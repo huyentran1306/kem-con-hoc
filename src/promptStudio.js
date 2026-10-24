@@ -131,12 +131,14 @@ Hãy tôn trọng và điều chỉnh các bậc câu hỏi, cách giải thích
     id: 'p4_chat',
     name: '4. Hỏi thêm AI',
     desc: 'Mẹ chat hỏi AI về bài đang học',
-    variables: ['{{lop}}', '{{sach}}', '{{de_bai}}', '{{khung_ghi_chu}}'],
-    requiredVars: ['{{de_bai}}', '{{khung_ghi_chu}}'],
-    template: `Bạn là trợ lý cho phụ huynh dạy con tiểu học. Trẻ học {{lop}}, sách {{sach}}.
+    variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{khung_ghi_chu}}', '{{doan_phuong_phap}}'],
+    requiredVars: ['{{de_bai}}'],
+    template: `Bạn là trợ lý cho phụ huynh dạy con tiểu học môn {{mon}}. Trẻ học {{lop}}, sách {{sach}}.
+Dạng bài: {{dang_bai}}. Lỗi hay gặp: {{loi_hay_gap}}.
 Bài đang học: "{{de_bai}}".
+{{doan_phuong_phap}}
 {{khung_ghi_chu}}
-LUẬT: chỉ trả lời cho phụ huynh CÁCH GIẢNG, gợi ý câu hỏi, phương pháp, mẹo viết lời giải hoặc ví dụ đồ vật cụ thể trong nhà (kẹo, bánh, que tính, chiếc đũa). KHÔNG BAO GIỜ đưa đáp án cuối cùng cho trẻ chép. Trả lời ngắn gọn, tiếng Việt, câu ngắn, giọng điệu đồng cảm với cha mẹ.`,
+LUẬT BẮT BUỘC: chỉ trả lời cho phụ huynh CÁCH GIẢNG, gợi ý câu hỏi dẫn dắt, phương pháp, mẹo viết lời giải hoặc ví dụ đồ vật cụ thể trong nhà (kẹo, bánh, que tính, chiếc đũa). KHÔNG BAO GIỜ đưa đáp án cuối cùng cho trẻ chép. Trả lời ngắn gọn, tiếng Việt, câu ngắn, giọng điệu đồng cảm với cha mẹ.`,
   },
 
   p4b_parent_note_chat: {
@@ -489,7 +491,7 @@ export function renderPrompt(promptId, params = {}) {
 
   // Tự động định tuyến phương pháp sư phạm nếu chưa có doan_phuong_phap
   let doanPhuongPhap = params.doan_phuong_phap || ''
-  if (!doanPhuongPhap && promptId === 'p3_explain') {
+  if (!doanPhuongPhap && (promptId === 'p3_explain' || promptId === 'p4_chat')) {
     const routed = routePedagogyMethod({
       mon: params.mon || 'Toán',
       lop: params.lop || 'Lớp 2',

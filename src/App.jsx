@@ -93,7 +93,7 @@ function loadState(lsKey) {
 }
 
 const TAB_OF = {
-  home: 'home', snap: 'home', analyze: 'home', explain: 'home', scaffold: 'home', done: 'home', ask: 'home',
+  home: 'home', snap: 'home', analyze: 'home', explain: 'home', scaffold: 'home', done: 'home', ask: 'home', chat: 'home',
   toy: 'toy', game: 'toy',
   report: 'report',
   profile: 'profile',
@@ -368,7 +368,7 @@ export default function App() {
 
 const TAB_CAP = {
   home: 'Home', snap: 'SnapHomework', analyze: 'Analyze', explain: 'Explain',
-  scaffold: 'Scaffold', done: 'Done', ask: 'AskAI', toy: 'SnapToy',
+  scaffold: 'Scaffold', done: 'Done', ask: 'AskAI', chat: 'AskAI', toy: 'SnapToy',
   game: 'Game', report: 'Report', profile: 'Profile',
 }
 

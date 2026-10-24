@@ -9,6 +9,7 @@ import { Header, SpeakBtn, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper }
 import { fmtTime, speak, compressImage, uid, boom } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
 import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress } from './api'
+import { renderPrompt } from './promptStudio'
 
 /* ============================================================
    1. ONBOARDING
@@ -788,6 +789,7 @@ export function Scaffold() {
   const child = S.children.find((c) => c.id === S.activeId)
   const steps = problem.steps || PROBLEM.steps
   const [showAns, setShowAns] = useState(false)
+  const [parentNote, setParentNote] = useState('')
 
   useEffect(() => setShowAns(false), [step])
 
@@ -875,11 +877,24 @@ export function Scaffold() {
                 <div style={{ fontSize: 12, color: '#C2410C', marginBottom: 8, lineHeight: 1.4 }}>
                   Nếu con chưa hiểu hoặc thắc mắc, {S.parent.toLowerCase()} có thể đọc hoặc gõ câu hỏi để AI tư vấn ngay mẹo giải thích!
                 </div>
+                <div style={{ marginBottom: 8 }}>
+                  <input
+                    className="field"
+                    style={{ fontSize: 13, padding: '7px 10px', background: '#fff', border: '1px solid #FED7AA' }}
+                    placeholder="Gõ hoặc nói câu hỏi (VD: con chưa học phép nhân)..."
+                    maxLength={200}
+                    value={parentNote}
+                    onChange={(e) => setParentNote(e.target.value.slice(0, 200))}
+                  />
+                </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button
                     className="btn ghost"
                     style={{ flex: 1, padding: '8px 10px', fontSize: 12.5, borderColor: '#F97316', color: '#EA580C', background: '#fff' }}
-                    onClick={() => go('chat')}
+                    onClick={() => {
+                      patch({ parentNoteChat: parentNote.trim() })
+                      go('ask')
+                    }}
                   >
                     💬 Hỏi AI cách giảng
                   </button>
@@ -887,8 +902,9 @@ export function Scaffold() {
                     <VoiceInputBtn
                       placeholder="Nói câu hỏi..."
                       onResult={(text) => {
-                        toast(`Đang hỏi AI: "${text}"`)
-                        go('chat')
+                        const clean = (text || '').slice(0, 200)
+                        setParentNote(clean)
+                        toast(`Đã nhận: "${clean}" 🎙️`)
                       }}
                     />
                   </div>
@@ -1253,7 +1269,7 @@ export function Done() {
    8. HỎI THÊM AI
    ============================================================ */
 export function AskAI() {
-  const { S, problem, toast } = useContext(AppCtx)
+  const { S, patch, problem, toast } = useContext(AppCtx)
   const [msgs, setMsgs] = useState([
     { from: 'ai', text: `Bạn cần hỏi gì về bài "${(problem.ocr || '').slice(0, 42)}…"? Mình sẽ gợi cách giảng, không đưa đáp án cho con nhé.` },
   ])
@@ -1267,7 +1283,7 @@ export function AskAI() {
     if (el) el.scrollTop = el.scrollHeight
   }, [msgs, typing])
 
-  const ask = async (q) => {
+  const ask = async (q, customNote = '') => {
     const text = (q || '').trim()
     if (!text || busyRef.current) return
     busyRef.current = true
@@ -1275,15 +1291,31 @@ export function AskAI() {
     setVal('')
     setTyping(true)
     const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
-    const sys =
-      `Bạn là trợ lý cho phụ huynh dạy con tiểu học. Trẻ học ${child.grade}, sách ${child.book}. ` +
-      `Bài đang học: "${problem.ocr}". LUẬT: chỉ trả lời cho phụ huynh CÁCH GIẢNG, gợi ý câu hỏi, ` +
-      `phương pháp, mẹo viết lời giải. KHÔNG BAO GIỜ đưa đáp án cuối cùng. Trả lời ngắn gọn, tiếng Việt, câu ngắn.`
+    const sys = renderPrompt('p4_chat', {
+      mon: problem.mon || 'Toán',
+      lop: child.grade,
+      sach: child.book,
+      dang_bai: problem.dang_bai || problem.type || 'Toán có lời văn',
+      loi_hay_gap: problem.loi_hay_gap || 'Con hay vội làm phép tính mà chưa đọc kỹ câu hỏi',
+      de_bai: problem.ocr || '',
+      ghi_chu: customNote || text,
+    })
     const reply = await aiChat(sys, msgs, text)
     setTyping(false)
     busyRef.current = false
     setMsgs((m) => [...m, { from: 'ai', text: reply || CHAT_REPLIES[text] || CHAT_REPLIES[CHAT_SAMPLES[0]] }])
   }
+
+  // A2: Nếu mẹ đã nhập ghi chú ở màn Hỏi con từng bước, tự động gửi câu hỏi đầu tiên
+  const initialTriggered = useRef(false)
+  useEffect(() => {
+    if (S.parentNoteChat && !initialTriggered.current) {
+      initialTriggered.current = true
+      const note = S.parentNoteChat
+      patch({ parentNoteChat: null })
+      ask(note, note)
+    }
+  }, [S.parentNoteChat])
 
   return (
     <>
