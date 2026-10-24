@@ -1,0 +1,20 @@
+{
+  "name": "Kèm Con Học – Bạn đồng hành dịu dàng",
+  "short_name": "Kèm Con Học",
+  "description": "Ứng dụng hỗ trợ bố mẹ kèm con học tại nhà theo phương pháp Socratic, chống cáu gắt và kết nối gia đình.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFDF9",
+  "theme_color": "#FFF7ED",
+  "categories": ["education", "kids", "parenting"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

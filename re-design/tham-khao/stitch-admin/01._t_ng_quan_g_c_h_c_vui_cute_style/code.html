@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Quicksand:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary": "#855300", "primary-container": "#f59e0b", "error-container": "#ffdad6", "surface-container-lowest": "#ffffff", "on-error": "#ffffff", "surface-bright": "#fff8f5", "on-secondary-container": "#730425", "tertiary-fixed": "#6ffbbe", "on-tertiary-fixed-variant": "#005236", "on-secondary-fixed": "#400010", "secondary": "#a93349", "surface-variant": "#eae1da", "on-surface-variant": "#534434", "on-primary-fixed": "#2a1700", "surface-container-highest": "#eae1da", "on-primary": "#ffffff", "on-surface": "#1f1b17", "surface-dim": "#e2d8d2", "surface": "#fff8f5", "surface-container-low": "#fcf2eb", "inverse-primary": "#ffb95f", "on-tertiary": "#ffffff", "secondary-fixed-dim": "#ffb2b9", "inverse-on-surface": "#f9efe8", "background": "#fff8f5", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#653e00", "tertiary-fixed-dim": "#4edea3", "on-secondary-fixed-variant": "#891933", "surface-tint": "#855300", "error": "#ba1a1a", "secondary-container": "#fe7488", "secondary-fixed": "#ffdadc", "primary-fixed-dim": "#ffb95f", "on-error-container": "#93000a", "on-tertiary-fixed": "#002113", "tertiary-container": "#30c88f", "on-primary-container": "#613b00", "primary-fixed": "#ffddb8", "surface-container": "#f6ece6", "on-background": "#1f1b17", "inverse-surface": "#342f2b", "tertiary": "#006c49", "surface-container-high": "#f0e6e0", "outline-variant": "d8c3ad", "outline": "#867461", "on-tertiary-container": "#004e34" }, "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, "spacing": { "space-xs": "0.375rem", "margin": "2rem", "space-md": "1.25rem", "space-lg": "2rem", "gutter-mobile": "0.75rem", "space-xl": "3rem", "gutter": "1.25rem", "space-sm": "0.75rem", "margin-mobile": "1rem" }, "fontFamily": { "body-md": ["Quicksand"], "headline-md": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "label-md": ["Quicksand"], "label-lg": ["Quicksand"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"], "label-sm": ["Quicksand"], "headline-lg": ["Plus Jakarta Sans"], "body-sm": ["Quicksand"], "body-lg": ["Quicksand"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "600" }], "headline-md": ["18px", { "lineHeight": "26px", "fontWeight": "700" }], "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.03em", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }], "headline-xl-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "800" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low shadow-[0_4px_24px_rgba(245,158,11,0.06)] z-50 flex flex-col justify-between p-space-md"><div class="flex flex-col gap-space-md"><div class="flex items-center gap-space-sm px-space-xs py-space-xs"><div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[24px]">school</span></div><div class="flex flex-col"><span class="font-headline-md text-headline-md text-primary tracking-tight">Kèm Con Học</span><span class="font-label-sm text-label-sm text-on-surface-variant font-bold">Cùng con học vui</span></div></div><nav class="flex flex-col gap-space-xs mt-space-xs" data-active-classes="bg-primary-container text-on-primary font-bold shadow-[0_8px_20px_-4px_rgba(245,158,11,0.3)]"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="tong-quan-goc-hoc-vui" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">cottage</span><span class="font-label-lg text-label-lg">Tổng quan Góc Học Vui</span></div><span class="w-2 h-2 rounded-full bg-primary-container"></span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="ba-me-va-cac-be-yeu" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">diversity_1</span><span class="font-label-lg text-label-lg">Ba Mẹ &amp; Các Bé Yêu</span></div><span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">12 bé</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="nhat-ky-gio-hoc-va-ai-su-pham" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">auto_stories</span><span class="font-label-lg text-label-lg">Nhật Ký &amp; AI Sư Phạm</span></div><span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">AI Mới</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="cai-dat-tro-ly-hoc-tap-va-ma-pin" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">settings_heart</span><span class="font-label-lg text-label-lg">Cài đặt Trợ Lý &amp; PIN</span></div></a></nav></div><div class="flex flex-col gap-space-sm"><div class="p-space-md rounded-lg bg-surface-container-lowest shadow-[0_8px_20px_-6px_rgba(245,158,11,0.12)] flex flex-col gap-space-xs"><div class="flex items-center gap-space-xs text-primary font-headline-md text-headline-md"><span class="material-symbols-outlined text-[20px] text-primary-container">star</span><span class="font-label-md text-label-md">Lời khen hôm nay</span></div><p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">🌟 Hôm nay đã có <span class="text-primary font-bold">3,420 bé</span> hoàn thành bài tập xuất sắc!</p></div><button class="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all font-label-sm text-label-sm font-bold shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">lock</span><span>Khoá màn hình PIN</span></button></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-20 bg-surface/90 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.03)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md"><img alt="Kèm Con Học Cute Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoAm9XSrR8cZd0XjOTnjph7QNJgwktDj5QqQIRkRVaAvbajjS_WZddSR3Ef1YMcvqtDZQED0mw-ph0lq4SUwHuPXb3Rch5P0b6ud4B1_4_kO4GyArjHkwTmvXOMoASDvtFusQu4f5qNZYfMocwLyovHac3e9-wrBSlzdmg2BJESsjBoBkWr3aJoV5HrIPHYtaVbI6v3iS5TIBheowhN5oE5yh5MEaQnQEGIdxJKDlNMfPxSVTVg_P3"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-md text-headline-md text-primary">Kèm Con Học ★ Góc Ba Mẹ &amp; Thầy Cô</span></div><span class="font-body-sm text-body-sm text-on-surface-variant">Đồng hành cùng con mỗi ngày vui vẻ</span></div></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span><input class="pl-9 pr-space-md py-2 w-64 rounded-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm focus:outline-none shadow-sm" placeholder="Tìm bé yêu, bài tập..." type="text"/></div><button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-[0_8px_20px_-4px_rgba(245,158,11,0.35)] hover:bg-primary transition-all" type="button"><span class="material-symbols-outlined text-[18px]">add_circle</span><span>✨ Thêm bé &amp; gia đình mới</span></button><div class="relative p-2 rounded-full bg-surface-container-lowest hover:bg-surface-container cursor-pointer transition-all shadow-sm"><span class="material-symbols-outlined text-[22px] text-on-surface-variant">notifications</span><span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-error border-2 border-surface-container-lowest"></span></div><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPl2oFiLhyFPY4GktrNBbgYP0KjLOuAk6iNzlNFRW8__08e-h4IF8L3uSjz7LPmXKnPolQTvy8LORcsJw6ogWWZY5NRzXLEkYjawcR4crH8Nwa-3Cq_GzwIBIPzS6KLZzOCpisMXmTikzlRAtwQpfikpw0hREh1gG-2STlonA6m_q9O9G-z8DiaZvwkSTViyLSdmM8wACSun6YatfADnqFsICu-OKyLZ2KJnTUmcmEFrw6bJ7NLVRB"/><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface font-bold">Mẹ Mai Phương</span><span class="font-label-sm text-label-sm text-primary font-bold">Quản trị viên</span></div></div></div></header><main class="w-full pt-20 px-space-lg bg-surface min-h-screen"><div class="flex flex-col w-full pb-space-xl">
+<!-- Top Welcome Mascot Banner -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-lg shadow-sm mb-space-lg">
+<!-- Ambient Pastel Blobs -->
+<div class="absolute -right-8 -top-8 w-64 h-64 rounded-full bg-primary-fixed/40 blur-3xl pointer-events-none"></div>
+<div class="absolute right-48 -bottom-12 w-48 h-48 rounded-full bg-secondary-fixed/50 blur-2xl pointer-events-none"></div>
+<div class="absolute left-1/3 top-0 w-40 h-40 rounded-full bg-tertiary-fixed/30 blur-2xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md max-w-2xl">
+<div class="relative flex-shrink-0">
+<div class="w-20 h-20 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center p-1.5 transform hover:rotate-6 transition-transform">
+<img class="w-full h-full object-contain rounded-full" data-alt="Chibi cute baby sprout character mascot with smiling sweet eyes, tiny green leaves on head, and blushing pink cheeks on a pastel cream circular badge, sticker art style, 3D claymation aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCq1spqMVTjze4Dt4Rs-El8pg8dx7Dirk1pVfePF52k8g6S56NP_vlIaHd4XKBELPkVpzXohKNLvlpiO662IPycdRFbnjdFLKGSkmipRW5WkXIUrDQvTG1gBcSDfsHmnzhzV9n0t-oapap4p0aI8H2lquUR94lFnZTRe3qWs9KCGMzdd8S0tZoUp-OSiKbIwXqhJ9GiwvrG_Atty6oxqPg1UNuHbigt5ITEMCVLhR_46WS8jLbeR-xA"/>
+</div>
+<span class="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[14px]">favorite</span>
+</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="font-headline-xl text-headline-xl text-on-surface">Chào buổi sáng Mẹ Mai Phương! ☀️🌈</span>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span> Góc Yêu Thương
+            </span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+            Hôm nay trời đẹp rực rỡ, có <span class="text-primary font-bold">2,845 gia đình</span> đang đồng hành cùng các thiên thần nhỏ khám phá kiến thức mới!
+          </p>
+<div class="flex items-center gap-space-sm pt-1">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary font-bold bg-primary-fixed/60 px-2.5 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">local_florist</span> Mẹo sư phạm: "Một lời khen nhỏ - Nụ cười cả ngày"
+            </span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="group flex items-center gap-space-xs px-space-md py-3 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-45">wb_sunny</span>
+<span>🌻 Tạo bài tập vui hôm nay</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-3 rounded-full bg-surface-container-lowest text-on-surface font-label-lg text-label-lg shadow-sm hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[20px] text-primary">download</span>
+<span>📊 Tải nhật ký sao tích lũy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 4 Sweet Candy KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-lg">
+<!-- Card 1: Warm Sunshine -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-primary-fixed/30 pointer-events-none"></div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shadow-inner">
+<span class="material-symbols-outlined text-[26px]">family_restroom</span>
+</div>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-on-tertiary-fixed bg-tertiary-fixed px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[13px]">trending_up</span> +12% tuần này
+        </span>
+</div>
+<div>
+<span class="font-headline-xl text-headline-xl text-primary font-bold tracking-tight">2,845</span>
+<div class="flex items-center gap-1 font-label-lg text-label-lg text-on-surface mt-0.5">
+<span>Tổ ấm đang cùng học</span>
+<span class="material-symbols-outlined text-[16px] text-primary-container" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">94% ba mẹ duy trì khung giờ cố định</p>
+</div>
+</div>
+<!-- Card 2: Mint Green Sprout -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-tertiary-fixed/30 pointer-events-none"></div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-12 h-12 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary shadow-inner">
+<span class="material-symbols-outlined text-[26px]">child_care</span>
+</div>
+<div class="flex -space-x-2 overflow-hidden">
+<img class="inline-block h-6 w-6 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="Cute cheerful young girl student wearing glasses smiling avatar profile with soft warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZQFUMJNYthZeSkXJJcRIGljTBfx2IfFDi4dk5NC9H4H5lqP6ncp9TvbhYmpXHIKMBgyZTDVTOJ8Vk7MSdcNYbiSX_HuyWzZIL74A0ZPNbWdBx4U9uHYmOIS3QD3oURSeqTmPnnr9EG3h_RHhANQaZ-IEVhUg5Cx4NDQaQ2VwmSdXvdUYcbIetmCLu8CnrSfvnCQkMtWjQCmadajsCVopKseSFgLXREKsNKaeRkExoDqHikt9G_w8n"/>
+<img class="inline-block h-6 w-6 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="Cute playful young boy student smiling wearing yellow cap avatar profile with warm pastel colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCr-8v2z2ZGqnEDNSe_mA44OBE8Gup6_UVghKNzSEoJU8GL-yqyVPBJH2ulQEdgSbuKDXQ3Qw4mXTTyvazyaurgu2eWS6o5i2jWm_G7Vl92FgN55kvCTxJcpu4bHfhc_0VRVckRFhLOQ5Q5ErO6aBmkwpneETbzLSrkK7nGMnVjFABexbOjjLRSvwfzrw_R0a2iRNnwT9jqiJ37A-vMZDnqpxZFxsy6OOVPFeWGpk1z8lp6lVJetv1U"/>
+<div class="h-6 w-6 rounded-full bg-tertiary-container text-on-tertiary font-label-sm text-[10px] flex items-center justify-center font-bold">
+            +5K
+          </div>
+</div>
+</div>
+<div>
+<span class="font-headline-xl text-headline-xl text-tertiary font-bold tracking-tight">3,420</span>
+<div class="flex items-center gap-1 font-label-lg text-label-lg text-on-surface mt-0.5">
+<span>Bé chăm ngoan (Lớp 1 - 5)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Gồm 1,210 bé Mầm non &amp; Tiền tiểu học</p>
+</div>
+</div>
+<!-- Card 3: Strawberry Pink -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-secondary-fixed/40 pointer-events-none"></div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary shadow-inner">
+<span class="material-symbols-outlined text-[26px]">hourglass_top</span>
+</div>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-secondary bg-secondary-fixed/60 px-2.5 py-1 rounded-full font-bold">
+          🌸 Kiên trì
+        </span>
+</div>
+<div>
+<span class="font-headline-xl text-headline-xl text-secondary font-bold tracking-tight">1,890h</span>
+<div class="flex items-center gap-1 font-label-lg text-label-lg text-on-surface mt-0.5">
+<span>Giờ ba mẹ kèm con</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">TB <span class="font-bold text-secondary">28 phút</span> mỗi buổi học cùng bé</p>
+</div>
+</div>
+<!-- Card 4: Peach Amber Happiness -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-primary-fixed/40 pointer-events-none"></div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shadow-inner">
+<span class="material-symbols-outlined text-[26px]">sentiment_very_satisfied</span>
+</div>
+<div class="flex items-center text-primary-container">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-xl text-headline-xl text-primary font-bold tracking-tight">4.96</span>
+<span class="font-label-md text-label-md text-on-surface-variant">/ 5.0</span>
+</div>
+<div class="flex items-center gap-1 font-label-lg text-label-lg text-on-surface mt-0.5">
+<span>Điểm Nụ Cười &amp; Hài Lòng</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">99.2% ba mẹ khen AI giảng bài dễ hiểu</p>
+</div>
+</div>
+</div>
+<!-- Main Split Bento Section -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg mb-space-lg">
+<!-- Left Column: Analytics & Habits (7 cols) -->
+<div class="lg:col-span-7 flex flex-col gap-space-lg">
+<!-- Subjects Favorite Card -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">palette</span>
+</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Môn học các bé yêu thích nhất</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Thống kê theo tổng số bài nộp đạt 3 sao tuần này</span>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-primary font-bold">
+            Tháng 10 🍂
+          </span>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Item 1: Math with abacus -->
+<div class="flex flex-col gap-1.5 p-3 rounded-lg bg-surface-container-low/60 hover:bg-surface-container-low transition-colors">
+<div class="flex items-center justify-between font-label-lg text-label-lg">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary">🧮</span>
+<span class="text-on-surface font-bold">Toán tư duy que tính &amp; hình học trực quan</span>
+</div>
+<span class="font-headline-md text-headline-md text-primary font-bold">45%</span>
+</div>
+<!-- Playful thick progress bar -->
+<div class="w-full h-3.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-primary-container transition-all duration-1000" style="width: 45%;"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-sm text-body-sm px-1">
+<span>1,539 bài toán que tính hoàn thành xuất sắc</span>
+<span class="text-primary font-bold">⭐ 4,617 Ngôi sao</span>
+</div>
+</div>
+<!-- Item 2: Storytelling & reading -->
+<div class="flex flex-col gap-1.5 p-3 rounded-lg bg-surface-container-low/60 hover:bg-surface-container-low transition-colors">
+<div class="flex items-center justify-between font-label-lg text-label-lg">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">📖</span>
+<span class="text-on-surface font-bold">Tập đọc, ghép vần &amp; Kể chuyện cổ tích</span>
+</div>
+<span class="font-headline-md text-headline-md text-secondary font-bold">32%</span>
+</div>
+<div class="w-full h-3.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-secondary-container transition-all duration-1000" style="width: 32%;"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-sm text-body-sm px-1">
+<span>1,094 truyện ngụ ngôn &amp; bài thơ đọc diễn cảm</span>
+<span class="text-secondary font-bold">💖 3,280 Trái tim</span>
+</div>
+</div>
+<!-- Item 3: English kids songs -->
+<div class="flex flex-col gap-1.5 p-3 rounded-lg bg-surface-container-low/60 hover:bg-surface-container-low transition-colors">
+<div class="flex items-center justify-between font-label-lg text-label-lg">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">🎵</span>
+<span class="text-on-surface font-bold">Tiếng Anh bài hát vui nhộn &amp; Từ vựng con vật</span>
+</div>
+<span class="font-headline-md text-headline-md text-tertiary font-bold">23%</span>
+</div>
+<div class="w-full h-3.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-tertiary-container transition-all duration-1000" style="width: 23%;"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-sm text-body-sm px-1">
+<span>786 bé luyện phát âm chuẩn ngữ điệu cùng AI</span>
+<span class="text-tertiary font-bold">🌱 2,358 Mầm xanh</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Prime Time Chart Card -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Khung Giờ Vàng Ba Mẹ Rảnh Rỗi Cùng Con</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Tập trung cao điểm sau bữa cơm tối ấm cúng gia đình</span>
+</div>
+</div>
+<div class="flex items-center gap-2 font-label-sm text-label-sm">
+<span class="inline-block w-3 h-3 rounded-full bg-primary-container"></span>
+<span class="text-on-surface font-bold">Đỉnh điểm: 19:30 - 20:45</span>
+</div>
+</div>
+<!-- Soft Smooth Wave Chart Container (Inline SVG) -->
+<div class="w-full h-44 relative flex items-end">
+<svg class="w-full h-full overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 600 140">
+<defs>
+<lineargradient id="softAreaGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"></stop>
+<stop offset="60%" stop-color="#fe7488" stop-opacity="0.12"></stop>
+<stop offset="100%" stop-color="#fff8f5" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Background faint guidelines -->
+<line stroke="#eae1da" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="600" y1="30" y2="30"></line>
+<line stroke="#eae1da" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="600" y1="75" y2="75"></line>
+<line stroke="#eae1da" stroke-width="1" x1="0" x2="600" y1="120" y2="120"></line>
+<!-- Area fill -->
+<path d="M0,130 C60,125 120,110 180,95 C240,80 300,50 360,25 C420,15 480,40 540,90 L600,125 L600,140 L0,140 Z" fill="url(#softAreaGrad)"></path>
+<!-- Soft Stroke Curve -->
+<path d="M0,130 C60,125 120,110 180,95 C240,80 300,50 360,25 C420,15 480,40 540,90 L600,125" stroke="#f59e0b" stroke-linecap="round" stroke-width="4"></path>
+<!-- Peak Dot with Badge -->
+<circle cx="395" cy="18" fill="#855300" r="6" stroke="#ffffff" stroke-width="3"></circle>
+</svg>
+<!-- Floating Tooltip near peak -->
+<div class="absolute left-[62%] top-1 -translate-x-1/2 bg-surface-container-lowest shadow-md px-3 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
+<span class="text-primary-container text-[12px]">✨</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">1,820 cặp Ba Mẹ &amp; Con cùng online</span>
+</div>
+</div>
+<div class="grid grid-cols-6 text-center pt-3 text-on-surface-variant font-label-sm text-label-sm">
+<span>06:30</span>
+<span>12:00</span>
+<span>16:30</span>
+<span class="text-primary font-bold">19:30 🔥</span>
+<span class="text-primary font-bold">20:30</span>
+<span>22:00</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Leaderboard & Quick Help (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-lg">
+<!-- Leaderboard Card -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">military_tech</span>
+</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Bảng Vinh Danh Bé Chăm Chỉ</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Chuỗi ngày học liên tục không ngắt quãng</span>
+</div>
+</div>
+<span class="text-xl">🏆</span>
+</div>
+<!-- List of Kids -->
+<div class="flex flex-col gap-space-sm mb-space-md">
+<!-- Kid 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:scale-[1.01] transition-transform">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-11 h-11 rounded-full object-cover shadow-sm" data-alt="Chibi cute young Vietnamese boy wearing a yellow headband smiling cheerfully, close-up portrait, cartoon clay style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaeWS14so-VQoVUJFgYkDV5QewLHF9m3Vuvzix0GCqbBXXfUWvyOcVCz560pJRVlgkiLxY1DPUJ147SiUyfxeCvGZfHxnD1or7n0LgOyFSlAzprZnhwbix3eq-WHG7qzODmCbEGwlePeGyPJSveLpyV860RQ_ZyhmWdMJdQIIc1E7JEFMFItd2s7TroUNlCtMmgo9BTrR2hxcWn3MyLetm3N1nH8jx97Pu4WMPoONZm5Zg8Y8BWJ2Z"/>
+<span class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-[10px]">1</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-headline-md text-on-surface">Bé Bắp</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-bold">Lớp 2A</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Thích: Giải toán &amp; xếp Lego</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="inline-flex items-center gap-1 font-headline-md text-headline-md text-secondary font-bold">
+                🔥 45 ngày
+              </span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">⭐ 135 sao</span>
+</div>
+</div>
+<!-- Kid 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:scale-[1.01] transition-transform">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-11 h-11 rounded-full object-cover shadow-sm" data-alt="Adorable sweet young girl with twin pigtails smiling happily holding a pencil, pastel cute illustrated avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-NcK6vVdKjJNZk6Mm43vWqfV0hqUvntnV3BjxwAQZqkmorpkv4Cx9xuLRKxiZIRJJf257Sdv8C6lHRRw209C4OjgXsoWUgoj6tgcXAx4e3A6cf0TZUhpc9pisTgdjalfU94ZKz_RkFranVVRHpsmAktCnNxVyKoDn3L25HJ7am_NlzXN62pzdhc2uqqd2b11XlmjAHz37REU_oAPR-blTWSZ25z-7nKN12ka7Qq2ezDfVQ0EIG4Ae"/>
+<span class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[10px]">2</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-headline-md text-on-surface">Bé Sữa</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-secondary font-label-sm text-label-sm font-bold">Lớp 1C</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Thích: Kể chuyện &amp; Đọc thơ</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="inline-flex items-center gap-1 font-headline-md text-headline-md text-secondary font-bold">
+                🔥 38 ngày
+              </span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">⭐ 114 sao</span>
+</div>
+</div>
+<!-- Kid 3 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:scale-[1.01] transition-transform">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-11 h-11 rounded-full object-cover shadow-sm" data-alt="Cute elementary school boy wearing green dinosaur hoodie grinning happily avatar icon in 3D clay aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKIwkR12yyPzZfVPMyP_RpWkvio_i5C2j_bIzgMFLxZ0W0s6EFwX-yKEnerGaIj7lFhnHNSnVEVt6mWfB-EqikUJI9FHXBJrR1feNFTtED3RtobmOYQyrM3PaeVmpFwAKOe7nFOH6aYGSAtSenjx9y4tP3u0EMaTcAVehXhkHKRRz-_xLVncJtdYbKOCK8dj3Bcmx9f3HX2r4ixwZWdKNEryf9MxrjUtYeHP9xXuMxOCPvuaEMPy9g"/>
+<span class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-surface-dim text-on-surface flex items-center justify-center font-bold text-[10px]">3</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-headline-md text-on-surface">Bé Cà Rốt</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-label-sm text-label-sm font-bold">Lớp 3B</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Thích: Học tiếng Anh &amp; vẽ tranh</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="inline-flex items-center gap-1 font-headline-md text-headline-md text-secondary font-bold">
+                🔥 30 ngày
+              </span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">⭐ 90 sao</span>
+</div>
+</div>
+</div>
+<!-- AI Pedagogical Encouragement Ribbon -->
+<div class="p-space-sm rounded-lg bg-primary-fixed/40 flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0">lightbulb</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary font-bold">Lời khuyên của AI Sư Phạm:</span>
+<p class="font-body-sm text-body-sm text-on-surface leading-snug">
+              "Khen ngợi nỗ lực và sự kiên trì từng ngày của con, thay vì chỉ khen con thông minh bẩm sinh nhé ba mẹ!"
+            </p>
+</div>
+</div>
+</div>
+<!-- Quick Support Box for Parents -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">support_agent</span>
+</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Góc Ba Mẹ Cần Hỗ Trợ Nhanh</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Yêu cầu hỏi phương pháp dạy con</span>
+</div>
+</div>
+<span class="flex h-3 w-3 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="p-2.5 rounded-lg bg-surface-container-low/70 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">🍰</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Cách giải thích phân số cho con lớp 4</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Mẹ Minh Thư • 5 phút trước</span>
+</div>
+</div>
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm hover:bg-primary transition-colors" type="button">
+              Giải đáp
+            </button>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low/70 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">💤</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Bé lớp 1 hay mất tập trung sau 15 phút</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Bố Hoàng Nam • 18 phút trước</span>
+</div>
+</div>
+<button class="px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-bold hover:bg-surface-container-high transition-colors" type="button">
+              Gửi mẹo
+            </button>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low/70 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">🔐</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Quên mã PIN phụ huynh kiểm soát giờ học</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Mẹ Ánh Tuyết • 32 phút trước</span>
+</div>
+</div>
+<button class="px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-bold hover:bg-surface-container-high transition-colors" type="button">
+              Mở PIN
+            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Realtime Activity Stream of Parents & Kids -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[18px]">stream</span>
+</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">🐾 Hoạt Động Trực Tiếp: Các Bé &amp; Ba Mẹ Đang Vui Học</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cập nhật theo thời gian thực từ khắp các tỉnh thành</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">142 phòng học đang kết nối</span>
+</div>
+</div>
+<!-- Live Stream Table / Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Live Card 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between hover:shadow-sm transition-all">
+<div class="flex items-center gap-space-xs mb-2">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Chibi cute mother wearing glasses and daughter smiling together studying a colorful book, warm 3D digital illustration" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBplKwlAe515A8s5By0wWyoBmG0z_8IOTDHYblyztAkVyEqc8Fs23MJmzHg_YljiEqmX8Um9hu9ANw1SRKqnnD9KhBSHsXiYjJHYcnmRsPeocOWOWGeXx9WgmmkGi9zAhq2KoFhCiboHQBDDzVm1_b22y83QZPoLiSwUCvtPj4AdMv2NjWAS9gqQ3nRIiq-goIXPB6KUNNK5ctiYG4SxzaaXTetTWH08ByHpdftrOdsPZs47cy_zrwi"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Mẹ Thảo &amp; Bé Nhím</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lớp 2 • Hà Nội</span>
+</div>
+</div>
+<div class="p-2 rounded-DEFAULT bg-surface-container-lowest flex items-center gap-2">
+<span class="text-[18px]">🧩</span>
+<div class="flex flex-col overflow-hidden">
+<span class="font-label-sm text-label-sm text-primary font-bold truncate">Đang giải đố que tính</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">Đã học 18 phút • +2 sao</span>
+</div>
+</div>
+</div>
+<!-- Live Card 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between hover:shadow-sm transition-all">
+<div class="flex items-center gap-space-xs mb-2">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Smiling father with young son smiling proudly next to a tablet learning together, heartwarming playful 3D cartoon style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoLBElYU98ZSqng0DsI--67s0rjwJAkASZ-gt9uQBHTs9kepPNq-9VxLXAzA0p2hmWrmN6StsYq1A0M9OSG8fBTRBNlb6HD6Iy7R26Fauv2cF7uPtFJeMAUE8vyi8QLYcfNZxQgQo28nHby5gdm7MooJMYdrGGf5y7IPSRUTzQiSeyO7ViKCVlzzDtrk_SOpoLrMLHd9UHi9NTRgHedljypzm3jBxzw_THsgIMgIe1Hz9aRKgIFvsF"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Bố Dũng &amp; Bé Bo</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lớp 1 • TP. HCM</span>
+</div>
+</div>
+<div class="p-2 rounded-DEFAULT bg-surface-container-lowest flex items-center gap-2">
+<span class="text-[18px]">🌙</span>
+<div class="flex flex-col overflow-hidden">
+<span class="font-label-sm text-label-sm text-secondary font-bold truncate">Vừa đọc bài Chú Cuội</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">Hoàn thành xuất sắc ⭐⭐⭐</span>
+</div>
+</div>
+</div>
+<!-- Live Card 3 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between hover:shadow-sm transition-all">
+<div class="flex items-center gap-space-xs mb-2">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Cheerful grandmother and sweet young granddaughter laughing and learning alphabet letters, cute pastel cartoon character style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBePq4N2-kcb03nPtXuiLKdo0Cpsi_92yGeLdkUbnp1KO5aAlh75_TAKuKbcSgF89O_RA7j3Mg3THjxT-vTr2lO2UIDCKtfrDUTad46hUK9ptuZcV3yFlNZC8fPdqwVXMFL7336uNr66mxK3S_eqVMmSctdTegrEG8-15KIf20TFkNHpx9640weUfuEnV2hG2f6DG4hP0_uDuJLyAbHvACoHvDlVHArjNtt5HszfYrcyj30BibTnG3I"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Bà Lan &amp; Bé Bống</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Mầm non 5 tuổi • Đà Nẵng</span>
+</div>
+</div>
+<div class="p-2 rounded-DEFAULT bg-surface-container-lowest flex items-center gap-2">
+<span class="text-[18px]">🎨</span>
+<div class="flex flex-col overflow-hidden">
+<span class="font-label-sm text-label-sm text-tertiary font-bold truncate">Tập tô chữ cái O, Ô, Ơ</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">Đang mở khóa huy hiệu mới</span>
+</div>
+</div>
+</div>
+<!-- Live Card 4 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between hover:shadow-sm transition-all">
+<div class="flex items-center gap-space-xs mb-2">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Mother and elementary school boy high-fiving after completing homework assignment on a cozy wooden desk, warm cheerful pastel 3D style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALJm-ZV4F6R3hBxncHcZTLrWsf_UgeVgE5gtyFpQyj7QtuymsVLQzBj6c25f5NulC7HCtphmO8EwkkI0ue6fdHjvhcAribnemplER4Htif-U6-1EjZcG_doDyD1kn1lLzWBJtyCvqCRqGZVy-yJ7LSazNDBPgq3QI8n0jHXZxyyQcPT2GV2tdttG_Kn-gxrJ1pmefM3I7cXavQ9HEIsObMqL1n14TyeQj-ZUSRYS_r-jatSBZt7OFS"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Mẹ Hương &amp; Bé Tít</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lớp 3 • Cần Thơ</span>
+</div>
+</div>
+<div class="p-2 rounded-DEFAULT bg-surface-container-lowest flex items-center gap-2">
+<span class="text-[18px]">✨</span>
+<div class="flex flex-col overflow-hidden">
+<span class="font-label-sm text-label-sm text-primary font-bold truncate">Hỏi đáp AI Sư Phạm</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">Bé tự tin đặt 4 câu hỏi thú vị</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

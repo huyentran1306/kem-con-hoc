@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI và thao tác chốt</title>
+<meta name="description" content="Bản vẽ giao diện đã chốt và thao tác từng màn cho 5 tính năng nâng cấp Kèm Con Học: giao diện theo sở thích, kiểm tra ảnh ngoài phạm vi, nhóm gia đình và Zalo, cổng giáo viên, admin bản Gấu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&family=Mitr:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F4F1; --paper: #FFFFFF; --ink: #1D1B26; --ink-2: #4A4758; --muted: #7C7889; --line: #E6E1DA;
+    --accent: #D6336C; --accent-soft: #FDE7EF; --green: #0F8A5F; --green-soft: #E2F5EC; --amber: #A55F00; --amber-soft: #FFF2D9;
+    --blue: #2563EB; --blue-soft: #E8F0FE; --violet: #6D4AE0; --violet-soft: #EEE9FF; --red: #B42318; --red-soft: #FDECEA;
+    --fc-edge: #8A7F99; --fc-box: #FFFFFF; --fc-box-line: #CFC6DA; --fc-text: #2E2840; --fc-start: #FFE1EC; --fc-start-line: #E0598E;
+    --fc-end: #D9F5EC; --fc-end-line: #18A58A; --fc-dec: #FFF6DB; --fc-dec-line: #E0A81F; --fc-note: #F3F0FF; --fc-note-line: #A78BFA; --fc-lbl: #6B5E80;
+    --sh: 0 1px 2px rgba(29, 27, 38, .05), 0 10px 30px -18px rgba(29, 27, 38, .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+      --accent: #FF6E9C; --accent-soft: #3A1E2B; --green: #4CD39A; --green-soft: #173327; --amber: #F5B451; --amber-soft: #3A2C14;
+      --blue: #7AA5FF; --blue-soft: #1D2A44; --violet: #A993FF; --violet-soft: #2A2342; --red: #FF8A7F; --red-soft: #3D1D1A;
+      --fc-edge: #9C93AE; --fc-box: #262431; --fc-box-line: #46415A; --fc-text: #EDEAF5; --fc-start: #3A1E2B; --fc-start-line: #FF6E9C;
+      --fc-end: #173327; --fc-end-line: #4CD39A; --fc-dec: #3A2C14; --fc-dec-line: #F5B451; --fc-note: #2A2342; --fc-note-line: #A993FF; --fc-lbl: #C9C5D6;
+      --sh: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+    --accent: #FF6E9C; --accent-soft: #3A1E2B; --green: #4CD39A; --green-soft: #173327; --amber: #F5B451; --amber-soft: #3A2C14;
+    --blue: #7AA5FF; --blue-soft: #1D2A44; --violet: #A993FF; --violet-soft: #2A2342; --red: #FF8A7F; --red-soft: #3D1D1A;
+    --fc-edge: #9C93AE; --fc-box: #262431; --fc-box-line: #46415A; --fc-text: #EDEAF5; --fc-start: #3A1E2B; --fc-start-line: #FF6E9C;
+    --fc-end: #173327; --fc-end-line: #4CD39A; --fc-dec: #3A2C14; --fc-dec-line: #F5B451; --fc-note: #2A2342; --fc-note-line: #A993FF; --fc-lbl: #C9C5D6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Be Vietnam Pro", system-ui, sans-serif; background: var(--bg); color: var(--ink-2); line-height: 1.6; font-size: 15.5px; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; }
+  b, strong { color: var(--ink); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .86em; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; color: var(--ink); }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 16px; }
+  header.hero { padding: 44px 0 22px; }
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .hero h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.6px; margin-top: 8px; }
+  .hero p { font-size: 17px; margin-top: 10px; max-width: 860px; }
+  nav.toc { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; text-decoration: none; font-size: 13.5px; font-weight: 700; color: var(--ink-2); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); }
+  section.feat { padding: 38px 0 8px; }
+  .sec-h .n { font-size: 12.5px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .sec-h h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 800; letter-spacing: -.4px; margin-top: 2px; }
+  .sec-h p { margin-top: 6px; max-width: 900px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; box-shadow: var(--sh); min-width: 0; }
+  .sub { font-size: 18px; font-weight: 800; color: var(--ink); margin: 26px 0 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 11.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .t-pink { background: var(--accent-soft); color: var(--accent); } .t-green { background: var(--green-soft); color: var(--green); } .t-amber { background: var(--amber-soft); color: var(--amber); }
+  .t-blue { background: var(--blue-soft); color: var(--blue); } .t-violet { background: var(--violet-soft); color: var(--violet); }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 22px 18px; align-items: start; }
+  .shot { display: grid; gap: 10px; min-width: 0; }
+  .shot .cap { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .shot h4 { font-size: 16.5px; margin-top: -4px; }
+  ol.ops { list-style: none; display: grid; gap: 7px; font-size: 14.2px; }
+  ol.ops li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+  ol.ops li .k { width: 20px; height: 20px; border-radius: 50%; background: #E11D48; color: #fff; display: grid; place-items: center; font: 800 11px "Nunito", sans-serif; margin-top: 2px; }
+  ol.ops li .k.s { background: var(--muted); }
+  .note { font-size: 13.5px; background: var(--amber-soft); color: var(--ink); border-radius: 12px; padding: 9px 12px; }
+  .note b { color: var(--amber); }
+  .state { font-size: 13.5px; background: var(--blue-soft); color: var(--ink); border-radius: 12px; padding: 9px 12px; }
+  .state b { color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+  tr:last-child td { border-bottom: 0; }
+  .tbl { overflow-x: auto; }
+  .flowbox { overflow-x: auto; }
+  .flowsvg { width: 100%; min-width: 760px; max-width: 1000px; display: block; margin: 0 auto; font-family: "Be Vietnam Pro", sans-serif; }
+  .fc-edge { fill: none; stroke: var(--fc-edge); stroke-width: 1.8; } .fc-edge.dash { stroke-dasharray: 6 5; }
+  .fc-head { fill: var(--fc-edge); }
+  .fc-proc { fill: var(--fc-box); stroke: var(--fc-box-line); stroke-width: 1.5; }
+  .fc-start { fill: var(--fc-start); stroke: var(--fc-start-line); stroke-width: 1.5; } .fc-end { fill: var(--fc-end); stroke: var(--fc-end-line); stroke-width: 1.5; }
+  .fc-dec { fill: var(--fc-dec); stroke: var(--fc-dec-line); stroke-width: 1.5; } .fc-note { fill: var(--fc-note); stroke: var(--fc-note-line); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .fc-t { font-size: 13.5px; fill: var(--fc-text); font-weight: 600; } .fc-t-dec { font-size: 13px; font-weight: 800; }
+  .fc-lblbg { fill: var(--paper); stroke: var(--line); } .fc-lbl { font-size: 11.5px; font-weight: 800; fill: var(--fc-lbl); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12.5px; margin-top: 10px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; border: 1.5px solid; }
+
+  /* ===== khung điện thoại chung ===== */
+  .ph { width: 300px; border-radius: 40px; background: #1C1A24; padding: 9px; box-shadow: 0 30px 50px -28px rgba(20, 15, 30, .6); position: relative; flex-shrink: 0; justify-self: center; }
+  .ph .scr { height: 610px; border-radius: 32px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .ph .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 96px; height: 26px; background: #1C1A24; border-radius: 999px; z-index: 9; }
+  .ph .sb { display: flex; justify-content: space-between; padding: 12px 22px 0; font: 800 12px "Nunito", sans-serif; }
+  .mk { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: #E11D48; color: #fff !important; font: 800 11px "Nunito", sans-serif; box-shadow: 0 0 0 2.5px #fff; flex-shrink: 0; vertical-align: middle; position: relative; z-index: 3; }
+  .mk.abs { position: absolute; }
+
+  /* ===== App phụ huynh: Kẹo Bông ===== */
+  .app { --bg: #FFF4F8; --card: #fff; --line: #F3D9E6; --ink: #4A3B5C; --ink2: #8A7B9A; --pink: #FF8FB8; --pinkd: #E0598E; --pinkt: #B83A70; --lav: #B9A3FF; --lavs: #EFE9FF; --lavt: #6A4FD0;
+    --mint: #7FD8C4; --mints: #E3F8F2; --mintt: #23735F; --yel: #FFD36E; --yels: #FFF6D6; --yelt: #8A5E00; --red: #C93A3A;
+    font-family: "Nunito", sans-serif; font-weight: 700; color: var(--ink); font-size: 12.5px; line-height: 1.45; }
+  .app .scr { background: var(--bg); }
+  .app h5 { font-family: "Baloo 2", cursive; font-size: 19px; line-height: 1.15; color: var(--ink); font-weight: 800; }
+  .app .top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+  .app .top .ib { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid var(--line); display: grid; place-items: center; font-weight: 900; font-size: 13px; }
+  .app .top h6 { font-family: "Baloo 2", cursive; font-size: 16px; flex: 1; font-weight: 800; }
+  .app .bd { flex: 1; padding: 6px 13px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .app .c { background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 10px 12px; box-shadow: 0 5px 0 var(--line); position: relative; }
+  .app .lb { font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 900; color: #B07A98; }
+  .app .bt { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 12px; font-weight: 900; font-size: 12.5px; color: #fff; background: linear-gradient(#FFA3C6, #FF7FAE); box-shadow: 0 4px 0 var(--pinkd); position: relative; }
+  .app .bt.g { background: #fff; color: var(--ink); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); }
+  .app .bt.l { background: linear-gradient(#C9B8FF, #B9A3FF); box-shadow: 0 4px 0 #8C72E8; }
+  .app .row { display: flex; gap: 8px; } .app .row > * { flex: 1; }
+  .app .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: #fff; border: 2px solid var(--line); font-size: 11px; font-weight: 800; }
+  .app .chip.on { background: var(--yels); border-color: var(--yel); }
+  .app .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .app .nav { display: flex; justify-content: space-around; padding: 7px 6px 16px; background: #fff; border-top: 2px solid var(--line); }
+  .app .nav div { text-align: center; font-size: 9.5px; color: var(--ink2); font-weight: 800; }
+  .app .nav div i { display: block; font-style: normal; font-size: 16px; }
+  .app .nav div.on { color: var(--pinkt); }
+  .app .li { display: flex; align-items: center; gap: 9px; padding: 8px 2px; border-bottom: 1.5px dashed var(--line); font-weight: 800; }
+  .app .li:last-child { border-bottom: 0; }
+  .app .li .e { width: 28px; height: 28px; border-radius: 10px; background: var(--yels); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+  .app .li .t { flex: 1; } .app .li small { display: block; font-weight: 700; color: var(--ink2); font-size: 10.5px; }
+  .app .face { font-family: "Baloo 2", cursive; font-weight: 800; letter-spacing: 2px; font-size: 15px; }
+  .app .dim { position: absolute; inset: 0; background: rgba(74, 59, 92, .35); z-index: 4; }
+  .app .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 14px 18px; z-index: 5; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -10px 30px -10px rgba(74, 59, 92, .35); }
+  .app .sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); align-self: center; }
+  .app .ip { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 7px 10px; font-weight: 700; color: var(--ink2); }
+  .app .ip.on { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 143, 184, .25); color: var(--ink); }
+  .app .dots { display: flex; gap: 8px; justify-content: center; }
+  .app .dots i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--pink); }
+  .app .dots i.f { background: var(--pink); }
+  .app .warnc { background: var(--yels); border-color: var(--yel); box-shadow: 0 5px 0 #F1D48A; }
+  .app .blockc { background: #FFF0F3; border-color: #FFC7D6; box-shadow: 0 5px 0 #FFD9E3; }
+  .app .okc { background: var(--mints); border-color: #BDEBDD; box-shadow: 0 5px 0 #CFF1E6; }
+  .app .lavc { background: var(--lavs); border-color: #D9CCFF; box-shadow: 0 5px 0 #E2D8FF; }
+  .app .thumb { height: 70px; border-radius: 14px; background: linear-gradient(135deg, #f3d3b5, #e7b38e); display: grid; place-items: center; font-size: 28px; }
+  .app .qr { width: 96px; height: 96px; border-radius: 12px; background:
+      conic-gradient(from 90deg at 30% 30%, #4A3B5C 0 25%, transparent 0 50%, #4A3B5C 0 75%, transparent 0) 0 0 / 16px 16px, #fff; border: 6px solid #fff; outline: 2px solid var(--line); margin: 0 auto; }
+  .app .bigcode { font-family: "Baloo 2", cursive; font-weight: 800; font-size: 30px; letter-spacing: 6px; text-align: center; color: var(--pinkt); }
+  .app .seg { display: flex; background: #fff; border: 2px solid var(--line); border-radius: 999px; padding: 3px; gap: 3px; }
+  .app .seg span { flex: 1; text-align: center; padding: 5px 4px; border-radius: 999px; font-weight: 900; font-size: 11px; color: var(--ink2); }
+  .app .seg span.on { background: var(--pink); color: #fff; }
+  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .tmini { border-radius: 14px; overflow: hidden; border: 2px solid var(--line); background: #fff; position: relative; }
+  .tmini .pv { height: 52px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .tmini .pv i { display: block; height: 10px; border-radius: 5px; }
+  .tmini .pv i.w { width: 60%; height: 7px; }
+  .tmini .nm { font-size: 10.5px; font-weight: 900; padding: 4px 7px 5px; }
+  .tmini.sel { border-color: var(--pinkd); box-shadow: 0 0 0 3px rgba(224, 89, 142, .25); }
+  .tmini .use { position: absolute; top: 4px; right: 4px; font-size: 8.5px; font-weight: 900; background: var(--pinkd); color: #fff; border-radius: 999px; padding: 1px 6px; }
+  .bear { --bg: #FFF8EC; --line: #F0DDC2; --ink: #4B3621; --ink2: #9C7B5A; --pink: #F6A623; --pinkd: #C47F0E; --pinkt: #9A5B00; --yels: #FFF1D6; --yel: #F6C56A; }
+  .bear .scr { background: var(--bg); }
+  .bear .bt { background: #F6A623; color: #4B3621; box-shadow: 0 4px 0 #C47F0E; }
+  .bear h5 { font-family: "Mitr", sans-serif; font-weight: 700; }
+  .bear .nav div.on { color: #9A5B00; }
+
+  /* ===== Cổng giáo viên: Bento Mềm ===== */
+  .tch { --bg: #F7F7FA; --card: #fff; --line: #E9EAF1; --ink: #15161E; --ink2: #6B6E80; --acc: #FF6B57; --acct: #C2412D; --acc2: #8A7CFF; --good: #22B07D; --goodt: #157A55; --warn: #F59E0B; --warnt: #9A5B00;
+    font-family: "Be Vietnam Pro", sans-serif; color: var(--ink); font-size: 12px; line-height: 1.45; font-weight: 500; }
+  .tch .scr { background: var(--bg); }
+  .tch .top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+  .tch .top h6 { font-size: 15px; font-weight: 800; flex: 1; }
+  .tch .top .ib { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-weight: 800; }
+  .tch .bd { flex: 1; padding: 6px 13px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .tch .c { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 10px 12px; box-shadow: 0 8px 20px -16px rgba(21, 22, 30, .35); position: relative; }
+  .tch .lb { font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 800; color: var(--ink2); }
+  .tch .bt { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 12px; font-weight: 800; font-size: 12px; color: #fff; background: #15161E; position: relative; }
+  .tch .bt.o { background: var(--acc); } .tch .bt.g { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .tch .row { display: flex; gap: 7px; } .tch .row > * { flex: 1; }
+  .tch .ip { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; color: var(--ink2); }
+  .tch .ip.hl { border-color: var(--acc2); background: #F4F2FF; color: var(--ink); }
+  .tch .tabs { display: flex; gap: 4px; background: #EEEFF5; border-radius: 999px; padding: 3px; }
+  .tch .tabs span { flex: 1; text-align: center; padding: 5px; border-radius: 999px; font-weight: 700; color: var(--ink2); font-size: 11px; }
+  .tch .tabs span.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+  .tch .st { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .tch .st:last-child { border: 0; }
+  .tch .av { width: 26px; height: 26px; border-radius: 50%; background: #FFE7E2; color: var(--acct); display: grid; place-items: center; font-weight: 800; font-size: 11px; flex-shrink: 0; }
+  .tch .bdg { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  .b-ok { background: #E6F7EF; color: #157A55; } .b-warn { background: #FFF6E5; color: #9A5B00; } .b-no { background: #F1F2F6; color: #6B6E80; } .b-red { background: #FDECEA; color: #B42318; }
+  .tch .bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; gap: 2px; }
+  .tch .bar i { display: block; height: 100%; }
+  .tch .code { font-size: 18px; font-weight: 800; letter-spacing: 2px; white-space: nowrap; }
+  .tch .row.tight .bt { padding: 8px 4px; font-size: 11px; white-space: nowrap; }
+
+  /* ===== Admin: bản Gấu ===== */
+  .dk { width: 100%; min-width: 980px; border-radius: 16px; overflow: hidden; border: 1px solid #E9D9BF; background: #FFF8EC; box-shadow: 0 30px 50px -30px rgba(75, 54, 33, .45);
+    font-family: "Nunito", sans-serif; font-weight: 600; color: #4B3621; font-size: 12px; line-height: 1.45; }
+  .dk .bar0 { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #F3E6D0; }
+  .dk .bar0 i { width: 10px; height: 10px; border-radius: 50%; background: #E5C9A0; }
+  .dk .bar0 span { margin-left: 10px; font-size: 11px; color: #8A6A4A; background: #FFF8EC; border-radius: 6px; padding: 2px 10px; }
+  .dk .shell { display: grid; grid-template-columns: 196px 1fr; min-height: 560px; }
+  .dk .side { background: #FFFFFF; border-right: 1px solid #F0DDC2; padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .dk .brand { display: flex; align-items: center; gap: 8px; padding: 0 6px 12px; }
+  .dk .brand b { font-family: "Mitr", sans-serif; font-size: 15px; color: #4B3621; display: block; line-height: 1.1; }
+  .dk .brand small { font-size: 10px; color: #8A6A4A; }
+  .dk .nv { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 12px; color: #6E5236; font-weight: 700; position: relative; }
+  .dk .nv.on { background: #FFF1D6; color: #4B3621; font-weight: 800; box-shadow: inset 4px 0 0 #F6A623; }
+  .dk .nv .cnt { margin-left: auto; font-size: 9.5px; background: #FB7185; color: #fff; border-radius: 999px; padding: 0 6px; font-weight: 800; }
+  .dk .tip { margin-top: auto; background: #FFF1D6; border-radius: 16px; padding: 10px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; font-size: 11px; }
+  .dk .me { display: flex; align-items: center; gap: 8px; padding: 10px 6px 0; border-top: 1px solid #F0DDC2; margin-top: 8px; font-size: 11px; }
+  .dk .avt { width: 28px; height: 28px; border-radius: 50%; background: #FFE2B3; color: #9A5B00; display: grid; place-items: center; font-weight: 900; font-size: 11px; flex-shrink: 0; }
+  .dk .main { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; position: relative; }
+  .dk .hd { display: flex; align-items: center; gap: 10px; height: 54px; border-bottom: 1px solid #F0DDC2; margin: 0 -18px; padding: 0 18px; background: rgba(255, 255, 255, .6); }
+  .dk .srch { flex: 1; max-width: 360px; background: #fff; border: 2px solid #F0DDC2; border-radius: 999px; padding: 6px 12px; color: #9C7B5A; }
+  .dk .clk { font-size: 11px; color: #8A6A4A; margin-left: auto; }
+  .dk .bell { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid #F0DDC2; display: grid; place-items: center; position: relative; }
+  .dk .bell em { position: absolute; top: -4px; right: -4px; font-style: normal; font-size: 9px; background: #FB7185; color: #fff; border-radius: 999px; padding: 0 5px; font-weight: 800; }
+  .dk h3 { font-family: "Mitr", sans-serif; font-size: 22px; font-weight: 700; color: #4B3621; }
+  .dk .sub2 { color: #8A6A4A; font-size: 12px; }
+  .dk .c { background: #fff; border: 1px solid #F0DDC2; border-radius: 22px; padding: 12px 14px; box-shadow: 0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, .18); min-width: 0; position: relative; }
+  .dk .lb { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 900; color: #8A6A4A; }
+  .dk .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .dk .kpi b { font-family: "Mitr", sans-serif; font-size: 24px; display: block; font-variant-numeric: tabular-nums; color: #4B3621; line-height: 1.2; margin-top: 2px; }
+  .dk .up { color: #047857; font-weight: 800; font-size: 11px; } .dk .dn { color: #BE123C; font-weight: 800; font-size: 11px; }
+  .dk .bt { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 13px; font-weight: 900; font-size: 11.5px; background: #F6A623; color: #4B3621; box-shadow: 0 3px 0 #C47F0E; position: relative; }
+  .dk .bt.g { background: #FFF1D6; color: #9A5B00; box-shadow: none; }
+  .dk .bt.r { background: #FFF1F2; color: #BE123C; box-shadow: none; }
+  .dk .segm { display: inline-flex; background: #fff; border: 2px solid #F0DDC2; border-radius: 999px; padding: 2px; }
+  .dk .segm span { padding: 3px 11px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #8A6A4A; }
+  .dk .segm span.on { background: #F6A623; color: #4B3621; }
+  .dk table { font-size: 11.5px; } .dk th { font-size: 9.5px; color: #8A6A4A; background: #FFF8EC; padding: 7px 9px; letter-spacing: 1px; }
+  .dk td { padding: 7px 9px; color: #5A4330; border-bottom: 1px solid #F6EBD9; }
+  .dk tr.bad td { background: #FFF1F2; }
+  .dk .pill { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+  .p-learn { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; } .p-done { background: #ECFDF5; color: #047857; border-color: #A7F3D0; }
+  .p-att { background: #FFF1D6; color: #9A5B00; border-color: #F6C56A; } .p-bad { background: #FFF1F2; color: #BE123C; border-color: #FECDD3; }
+  .dk .bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; border-bottom: 1px solid #F0DDC2; }
+  .dk .bars i { flex: 1; background: #FFD98A; border-radius: 5px 5px 0 0; display: block; }
+  .dk .bars i.pk { background: #F6A623; }
+  .dk .hx { display: flex; gap: 6px; font-size: 9px; color: #8A6A4A; } .dk .hx span { flex: 1; text-align: center; }
+  .dk .stack { display: flex; height: 14px; border-radius: 8px; overflow: hidden; gap: 2px; }
+  .dk .stack i { display: block; }
+  .dk .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: #fff; border-left: 1px solid #F0DDC2; box-shadow: -20px 0 40px -20px rgba(75, 54, 33, .35); padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; z-index: 4; overflow: hidden; }
+  .dk .ipt { background: #fff; border: 2px solid #F0DDC2; border-radius: 14px; padding: 7px 11px; color: #9C7B5A; }
+  .dk .ipt.on { border-color: #F6A623; box-shadow: 0 0 0 4px rgba(246, 166, 35, .2); color: #4B3621; }
+  .dk .tabs2 { display: flex; gap: 4px; flex-wrap: wrap; }
+  .dk .tabs2 span { padding: 5px 11px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #8A6A4A; background: #fff; border: 1px solid #F0DDC2; }
+  .dk .tabs2 span.on { background: #4B3621; color: #FFF8EC; border-color: #4B3621; }
+  .dk .tg { width: 30px; height: 17px; border-radius: 999px; background: #10B981; position: relative; display: inline-block; vertical-align: middle; }
+  .dk .tg::after { content: ""; position: absolute; right: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; }
+  .dk .tg.off { background: #E5D6C1; } .dk .tg.off::after { right: auto; left: 2px; }
+  .dk .savebar { position: absolute; left: 14px; right: 14px; bottom: 12px; background: #4B3621; color: #FFF8EC; border-radius: 16px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; font-size: 11.5px; }
+  .dk .savebar .bt { margin-left: auto; }
+  .dk .heat { display: grid; grid-template-columns: 30px repeat(8, 1fr); gap: 3px; font-size: 9px; color: #8A6A4A; }
+  .dk .heat i { display: block; height: 15px; border-radius: 4px; background: #F6A623; }
+  .dk .keypad { display: grid; grid-template-columns: repeat(3, 52px); gap: 9px; justify-content: center; }
+  .dk .keypad span { height: 44px; border-radius: 999px; background: #fff; border: 2px solid #F0DDC2; box-shadow: 0 3px 0 #F0DDC2; display: grid; place-items: center; font-family: "Mitr", sans-serif; font-size: 17px; color: #4B3621; }
+  .dk .pdots { display: flex; gap: 12px; justify-content: center; } .dk .pdots i { width: 15px; height: 15px; border-radius: 50%; border: 2.5px solid #F6A623; } .dk .pdots i.f { background: #F6A623; }
+  .dkwrap { overflow-x: auto; padding-bottom: 6px; min-width: 0; max-width: 100%; }
+  .grid2 > *, .grid3 > *, .shots > *, .flowbox { min-width: 0; }
+  .theme-btn { position: fixed; right: 16px; bottom: 16px; z-index: 30; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 700 13px "Be Vietnam Pro", sans-serif; box-shadow: var(--sh); cursor: pointer; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0 60px; }
+  @media (max-width: 860px) { .grid3, .grid2 { grid-template-columns: 1fr; } }
+  @media print { nav.toc, .theme-btn { display: none; } .card, .shot { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="bear" viewBox="0 0 64 64"><circle cx="15" cy="15" r="9" fill="#C98A4B"/><circle cx="49" cy="15" r="9" fill="#C98A4B"/><circle cx="15" cy="15" r="4.5" fill="#F3C9A0"/><circle cx="49" cy="15" r="4.5" fill="#F3C9A0"/><circle cx="32" cy="35" r="23" fill="#D99A5B"/><ellipse cx="32" cy="43" rx="10.5" ry="8" fill="#F6DDBF"/><circle cx="23.5" cy="31" r="2.7" fill="#3B2A1A"/><circle cx="40.5" cy="31" r="2.7" fill="#3B2A1A"/><ellipse cx="32" cy="39.5" rx="3.3" ry="2.5" fill="#3B2A1A"/><path d="M28 45 q4 3.2 8 0" stroke="#3B2A1A" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="18" cy="39" r="3.2" fill="#F4A7A0" opacity=".65"/><circle cx="46" cy="39" r="3.2" fill="#F4A7A0" opacity=".65"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="#F6A623" stroke="#9A5B00" stroke-width="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#9A5B00" stroke-width="1.8"/></symbol>
+</defs></svg>
+
+<header class="hero wrap">
+  <div class="eyebrow">Kèm Con Học · Bản chốt để review</div>
+  <h1>Giao diện và thao tác từng màn</h1>
+  <p>Mỗi tính năng gồm: lưu đồ luồng chính, bản vẽ từng màn đã chốt, và danh sách thao tác. <b>Số đỏ</b> trên bản vẽ ứng với số trong danh sách "bấm gì, ra gì" bên dưới. Nội dung khớp với 7 file prompt (00 đến 06) trong cùng thư mục; chỗ nào anh chị muốn đổi, ghi chú theo mã màn (ví dụ "1B, thao tác 3").</p>
+</header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#quy-uoc">Quy ước chung</a><a href="#s00">00 Nền tảng</a><a href="#s01">01 Giao diện</a><a href="#s02">02 Ảnh ngoài phạm vi</a><a href="#s03">03 Gia đình & Zalo</a><a href="#s04">04 Giáo viên</a><a href="#s05">05 Admin bản Gấu</a><a href="#s06">06 Sửa lỗi nhanh</a><a href="#chot">Điểm cần chốt</a>
+</div></nav>
+
+<main class="wrap">
+
+  <!-- ================= QUY ƯỚC ================= -->
+  <section class="feat" id="quy-uoc">
+    <div class="sec-h"><div class="n">Áp dụng cho mọi màn</div><h2>Quy ước chung</h2></div>
+    <div class="grid3" style="margin-top:14px">
+      <div class="card"><h4>3 phong cách, 3 người dùng</h4><ul style="padding-left:18px;margin-top:6px;font-size:14px;display:grid;gap:5px">
+        <li><b>App phụ huynh:</b> 8 bộ giao diện, mặc định <b>Kẹo Bông</b>. Bản vẽ dưới đây dùng Kẹo Bông; đổi bộ chỉ đổi màu, font, trang trí, không đổi bố cục.</li>
+        <li><b>Cổng giáo viên:</b> cố định phong cách <b>Bento Mềm</b> (sáng, gọn), chữ Be Vietnam Pro. Cô dùng hằng ngày trên điện thoại, cần rõ ràng hơn là vui mắt.</li>
+        <li><b>Admin:</b> <b>bản Gấu</b> (mật ong, kem, mascot gấu), bố cục theo các màn xanh dương của Stitch.</li></ul></div>
+      <div class="card"><h4>Thao tác chung</h4><ul style="padding-left:18px;margin-top:6px;font-size:14px;display:grid;gap:5px">
+        <li>Mỗi màn chỉ <b>một nút chính</b> (màu đậm nhất); nút phụ dạng viền.</li>
+        <li>Vùng bấm tối thiểu 44 x 44 px trên điện thoại.</li>
+        <li>Thông báo nhanh (toast) hiện 3 giây ở cuối màn, không chặn thao tác.</li>
+        <li>Việc không hoàn tác được (xoá gia đình, xoá thành viên, rời lớp) phải xác nhận; xoá gia đình phải gõ lại tên.</li>
+        <li>Giữ nguyên các cơ chế đang có: giữ 1,5 giây xem đáp án bậc, giữ 2 giây xem đáp án cuối.</li><li><b>Xưng hô</b> theo người đang dùng máy: Mẹ / Bố / Ông / Bà (biến <code>{xung_ho}</code>); bản vẽ dùng "Mẹ" làm ví dụ.</li><li><b>Thang tự đánh giá</b> thống nhất: Con tự làm được / Con cần gợi ý / Mẹ (Bố) hướng dẫn nhiều.</li><li><b>Tên vai trò:</b> Chủ nhà, Kèm con, Chỉ xem.</li></ul></div>
+      <div class="card"><h4>Trạng thái bắt buộc</h4><ul style="padding-left:18px;margin-top:6px;font-size:14px;display:grid;gap:5px">
+        <li><b>Đang tải:</b> khung xương mờ đúng hình nội dung, không dùng vòng xoay toàn màn.</li>
+        <li><b>Trống:</b> minh hoạ (mặt cười Kẹo Bông, gấu ở admin) + 1 câu + 1 nút làm tiếp.</li>
+        <li><b>Lỗi:</b> lời nhắn dễ hiểu + nút "Thử lại"; không hiện mã lỗi kỹ thuật cho phụ huynh.</li>
+        <li><b>Mất mạng:</b> dải vàng trên cùng "Đang ngoại tuyến, sẽ đồng bộ khi có mạng".</li></ul></div>
+    </div>
+    <div class="legend"><span><i style="background:var(--fc-start);border-color:var(--fc-start-line)"></i>Bắt đầu</span><span><i style="background:var(--fc-end);border-color:var(--fc-end-line)"></i>Kết thúc</span><span><i style="background:var(--fc-dec);border-color:var(--fc-dec-line);transform:rotate(45deg) scale(.8)"></i>Rẽ nhánh</span><span><i style="background:var(--fc-box);border-color:var(--fc-box-line)"></i>Bước xử lý</span><span><i style="background:var(--fc-note);border-color:var(--fc-note-line);border-style:dashed"></i>Thông báo / quay lại</span><span>Mũi tên nét đứt: vòng lặp quay lại bước trước</span></div>
+  </section>
+
+  <!-- ================= 00 ================= -->
+  <section class="feat" id="s00">
+    <div class="sec-h"><div class="n">Prompt 00 · nền tảng</div><h2>Hai màn mới do nền tảng tài khoản</h2><p>Phần lớn prompt 00 chạy ở máy chủ; phụ huynh chỉ thấy 2 thay đổi dưới đây.</p></div>
+    <div class="shots" style="margin-top:14px">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:30</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:18px">
+            <div style="text-align:center"><span class="face" style="color:#C2447A;font-size:22px">• ‿ •</span><h5 style="font-size:18px">Bảo vệ dữ liệu của nhà Mít</h5><span style="color:var(--ink2)">Kèm Con Học vừa nâng cấp bảo mật. Mẹ nhập lại mật khẩu gia đình <b>một lần</b> nhé, các lần sau không cần.</span></div>
+            <span class="lb">Mật khẩu gia đình</span><div class="ip on">••••••</div>
+            <div class="bt">Tiếp tục <span class="mk">1</span></div>
+            <div style="text-align:center;color:var(--ink2);font-weight:800">Quên mật khẩu? Liên hệ Kèm Con Học để đặt lại</div>
+          </div>
+        </div></div>
+        <span class="cap">0A · Nhập lại mật khẩu một lần</span><h4>Chỉ với máy đang đăng nhập kiểu cũ</h4>
+        <ol class="ops"><li><span class="k">1</span><span>Đúng mật khẩu → có phiên đăng nhập mới, vào màn chính như cũ, không mất dữ liệu. Sai 5 lần → tạm khoá 15 phút (theo mạng đang dùng + gia đình).</span></li></ol>
+      </div>
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:40</span><span>●●● ▮</span></div>
+          <div class="top"><h6 style="opacity:.4">Con tôi</h6></div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <h5 style="font-size:16px;color:#C93A3A">Xoá toàn bộ dữ liệu của nhà Mít?</h5>
+            <span style="color:var(--ink2)">Xoá vĩnh viễn: hồ sơ các con, sticker, lịch sử học, thành viên, link báo cáo, kết nối lớp học. Mọi máy sẽ bị đăng xuất.</span>
+            <span class="lb">Nhập mật khẩu gia đình để xác nhận</span><div class="ip">••••••</div>
+            <div class="bt" style="background:#C93A3A;box-shadow:0 4px 0 #8E2424">🗑 Xoá vĩnh viễn <span class="mk">2</span></div>
+            <div class="bt g">Huỷ</div>
+          </div>
+        </div></div>
+        <span class="cap">0B · Xoá toàn bộ dữ liệu</span><h4>Quyền xoá của phụ huynh</h4>
+        <ol class="ops"><li><span class="k">2</span><span>Chỉ chủ nhà thấy nút này. Đúng mật khẩu → xoá dây chuyền mọi bảng ở máy chủ, đăng xuất mọi máy, về màn đăng nhập.</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 01 ================= -->
+  <section class="feat" id="s01">
+    <div class="sec-h"><div class="n">Tính năng 01 · prompt 01</div><h2>Giao diện theo sở thích gia đình</h2><p>Bố mẹ chọn 1 trong 8 bộ, cả app đổi ngay để xem thử; bấm xác nhận mới lưu cho cả nhà.</p></div>
+    <div class="sub">Lưu đồ <span class="tag t-pink">Chọn giao diện</span></div>
+    <div class="card flowbox"><svg class="flowsvg" viewBox="0 0 1000 760" role="img" aria-label="Luồng chọn giao diện cả nhà"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M500.0 58.0 L500.0 102.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 158.0 L500.0 193.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 257.0 L500.0 308.0" marker-end="url(#ah)"/><path class="fc-edge" d="M400.0 350.0 L220.0 350.0 L220.0 438.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="252.0" y="340.0" width="116.0" height="20" rx="10"/><text class="fc-lbl" x="310.0" y="350.5" text-anchor="middle" dominant-baseline="middle">Dùng cho cả nhà</text><path class="fc-edge" d="M220.0 502.0 L220.0 548.0" marker-end="url(#ah)"/><path class="fc-edge" d="M220.0 612.0 L220.0 668.0" marker-end="url(#ah)"/><path class="fc-edge" d="M600.0 350.0 L780.0 350.0 L780.0 442.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="635.6" y="340.0" width="108.8" height="20" rx="10"/><text class="fc-lbl" x="690.0" y="350.5" text-anchor="middle" dominant-baseline="middle">Thôi / rời màn</text><path class="fc-edge" d="M780.0 498.0 L780.0 668.0" marker-end="url(#ah)"/><path class="fc-edge dash" d="M500.0 308.0 L500.0 300.0 L560.0 300.0 L780.0 300.0 L780.0 253.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="626.4" y="290.0" width="87.2" height="20" rx="10"/><text class="fc-lbl" x="670.0" y="300.5" text-anchor="middle" dominant-baseline="middle">Thử bộ khác</text><path class="fc-edge dash" d="M695.0 225.0 L665.0 225.0" marker-end="url(#ah)"/><rect class="fc-start" x="360.0" y="14.0" width="280" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="500" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Con tôi → 🎨 Giao diện cả nhà</tspan></text><rect class="fc-proc" x="380.0" y="102.0" width="240" height="56" rx="12"/><text class="fc-t" x="500" y="130.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Bấm thẻ một bộ giao diện</tspan></text><rect class="fc-proc" x="335.0" y="193.0" width="330" height="64" rx="12"/><text class="fc-t" x="500" y="217.2" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Cả app đổi ngay để xem thử</tspan><tspan x="500" dy="15.5">thanh dưới: Dùng cho cả nhà / Thôi</tspan></text><polygon class="fc-dec" points="500,308.0 600.0,350 500,392.0 400.0,350"/><text class="fc-t fc-t-dec" x="500" y="350.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Mẹ chọn gì?</tspan></text><rect class="fc-proc" x="115.0" y="438.0" width="210" height="64" rx="12"/><text class="fc-t" x="220" y="462.2" text-anchor="middle" dominant-baseline="middle"><tspan x="220" dy="0">Lưu theme vào</tspan><tspan x="220" dy="15.5">dữ liệu gia đình</tspan></text><rect class="fc-proc" x="95.0" y="548.0" width="250" height="64" rx="12"/><text class="fc-t" x="220" y="572.2" text-anchor="middle" dominant-baseline="middle"><tspan x="220" dy="0">Máy khác của nhà đổi theo</tspan><tspan x="220" dy="15.5">sau lần đồng bộ kế tiếp</tspan></text><rect class="fc-end" x="95.0" y="668.0" width="250" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="220" y="690.0" text-anchor="middle" dominant-baseline="middle"><tspan x="220" dy="0">Giao diện mới cho cả nhà</tspan></text><rect class="fc-proc" x="665.0" y="442.0" width="230" height="56" rx="12"/><text class="fc-t" x="780" y="470.0" text-anchor="middle" dominant-baseline="middle"><tspan x="780" dy="0">Quay về bộ đang dùng</tspan></text><rect class="fc-end" x="680.0" y="668.0" width="200" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="780" y="690.0" text-anchor="middle" dominant-baseline="middle"><tspan x="780" dy="0">Không đổi gì</tspan></text><rect class="fc-proc" x="695.0" y="197.0" width="170" height="56" rx="12"/><text class="fc-t" x="780" y="225.0" text-anchor="middle" dominant-baseline="middle"><tspan x="780" dy="0">Bấm thẻ khác</tspan></text></svg></div>
+
+    <div class="sub">Màn hình</div>
+    <div class="shots">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:45</span><span>●●● ▮</span></div>
+          <div class="top"><h6>Con tôi</h6></div>
+          <div class="bd">
+            <div class="c" style="display:flex;gap:10px;align-items:center"><div class="e" style="width:42px;height:42px;border-radius:14px;background:#FFE1EC;display:grid;place-items:center;font-size:22px">🧒</div><div><h5 style="font-size:16px">Mít · Lớp 3</h5><span style="color:var(--ink2)">Kết nối tri thức · 12 sticker</span></div></div>
+            <div class="c" style="padding:4px 12px">
+              <div class="li"><span class="e">📒</span><span class="t">Sổ sticker</span>›</div>
+              <div class="li"><span class="e">🎨</span><span class="t">Giao diện cả nhà <small>Mọi máy của nhà dùng chung</small></span><span class="chip on">Kẹo Bông</span><span class="mk">1</span></div>
+              <div class="li"><span class="e">👨‍👩‍👧</span><span class="t">Thành viên gia đình <small>3 người</small></span>›</div>
+              <div class="li"><span class="e">🏫</span><span class="t">Lớp học của con <small>Lớp 3A · cô Hạnh</small></span>›</div>
+              <div class="li"><span class="e">📅</span><span class="t">Lịch chia ca</span>›</div>
+              <div class="li"><span class="e">🔊</span><span class="t">Âm thanh</span>›</div>
+            </div>
+            <div class="bt g">Đăng xuất</div>
+          </div>
+          <div class="nav"><div><i>🌙</i>Học tối nay</div><div><i>🎲</i>Trò chơi</div><div><i>📊</i>Báo cáo</div><div class="on"><i>🧒</i>Con tôi</div></div>
+        </div></div>
+        <span class="cap">1A · Con tôi</span><h4>Điểm vào chọn giao diện</h4>
+        <ol class="ops"><li><span class="k">1</span><span>Bấm <b>"🎨 Giao diện cả nhà"</b> → mở màn 1B. Nhãn bên phải luôn hiện tên bộ đang dùng.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:45</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Giao diện cả nhà</h6></div>
+          <div class="bd" style="gap:7px">
+            <span style="color:var(--ink2)">Chọn giao diện con thích. Mọi máy của nhà sẽ đổi theo.</span>
+            <div class="tgrid">
+              <div class="tmini"><div class="pv" style="background:#0B1026"><i style="background:#22D3EE"></i><i class="w" style="background:#A78BFA"></i></div><div class="nm">Cực Quang</div></div>
+              <div class="tmini"><div class="pv" style="background:#FFF7E6"><i style="background:#FF4F8B;border:2px solid #1B1B2F"></i><i class="w" style="background:#FFC928"></i></div><div class="nm">Sticker Studio</div></div>
+              <div class="tmini"><div class="pv" style="background:#F6F1E7"><i style="background:#C4613A"></i><i class="w" style="background:#7D9A6B"></i></div><div class="nm">Sổ Tay Buổi Tối</div></div>
+              <div class="tmini"><div class="pv" style="background:#F7F7FA"><i style="background:linear-gradient(90deg,#FF6B57,#8A7CFF)"></i><i class="w" style="background:#15161E"></i></div><div class="nm">Bento Mềm</div></div>
+              <div class="tmini"><div class="pv" style="background:#0F2A24"><i style="background:#FFD166"></i><i class="w" style="background:#6EE7B7"></i></div><div class="nm">Khu Vườn Đêm</div></div>
+              <div class="tmini"><div class="pv" style="background:#2F4A41"><i style="background:#F9E07F"></i><i class="w" style="background:#F7A1C4"></i></div><div class="nm">Bảng Phấn</div></div>
+              <div class="tmini sel"><span class="use">Đang dùng</span><div class="pv" style="background:#FFF4F8"><i style="background:#FF8FB8"></i><i class="w" style="background:#B9A3FF"></i></div><div class="nm">Kẹo Bông</div></div>
+              <div class="tmini" style="position:relative"><span class="mk abs" style="top:-6px;left:-6px">2</span><div class="pv" style="background:#FFF8EC"><i style="background:#F6A623"></i><i class="w" style="background:#7FB7F5"></i></div><div class="nm">Bạn Gấu 🧸</div></div>
+            </div>
+            <div class="lb" style="margin-top:2px">Hiệu ứng <span class="mk">3</span></div>
+            <div class="seg"><span class="on">Đầy đủ</span><span>Nhẹ</span><span>Tắt</span></div>
+          </div>
+        </div></div>
+        <span class="cap">1B · Chọn giao diện</span><h4>8 thẻ xem trước, vẽ bằng chính màu của bộ</h4>
+        <ol class="ops"><li><span class="k">2</span><span>Bấm một thẻ → <b>cả app đổi ngay</b> (mờ dần 0,25 giây), vẫn ở màn này; thẻ được chọn có viền sáng; thanh xem thử hiện ở dưới (màn 1C).</span></li>
+          <li><span class="k">3</span><span>Hiệu ứng: <b>Đầy đủ</b> (mặc định) / <b>Nhẹ</b> (giữ màu, tắt trang trí chuyển động) / <b>Tắt</b> (không chuyển động). Áp dụng ngay, lưu cùng lúc với giao diện.</span></li>
+          <li><span class="k s">·</span><span>Admin tắt bộ nào thì bộ đó không hiện ở đây.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app bear"><div class="scr"><div class="notch"></div><div class="sb"><span>20:46</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:10px">
+            <div><span class="lb" style="color:#9A5B00">Thứ tư 21/10 · Lớp 3</span><h5 style="font-size:21px">Chào buổi tối, mẹ 🐻</h5><span style="color:var(--ink2)">Tối nay Mít học gì?</span></div>
+            <div class="c" style="background:#FFF1D6"><svg width="34" height="34" style="position:absolute;right:10px;top:8px"><use href="#bear"/></svg><h5 style="font-size:16px">Bài tối nay</h5><span style="color:var(--ink2)">Chụp vở, gõ hoặc đọc đề</span>
+              <div class="row" style="margin-top:8px"><div class="c" style="padding:7px;text-align:center;box-shadow:none">📷<br>Chụp vở</div><div class="c" style="padding:7px;text-align:center;box-shadow:none">⌨️<br>Gõ đề</div><div class="c" style="padding:7px;text-align:center;box-shadow:none;background:#F6A623">🎙️<br>Đọc đề</div></div></div>
+            <div class="row"><div class="c"><b>🎲 Trò chơi 5 phút</b></div><div class="c"><b>🫧 Góc hạ hoả</b></div></div>
+            <div style="flex:1"></div>
+            <div class="c" style="background:#4B3621;color:#FFF8EC;border-color:#4B3621;box-shadow:none;display:grid;gap:7px">
+              <span>Đang xem thử: <b style="color:#FFD98A">Bạn Gấu</b></span>
+              <div class="row"><div class="bt g" style="color:#4B3621">Thôi <span class="mk">5</span></div><div class="bt">Dùng cho cả nhà <span class="mk">4</span></div></div>
+            </div>
+          </div>
+        </div></div>
+        <span class="cap">1C · Đang xem thử</span><h4>Cả app đã đổi, chờ xác nhận</h4>
+        <ol class="ops"><li><span class="k">4</span><span><b>"Dùng cho cả nhà"</b> → lưu vào dữ liệu gia đình, toast "Đã đổi giao diện cho cả nhà". Máy khác của nhà đổi ở lần đồng bộ kế tiếp.</span></li>
+          <li><span class="k">5</span><span><b>"Thôi"</b>, bấm quay lại, hoặc chuyển sang tab khác → về bộ đang dùng, không lưu gì.</span></li></ol>
+        <div class="state"><b>Ngoại tuyến:</b> vẫn đổi được trên máy này, tự lưu lên khi có mạng.</div>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>19:30</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:12px">
+            <span class="lb">Bước 3/3 · tuỳ chọn</span>
+            <h5>Chọn giao diện con thích</h5>
+            <span style="color:var(--ink2)">Để con cùng chọn nhé. Đổi lại lúc nào cũng được ở "Con tôi".</span>
+            <div class="tgrid">
+              <div class="tmini sel"><div class="pv" style="background:#FFF4F8"><i style="background:#FF8FB8"></i><i class="w" style="background:#B9A3FF"></i></div><div class="nm">Kẹo Bông</div></div>
+              <div class="tmini"><div class="pv" style="background:#FFF8EC"><i style="background:#F6A623"></i><i class="w" style="background:#7FB7F5"></i></div><div class="nm">Bạn Gấu</div></div>
+              <div class="tmini"><div class="pv" style="background:#0F2A24"><i style="background:#FFD166"></i><i class="w" style="background:#6EE7B7"></i></div><div class="nm">Khu Vườn Đêm</div></div>
+              <div class="tmini"><div class="pv" style="background:#F7F7FA"><i style="background:linear-gradient(90deg,#FF6B57,#8A7CFF)"></i><i class="w" style="background:#15161E"></i></div><div class="nm">Bento Mềm</div></div>
+            </div>
+            <span style="color:var(--ink2);text-align:center">Xem thêm 4 bộ ›</span>
+            <div style="flex:1"></div>
+            <div class="bt">Xong, bắt đầu <span class="mk">6</span></div>
+            <div style="text-align:center;font-weight:900;color:var(--ink2)">Để sau <span class="mk">7</span></div>
+          </div>
+        </div></div>
+        <span class="cap">1D · Onboarding</span><h4>Bước tuỳ chọn khi tạo gia đình</h4>
+        <ol class="ops"><li><span class="k">6</span><span>Chọn bộ rồi bấm <b>"Xong, bắt đầu"</b> → lưu và vào màn chính bằng bộ đã chọn.</span></li>
+          <li><span class="k">7</span><span><b>"Để sau"</b> → dùng bộ mặc định admin đặt (hiện là Kẹo Bông).</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 02 ================= -->
+  <section class="feat" id="s02">
+    <div class="sec-h"><div class="n">Tính năng 02 · prompt 02</div><h2>Ảnh và đề ngoài phạm vi</h2><p>Phân loại ngay ở bước đọc đề (không thêm thời gian chờ), hiện thẻ thân thiện theo luật admin cấu hình.</p></div>
+    <div class="sub">Lưu đồ <span class="tag t-amber">Kiểm tra phạm vi</span></div>
+    <div class="card flowbox"><svg class="flowsvg" viewBox="0 0 1040 1140" role="img" aria-label="Luồng kiểm tra phạm vi đề bài"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M520.0 58.0 L520.0 93.0" marker-end="url(#ah)"/><path class="fc-edge" d="M425.0 135.0 L280.0 135.0 L280.0 208.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="337.7" y="125.0" width="29.6" height="20" rx="10"/><text class="fc-lbl" x="352.5" y="135.5" text-anchor="middle" dominant-baseline="middle">Ảnh</text><path class="fc-edge" d="M615.0 135.0 L760.0 135.0 L760.0 208.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="633.1" y="125.0" width="108.8" height="20" rx="10"/><text class="fc-lbl" x="687.5" y="135.5" text-anchor="middle" dominant-baseline="middle">Gõ / giọng nói</text><path class="fc-edge" d="M760.0 272.0 L760.0 317.0" marker-end="url(#ah)"/><path class="fc-edge" d="M840.0 355.0 L940.0 355.0 L940.0 423.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="871.6" y="345.0" width="36.8" height="20" rx="10"/><text class="fc-lbl" x="890.0" y="355.5" text-anchor="middle" dominant-baseline="middle">Chưa</text><path class="fc-edge" d="M760.0 393.0 L760.0 470.0 L630.0 470.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="745.2" y="406.1" width="29.6" height="20" rx="10"/><text class="fc-lbl" x="760.0" y="416.6" text-anchor="middle" dominant-baseline="middle">Rồi</text><path class="fc-edge" d="M940.0 487.0 L940.0 520.0 L690.0 520.0 L690.0 470.0 L630.0 470.0" marker-end="url(#ah)"/><path class="fc-edge" d="M280.0 272.0 L280.0 470.0 L410.0 470.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 515.0 L520.0 545.0 L95.0 545.0 L95.0 581.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 515.0 L520.0 545.0 L265.0 545.0 L265.0 581.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 515.0 L520.0 545.0 L435.0 545.0 L435.0 581.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 515.0 L520.0 545.0 L605.0 545.0 L605.0 581.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 515.0 L520.0 545.0 L775.0 545.0 L775.0 581.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 515.0 L520.0 545.0 L945.0 545.0 L945.0 581.0" marker-end="url(#ah)"/><path class="fc-edge dash" d="M95.0 659.0 L95.0 700.0 L18.0 700.0 L18.0 36.0 L390.0 36.0" marker-end="url(#ah)"/><path class="fc-edge dash" d="M265.0 659.0 L265.0 690.0 L30.0 690.0 L30.0 36.0 L390.0 36.0" marker-end="url(#ah)"/><path class="fc-edge" d="M435.0 659.0 L435.0 700.0 L520.0 700.0 L520.0 738.0" marker-end="url(#ah)"/><path class="fc-edge" d="M605.0 659.0 L605.0 700.0 L520.0 700.0 L520.0 738.0" marker-end="url(#ah)"/><path class="fc-edge" d="M775.0 659.0 L775.0 770.0 L660.0 770.0" marker-end="url(#ah)"/><path class="fc-edge" d="M945.0 659.0 L945.0 730.0" marker-end="url(#ah)"/><path class="fc-edge" d="M860.0 770.0 L820.0 770.0 L660.0 770.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="728.8" y="760.0" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="740.0" y="770.5" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M945.0 810.0 L945.0 868.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="923.0" y="829.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="945.0" y="839.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge dash" d="M1030.0 900.0 L1030.0 900.0 L1030.0 36.0 L650.0 36.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 802.0 L520.0 852.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 908.0 L520.0 943.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 1027.0 L520.0 1078.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="498.0" y="1042.5" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="520.0" y="1053.0" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge" d="M430.0 985.0 L350.0 985.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="378.8" y="975.0" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="390.0" y="985.5" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge dash" d="M230.0 955.0 L230.0 770.0 L380.0 770.0" marker-end="url(#ah)"/><rect class="fc-start" x="390.0" y="14.0" width="260" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="520" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Mẹ chụp, gõ hoặc đọc đề</tspan></text><polygon class="fc-dec" points="520,93.0 615.0,135 520,177.0 425.0,135"/><text class="fc-t fc-t-dec" x="520" y="135.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Ảnh hay chữ?</tspan></text><rect class="fc-proc" x="160.0" y="208.0" width="240" height="64" rx="12"/><text class="fc-t" x="280" y="232.2" text-anchor="middle" dominant-baseline="middle"><tspan x="280" dy="0">Đọc ảnh + phân loại</tspan><tspan x="280" dy="15.5">(gộp trong 1 lần gọi AI)</tspan></text><rect class="fc-proc" x="645.0" y="208.0" width="230" height="64" rx="12"/><text class="fc-t" x="760" y="232.2" text-anchor="middle" dominant-baseline="middle"><tspan x="760" dy="0">Luật nhanh</tspan><tspan x="760" dy="15.5">(độ dài, từ khoá, làm hộ)</tspan></text><polygon class="fc-dec" points="760,317.0 840.0,355 760,393.0 680.0,355"/><text class="fc-t fc-t-dec" x="760" y="355.0" text-anchor="middle" dominant-baseline="middle"><tspan x="760" dy="0">Đủ chắc?</tspan></text><rect class="fc-proc" x="855.0" y="423.0" width="170" height="64" rx="12"/><text class="fc-t" x="940" y="447.2" text-anchor="middle" dominant-baseline="middle"><tspan x="940" dy="0">AI phân loại chữ</tspan><tspan x="940" dy="15.5">(tối đa 6 giây)</tspan></text><polygon class="fc-dec" points="520,425.0 630.0,470 520,515.0 410.0,470"/><text class="fc-t fc-t-dec" x="520" y="470.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Thuộc loại nào?</tspan></text><rect class="fc-proc" x="15.0" y="581.0" width="160" height="78" rx="12"/><text class="fc-t" x="95" y="604.5" text-anchor="middle" dominant-baseline="middle"><tspan x="95" dy="0">Chặn: không phải</tspan><tspan x="95" dy="15.5">bài, nhạy cảm,</tspan><tspan x="95" dy="15.5">không liên quan</tspan></text><rect class="fc-proc" x="190.0" y="581.0" width="150" height="78" rx="12"/><text class="fc-t" x="265" y="612.2" text-anchor="middle" dominant-baseline="middle"><tspan x="265" dy="0">Ảnh mờ: gợi ý</tspan><tspan x="265" dy="15.5">cách chụp lại</tspan></text><rect class="fc-proc" x="360.0" y="581.0" width="150" height="78" rx="12"/><text class="fc-t" x="435" y="612.2" text-anchor="middle" dominant-baseline="middle"><tspan x="435" dy="0">Bài tập</tspan><tspan x="435" dy="15.5">hợp lệ</tspan></text><rect class="fc-proc" x="525.0" y="581.0" width="160" height="78" rx="12"/><text class="fc-t" x="605" y="604.5" text-anchor="middle" dominant-baseline="middle"><tspan x="605" dy="0">Nhờ làm hộ: thêm</tspan><tspan x="605" dy="15.5">khung &quot;chỉ gợi</tspan><tspan x="605" dy="15.5">dàn ý&quot;</tspan></text><rect class="fc-proc" x="700.0" y="581.0" width="150" height="78" rx="12"/><text class="fc-t" x="775" y="612.2" text-anchor="middle" dominant-baseline="middle"><tspan x="775" dy="0">Nhiều bài:</tspan><tspan x="775" dy="15.5">mẹ chọn 1 bài</tspan></text><rect class="fc-proc" x="865.0" y="581.0" width="160" height="78" rx="12"/><text class="fc-t" x="945" y="604.5" text-anchor="middle" dominant-baseline="middle"><tspan x="945" dy="0">Cảnh báo: lệch</tspan><tspan x="945" dy="15.5">lớp, ngoài CT,</tspan><tspan x="945" dy="15.5">môn chưa hỗ trợ</tspan></text><polygon class="fc-dec" points="945,730.0 1030.0,770 945,810.0 860.0,770"/><text class="fc-t fc-t-dec" x="945" y="770.0" text-anchor="middle" dominant-baseline="middle"><tspan x="945" dy="0">Vẫn tiếp tục?</tspan></text><rect class="fc-proc" x="860.0" y="868.0" width="170" height="64" rx="12"/><text class="fc-t" x="945" y="892.2" text-anchor="middle" dominant-baseline="middle"><tspan x="945" dy="0">Sửa hồ sơ con</tspan><tspan x="945" dy="15.5">hoặc chụp lại</tspan></text><rect class="fc-proc" x="380.0" y="738.0" width="280" height="64" rx="12"/><text class="fc-t" x="520" y="762.2" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Ô soát đề: mẹ xem, sửa</tspan><tspan x="520" dy="15.5">(sửa thì chạy lại luật chữ)</tspan></text><rect class="fc-proc" x="390.0" y="852.0" width="260" height="56" rx="12"/><text class="fc-t" x="520" y="880.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Soạn bài giảng gợi mở (p3)</tspan></text><polygon class="fc-dec" points="520,943.0 610.0,985 520,1027.0 430.0,985"/><text class="fc-t fc-t-dec" x="520" y="977.8" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">AI báo đề</tspan><tspan x="520" dy="14.5">chưa rõ?</tspan></text><rect class="fc-end" x="400.0" y="1078.0" width="240" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="520" y="1100.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Màn &quot;Trước khi giảng&quot;</tspan></text><rect class="fc-note" x="110.0" y="955.0" width="240" height="60" rx="12"/><text class="fc-t fc-t-note" x="230" y="977.2" text-anchor="middle" dominant-baseline="middle"><tspan x="230" dy="0">Thẻ: &quot;Đề có chỗ chưa rõ&quot;</tspan><tspan x="230" dy="15.5">nút quay về ô soát đề</tspan></text></svg></div>
+
+    <div class="sub">9 loại và cách hiển thị mặc định</div>
+    <div class="card tbl"><table>
+      <thead><tr><th>Loại</th><th>Ví dụ</th><th>Hành động mặc định</th><th>Nút trên thẻ</th></tr></thead>
+      <tbody>
+        <tr><td><b>Không phải bài tập</b></td><td>selfie, đồ chơi, màn hình game</td><td>Chặn</td><td>📷 Chụp lại · ⌨️ Gõ đề · 🧸 Sang Chơi với đồ vật (nếu giống đồ chơi)</td></tr>
+        <tr><td><b>Nhạy cảm</b></td><td>mặt người rõ, giấy tờ, nội dung người lớn</td><td>Chặn, xoá ảnh khỏi máy ngay</td><td>📷 Chụp lại · ⌨️ Gõ đề</td></tr>
+        <tr><td><b>Ảnh mờ</b></td><td>rung tay, thiếu sáng, cắt mất đề</td><td>Chụp lại kèm mẹo</td><td>📷 Chụp lại · ⌨️ Gõ đề</td></tr>
+        <tr><td><b>Nhiều bài</b></td><td>cả trang có Câu 1, 2, 3</td><td>Chọn một bài</td><td>Danh sách câu · Dùng câu này</td></tr>
+        <tr><td><b>Ngoài chương trình</b></td><td>bài lớp 7</td><td>Cảnh báo</td><td>Vẫn tiếp tục · Chụp lại</td></tr>
+        <tr><td><b>Lệch lớp</b></td><td>con lớp 2, bài lớp 4</td><td>Cảnh báo</td><td>Vẫn tiếp tục · Sửa hồ sơ con</td></tr>
+        <tr><td><b>Môn chưa hỗ trợ</b></td><td>Lịch sử, Khoa học</td><td>Cảnh báo</td><td>Vẫn tiếp tục · Gõ đề khác</td></tr>
+        <tr><td><b>Nhờ làm hộ</b></td><td>"viết hộ bài văn tả mẹ"</td><td>Chuyển hướng: chỉ gợi dàn ý</td><td>Thẻ thông tin + Tiếp tục</td></tr>
+        <tr><td><b>Không liên quan</b></td><td>câu hỏi ngoài học tập</td><td>Chặn</td><td>⌨️ Gõ lại đề</td></tr>
+      </tbody></table></div>
+
+    <div class="sub">Màn hình phụ huynh</div>
+    <div class="shots">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:50</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Đọc đề bài</h6></div>
+          <div class="bd">
+            <div class="thumb">🧸</div>
+            <div class="c blockc"><span class="face" style="color:#C2447A">• ︵ •</span><h5 style="font-size:16px;margin-top:2px">Ảnh này chưa giống trang bài tập</h5><span style="color:var(--ink2)">Mẹ chụp lại đúng 1 bài trong sách hoặc vở nhé. Để máy song song trang giấy, đủ sáng.</span></div>
+            <div class="bt">📷 Chụp lại <span class="mk">1</span></div>
+            <div class="row"><div class="bt g">⌨️ Gõ đề <span class="mk">2</span></div><div class="bt g">🧸 Chơi với đồ vật <span class="mk">3</span></div></div>
+          </div>
+        </div></div>
+        <span class="cap">2A · Chặn</span><h4>Không phải bài tập</h4>
+        <ol class="ops"><li><span class="k">1</span><span><b>Chụp lại</b> → mở lại camera ở màn Chụp bài.</span></li>
+          <li><span class="k">2</span><span><b>Gõ đề</b> → mở bảng gõ hoặc đọc đề bằng giọng nói.</span></li>
+          <li><span class="k">3</span><span>Chỉ hiện khi ảnh trông như đồ chơi → sang luồng "Chơi với đồ vật", dùng luôn ảnh này.</span></li></ol>
+        <div class="state"><b>Không gọi AI soạn bài</b> ở nhánh này; ghi nhật ký phạm vi (không lưu ảnh).</div>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:52</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Đọc đề bài</h6></div>
+          <div class="bd">
+            <div class="c"><span class="lb">AI đọc được</span><div style="margin-top:3px">Tính giá trị biểu thức: 1 250 : 25 x (36 − 18) …</div></div>
+            <div class="c warnc"><span style="font-size:16px">⚠️</span><h5 style="font-size:15.5px;margin-top:2px">Bài này có vẻ của lớp 4</h5><span>Hồ sơ của Mít đang là <b>lớp 2</b>. Mình vẫn gợi ý được, nhưng có thể chưa sát cách cô dạy.</span></div>
+            <div style="flex:1"></div>
+            <div class="bt">Vẫn tiếp tục <span class="mk">4</span></div>
+            <div class="row"><div class="bt g">Sửa hồ sơ con <span class="mk">5</span></div><div class="bt g">📷 Chụp lại</div></div>
+          </div>
+        </div></div>
+        <span class="cap">2B · Cảnh báo</span><h4>Lệch lớp so với hồ sơ</h4>
+        <ol class="ops"><li><span class="k">4</span><span><b>Vẫn tiếp tục</b> → sang ô soát đề như bình thường; nhật ký ghi "đã bỏ qua cảnh báo".</span></li>
+          <li><span class="k">5</span><span><b>Sửa hồ sơ con</b> → mở sheet sửa lớp, lưu xong quay lại đúng bước này và kiểm tra lại.</span></li></ol>
+        <div class="note"><b>Cùng mẫu thẻ</b> cho "Ngoài chương trình" và "Môn chưa hỗ trợ", khác câu chữ (admin sửa được) và nút phụ: ngoài chương trình → "Chụp lại"; môn chưa hỗ trợ → "Gõ đề khác". Lệch lớp chỉ cảnh báo khi lệch từ 2 lớp trở lên (mặc định).</div>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:53</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Đọc đề bài</h6></div>
+          <div class="bd">
+            <div class="c lavc"><h5 style="font-size:15.5px">Trong ảnh có 3 bài</h5><span>Mẹ chọn bài con đang làm nhé.</span></div>
+            <div class="c" style="display:flex;gap:8px"><span>○</span><span><b>Câu 1.</b> Mỗi hộp có 8 cây bút chì…</span></div>
+            <div class="c" style="display:flex;gap:8px;border-color:var(--pink);box-shadow:0 5px 0 #FFD1E1"><span style="color:var(--pinkd)">●</span><span><b>Câu 2.</b> Lan có 24 quyển vở, cho bạn 5 quyển… <span class="mk">6</span></span></div>
+            <div class="c" style="display:flex;gap:8px"><span>○</span><span><b>Câu 3.</b> Một đoạn dây dài 36 cm…</span></div>
+            <div style="flex:1"></div>
+            <div class="bt">Dùng câu này <span class="mk">7</span></div>
+          </div>
+        </div></div>
+        <span class="cap">2C · Chọn một bài</span><h4>Ảnh có nhiều bài</h4>
+        <ol class="ops"><li><span class="k">6</span><span>Bấm một câu để chọn (chọn được 1).</span></li>
+          <li><span class="k">7</span><span><b>Dùng câu này</b> → ô soát đề chỉ còn câu đã chọn.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:58</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Trước khi giảng</h6></div>
+          <div class="bd">
+            <div class="c lavc"><span style="font-size:16px">🤔</span><h5 style="font-size:15.5px">Đề có chỗ chưa rõ</h5><span>"Chưa biết mẹ cho bạn Na bao nhiêu cây bút." Mẹ xem lại đề giúp mình nhé.</span></div>
+            <div class="bt">Xem lại đề <span class="mk">8</span></div>
+            <div style="flex:1"></div>
+            <div class="c blockc" style="opacity:.95"><span class="lb" style="color:#C2447A">Biến thể · ảnh nhạy cảm</span><h5 style="font-size:14px;margin-top:2px">Ảnh có mặt người hoặc giấy tờ riêng tư nên mình không đọc</h5><span style="color:var(--ink2)">App không lưu ảnh này. Mẹ chụp riêng phần đề bài thôi nhé.</span></div>
+          </div>
+        </div></div>
+        <span class="cap">2D · Đề chưa rõ + biến thể nhạy cảm</span><h4>Dùng trường <code>can_hoi_lai</code> đang bị bỏ qua</h4>
+        <ol class="ops"><li><span class="k">8</span><span><b>Xem lại đề</b> → quay về ô soát đề, con trỏ đặt sẵn vào ô chữ.</span></li>
+          <li><span class="k s">·</span><span>Ảnh nhạy cảm: <b>không hiển thị lại ảnh</b>, không gửi tiếp cho bước nào khác, xoá khỏi bộ nhớ trình duyệt; chỉ còn 2 nút Chụp lại và Gõ đề.</span></li></ol>
+      </div>
+    </div>
+
+    <div class="sub">Màn hình admin <span class="tag t-amber">Cấu hình AI & Hệ thống → [4] Luật phạm vi</span></div>
+    <div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/admin/cau-hinh/pham-vi</span></div>
+      <div class="shell">
+        <div class="side">
+          <div class="brand"><svg width="30" height="30"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị</small></div></div>
+          <div class="nv">🏡 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình & Học sinh</div><div class="nv">📖 Nhật ký kèm học</div><div class="nv">📊 Báo cáo</div><div class="nv">🏫 Giáo viên & Lớp học <span class="cnt">3</span></div><div class="nv on">⚙️ Cấu hình AI & Hệ thống</div><div class="nv">🧰 Công cụ nội bộ</div>
+        </div>
+        <div class="main">
+          <div class="hd"><div class="srch">🔍 Tìm gia đình, tên gọi của con, mã buổi học…</div><span class="clk">Giờ VN · 21:05</span><span class="bell">🔔<em>5</em></span></div>
+          <div><h3>Cấu hình AI & Hệ thống</h3></div>
+          <div class="tabs2"><span>[1] Mô hình</span><span>[2] Prompt Studio</span><span>[3] Router sư phạm</span><span class="on">[4] Luật phạm vi</span><span>[5] Giao diện app</span><span>[6] Quản trị viên</span><span>[7] Nhật ký thao tác</span><span>[8] Hạ tầng</span><span>[9] Thông báo & Zalo</span></div>
+          <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:12px">
+            <div class="c" style="display:grid;gap:8px">
+              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><span><span class="tg"></span> <b>Bật kiểm tra phạm vi</b></span><span>Môn: <span class="pill p-done">Toán</span> <span class="pill p-done">Tiếng Việt</span> <span class="pill p-done">Tiếng Anh</span></span><span>Lớp <b>1</b> đến <b>5</b> · lệch tối đa <b>1</b> lớp</span></div>
+              <table><thead><tr><th>Loại</th><th>Hành động</th><th>Lời nhắn cho phụ huynh</th></tr></thead><tbody>
+                <tr><td>Không phải bài tập</td><td><span class="ipt" style="padding:3px 8px">Chặn ▾</span> <span class="mk">1</span></td><td>Ảnh này chưa giống trang bài tập. Mẹ chụp lại…</td></tr>
+                <tr><td>Nhạy cảm</td><td><span class="ipt" style="padding:3px 8px">Chặn ▾</span></td><td>Ảnh có mặt người hoặc giấy tờ riêng tư…</td></tr>
+                <tr><td>Lệch lớp</td><td><span class="ipt" style="padding:3px 8px">Cảnh báo ▾</span></td><td><span class="ipt on" style="display:block;padding:4px 8px">Bài này có vẻ của lớp {lop_doan}, còn hồ sơ của {ten_con}… <span class="mk">2</span></span></td></tr>
+                <tr><td>Nhiều bài</td><td><span class="ipt" style="padding:3px 8px">Chọn 1 bài ▾</span></td><td>Trong ảnh có {so_bai} bài. Mẹ chọn…</td></tr>
+                <tr><td>Nhờ làm hộ</td><td><span class="ipt" style="padding:3px 8px">Chuyển hướng ▾</span></td><td>Kèm Con Học không làm bài hộ, nhưng…</td></tr>
+              </tbody></table>
+              <div><span class="lb">Từ khoá chặn</span> <span class="pill p-bad">làm hộ bài kiểm tra ×</span> <span class="pill p-bad">đáp án đề thi ×</span> <span class="bt g" style="padding:2px 10px">+ Thêm</span></div>
+            </div>
+            <div class="c" style="display:grid;gap:8px;align-content:start">
+              <b style="font-family:Mitr;font-size:15px">🧪 Bàn thử</b>
+              <div style="display:flex;gap:5px;flex-wrap:wrap"><span class="pill p-learn">Trang toán lớp 3</span><span class="pill p-learn" style="background:#4B3621;color:#FFF8EC;border-color:#4B3621">Ảnh đồ chơi</span><span class="pill p-learn">Ảnh mờ</span><span class="pill p-learn">3 bài</span><span class="pill p-learn">Đề lớp 8</span><span class="pill p-learn">Viết hộ bài văn</span> <span class="mk">3</span></div>
+              <div class="row" style="display:flex;gap:6px"><span class="bt g">⬆ Tải ảnh <span class="mk">4</span></span><span class="bt g">⌨ Gõ đề</span></div>
+              <div style="background:#2B2118;color:#FFE9C2;border-radius:12px;padding:8px 10px;font-family:ui-monospace,Consolas,monospace;font-size:10.5px">{"pham_vi":"khong_phai_bai_tap","ly_do":"ảnh gấu bông","mon_doan":"khac","so_bai":0}</div>
+              <div style="background:#FFF0F3;border:1px solid #FFC7D6;border-radius:14px;padding:8px 10px"><b>Phụ huynh sẽ thấy:</b> Ảnh này chưa giống trang bài tập… · nút Chụp lại / Gõ đề / Chơi với đồ vật</div>
+            </div>
+          </div>
+          <div style="height:44px"></div>
+          <div class="savebar">Có 2 thay đổi chưa lưu · lần lưu trước 20:41 bởi Huyền <span class="bt g" style="color:#9A5B00">Đặt lại</span><span class="bt">Lưu thay đổi <span class="mk">5</span></span></div>
+        </div>
+      </div></div></div>
+    <div class="grid2" style="margin-top:12px">
+      <ol class="ops card"><li><span class="k">1</span><span>Đổi hành động từng loại: Chặn / Chụp lại / Cảnh báo / Chọn 1 bài / Chuyển hướng / Cho qua.</span></li>
+        <li><span class="k">2</span><span>Bấm vào lời nhắn để sửa tại chỗ; gợi ý biến <code>{so_bai} {lop_doan} {lop_con} {ten_con}</code> hiện khi gõ dấu <code>{</code>.</span></li>
+        <li><span class="k">3</span><span>Bấm một mẫu có sẵn → chạy đúng chuỗi phân loại, hiện JSON và thẻ phụ huynh sẽ thấy.</span></li></ol>
+      <ol class="ops card"><li><span class="k">4</span><span>Tải ảnh của mình để thử (ảnh không lưu lại sau khi thử).</span></li>
+        <li><span class="k">5</span><span><b>Lưu thay đổi</b> → tăng số phiên bản, ghi nhật ký thao tác; app phụ huynh nhận luật mới trong tối đa 10 phút.</span></li>
+        <li><span class="k s">·</span><span>Bên dưới (cuộn xuống): biểu đồ số lần theo loại 7/30 ngày, tỉ lệ "Vẫn tiếp tục", 20 sự kiện gần nhất.</span></li></ol>
+    </div>
+  </section>
+
+  <!-- ================= 03 ================= -->
+  <section class="feat" id="s03">
+    <div class="sec-h"><div class="n">Tính năng 03 · prompt 03</div><h2>Nhóm gia đình và báo cáo qua Zalo</h2><p>Nhiều người thân vào chung một nhà bằng mã mời; báo cáo tuần thành ảnh + link để gửi vào nhóm Zalo gia đình.</p></div>
+    <div style="margin-top:14px">
+      <div><div class="sub" style="margin-top:0">Lưu đồ <span class="tag t-blue">Mời người thân</span></div><div class="card flowbox"><svg class="flowsvg" viewBox="0 0 1000 900" role="img" aria-label="Luồng mời người thân vào gia đình"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M300.0 58.0 L300.0 98.0" marker-end="url(#ah)"/><path class="fc-edge" d="M300.0 162.0 L300.0 203.0" marker-end="url(#ah)"/><path class="fc-edge" d="M300.0 267.0 L300.0 303.0" marker-end="url(#ah)"/><path class="fc-edge" d="M300.0 367.0 L300.0 412.0" marker-end="url(#ah)"/><path class="fc-edge" d="M300.0 468.0 L300.0 502.0" marker-end="url(#ah)"/><path class="fc-edge" d="M395.0 545.0 L570.0 545.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="460.5" y="535.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="482.5" y="545.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge dash" d="M720.0 513.0 L720.0 36.0 L440.0 36.0" marker-end="url(#ah)"/><path class="fc-edge" d="M300.0 588.0 L300.0 623.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="288.8" y="595.5" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="300.0" y="606.0" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M300.0 687.0 L300.0 722.0" marker-end="url(#ah)"/><path class="fc-edge" d="M300.0 798.0 L300.0 838.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="288.8" y="808.0" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="300.0" y="818.5" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M385.0 760.0 L610.0 760.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="475.5" y="750.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="497.5" y="760.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge dash" d="M720.0 730.0 L720.0 655.0 L430.0 655.0" marker-end="url(#ah)"/><rect class="fc-start" x="160.0" y="14.0" width="280" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="300" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Owner bấm ➕ Mời người thân</tspan></text><rect class="fc-proc" x="150.0" y="98.0" width="300" height="64" rx="12"/><text class="fc-t" x="300" y="122.2" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Chọn vai trò (kèm con / chỉ xem)</tspan><tspan x="300" dy="15.5">và quan hệ (Bố, Bà...)</tspan></text><rect class="fc-proc" x="160.0" y="203.0" width="280" height="64" rx="12"/><text class="fc-t" x="300" y="227.2" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Tạo mã 6 ký tự + QR + link</tspan><tspan x="300" dy="15.5">hạn 72 giờ, 1 lượt</tspan></text><rect class="fc-proc" x="160.0" y="303.0" width="280" height="64" rx="12"/><text class="fc-t" x="300" y="327.2" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Gửi qua Zalo (bảng chia sẻ)</tspan><tspan x="300" dy="15.5">hoặc copy link</tspan></text><rect class="fc-proc" x="175.0" y="412.0" width="250" height="56" rx="12"/><text class="fc-t" x="300" y="440.0" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Người thân mở /join/mã</tspan></text><polygon class="fc-dec" points="300,502.0 395.0,545 300,588.0 205.0,545"/><text class="fc-t fc-t-dec" x="300" y="537.8" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Mã còn dùng</tspan><tspan x="300" dy="14.5">được?</tspan></text><rect class="fc-note" x="570.0" y="513.0" width="300" height="64" rx="12"/><text class="fc-t fc-t-note" x="720" y="537.2" text-anchor="middle" dominant-baseline="middle"><tspan x="720" dy="0">&quot;Mã đã hết hạn hoặc đã dùng&quot;</tspan><tspan x="720" dy="15.5">nút: Nhờ người mời gửi mã mới</tspan></text><rect class="fc-proc" x="170.0" y="623.0" width="260" height="64" rx="12"/><text class="fc-t" x="300" y="647.2" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Nhập tên, chọn quan hệ</tspan><tspan x="300" dy="15.5">đặt PIN 2 lần</tspan></text><polygon class="fc-dec" points="300,722.0 385.0,760 300,798.0 215.0,760"/><text class="fc-t fc-t-dec" x="300" y="760.0" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">PIN khớp?</tspan></text><rect class="fc-end" x="120.0" y="838.0" width="360" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="300" y="860.0" text-anchor="middle" dominant-baseline="middle"><tspan x="300" dy="0">Vào nhà: thấy các con, sticker, lịch sử</tspan></text><rect class="fc-note" x="610.0" y="730.0" width="220" height="60" rx="12"/><text class="fc-t fc-t-note" x="720" y="752.2" text-anchor="middle" dominant-baseline="middle"><tspan x="720" dy="0">Báo &quot;PIN chưa khớp&quot;</tspan><tspan x="720" dy="15.5">nhập lại</tspan></text></svg></div></div>
+      <div><div class="sub" style="margin-top:0">Lưu đồ <span class="tag t-blue">Gửi báo cáo tuần</span></div><div class="card flowbox"><svg class="flowsvg" viewBox="0 0 1000 660" role="img" aria-label="Luồng gửi báo cáo tuần qua Zalo"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M500.0 58.0 L500.0 98.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 162.0 L500.0 202.0" marker-end="url(#ah)"/><path class="fc-edge" d="M385.0 250.0 L200.0 250.0 L200.0 348.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="281.3" y="240.0" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="292.5" y="250.5" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M615.0 250.0 L760.0 250.0 L760.0 332.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="665.5" y="240.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="687.5" y="250.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge" d="M760.0 428.0 L760.0 460.0 L620.0 460.0 L620.0 482.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="748.8" y="430.8" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="760.0" y="441.3" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M875.0 380.0 L880.0 380.0 L880.0 478.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="858.0" y="419.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="880.0" y="429.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge" d="M200.0 412.0 L200.0 620.0 L285.0 620.0" marker-end="url(#ah)"/><path class="fc-edge" d="M620.0 538.0 L620.0 570.0 L500.0 570.0 L500.0 598.0" marker-end="url(#ah)"/><path class="fc-edge" d="M880.0 542.0 L880.0 620.0 L715.0 620.0" marker-end="url(#ah)"/><rect class="fc-start" x="290.0" y="14.0" width="420" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="500" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Tối Chủ nhật app nhắc, hoặc mẹ bấm Gửi báo cáo</tspan></text><rect class="fc-proc" x="320.0" y="98.0" width="360" height="64" rx="12"/><text class="fc-t" x="500" y="122.2" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Ảnh báo cáo đã tạo sẵn khi mở tab</tspan><tspan x="500" dy="15.5">+ link /r/mã, bản chụp số liệu, hạn 7 ngày</tspan></text><polygon class="fc-dec" points="500,202.0 615.0,250 500,298.0 385.0,250"/><text class="fc-t fc-t-dec" x="500" y="242.8" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Điện thoại chia sẻ</tspan><tspan x="500" dy="14.5">được ảnh?</tspan></text><rect class="fc-proc" x="75.0" y="348.0" width="250" height="64" rx="12"/><text class="fc-t" x="200" y="372.2" text-anchor="middle" dominant-baseline="middle"><tspan x="200" dy="0">Bảng chia sẻ: chọn Zalo</tspan><tspan x="200" dy="15.5">chọn nhóm gia đình</tspan></text><polygon class="fc-dec" points="760,332.0 875.0,380 760,428.0 645.0,380"/><text class="fc-t fc-t-dec" x="760" y="372.8" text-anchor="middle" dominant-baseline="middle"><tspan x="760" dy="0">Có nút chia sẻ</tspan><tspan x="760" dy="14.5">của trình duyệt?</tspan></text><rect class="fc-proc" x="525.0" y="482.0" width="190" height="56" rx="12"/><text class="fc-t" x="620" y="510.0" text-anchor="middle" dominant-baseline="middle"><tspan x="620" dy="0">Chia sẻ chữ + link</tspan></text><rect class="fc-proc" x="775.0" y="478.0" width="210" height="64" rx="12"/><text class="fc-t" x="880" y="502.2" text-anchor="middle" dominant-baseline="middle"><tspan x="880" dy="0">3 nút: Tải ảnh /</tspan><tspan x="880" dy="15.5">Copy link / Zalo Web</tspan></text><rect class="fc-end" x="285.0" y="598.0" width="430" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="500" y="620.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Cả nhà mở link, xem báo cáo không cần đăng nhập</tspan></text></svg></div></div>
+    </div>
+    <div class="sub">Vai trò</div>
+    <div class="card tbl"><table><thead><tr><th>Vai trò</th><th>Ai</th><th>Được làm</th><th>Không được</th></tr></thead><tbody>
+      <tr><td><b>Chủ nhà</b></td><td>người tạo gia đình</td><td>Mọi việc, mời và xoá thành viên, đổi vai trò, xoá gia đình, đổi giao diện</td><td></td></tr>
+      <tr><td><b>Kèm con</b></td><td>bố, ông bà ở cùng</td><td>Kèm con, xem báo cáo, gửi báo cáo, mời người "Chỉ xem"</td><td>Xoá gia đình, xoá thành viên, đổi vai trò</td></tr>
+      <tr><td><b>Chỉ xem</b></td><td>ông bà ở xa, cô chú</td><td>Xem báo cáo và lịch sử</td><td>Chụp bài, kèm con, đổi cài đặt</td></tr>
+    </tbody></table></div>
+
+    <div class="sub">Màn hình</div>
+    <div class="shots">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:10</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Thành viên gia đình</h6></div>
+          <div class="bd">
+            <div class="c" style="padding:4px 12px">
+              <div class="li"><span class="e" style="background:#FFE1EC">L</span><span class="t">Mẹ Lan <small>Chủ nhà · kèm 4 buổi tuần này</small></span></div>
+              <div class="li"><span class="e" style="background:#E3F8F2">T</span><span class="t">Bố Tuấn <small>Kèm con · kèm 2 buổi · mở app 2 giờ trước</small></span>› <span class="mk">2</span></div>
+              <div class="li"><span class="e" style="background:#EFE9FF">H</span><span class="t">Bà Hoa <small>Chỉ xem · mở app hôm qua</small></span>›</div>
+            </div>
+            <span class="lb">Mã mời đang chờ</span>
+            <div class="c" style="display:flex;align-items:center;gap:8px"><span class="t" style="flex:1"><b>K7M 2QX</b> · Kèm con · Ông<br><small style="color:var(--ink2);font-weight:700">hết hạn sau 2 ngày</small></span><span class="chip" style="color:#C93A3A">Thu hồi <span class="mk">3</span></span></div>
+            <div style="flex:1"></div>
+            <div class="bt">➕ Mời người thân <span class="mk">1</span></div>
+          </div>
+        </div></div>
+        <span class="cap">3A · Thành viên</span><h4>Thay cho mục "Mời bố cùng kèm con"</h4>
+        <ol class="ops"><li><span class="k">1</span><span><b>Mời người thân</b> → mở sheet mời (3B).</span></li>
+          <li><span class="k">2</span><span>Chủ nhà bấm một người → sheet: đổi vai trò, đổi tên hiển thị, xoá khỏi nhà (xác nhận). Người khác chỉ xem được.</span></li>
+          <li><span class="k">3</span><span><b>Thu hồi</b> mã đang chờ → mã không dùng được nữa.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:11</span><span>●●● ▮</span></div>
+          <div class="top"><h6 style="opacity:.4">Thành viên gia đình</h6></div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <h5 style="font-size:17px">Mời người thân</h5>
+            <span class="lb">Vai trò</span>
+            <div class="c" style="border-color:var(--pink);box-shadow:0 5px 0 #FFD1E1"><b>● Kèm con</b><br><span style="color:var(--ink2)">Kèm con học, xem báo cáo</span></div>
+            <div class="c"><b>○ Chỉ xem</b><br><span style="color:var(--ink2)">Hợp với ông bà ở xa</span></div>
+            <span class="lb">Quan hệ với con</span>
+            <div class="chips"><span class="chip">Mẹ</span><span class="chip">Bố</span><span class="chip on">Ông</span><span class="chip">Bà</span><span class="chip">Cô/Chú</span><span class="chip">Anh/Chị</span><span class="chip">Người giúp việc</span><span class="chip">Khác</span></div>
+            <div class="bt">Tạo mã mời <span class="mk">4</span></div>
+          </div>
+        </div></div>
+        <span class="cap">3B · Sheet mời, bước 1</span><h4>Chọn vai trò và quan hệ</h4>
+        <ol class="ops"><li><span class="k">4</span><span><b>Tạo mã mời</b> → sinh mã 6 ký tự (không có 0/O, 1/I), hạn 72 giờ, dùng 1 lần; chuyển sang bước 2.</span></li>
+          <li><span class="k s">·</span><span>Người "Kèm con" mở sheet này chỉ thấy lựa chọn "Chỉ xem".</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:11</span><span>●●● ▮</span></div>
+          <div class="top"><h6 style="opacity:.4">Thành viên gia đình</h6></div>
+          <div class="dim"></div>
+          <div class="sheet" style="top:70px">
+            <div class="grab"></div>
+            <h5 style="font-size:17px;text-align:center">Mã mời cho Ông</h5>
+            <div class="bigcode">K7M 2QX</div>
+            <div class="qr"></div>
+            <div style="text-align:center;color:var(--ink2)">kem-con-hoc-5xf.pages.dev/join/K7M2QX<br>Hết hạn sau 72 giờ · dùng 1 lần</div>
+            <div class="bt">💬 Gửi qua Zalo <span class="mk">5</span></div>
+            <div class="row"><div class="bt g">📋 Copy link <span class="mk">6</span></div><div class="bt g">Xong</div></div>
+          </div>
+        </div></div>
+        <span class="cap">3C · Sheet mời, bước 2</span><h4>Mã lớn, QR, link</h4>
+        <ol class="ops"><li><span class="k">5</span><span><b>Gửi qua Zalo</b> → bảng chia sẻ của điện thoại (chọn Zalo, chọn người hoặc nhóm). Máy không có bảng chia sẻ → mở <code>zalo.me/share</code>.</span></li>
+          <li><span class="k">6</span><span><b>Copy link</b> → toast "Đã copy link mời".</span></li>
+          <li><span class="k s">·</span><span>Người ngồi cạnh: quét QR bằng camera là mở đúng trang mời.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:20</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:14px">
+            <div style="text-align:center"><span class="face" style="color:#C2447A;font-size:22px">• ‿ •</span><h5 style="font-size:18px">Mẹ Lan mời bạn cùng kèm con</h5><span style="color:var(--ink2)">trên Kèm Con Học · vai trò: <b>Kèm con</b></span></div>
+            <span class="lb">Tên hiển thị</span><div class="ip on">Ông Bình</div>
+            <span class="lb">Quan hệ</span><div class="chips"><span class="chip">Mẹ</span><span class="chip">Bố</span><span class="chip on">Ông</span><span class="chip">Bà</span><span class="chip">Khác</span></div>
+            <span class="lb">Đặt PIN 4 đến 6 số</span><div class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div>
+            <span class="lb">Nhập lại PIN</span><div class="dots"><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i></div>
+            <div style="flex:1"></div>
+            <div class="bt">Vào nhà <span class="mk">7</span></div>
+          </div>
+        </div></div>
+        <span class="cap">3D · Trang /join/mã</span><h4>Mở được không cần tài khoản</h4>
+        <ol class="ops"><li><span class="k">7</span><span><b>Vào nhà</b> → tạo thành viên, đăng nhập luôn, vào màn chính của gia đình (thấy các con, sticker, lịch sử).</span></li>
+          <li><span class="k s">·</span><span>Mã hết hạn / đã dùng / bị thu hồi → thẻ "Mã này không còn dùng được" + nút "Nhờ người mời gửi mã mới".</span></li>
+          <li><span class="k s">·</span><span>PIN 2 lần không khớp → rung nhẹ, báo "PIN chưa khớp", xoá ô nhập lại.</span></li>
+          <li><span class="k s">·</span><span>Trang không hiện tên con trước khi vào nhà.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>07:30</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:14px">
+            <div style="text-align:center"><h5>Nhà Mít</h5><span style="color:var(--ink2)">Ai đang dùng máy này?</span></div>
+            <div class="row" style="text-align:center">
+              <div><div style="width:48px;height:48px;border-radius:50%;background:#FFE1EC;margin:0 auto;display:grid;place-items:center;font-weight:900">L</div>Mẹ Lan</div>
+              <div><div style="width:48px;height:48px;border-radius:50%;background:#E3F8F2;margin:0 auto;display:grid;place-items:center;font-weight:900;outline:3px solid var(--pink)">T</div>Bố Tuấn <span class="mk">8</span></div>
+              <div><div style="width:48px;height:48px;border-radius:50%;background:#EFE9FF;margin:0 auto;display:grid;place-items:center;font-weight:900">H</div>Bà Hoa</div>
+            </div>
+            <span class="lb" style="text-align:center">PIN của Bố Tuấn</span>
+            <div class="dots"><i class="f"></i><i class="f"></i><i></i><i></i></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 20px">
+              <div class="bt g">1</div><div class="bt g">2</div><div class="bt g">3</div><div class="bt g">4</div><div class="bt g">5</div><div class="bt g">6</div><div class="bt g">7</div><div class="bt g">8</div><div class="bt g">9</div><div></div><div class="bt g">0 <span class="mk">9</span></div><div class="bt g">⌫</div>
+            </div>
+            <div style="text-align:center;color:var(--ink2);font-weight:800">Chủ nhà: đăng nhập bằng mật khẩu gia đình</div>
+          </div>
+        </div></div>
+        <span class="cap">3E · Đăng nhập thành viên</span><h4>Chọn mình, nhập PIN</h4>
+        <ol class="ops"><li><span class="k">8</span><span>Máy đã từng vào nhà này: hiện sẵn danh sách thành viên; bấm tên mình.</span></li>
+          <li><span class="k">9</span><span>Nhập đủ PIN là tự đăng nhập. Sai 5 lần → thành viên này bị khoá 15 phút trên <b>mọi máy</b> (khoá ở máy chủ).</span></li>
+          <li><span class="k s">·</span><span>Máy mới: <b>không</b> hiện danh sách thành viên (tránh lộ tên người thân); dùng mã đăng nhập máy mới (màn 3F).</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:30</span><span>●●● ▮</span></div>
+          <div class="top"><h6 style="opacity:.4">Thành viên gia đình</h6></div>
+          <div class="dim"></div>
+          <div class="sheet" style="top:120px">
+            <div class="grab"></div>
+            <h5 style="font-size:17px;text-align:center">Đăng nhập trên máy khác</h5>
+            <span style="text-align:center;color:var(--ink2)">Chỉ dùng cho <b>Bố Tuấn</b> · hết hạn sau 15 phút</span>
+            <div class="bigcode">P4K 7XM</div>
+            <div class="c lavc" style="font-size:11.5px">Trên máy mới: mở app → <b>"Tôi có mã đăng nhập"</b> → nhập mã này → nhập PIN của Bố Tuấn. <span class="mk">13</span></div>
+            <div class="bt g">Xong</div>
+          </div>
+        </div></div>
+        <span class="cap">3F · Mã đăng nhập máy mới</span><h4>Vào máy mới mà không lộ tên người thân</h4>
+        <ol class="ops"><li><span class="k">12</span><span>Từ máy đang đăng nhập: Con tôi → Thành viên → bấm mình → <b>"Đăng nhập trên máy khác"</b> (chủ nhà làm được cho mọi người).</span></li>
+          <li><span class="k">13</span><span>Trên máy mới nhập mã rồi nhập PIN. Mã dùng 1 lần, hết hạn 15 phút.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:00</span><span>●●● ▮</span></div>
+          <div class="top"><h6>Tuần này của Mít</h6></div>
+          <div class="bd">
+            <div class="row"><div class="c" style="text-align:center"><b style="font-size:18px">5</b><br>buổi</div><div class="c" style="text-align:center"><b style="font-size:18px">74′</b><br>phút</div><div class="c" style="text-align:center"><b style="font-size:18px">3</b><br>bài tự làm</div></div>
+            <div class="c"><span class="lb">Ai kèm tuần này</span><div style="margin-top:4px">Mẹ Lan <b>3</b> · Bố Tuấn <b>2</b></div><div style="display:flex;height:8px;border-radius:6px;overflow:hidden;margin-top:5px"><i style="flex:3;background:#FF8FB8"></i><i style="flex:2;background:#7FD8C4"></i></div></div>
+            <div class="c okc"><span class="lb" style="color:#23735F">Con đã vững</span><div>Toán lời văn 1 bước</div></div>
+            <div class="c warnc"><span class="lb" style="color:#8A5E00">Con hay vướng</span><div>Bước trừ trong bài 2 bước</div></div>
+            <div style="flex:1"></div>
+            <div class="bt">💬 Gửi báo cáo vào nhóm Zalo gia đình <span class="mk">10</span></div>
+            <div style="text-align:center;font-weight:900;color:var(--ink2)">Các link đã chia sẻ (2) <span class="mk">11</span></div>
+          </div>
+          <div class="nav"><div><i>🌙</i>Học tối nay</div><div><i>🎲</i>Trò chơi</div><div class="on"><i>📊</i>Báo cáo</div><div><i>🧒</i>Con tôi</div></div>
+        </div></div>
+        <span class="cap">3G · Báo cáo tuần</span><h4>Số liệu thật từ từng buổi học</h4>
+        <ol class="ops"><li><span class="k">10</span><span>Ảnh đã được tạo sẵn khi mở tab, nên bấm là bảng chia sẻ hiện ngay (xem lưu đồ "Gửi báo cáo tuần"). Link xem mặc định 7 ngày (chọn được 14); toast "Đã tạo link, hết hạn 27/10".</span></li>
+          <li><span class="k">11</span><span>Danh sách link đã gửi: ngày tạo, số lượt mở, nút <b>Thu hồi</b>. Chủ nhà thấy tất cả, người "Kèm con" thấy link mình tạo, người "Chỉ xem" không thấy mục này.</span></li>
+          <li><span class="k s">·</span><span>Con chưa học buổi nào tuần này: thẻ trống "Chưa có buổi học nào tuần này", ẩn nút gửi.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr" style="background:#F3EDF1"><div class="notch"></div><div class="sb"><span>20:01</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:12px">
+            <span class="lb" style="text-align:center">Ảnh báo cáo gửi vào Zalo (1080 x 1350)</span>
+            <div class="c" style="background:#FFF4F8;padding:14px;display:grid;gap:7px;border-color:#F3D9E6">
+              <div style="display:flex;justify-content:space-between;align-items:center"><h5 style="font-size:17px">Tuần của Mít</h5><span class="face" style="color:#C2447A">• ‿ •</span></div>
+              <span style="color:var(--ink2)">14 đến 20/10 · Lớp 3</span>
+              <div class="row" style="text-align:center"><div><b style="font-size:20px;color:#B83A70">5</b><br>buổi</div><div><b style="font-size:20px;color:#B83A70">74′</b><br>phút</div><div><b style="font-size:20px;color:#B83A70">3</b><br>tự làm</div></div>
+              <div>✅ Đã vững: lời văn 1 bước<br>🔁 Hay vướng: bước trừ<br>👨‍👩‍👧 Mẹ 3 · Bố 2</div>
+              <div class="c lavc" style="padding:7px 9px">Cuối tuần: chơi "cất que tính vào túi" 10 phút</div>
+              <div style="display:flex;gap:8px;align-items:center"><div class="qr" style="width:54px;height:54px;border-width:3px;margin:0"></div><span style="color:var(--ink2)">Quét để xem chi tiết<br>(link hết hạn sau 7 ngày)</span></div>
+            </div>
+            <span style="text-align:center;color:var(--ink2)">Chỉ tên gọi ở nhà, không họ tên, không trường lớp, không ảnh.</span>
+          </div>
+        </div></div>
+        <span class="cap">3H · Ảnh báo cáo</span><h4>Theo giao diện nhà đang dùng</h4>
+        <ol class="ops"><li><span class="k s">·</span><span>Trang <code>/r/mã</code> (mở trên máy bất kỳ, không cần đăng nhập) hiện đúng nội dung này + biểu đồ 7 ngày; link thu hồi thì báo "Link đã hết hạn".</span></li>
+          <li><span class="k s">·</span><span>Link là <b>bản chụp số liệu lúc tạo</b>, không thấy dữ liệu phát sinh sau. Chủ nhà tắt được dòng "Ai kèm" trước khi gửi.</span></li>
+          <li><span class="k s">·</span><span>Đang mở app trong Zalo: hiện dải "Mở bằng trình duyệt để gửi được ảnh".</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 04 ================= -->
+  <section class="feat" id="s04">
+    <div class="sec-h"><div class="n">Tính năng 04 · prompt 04</div><h2>Cổng giáo viên: lớp học, giao bài, thông báo</h2><p>Cổng giáo viên chạy ở <code>/teacher</code> (cùng app, giao diện Bento Mềm). Phụ huynh nhận bài ngay trong app của mình.</p></div>
+    <div class="sub">Lưu đồ <span class="tag t-green">Từ đăng ký tới nhận kết quả</span></div>
+    <div class="card flowbox"><svg class="flowsvg" viewBox="0 0 1040 1220" role="img" aria-label="Luồng giáo viên giao bài và nhận kết quả"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M520.0 58.0 L520.0 97.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 153.0 L520.0 190.0" marker-end="url(#ah)"/><path class="fc-edge" d="M610.0 230.0 L750.0 230.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="650.8" y="220.0" width="58.4" height="20" rx="10"/><text class="fc-lbl" x="680.0" y="230.5" text-anchor="middle" dominant-baseline="middle">Từ chối</text><path class="fc-edge dash" d="M870.0 200.0 L870.0 125.0 L665.0 125.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 270.0 L520.0 308.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="498.0" y="279.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="520.0" y="289.5" text-anchor="middle" dominant-baseline="middle">Duyệt</text><path class="fc-edge" d="M520.0 372.0 L520.0 412.0" marker-end="url(#ah)"/><path class="fc-edge" d="M415.0 460.0 L250.0 460.0 L250.0 558.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="285.3" y="450.0" width="94.4" height="20" rx="10"/><text class="fc-lbl" x="332.5" y="460.5" text-anchor="middle" dominant-baseline="middle">Mã lớp chung</text><path class="fc-edge" d="M625.0 460.0 L790.0 460.0 L790.0 558.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="645.9" y="450.0" width="123.2" height="20" rx="10"/><text class="fc-lbl" x="707.5" y="460.5" text-anchor="middle" dominant-baseline="middle">Danh sách có sẵn</text><path class="fc-edge" d="M250.0 622.0 L250.0 658.0" marker-end="url(#ah)"/><path class="fc-edge" d="M250.0 722.0 L250.0 762.0" marker-end="url(#ah)"/><path class="fc-edge" d="M790.0 622.0 L790.0 658.0" marker-end="url(#ah)"/><path class="fc-edge" d="M250.0 818.0 L250.0 890.0 L380.0 890.0" marker-end="url(#ah)"/><path class="fc-edge" d="M790.0 722.0 L790.0 890.0 L660.0 890.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 918.0 L520.0 957.0" marker-end="url(#ah)"/><path class="fc-edge" d="M520.0 1013.0 L520.0 1043.0" marker-end="url(#ah)"/><path class="fc-edge" d="M700.0 1075.0 L765.0 1075.0" marker-end="url(#ah)"/><path class="fc-edge" d="M870.0 1123.0 L870.0 1163.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="848.0" y="1133.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="870.0" y="1143.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge" d="M870.0 1027.0 L870.0 1011.0" marker-end="url(#ah)"/><path class="fc-edge dash" d="M755.0 985.0 L690.0 985.0" marker-end="url(#ah)"/><rect class="fc-start" x="370.0" y="14.0" width="300" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="520" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Cô đăng ký tài khoản giáo viên</tspan></text><rect class="fc-proc" x="375.0" y="97.0" width="290" height="56" rx="12"/><text class="fc-t" x="520" y="125.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Chờ duyệt (thường trong 24 giờ)</tspan></text><polygon class="fc-dec" points="520,190.0 610.0,230 520,270.0 430.0,230"/><text class="fc-t fc-t-dec" x="520" y="230.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Admin duyệt?</tspan></text><rect class="fc-note" x="750.0" y="200.0" width="240" height="60" rx="12"/><text class="fc-t fc-t-note" x="870" y="222.2" text-anchor="middle" dominant-baseline="middle"><tspan x="870" dy="0">Nhận lý do từ chối</tspan><tspan x="870" dy="15.5">sửa thông tin, gửi lại</tspan></text><rect class="fc-proc" x="355.0" y="308.0" width="330" height="64" rx="12"/><text class="fc-t" x="520" y="332.2" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Tạo lớp: tên, trường, khối, năm học</tspan><tspan x="520" dy="15.5">→ mã lớp + QR</tspan></text><polygon class="fc-dec" points="520,412.0 625.0,460 520,508.0 415.0,460"/><text class="fc-t fc-t-dec" x="520" y="452.8" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Thêm học sinh</tspan><tspan x="520" dy="14.5">cách nào?</tspan></text><rect class="fc-proc" x="135.0" y="558.0" width="230" height="64" rx="12"/><text class="fc-t" x="250" y="582.2" text-anchor="middle" dominant-baseline="middle"><tspan x="250" dy="0">Gửi mã lớp vào</tspan><tspan x="250" dy="15.5">nhóm Zalo phụ huynh</tspan></text><rect class="fc-proc" x="135.0" y="658.0" width="230" height="64" rx="12"/><text class="fc-t" x="250" y="682.2" text-anchor="middle" dominant-baseline="middle"><tspan x="250" dy="0">Phụ huynh nhập mã,</tspan><tspan x="250" dy="15.5">chọn con, đồng ý</tspan></text><rect class="fc-proc" x="135.0" y="762.0" width="230" height="56" rx="12"/><text class="fc-t" x="250" y="790.0" text-anchor="middle" dominant-baseline="middle"><tspan x="250" dy="0">Cô duyệt từng yêu cầu</tspan></text><rect class="fc-proc" x="670.0" y="558.0" width="240" height="64" rx="12"/><text class="fc-t" x="790" y="582.2" text-anchor="middle" dominant-baseline="middle"><tspan x="790" dy="0">Dán danh sách tên</tspan><tspan x="790" dy="15.5">mỗi em một mã riêng</tspan></text><rect class="fc-proc" x="670.0" y="658.0" width="240" height="64" rx="12"/><text class="fc-t" x="790" y="682.2" text-anchor="middle" dominant-baseline="middle"><tspan x="790" dy="0">Phụ huynh nhập mã riêng,</tspan><tspan x="790" dy="15.5">chọn con, đồng ý</tspan></text><rect class="fc-proc" x="380.0" y="862.0" width="280" height="56" rx="12"/><text class="fc-t" x="520" y="890.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Học sinh vào lớp (đang học)</tspan></text><rect class="fc-proc" x="350.0" y="957.0" width="340" height="56" rx="12"/><text class="fc-t" x="520" y="985.0" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Cô giao bài: đề + &quot;Cách cô dạy ở lớp&quot;</tspan></text><rect class="fc-proc" x="340.0" y="1043.0" width="360" height="64" rx="12"/><text class="fc-t" x="520" y="1067.2" text-anchor="middle" dominant-baseline="middle"><tspan x="520" dy="0">Phụ huynh kèm con theo cách cô dạy</tspan><tspan x="520" dy="15.5">xong bài: chỉ gửi trạng thái cho cô</tspan></text><polygon class="fc-dec" points="870,1027.0 975.0,1075 870,1123.0 765.0,1075"/><text class="fc-t fc-t-dec" x="870" y="1067.8" text-anchor="middle" dominant-baseline="middle"><tspan x="870" dy="0">Cả lớp vướng</tspan><tspan x="870" dy="14.5">cùng một bậc?</tspan></text><rect class="fc-end" x="750.0" y="1163.0" width="240" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="870" y="1185.0" text-anchor="middle" dominant-baseline="middle"><tspan x="870" dy="0">Theo dõi bài tiếp theo</tspan></text><rect class="fc-note" x="755.0" y="959.0" width="230" height="52" rx="12"/><text class="fc-t fc-t-note" x="870" y="977.2" text-anchor="middle" dominant-baseline="middle"><tspan x="870" dy="0">Có: giảng lại hôm sau</tspan><tspan x="870" dy="15.5">hoặc giao bài củng cố</tspan></text></svg></div>
+
+    <div class="sub">Ai cấu hình gì <span class="tag t-green">3 tầng tách riêng</span></div>
+    <div class="card tbl"><table>
+      <thead><tr><th>Tầng</th><th>Ở đâu</th><th>Số lượng</th><th>Cấu hình</th><th>Không được</th></tr></thead>
+      <tbody>
+        <tr><td><b>Hệ thống</b></td><td><code>/admin</code> (5A đến 5I)</td><td>Một cho toàn app, nhiều admin dùng chung</td><td>Prompt, router sư phạm, luật phạm vi, giao diện app, duyệt giáo viên</td><td></td></tr>
+        <tr><td><b>Giáo viên</b></td><td><code>/teacher/cai-dat</code> (4N)</td><td><b>Mỗi cô một bản riêng</b>, chỉ thấy lớp của mình</td><td>Hồ sơ, thư viện "cách cô dạy", cài đặt từng lớp</td><td>Sửa prompt và luật an toàn, xem lớp cô khác, vào <code>/admin</code></td></tr>
+        <tr><td><b>Gia đình</b></td><td>Tab "Con tôi"</td><td>Mỗi nhà một bản</td><td>Giao diện, giọng điệu, thành viên, lớp học của con</td><td></td></tr>
+      </tbody></table></div>
+
+    <div class="sub">Màn hình của cô <span class="tag t-green">/teacher</span></div>
+    <div class="shots">
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>16:00</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:14px">
+            <span class="lb">Kèm Con Học · Giáo viên</span>
+            <h6 style="font-size:19px;font-weight:800">Đăng ký tài khoản giáo viên</h6>
+            <div class="ip">Họ tên</div><div class="ip">Email</div><div class="ip">Số điện thoại</div>
+            <div class="row"><div class="ip">Trường</div><div class="ip">Tỉnh/thành</div></div>
+            <div class="ip">Khối dạy: <b style="color:var(--ink)">3</b></div><div class="ip">Mật khẩu (từ 8 ký tự)</div>
+            <span>☑ Tôi đồng ý điều khoản và chính sách dữ liệu</span>
+            <div class="bt">Gửi đăng ký <span class="mk">1</span></div>
+            <div class="c" style="background:#FFF6E5;border-color:#FFE2B0"><b>⏳ Đang chờ duyệt</b><br>Thường trong 24 giờ. Kèm Con Học có thể gọi điện xác minh.</div>
+          </div>
+        </div></div>
+        <span class="cap">4A · Đăng ký</span><h4>Không tải ảnh giấy tờ</h4>
+        <ol class="ops"><li><span class="k">1</span><span><b>Gửi đăng ký</b> → hiện thẻ "Đang chờ duyệt"; mở lại app vẫn thấy thẻ này cho tới khi admin duyệt (5H). Bị từ chối → thấy lý do và nút "Sửa và gửi lại".</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>07:10</span><span>●●● ▮</span></div>
+          <div class="top"><h6>Lớp của cô Hạnh</h6><span class="ib">⚙️</span></div>
+          <div class="bd">
+            <div class="c" style="display:grid;gap:5px"><div style="display:flex;align-items:center;gap:6px"><b style="flex:1;font-size:13.5px">3A · TH Nghĩa Tân</b><span class="bdg b-warn">2 chờ duyệt</span><span class="mk">1</span></div><small style="color:var(--ink2)">18/25 học sinh đã kết nối · 1 bài đang mở</small><div class="bar"><i style="flex:18;background:#22B07D"></i><i style="flex:7;background:#E9EAF1"></i></div></div>
+            <div class="c" style="display:grid;gap:5px"><b style="font-size:13.5px">Tiếng Anh 3 · CLB chiều</b><small style="color:var(--ink2)">9/12 đã kết nối · chưa có bài</small><div class="bar"><i style="flex:9;background:#22B07D"></i><i style="flex:3;background:#E9EAF1"></i></div></div>
+            <div class="c" style="background:#F6F6F9;border-style:dashed;display:flex;align-items:center"><b style="flex:1">3B · 2025-2026</b><span class="bdg b-no">Đã lưu trữ</span></div>
+            <div style="flex:1"></div>
+            <div class="bt o">+ Tạo lớp <span class="mk">2</span></div>
+          </div>
+        </div></div>
+        <span class="cap">4B · Trang chủ của cô</span><h4>Danh sách lớp sau khi đăng nhập</h4>
+        <ol class="ops"><li><span class="k">1</span><span>Bấm lớp → trang lớp (4C). Thanh xanh là tỉ lệ học sinh đã kết nối; nhãn vàng là số yêu cầu chờ duyệt.</span></li>
+          <li><span class="k">2</span><span><b>Tạo lớp</b> → sheet: tên lớp, trường (điền sẵn từ hồ sơ), khối, năm học → sinh mã lớp và QR.</span></li>
+          <li><span class="k s">·</span><span>Đăng nhập ở <code>/teacher/login</code> bằng email và mật khẩu; lớp đã lưu trữ chỉ xem được. Nút ⚙️ góc phải mở "Cài đặt của cô" (4N).</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>16:10</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Lớp 3A · 2026-2027</h6></div>
+          <div class="bd">
+            <div class="c" style="display:flex;align-items:center;gap:8px"><div style="flex:1"><span class="lb">Mã lớp</span><div class="code">K7 M2 QX</div></div><span class="bt g">QR</span><span class="bt o">Gửi Zalo <span class="mk">2</span></span></div>
+            <div class="tabs"><span class="on">Học sinh 18/25</span><span>Bài tập</span><span>Thông báo</span></div>
+            <div class="c"><span class="lb">Chờ cô duyệt (2)</span>
+              <div class="st"><span class="av">MA</span><span style="flex:1"><b>Minh An</b><br><small style="color:var(--ink2)">Mẹ Lan gửi · tên con trong lớp</small></span><span class="bt" style="padding:5px 9px">Duyệt <span class="mk">3</span></span><span class="bt g" style="padding:5px 9px">✕</span></div></div>
+            <div class="c"><div class="st"><span class="av">BA</span><span style="flex:1">Bảo Anh</span><span class="bdg b-ok">Đang học</span></div><div class="st"><span class="av">GH</span><span style="flex:1">Gia Huy</span><span class="bdg b-ok">Đang học</span></div><div class="st"><span class="av">TL</span><span style="flex:1">Tuệ Lâm</span><span class="bdg b-no">Chưa kết nối</span></div></div>
+            <div style="flex:1"></div>
+            <div class="bt g">+ Thêm theo danh sách lớp <span class="mk">4</span></div>
+          </div>
+        </div></div>
+        <span class="cap">4C · Trang lớp</span><h4>Mã lớp, yêu cầu chờ duyệt, danh sách</h4>
+        <ol class="ops"><li><span class="k">2</span><span><b>Gửi Zalo</b> → bảng chia sẻ, kèm câu mẫu "Phụ huynh lớp 3A nhập mã K7M2QX trong app Kèm Con Học để nhận bài cô giao".</span></li>
+          <li><span class="k">3</span><span><b>Duyệt</b> → học sinh vào lớp, phụ huynh nhận thông báo trong app. <b>✕</b> → từ chối, hỏi lý do ngắn (tuỳ chọn).</span></li>
+          <li><span class="k">4</span><span>Mở màn 4D để dán danh sách tên.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>16:12</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Thêm theo danh sách</h6></div>
+          <div class="bd">
+            <div class="ip" style="height:80px;color:var(--ink)">Nguyễn Minh An<br>Trần Bảo Anh<br>Lê Gia Huy…</div>
+            <div class="bt">Tạo mã cho 25 em <span class="mk">5</span></div>
+            <div class="c"><span class="lb">Mã riêng từng em</span>
+              <div class="st"><span style="flex:1">Nguyễn Minh An</span><b>A4K-92P</b><span class="bdg b-ok">Đã nhận</span></div>
+              <div class="st"><span style="flex:1">Trần Bảo Anh</span><b>Q7M-3XD</b><span class="bdg b-no">Chưa nhận</span></div>
+              <div class="st"><span style="flex:1">Lê Gia Huy</span><b>H2R-8TC</b><span class="bdg b-no">Chưa nhận</span></div></div>
+            <div style="flex:1"></div>
+            <div class="row"><div class="bt g">🖨 In phiếu mã <span class="mk">6</span></div><div class="bt g">📋 Copy từng mã</div></div>
+          </div>
+        </div></div>
+        <span class="cap">4D · Mã riêng từng em</span><h4>Cách 2: danh sách có sẵn</h4>
+        <ol class="ops"><li><span class="k">5</span><span>Mỗi dòng là một em; bỏ dòng trống, báo tên trùng. Bấm tạo → mỗi em một mã.</span></li>
+          <li><span class="k">6</span><span><b>In phiếu mã</b> → trang in, mỗi em một phiếu cắt rời (tên + mã + hướng dẫn 3 bước). Phụ huynh nhập mã riêng là vào lớp luôn, cô không phải duyệt lại.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>16:30</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Giao bài mới</h6></div>
+          <div class="bd" style="gap:7px">
+            <div class="ip" style="color:var(--ink)">Toán · Bài về nhà thứ Tư</div>
+            <div class="row"><div class="ip">Môn: <b style="color:var(--ink)">Toán</b></div><div class="ip">Hạn: <b style="color:var(--ink)">Thứ Năm</b></div></div>
+            <div class="c" style="display:grid;gap:6px"><span class="lb">Câu 1</span>
+              <div class="ip" style="color:var(--ink)">Mỗi hộp có 8 cây bút chì. Mẹ mua 3 hộp, cho bạn Na 5 cây…</div>
+              <div class="row"><span class="bt g" style="padding:5px">📷 Chụp phiếu <span class="mk">7</span></span><span class="bdg b-warn" style="align-self:center;text-align:center">Lời văn 2 bước <span class="mk">8</span></span></div>
+              <div class="ip hl"><b style="color:#5B4BD1">Cách cô dạy ở lớp</b><br>Lớp mình vẽ sơ đồ đoạn thẳng, chưa dùng phép nhân. <span class="mk">9</span></div>
+              <div class="ip">Đáp án cho phụ huynh (tuỳ chọn)</div></div>
+            <div class="bt g">+ Thêm câu</div>
+            <div style="flex:1"></div>
+            <div class="row tight"><div class="bt g">Lưu nháp</div><div class="bt g">Xem trước</div><div class="bt o">Giao bài <span class="mk">10</span></div></div>
+          </div>
+        </div></div>
+        <span class="cap">4E · Soạn bài</span><h4>Ô "Cách cô dạy" là điểm nhấn</h4>
+        <ol class="ops"><li><span class="k">7</span><span><b>Chụp phiếu</b> → đọc chữ từ ảnh để điền đề, cô sửa lại. Ảnh không lưu.</span></li>
+          <li><span class="k">8</span><span>Dạng bài tự gợi ý; bấm để đổi. Ô "Cách cô dạy" bên dưới tự gợi ý mục cùng dạng bài từ thư viện của cô (4N).</span></li>
+          <li><span class="k">9</span><span><b>Cách cô dạy</b> đi vào prompt phụ <code>p3c_teacher_note</code> rồi vào bài giảng qua <code>{{khung_giao_vien}}</code>; khác phương pháp router gợi ý thì AI theo cô.</span></li>
+          <li><span class="k">10</span><span><b>Xem trước</b> → AI soạn bài giảng cho từng câu để cô duyệt (màn 4F). <b>Giao bài</b> chỉ bật khi mọi câu đã duyệt; phụ huynh trong lớp thấy thẻ bài ngay.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>16:40</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Xem trước · Câu 1/2</h6></div>
+          <div class="bd" style="gap:7px">
+            <div class="c" style="background:#F4F2FF;border-color:#DCD6FF;padding:7px 10px"><b>🏫 Theo cách cô Hạnh dạy</b><br><small>Vẽ sơ đồ đoạn thẳng, chưa dùng phép nhân.</small></div>
+            <div class="c" style="display:grid;gap:5px"><span class="lb">Bài giảng AI soạn (phụ huynh sẽ thấy)</span>
+              <div><b>Bậc 1.</b> Mỗi hộp có mấy cây bút chì?</div>
+              <div><b>Bậc 2.</b> Vẽ 3 đoạn dài bằng nhau, mỗi đoạn là 1 hộp. Cả 3 đoạn có tất cả bao nhiêu cây?<br><small style="color:var(--ink2)">Gợi ý 1: xếp 3 nhóm que tính · Gợi ý 2: đếm thêm 8 mỗi đoạn</small></div>
+              <div><b>Bậc 3.</b> Cho bạn 5 cây thì số bút nhiều lên hay bớt đi?</div></div>
+            <div class="c" style="background:#E6F7EF;border-color:#BFE9D4;padding:7px 10px">🛡 <b>Kiểm định: Đạt</b> · 3 bậc · không lộ đáp án · không dùng phép nhân</div>
+            <div style="flex:1"></div>
+            <div class="row"><div class="bt g">↻ Soạn lại <span class="mk">3</span></div><div class="bt">✓ Dùng bài giảng này <span class="mk">4</span></div></div>
+            <small style="text-align:center;color:var(--ink2)">Câu 2: chưa duyệt</small>
+          </div>
+        </div></div>
+        <span class="cap">4F · Xem trước bài giảng AI</span><h4>Cô duyệt một lần, cả lớp dùng chung</h4>
+        <ol class="ops"><li><span class="k">3</span><span><b>Soạn lại</b> → AI soạn bản mới (khoảng 10 đến 30 giây), bản cũ bỏ đi.</span></li>
+          <li><span class="k">4</span><span><b>Dùng bài giảng này</b> → câu đã duyệt; nút "Giao bài" chỉ bật khi mọi câu đã duyệt.</span></li>
+          <li><span class="k s">·</span><span>Kiểm định "Đã chặn" (AI từng lộ đáp án, máy chủ đã sửa) thì hiện nhãn vàng để cô đọc kỹ trước khi duyệt.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>21:30</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Bài về nhà thứ Tư</h6></div>
+          <div class="bd" style="gap:7px">
+            <div class="c"><span class="lb">Hoàn thành</span><div style="display:flex;align-items:baseline;gap:6px"><b style="font-size:22px">18/25</b><span style="color:var(--ink2)">72% · hạn thứ Năm</span></div></div>
+            <div class="c" style="display:grid;gap:5px"><b>Câu 1 · lời văn 2 bước</b>
+              <div class="bar"><i style="flex:9;background:#22B07D"></i><i style="flex:6;background:#F59E0B"></i><i style="flex:3;background:#FF6B57"></i></div>
+              <small style="color:var(--ink2)">Tự làm 9 · Cần gợi ý 6 · Mẹ hướng dẫn nhiều 3</small>
+              <div style="background:#FFF6E5;border-radius:10px;padding:5px 8px">Bậc hay vướng nhất: <b>Bậc 2 · tìm tổng số bút</b> (8 bé)</div></div>
+            <div class="c" style="background:#F4F2FF;border-color:#DCD6FF"><b>✨ Nhận xét của trợ lý cho cô</b> <span class="mk">11</span><br><small>Cả lớp vướng ở bước tìm tổng. Gợi ý: mai cho lớp vẽ lại sơ đồ 3 đoạn bằng nhau trước khi trừ.</small></div>
+            <div class="tabs"><span class="on">Tất cả</span><span>Cần gợi ý nhiều</span><span>Chưa làm 7</span> </div>
+            <div class="c" style="padding:4px 12px"><div class="st"><span class="av">BA</span><span style="flex:1">Bảo Anh</span><span class="bdg b-ok">Tự làm</span></div><div class="st"><span class="av">GH</span><span style="flex:1">Gia Huy</span><span class="bdg b-warn">Cần gợi ý</span></div><div class="st"><span class="av">TL</span><span style="flex:1">Tuệ Lâm</span><span class="bdg b-no">Chưa làm</span> <span class="mk">12</span></div></div>
+          </div>
+        </div></div>
+        <span class="cap">4G · Kết quả bài</span><h4>Cô thấy trạng thái, không thấy bài làm</h4>
+        <ol class="ops"><li><span class="k">11</span><span>Nhận xét do AI viết từ <b>số liệu tổng hợp</b>, không nhận tên trẻ; bấm "Viết lại" để tạo lại.</span></li>
+          <li><span class="k s">·</span><span>Cả lớp dùng chung bài giảng cô đã duyệt, nên "Bậc 2" là cùng một câu hỏi cho mọi nhà.</span></li>
+          <li><span class="k">12</span><span>Lọc theo trạng thái. Bấm một em chỉ thấy: đã làm câu nào, số lần bí, mức tự đánh giá. Không có ảnh, chat, đáp án của con.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>17:00</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Thông báo lớp 3A</h6></div>
+          <div class="bd" style="gap:7px">
+            <div class="c" style="display:grid;gap:6px"><div class="ip" style="color:var(--ink)">Họp phụ huynh thứ Bảy 8:00</div><div class="ip" style="height:56px">Nội dung…</div>
+              <span>📌 Ghim lên đầu &nbsp; ✅ Yêu cầu xác nhận đã đọc</span>
+              <div class="bt o">Gửi thông báo <span class="mk">13</span></div></div>
+            <span class="lb">Đã gửi</span>
+            <div class="c"><b>📌 Họp phụ huynh thứ Bảy</b><div style="display:flex;justify-content:space-between;margin-top:4px"><small style="color:var(--ink2)">Hôm qua 17:02</small><span class="bdg b-ok">Đã đọc 20/25</span></div><span style="color:#5B4BD1;font-weight:700">Xem 5 nhà chưa đọc › <span class="mk">14</span></span></div>
+            <div class="c"><b>Nhắc mang bút màu</b><div style="display:flex;justify-content:space-between;margin-top:4px"><small style="color:var(--ink2)">Thứ Hai</small><span class="bdg b-no">Đã xem 23/25</span></div></div>
+          </div>
+        </div></div>
+        <span class="cap">4H · Thông báo</span><h4>Một chiều, có xác nhận đã đọc</h4>
+        <ol class="ops"><li><span class="k">13</span><span><b>Gửi</b> → phụ huynh thấy chuông có số trên màn chính. Không có ô trả lời.</span></li>
+          <li><span class="k">14</span><span>Xem danh sách nhà chưa đọc (chỉ tên con trong lớp) để nhắc riêng.</span></li></ol>
+      </div>
+      <div class="shot">
+        <div class="ph tch"><div class="scr"><div class="notch"></div><div class="sb"><span>20:00</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Cài đặt của cô</h6></div>
+          <div class="bd" style="gap:7px">
+            <div class="c" style="display:flex;align-items:center;gap:8px"><span class="av">NH</span><span style="flex:1"><b>Nguyễn Thị Hạnh</b><br><small style="color:var(--ink2)">TH Nghĩa Tân · khối 3</small></span><span class="bt g" style="padding:5px 9px">Sửa</span></div>
+            <div class="c" style="display:grid;gap:5px"><div style="display:flex;align-items:center"><b style="flex:1">📚 Thư viện "Cách cô dạy"</b><span class="mk">1</span></div>
+              <div class="st"><span style="flex:1"><b>Lời văn 2 bước</b><br><small style="color:var(--ink2)">Vẽ sơ đồ đoạn thẳng, chưa dùng phép nhân</small></span></div>
+              <div class="st"><span style="flex:1"><b>Tìm thành phần chưa biết</b><br><small style="color:var(--ink2)">Dùng mô hình phần và tổng</small></span></div>
+              <span style="color:#5B4BD1;font-weight:700">+ Thêm cách dạy</span></div>
+            <div class="c" style="display:grid;gap:5px"><div style="display:flex;align-items:center"><b style="flex:1">🏫 Cài đặt lớp 3A</b><span class="mk">2</span></div>
+              <div class="st"><span style="flex:1">Cách vào lớp</span><span class="bdg b-no">Mã chung + mã riêng ▾</span></div>
+              <div class="st"><span style="flex:1">Hạn nộp mặc định</span><span class="bdg b-no">Hôm sau ▾</span></div>
+              <div class="st"><span style="flex:1">Gửi đáp án của cô cho phụ huynh</span><span class="bdg b-ok">Bật</span></div>
+              <div class="st"><span style="flex:1">Tạo lại mã lớp</span><span style="color:#C2412D;font-weight:700">Đổi mã</span></div></div>
+            <div class="c" style="background:#F6F6F9;padding:7px 10px"><small>🔒 Prompt, luật an toàn và bộ chặn lộ đáp án do Kèm Con Học quản lý chung, cô không cần cài. <span class="mk">3</span></small></div>
+          </div>
+        </div></div>
+        <span class="cap">4N · Cài đặt của cô</span><h4>Mỗi cô một trang riêng</h4>
+        <ol class="ops"><li><span class="k">1</span><span>Thư viện "cách cô dạy" theo dạng bài, tối đa 300 ký tự mỗi mục; khi soạn bài (4E), ô "Cách cô dạy" tự gợi ý mục cùng dạng bài, chọn rồi sửa riêng cho câu đó.</span></li>
+          <li><span class="k">2</span><span>Cài đặt từng lớp: cách vào lớp (mã chung + mã riêng, hoặc chỉ mã riêng), hạn nộp mặc định, có gửi đáp án của cô cho phụ huynh không, tạo lại mã lớp (mã cũ hết hiệu lực).</span></li>
+          <li><span class="k">3</span><span>Cô không thấy và không sửa được cấu hình hệ thống; ghi chú của cô chỉ đi vào khung giáo viên, bộ chặn lộ đáp án vẫn chạy.</span></li>
+          <li><span class="k s">·</span><span>Hồ sơ: đổi tên, khối, số điện thoại, mật khẩu, đăng xuất mọi máy; đổi trường thì admin duyệt lại.</span></li></ol>
+      </div>
+    </div>
+
+    <div class="sub">Màn hình của phụ huynh</div>
+    <div class="shots">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>19:00</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Lớp học của con</h6></div>
+          <div class="bd">
+            <span class="lb">Mã lớp hoặc mã riêng cô gửi</span><div class="ip on" style="font-family:'Baloo 2';font-size:18px;letter-spacing:4px;text-align:center">K7M2QX <span class="mk">1</span></div>
+            <span class="lb">Con nào học lớp này?</span><div class="chips"><span class="chip on">🧒 Mít</span><span class="chip">👧 Na</span></div>
+            <span class="lb">Tên của con trong lớp</span><div class="ip">Nguyễn Minh An</div>
+            <div class="c okc" style="font-size:11px;padding:7px 10px">☑ Tôi đồng ý cho cô xem <b>trạng thái làm bài cô giao</b> của con (không gồm ảnh, trò chuyện với AI).<br>☑ Con đã được giải thích và đồng ý. <span class="mk">2</span></div>
+            <div class="bt">Gửi yêu cầu vào lớp <span class="mk">3</span></div>
+            <span class="lb">Đã kết nối</span>
+            <div class="c" style="display:flex;gap:8px;align-items:center"><span style="flex:1"><b>3A · cô Hạnh</b><br><small style="color:var(--ink2)">Đang chờ cô duyệt</small></span><span class="chip">Rời lớp</span></div>
+          </div>
+        </div></div>
+        <span class="cap">4I · Kết nối lớp</span><h4>Phụ huynh là người kết nối</h4>
+        <ol class="ops"><li><span class="k">1</span><span>Nhập mã lớp (6 ký tự) hoặc mã riêng (có gạch nối); app nhận ra loại mã.</span></li>
+          <li><span class="k">2</span><span>Phải đánh dấu <b>cả 2 ô</b> (phụ huynh và con, theo quy định với trẻ từ 7 tuổi) mới bấm được nút gửi.</span></li>
+          <li><span class="k">3</span><span>Mã lớp → "Đang chờ cô duyệt". Mã riêng → vào lớp ngay, toast "Mít đã vào lớp 3A".</span></li>
+          <li><span class="k s">·</span><span><b>Rời lớp</b> → xác nhận, có ô "Xoá kết quả cũ của con ở lớp này"; cô không nhận kết quả mới nữa. Cô từ chối → thấy lý do, gửi lại được.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>19:45</span><span>●●● ▮</span></div>
+          <div class="bd" style="padding-top:10px">
+            <div style="display:flex;align-items:flex-start"><div style="flex:1"><span class="lb">Thứ tư 21/10 · Lớp 3</span><h5 style="font-size:20px;color:#B83A70">Chào buổi tối, mẹ</h5></div><span style="width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;position:relative">🔔<em style="position:absolute;top:-5px;right:-5px;font-style:normal;background:#C93A3A;color:#fff;border-radius:999px;font-size:9px;padding:0 5px">1</em></span><span class="mk" style="margin-left:4px">5</span></div>
+            <div class="c lavc"><b style="font-size:13.5px">📚 Cô Hạnh giao 2 bài</b> <span class="mk">4</span><br><span>Hạn thứ Năm · Mít đã làm 0/2</span></div>
+            <div class="c" style="background:linear-gradient(160deg,#FFE1EC,#E9DEFF)"><span class="face" style="position:absolute;right:10px;top:8px">• ‿ •</span><h5 style="font-size:16px">Bài tối nay</h5><span style="color:var(--ink2)">Chụp vở, gõ hoặc đọc đề</span>
+              <div class="row" style="margin-top:7px"><div class="c" style="padding:6px;text-align:center;box-shadow:none">📷<br>Chụp</div><div class="c" style="padding:6px;text-align:center;box-shadow:none">⌨️<br>Gõ</div><div class="c" style="padding:6px;text-align:center;box-shadow:none;background:#FFF6D6">🎙️<br>Đọc</div></div></div>
+            <div class="row"><div class="c"><b>🎲 Trò chơi</b></div><div class="c"><b>🫧 Hạ hoả</b></div></div>
+          </div>
+          <div class="nav"><div class="on"><i>🌙</i>Học tối nay</div><div><i>🎲</i>Trò chơi</div><div><i>📊</i>Báo cáo</div><div><i>🧒</i>Con tôi</div></div>
+        </div></div>
+        <span class="cap">4J · Màn chính</span><h4>Thẻ bài cô giao nằm trên cùng</h4>
+        <ol class="ops"><li><span class="k">4</span><span>Bấm thẻ → danh sách câu cô giao (4K). Thẻ ẩn khi đã làm xong hết hoặc quá hạn 3 ngày.</span></li>
+          <li><span class="k">5</span><span>Chuông → hộp thông báo của lớp; mở thông báo là tính đã xem; thông báo cần xác nhận có nút "Đã đọc".</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>19:46</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Bài cô Hạnh giao</h6></div>
+          <div class="bd">
+            <div class="c lavc" style="padding:8px 11px"><b>Toán · Bài về nhà thứ Tư</b><br><span>Hạn thứ Năm · Mít · lớp 3A</span></div>
+            <div class="c" style="display:grid;gap:6px"><span class="lb">Câu 1</span><div>Mỗi hộp có 8 cây bút chì. Mẹ mua 3 hộp, cho bạn Na 5 cây…</div><div style="display:flex;align-items:center;gap:6px"><span class="chip">Chưa làm</span><div class="bt" style="flex:1">Kèm con làm câu này <span class="mk">8</span></div></div></div>
+            <div class="c okc" style="display:grid;gap:4px"><span class="lb" style="color:#23735F">Câu 2</span><div>Lan có 24 quyển vở, cho bạn 5 quyển…</div><span class="chip" style="background:#fff">✅ Đã làm · Con tự làm được</span></div>
+            <div class="c" style="border-style:dashed;text-align:center;font-weight:900;color:var(--ink2)">🔒 Đáp án cô gửi phụ huynh · giữ 1,5 giây để xem <span class="mk">9</span></div>
+          </div>
+        </div></div>
+        <span class="cap">4K · Bài cô giao</span><h4>Danh sách câu và trạng thái</h4>
+        <ol class="ops"><li><span class="k">8</span><span><b>Kèm con làm câu này</b> → màn 4L, dùng bài giảng cô đã duyệt, bỏ qua chụp ảnh và kiểm tra phạm vi.</span></li>
+          <li><span class="k">9</span><span>Đáp án cô gửi (nếu có): giữ 1,5 giây mới hiện, như đáp án bậc; con không thấy và đáp án này không bao giờ gửi cho AI.</span></li>
+          <li><span class="k s">·</span><span>Câu đã làm hiện mức tự đánh giá; làm lại được, cô thấy kết quả của lần mới nhất.</span></li></ol>
+      </div>
+
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>19:50</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Trước khi giảng</h6></div>
+          <div class="bd">
+            <div class="c lavc" style="padding:7px 10px"><b>🏫 Theo cách cô Hạnh dạy</b> <span class="mk">6</span><br><span>Vẽ sơ đồ đoạn thẳng, chưa dùng phép nhân.</span></div>
+            <div class="c"><span class="lb">Đề bài (cô giao)</span><div>Mỗi hộp có 8 cây bút chì. Mẹ mua 3 hộp, cho bạn Na 5 cây…</div></div>
+            <div class="c"><span class="lb">Dạng bài</span><h5 style="font-size:14.5px">Lời văn hai bước</h5><span style="color:var(--ink2)">Vẽ 3 đoạn bằng nhau, mỗi đoạn 8, rồi bớt 5.</span></div>
+            <div class="c warnc"><span class="lb" style="color:#8A5E00">⚠️ Mẹ lưu ý</span><div>Con chưa học phép nhân, đừng nhắc 8 x 3 nhé.</div></div>
+            <div style="flex:1"></div>
+            <div class="bt">Bắt đầu hỏi con từng bước <span class="mk">7</span></div>
+          </div>
+        </div></div>
+        <span class="cap">4L · Kèm bài cô giao</span><h4>Bỏ qua chụp ảnh và kiểm tra phạm vi</h4>
+        <ol class="ops"><li><span class="k">6</span><span>Nhãn cho mẹ biết AI đang theo cách cô dạy (giải nỗi lo "Cô không dạy thế!").</span></li>
+          <li><span class="k">7</span><span>Luồng hỏi từng bước như cũ, dùng <b>bài giảng cô đã duyệt</b> (không gọi AI soạn lại). Màn Xong bài có thêm dòng "Kết quả đã gửi cô (chỉ trạng thái, không gửi bài làm)".</span></li></ol>
+      </div>
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>19:47</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Thông báo của lớp</h6></div>
+          <div class="bd">
+            <div class="c" style="display:grid;gap:5px;border-color:var(--pink);box-shadow:0 5px 0 #FFD1E1"><span class="lb" style="color:#B83A70">📌 Ghim · cô Hạnh · hôm qua 17:02</span><b style="font-size:13.5px">Họp phụ huynh thứ Bảy 8:00</b><span style="color:var(--ink2)">Kính mời phụ huynh lớp 3A dự họp tại phòng 204…</span><div class="bt">✓ Đã đọc <span class="mk">10</span></div></div>
+            <div class="c" style="display:grid;gap:4px"><span class="lb">cô Hạnh · thứ Hai</span><b>Nhắc mang bút màu</b><span class="chip" style="width:fit-content">Đã xem</span></div>
+            <div style="flex:1"></div>
+            <div style="text-align:center;font-weight:900;color:#C93A3A">⚑ Báo nội dung không phù hợp <span class="mk">11</span></div>
+          </div>
+        </div></div>
+        <span class="cap">4M · Hộp thông báo</span><h4>Mở từ chuông trên màn chính</h4>
+        <ol class="ops"><li><span class="k">10</span><span>Thông báo cần xác nhận có nút <b>"Đã đọc"</b>; bấm thì cô thấy nhà mình đã đọc. Thông báo thường: mở ra là tính đã xem.</span></li>
+          <li><span class="k">11</span><span>Báo nội dung → chọn lý do (không liên quan học tập, quảng cáo, ngôn từ không phù hợp, khác) → admin xử lý ở 5H.</span></li>
+          <li><span class="k s">·</span><span>Không có ô trả lời (thông báo một chiều).</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 05 ================= -->
+  <section class="feat" id="s05">
+    <div class="sec-h"><div class="n">Tính năng 05 · prompt 05</div><h2>Admin bản Gấu</h2><p>Bố cục theo các màn xanh dương của Stitch, màu và mascot theo bản Gấu. Mọi số liệu lấy từ dữ liệu thật; số trong bản vẽ chỉ để minh hoạ.</p></div>
+    <div class="sub">Lưu đồ <span class="tag t-violet">Đăng nhập và khoá màn hình</span></div>
+    <div class="card flowbox"><svg class="flowsvg" viewBox="0 0 1000 900" role="img" aria-label="Luồng đăng nhập và khoá màn hình admin"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M380.0 58.0 L380.0 92.0" marker-end="url(#ah)"/><path class="fc-edge" d="M285.0 135.0 L140.0 135.0 L140.0 218.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="190.5" y="125.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="212.5" y="135.5" text-anchor="middle" dominant-baseline="middle">Không</text><path class="fc-edge" d="M475.0 135.0 L760.0 135.0 L760.0 500.0 L490.0 500.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="520.8" y="125.0" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="532.0" y="135.5" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M140.0 282.0 L140.0 332.0" marker-end="url(#ah)"/><path class="fc-edge" d="M140.0 408.0 L140.0 470.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="125.2" y="429.0" width="29.6" height="20" rx="10"/><text class="fc-lbl" x="140.0" y="439.5" text-anchor="middle" dominant-baseline="middle">Sai</text><path class="fc-edge" d="M215.0 370.0 L290.0 370.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="234.1" y="360.0" width="36.8" height="20" rx="10"/><text class="fc-lbl" x="252.5" y="370.5" text-anchor="middle" dominant-baseline="middle">Đúng</text><path class="fc-edge" d="M380.0 410.0 L380.0 472.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="365.2" y="431.0" width="29.6" height="20" rx="10"/><text class="fc-lbl" x="380.0" y="441.5" text-anchor="middle" dominant-baseline="middle">Rồi</text><path class="fc-edge" d="M470.0 370.0 L565.0 370.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="499.1" y="360.0" width="36.8" height="20" rx="10"/><text class="fc-lbl" x="517.5" y="370.5" text-anchor="middle" dominant-baseline="middle">Chưa</text><path class="fc-edge" d="M650.0 398.0 L650.0 500.0 L490.0 500.0" marker-end="url(#ah)"/><path class="fc-edge" d="M380.0 528.0 L380.0 567.0" marker-end="url(#ah)"/><path class="fc-edge dash" d="M275.0 615.0 L240.0 615.0 L240.0 500.0 L270.0 500.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="221.6" y="547.5" width="36.8" height="20" rx="10"/><text class="fc-lbl" x="240.0" y="558.0" text-anchor="middle" dominant-baseline="middle">Chưa</text><path class="fc-edge" d="M380.0 663.0 L380.0 712.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="368.8" y="677.5" width="22.4" height="20" rx="10"/><text class="fc-lbl" x="380.0" y="688.0" text-anchor="middle" dominant-baseline="middle">Có</text><path class="fc-edge" d="M475.0 740.0 L565.0 740.0" marker-end="url(#ah)"/><path class="fc-edge" d="M650.0 702.0 L650.0 615.0 L735.0 615.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="631.6" y="657.2" width="36.8" height="20" rx="10"/><text class="fc-lbl" x="650.0" y="667.7" text-anchor="middle" dominant-baseline="middle">Đúng</text><path class="fc-edge" d="M650.0 778.0 L650.0 838.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="613.6" y="798.0" width="72.8" height="20" rx="10"/><text class="fc-lbl" x="650.0" y="808.5" text-anchor="middle" dominant-baseline="middle">Sai 5 lần</text><rect class="fc-start" x="290.0" y="14.0" width="180" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="380" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0">Mở /admin</tspan></text><polygon class="fc-dec" points="380,92.0 475.0,135 380,178.0 285.0,135"/><text class="fc-t fc-t-dec" x="380" y="127.8" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0">Còn phiên</tspan><tspan x="380" dy="14.5">đăng nhập?</tspan></text><rect class="fc-proc" x="40.0" y="218.0" width="200" height="64" rx="12"/><text class="fc-t" x="140" y="242.2" text-anchor="middle" dominant-baseline="middle"><tspan x="140" dy="0">Đăng nhập</tspan><tspan x="140" dy="15.5">email + mật khẩu</tspan></text><polygon class="fc-dec" points="140,332.0 215.0,370 140,408.0 65.0,370"/><text class="fc-t fc-t-dec" x="140" y="370.0" text-anchor="middle" dominant-baseline="middle"><tspan x="140" dy="0">Đúng?</tspan></text><rect class="fc-note" x="50.0" y="470.0" width="180" height="60" rx="12"/><text class="fc-t fc-t-note" x="140" y="492.2" text-anchor="middle" dominant-baseline="middle"><tspan x="140" dy="0">Sai 5 lần:</tspan><tspan x="140" dy="15.5">khoá 30 phút</tspan></text><polygon class="fc-dec" points="380,330.0 470.0,370 380,410.0 290.0,370"/><text class="fc-t fc-t-dec" x="380" y="370.0" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0">Đã đặt PIN?</tspan></text><rect class="fc-proc" x="565.0" y="342.0" width="170" height="56" rx="12"/><text class="fc-t" x="650" y="370.0" text-anchor="middle" dominant-baseline="middle"><tspan x="650" dy="0">Đặt PIN 4 đến 6 số</tspan></text><rect class="fc-proc" x="270.0" y="472.0" width="220" height="56" rx="12"/><text class="fc-t" x="380" y="500.0" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0">Làm việc trong admin</tspan></text><polygon class="fc-dec" points="380,567.0 485.0,615 380,663.0 275.0,615"/><text class="fc-t fc-t-dec" x="380" y="607.8" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0">Không thao tác</tspan><tspan x="380" dy="14.5">quá 15 phút?</tspan></text><rect class="fc-proc" x="285.0" y="712.0" width="190" height="56" rx="12"/><text class="fc-t" x="380" y="740.0" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0">Màn khoá PIN</tspan></text><polygon class="fc-dec" points="650,702.0 735.0,740 650,778.0 565.0,740"/><text class="fc-t fc-t-dec" x="650" y="740.0" text-anchor="middle" dominant-baseline="middle"><tspan x="650" dy="0">PIN đúng?</tspan></text><rect class="fc-end" x="735.0" y="593.0" width="230" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="850" y="615.0" text-anchor="middle" dominant-baseline="middle"><tspan x="850" dy="0">Về đúng trang đang xem</tspan></text><rect class="fc-end" x="515.0" y="838.0" width="270" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="650" y="860.0" text-anchor="middle" dominant-baseline="middle"><tspan x="650" dy="0">Sai 5 lần: về màn đăng nhập</tspan></text></svg></div>
+
+    <div class="sub">5A · Đăng nhập và 5B · Khoá PIN</div>
+    <div class="grid2">
+      <div class="dkwrap"><div class="dk" style="min-width:480px"><div class="bar0"><i></i><i></i><i></i><span>/admin</span></div>
+        <div style="min-height:380px;display:grid;place-items:center;background:radial-gradient(400px 220px at 50% 0%,#FFE9C2,transparent 70%),#FFF8EC">
+          <div class="c" style="width:300px;display:grid;gap:9px;text-align:center">
+            <svg width="64" height="64" style="margin:0 auto"><use href="#bear"/></svg>
+            <h3 style="font-size:19px">Chào bạn quay lại</h3><span class="sub2">Đăng nhập khu quản trị Kèm Con Học</span>
+            <div class="ipt" style="text-align:left">Email</div><div class="ipt on" style="text-align:left">••••••••••</div>
+            <span class="bt" style="justify-content:center">Đăng nhập <span class="mk">1</span></span>
+            <span class="sub2">Quên mật khẩu? Liên hệ superadmin</span>
+          </div></div></div></div>
+      <div class="dkwrap"><div class="dk" style="min-width:480px"><div class="bar0"><i></i><i></i><i></i><span>/admin (đã khoá)</span></div>
+        <div style="min-height:380px;display:grid;place-items:center;background:#FFF8EC">
+          <div class="c" style="width:300px;display:grid;gap:9px;text-align:center">
+            <div style="position:relative;width:64px;margin:0 auto"><svg width="64" height="64"><use href="#bear"/></svg><svg width="24" height="24" style="position:absolute;right:-8px;bottom:0"><use href="#lock"/></svg></div>
+            <h3 style="font-size:17px">Gấu đang giữ cửa</h3><span class="sub2">Nhập PIN để vào tiếp nhé, Huyền</span>
+            <div class="pdots"><i class="f"></i><i class="f"></i><i></i><i></i></div>
+            <div class="keypad"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span style="font-size:11px">Hiện số</span><span>0</span><span>⌫</span></div>
+            <span class="sub2">Quên PIN? <b style="color:#9A5B00">Đăng nhập lại bằng email</b> <span class="mk">2</span></span>
+          </div></div></div></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <ol class="ops card"><li><span class="k">1</span><span><b>Đăng nhập</b> → lần đầu hỏi đặt PIN 4 đến 6 số, rồi vào Tổng quan. Không hiện menu, số liệu, IP trước khi đăng nhập. Sai 5 lần → khoá 30 phút.</span></li></ol>
+      <ol class="ops card"><li><span class="k">2</span><span>Màn khoá hiện sau 15 / 30 / 60 phút không thao tác (admin chọn) hoặc khi bấm "Khoá". PIN đúng → về đúng trang đang xem; sai 5 lần → về đăng nhập. "Hiện số" chỉ hiện số đang gõ.</span></li></ol>
+    </div>
+
+    <div class="sub">5C · Tổng quan</div>
+    <div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/admin</span></div>
+      <div class="shell">
+        <div class="side">
+          <div class="brand"><svg width="30" height="30"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị</small></div></div>
+          <div class="nv on">🏡 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình & Học sinh</div><div class="nv">📖 Nhật ký kèm học <span class="cnt">1</span></div><div class="nv">📊 Báo cáo</div><div class="nv">🏫 Giáo viên & Lớp học <span class="cnt">3</span></div><div class="nv">⚙️ Cấu hình AI & Hệ thống</div><div class="nv">🧰 Công cụ nội bộ</div>
+          <div class="tip"><svg width="34" height="34"><use href="#bear"/></svg><span><b>Gấu nhắc:</b> 3 giáo viên đang chờ duyệt</span></div>
+          <div class="me"><span class="avt">H</span><span style="flex:1"><b>Huyền</b><br>superadmin</span>🔒 ⎋</div>
+          <div style="font-size:10.5px;color:#047857;padding:4px 6px">● AI hoạt động · 1,2 giây</div>
+        </div>
+        <div class="main">
+          <div class="hd"><div class="srch">🔍 Tìm gia đình, tên gọi của con, mã buổi học…</div><span class="clk">Giờ VN · Thứ tư 21:05</span><span class="bell">🔔<em>5</em></span></div>
+          <div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><h3>Chào buổi tối, Huyền 🍯</h3><span class="sub2">Thứ tư 21/10/2026 · 37 buổi kèm đang diễn ra trong giờ vàng</span></div><span class="segm"><span>Hôm nay</span><span class="on">7 ngày</span><span>30 ngày</span></span><span class="mk">1</span></div>
+          <div class="kpis">
+            <div class="c kpi"><span class="lb">Gia đình hoạt động</span><b>184 <small style="font-size:12px;color:#8A6A4A">/ 241</small></b><span class="up">▲ 12% so với 7 ngày trước</span></div>
+            <div class="c kpi"><span class="lb">Học sinh đang học</span><b>226</b><span class="up">▲ 8%</span></div>
+            <div class="c kpi"><span class="lb">Buổi kèm</span><b>1 032</b><span class="sub2">TB 14 phút/buổi</span></div>
+            <div class="c kpi"><span class="lb">Con tự làm được</span><b>61%</b><span class="dn">▼ 2 điểm</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:12px">
+            <div class="c"><span class="lb">Tỉ trọng môn</span><div class="stack" style="margin:6px 0 4px"><i style="flex:64;background:#F6A623"></i><i style="flex:22;background:#7FB7F5"></i><i style="flex:10;background:#10B981"></i><i style="flex:4;background:#FB7185"></i></div><span class="sub2">Toán 64% · Tiếng Việt 22% · Tiếng Anh 10% · Khác 4%</span>
+              <div class="lb" style="margin-top:8px">Khung giờ vàng (số buổi theo giờ)</div>
+              <div class="bars"><i style="height:8%"></i><i style="height:10%"></i><i style="height:14%"></i><i style="height:22%"></i><i style="height:40%"></i><i class="pk" style="height:92%"></i><i class="pk" style="height:100%"></i><i style="height:58%"></i><i style="height:20%"></i></div>
+              <div class="hx"><span>14h</span><span>15h</span><span>16h</span><span>17h</span><span>18h</span><span>19h</span><span>20h</span><span>21h</span><span>22h</span></div></div>
+            <div class="c" style="display:grid;gap:6px;align-content:start"><span class="lb">Việc cần xử lý <span class="mk">2</span></span>
+              <div style="display:flex;align-items:center;gap:8px"><span style="flex:1">🏫 3 giáo viên chờ duyệt</span><span class="bt g">Xem</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="flex:1">🛡 1 buổi AI lộ đáp án (đã chặn)</span><span class="bt r">Xem</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="flex:1">🚩 4 góp ý "Giảng chưa đúng"</span><span class="bt g">Xem</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="flex:1">📣 0 báo cáo nội dung</span><span class="pill p-done">Ổn</span></div>
+              <div class="lb" style="margin-top:4px">Chất lượng AI</div><span class="sub2">/chat 2,8s (p95 6,1s) · /vision 3,9s · /stt 2,2s · lỗi 1,4%</span></div>
+          </div>
+          <div class="c"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="lb" style="flex:1">Buổi kèm gần nhất · tự làm mới 30 giây</span><span class="bt g">⏸ Tạm dừng <span class="mk">3</span></span></div>
+            <table><thead><tr><th>Thời gian</th><th>Học sinh</th><th>Người kèm</th><th>Môn & dạng bài</th><th>Phương pháp</th><th>Tiến độ</th><th>Tự đánh giá</th><th></th></tr></thead><tbody>
+              <tr><td>Vừa xong</td><td>Mít · lớp 3</td><td>Bố</td><td>Toán · lời văn 2 bước</td><td>Singapore CPA</td><td>4/4 · bí 1</td><td><span class="pill p-done">Tự làm được</span></td><td>👁</td></tr>
+              <tr><td>3 phút</td><td>Na · lớp 1</td><td>Mẹ</td><td>Tiếng Việt · vần</td><td>Hỏi gợi mở</td><td>2/3</td><td><span class="pill p-learn">Đang học</span></td><td>👁</td></tr>
+              <tr><td>9 phút</td><td>Bơ · lớp 2</td><td>Bà</td><td>Toán · phép chia</td><td>Quy nạp</td><td>3/3</td><td><span class="pill p-att">AI lộ đáp án · đã chặn</span></td><td>👁</td></tr>
+            </tbody></table></div>
+        </div>
+      </div></div></div>
+    <div class="grid2" style="margin-top:10px">
+      <ol class="ops card"><li><span class="k">1</span><span>Đổi kỳ Hôm nay / 7 ngày / 30 ngày → mọi thẻ và biểu đồ tính lại, mũi tên so với kỳ trước liền kề.</span></li>
+        <li><span class="k">2</span><span>Mỗi việc có nút đi thẳng tới đúng màn đã lọc sẵn (ví dụ "Xem" lộ đáp án → Nhật ký, lọc "Đã chặn").</span></li></ol>
+      <ol class="ops card"><li><span class="k">3</span><span>Bảng tự làm mới 30 giây; "Tạm dừng" để đọc kỹ. Bấm 👁 → ngăn kéo chi tiết buổi (như 5E).</span></li>
+        <li><span class="k s">·</span><span>Chuông trên cùng = tổng việc cần xử lý. Ô tìm toàn cục tìm được tên gia đình, tên gọi của con, mã buổi học.</span></li></ol>
+    </div>
+
+    <div class="sub">5D · Gia đình & Học sinh (đang mở ngăn kéo chi tiết)</div>
+    <div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>/admin/gia-dinh</span></div>
+      <div class="shell">
+        <div class="side"><div class="brand"><svg width="30" height="30"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị</small></div></div>
+          <div class="nv">🏡 Tổng quan</div><div class="nv on">👨‍👩‍👧 Gia đình & Học sinh</div><div class="nv">📖 Nhật ký kèm học</div><div class="nv">📊 Báo cáo</div><div class="nv">🏫 Giáo viên & Lớp học</div><div class="nv">⚙️ Cấu hình AI & Hệ thống</div><div class="nv">🧰 Công cụ nội bộ</div></div>
+        <div class="main">
+          <div class="hd"><div class="srch">🔍 Tìm gia đình, tên gọi của con…</div><span class="clk">21:06</span><span class="bell">🔔<em>5</em></span></div>
+          <div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">Gia đình & Học sinh</h3><span class="bt g">⬇ Xuất CSV</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="ipt" style="width:220px">🔍 Tên gia đình, tên con…</span><span class="segm"><span class="on">Tất cả</span><span>L1</span><span>L2</span><span>L3</span><span>L4</span><span>L5</span></span><span class="ipt">Trạng thái: Ngủ đông ▾</span><span class="ipt">Bộ sách ▾</span><span class="ipt">Giao diện ▾</span><span class="mk">1</span></div>
+          <div class="c" style="padding:6px 8px"><table><thead><tr><th>☐</th><th>Gia đình</th><th>Thành viên</th><th>Các con</th><th>Chuỗi</th><th>7 ngày</th><th>Lần cuối</th><th>Trạng thái</th></tr></thead><tbody>
+            <tr style="background:#FFF1D6"><td>☐</td><td><b>Nhà Mít</b> · f7k2</td><td>Mẹ Lan, Bố Tuấn, Bà Hoa</td><td>Mít L3 · Na L1</td><td>6</td><td>5 buổi · 74′</td><td>2 giờ</td><td><span class="pill p-done">Hoạt động</span> <span class="mk">2</span></td></tr>
+            <tr><td>☐</td><td><b>Nhà Bắp</b> · q91x</td><td>Mẹ Thảo</td><td>Bắp L2</td><td>0</td><td>0</td><td>34 ngày</td><td><span class="pill p-att">Ngủ đông</span></td></tr>
+            <tr><td>☐</td><td><b>Nhà Sóc</b> · m3pd</td><td>Bố Dũng, Mẹ Hà</td><td>Sóc L4</td><td>2</td><td>2 buổi</td><td>hôm qua</td><td><span class="pill p-done">Hoạt động</span></td></tr>
+          </tbody></table></div>
+          <div class="drawer">
+            <div style="display:flex;align-items:center;gap:8px"><h3 style="font-size:17px;flex:1">Nhà Mít</h3><span>✕</span></div>
+            <div class="tabs2"><span class="on">Tổng quan</span><span>Các con</span><span>Thành viên</span><span>Buổi học</span><span>Lớp học</span><span>Góp ý</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="c"><span class="lb">Buổi 30 ngày</span><b style="font-family:Mitr;font-size:18px;display:block">21</b></div><div class="c"><span class="lb">Tự làm được</span><b style="font-family:Mitr;font-size:18px;display:block">64%</b></div></div>
+            <div class="c"><span class="lb">Thành viên</span><div>Mẹ Lan (chủ nhà) · Bố Tuấn (kèm con) · Bà Hoa (chỉ xem)</div></div>
+            <div class="c"><span class="lb">Giao diện</span><div>Kẹo Bông · Hiệu ứng: Đầy đủ</div></div>
+            <div style="flex:1"></div>
+            <div style="display:grid;gap:6px"><span class="bt g">🔑 Đặt lại mật khẩu <span class="mk">3</span></span><span class="bt g">✏️ Đổi tên</span><span class="bt g">📵 Thu hồi mọi phiên đăng nhập</span><span class="bt r">🗑 Xoá gia đình <span class="mk">4</span></span></div>
+          </div>
+        </div>
+      </div></div></div>
+    <div class="grid2" style="margin-top:10px">
+      <ol class="ops card"><li><span class="k">1</span><span>Lọc kết hợp được; trạng thái: Hoạt động (có buổi trong 7 ngày) / Ít hoạt động (8 đến 30 ngày) / Ngủ đông (hơn 30 ngày). Nút "Đặt lại bộ lọc" hiện khi đang lọc.</span></li>
+        <li><span class="k">2</span><span>Bấm một dòng → ngăn kéo chi tiết bên phải; bảng vẫn cuộn được phía sau.</span></li></ol>
+      <ol class="ops card"><li><span class="k">3</span><span>Đặt lại mật khẩu → hộp thoại nhập mật khẩu tạm, hiện 1 lần để gửi cho phụ huynh; ghi nhật ký thao tác.</span></li>
+        <li><span class="k">4</span><span>Xoá gia đình → hộp thoại đỏ, <b>gõ lại "Nhà Mít"</b> mới bấm được; xoá cả dữ liệu buổi học, mã mời, kết nối lớp.</span></li></ol>
+    </div>
+
+    <div class="sub">5E · Nhật ký kèm học & Chất lượng AI (đang xem một buổi AI lộ đáp án, đã bị chặn)</div>
+    <div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>/admin/nhat-ky?loc=da-chan</span></div>
+      <div class="shell">
+        <div class="side"><div class="brand"><svg width="30" height="30"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị</small></div></div>
+          <div class="nv">🏡 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình & Học sinh</div><div class="nv on">📖 Nhật ký kèm học <span class="cnt">1</span></div><div class="nv">📊 Báo cáo</div><div class="nv">🏫 Giáo viên & Lớp học</div><div class="nv">⚙️ Cấu hình AI & Hệ thống</div><div class="nv">🧰 Công cụ nội bộ</div></div>
+        <div class="main">
+          <div class="hd"><div class="srch">🔍 Tìm trong đề bài, mã buổi…</div><span class="clk">21:07</span><span class="bell">🔔<em>5</em></span></div>
+          <h3>Nhật ký kèm học & Chất lượng AI</h3>
+          <div class="kpis"><div class="c kpi"><span class="lb">Buổi 7 ngày</span><b>1 032</b></div><div class="c kpi"><span class="lb">Đạt kiểm định</span><b>97,8%</b></div><div class="c kpi" style="background:#FFF1F2;border-color:#FECDD3"><span class="lb" style="color:#BE123C">Lộ đáp án: đã chặn / lọt</span><b style="color:#BE123C">1 / 0</b></div><div class="c kpi"><span class="lb">Cần xem lại</span><b>6</b></div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="ipt">Môn ▾</span><span class="ipt">Khối ▾</span><span class="ipt">Phương pháp ▾</span><span class="ipt">Nguồn đề ▾</span><span class="ipt on">Kiểm định: Đã chặn ▾</span></div>
+          <div class="c" style="padding:6px 8px;margin-right:372px"><table><thead><tr><th>Thời gian</th><th>Học sinh</th><th>Đề bài</th><th>Tiến độ</th><th>Kiểm định</th></tr></thead><tbody>
+            <tr class="bad"><td>20:58</td><td>Bơ · L2</td><td>Chia đều 12 kẹo cho 3 bạn…</td><td>3/3 · gợi ý 1</td><td><span class="pill p-att">Đã chặn</span> <span class="mk">1</span></td></tr></tbody></table></div>
+          <div class="drawer" style="width:372px">
+            <div style="display:flex;align-items:center;gap:8px"><h3 style="font-size:16px;flex:1">Buổi #KCH-8824</h3><span>✕</span></div>
+            <span class="sub2">Bơ · lớp 2 · Bà kèm · Router: "Khái niệm mới · quy nạp"</span>
+            <div class="c" style="padding:8px 10px"><span class="lb">Bậc 3 · AI trả về (đã chặn)</span><div style="background:#FFF1F2;border-radius:8px;padding:4px 6px;margin-top:2px"><s>"Vậy mỗi bạn được <u><b>4</b></u> cái kẹo đúng không con?"</s></div><span class="lb" style="margin-top:4px;display:block">Con đã thấy (bản soạn lại)</span><div>"Con chia 12 hạt vào 3 đĩa xem mỗi đĩa mấy hạt nhé?"</div><span class="lb" style="margin-top:4px;display:block">Đáp án chỉ cho phụ huynh</span><div>12 : 3 = 4 cái kẹo</div></div>
+            <div class="c" style="padding:8px 10px"><span class="lb">Kiểm định</span><div>🛡 Đã chặn: số 4 (kết quả, không có trong đề) nằm trong câu hỏi bậc 3; máy chủ soạn lại 1 lần, bản mới đạt<br>✅ 3 bậc · ✅ câu hỏi dưới 25 chữ · ✅ có bài anh em</div></div>
+            <div class="c" style="padding:8px 10px"><span class="lb">Dòng thời gian</span><div>20:51 bắt đầu · 20:54 bí bậc 2 · 20:55 mở gợi ý mức 1 · 20:58 xong</div></div>
+            <div style="flex:1"></div>
+            <div style="display:grid;gap:6px"><span class="bt g">🧪 Mở trong bàn thử <span class="mk">3</span></span><span class="bt g">⭐ Lưu làm ví dụ mẫu <span class="mk">2</span></span><span class="bt">✓ Đánh dấu đã xem <span class="mk">4</span></span></div>
+          </div>
+        </div>
+      </div></div></div>
+    <div class="grid2" style="margin-top:10px">
+      <ol class="ops card"><li><span class="k">1</span><span>Bấm dòng → ngăn kéo chi tiết: từng bậc, bản AI trả về bị chặn (gạch ngang) và bản con đã thấy, dòng thời gian, kết quả kiểm định, góp ý của phụ huynh (nếu có).</span></li>
+        <li><span class="k">2</span><span><b>Lưu làm ví dụ mẫu</b> (chỉ dùng cho buổi tốt) → thêm vào thư viện ví dụ của Prompt Studio; buổi "Đã chặn" hoặc "Lọt" thì nút này mờ.</span></li></ol>
+      <ol class="ops card"><li><span class="k">3</span><span><b>Mở trong bàn thử</b> → sang Prompt Studio với đúng đề này để sửa prompt và chạy lại.</span></li>
+        <li><span class="k">4</span><span><b>Đánh dấu đã xem</b> → bỏ khỏi "Cần xem lại", ghi người xem và giờ.</span></li></ol>
+    </div>
+
+    <div class="sub">5F · Báo cáo và 5G · Cấu hình (tab Giao diện app)</div>
+    <div class="grid2">
+      <div class="dkwrap"><div class="dk" style="min-width:520px"><div class="bar0"><i></i><i></i><i></i><span>/admin/bao-cao</span></div>
+        <div class="main" style="padding:14px 16px 16px;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px"><h3 style="font-size:18px;flex:1">Báo cáo</h3><span class="segm"><span class="on">Tuần này</span><span>Tháng</span><span>Tuỳ chỉnh</span></span><span class="bt g">⬇ CSV · In <span class="mk">2</span></span></div>
+          <div class="c"><span class="lb">Ai kèm (số buổi theo ngày)</span>
+            <div class="bars" style="height:70px"><i style="height:50%"></i><i style="height:62%"></i><i class="pk" style="height:80%"></i><i style="height:55%"></i><i class="pk" style="height:92%"></i><i style="height:70%"></i><i style="height:40%"></i></div>
+            <span class="sub2">Mẹ 58% · Bố 27% · Ông bà 12% · khác 3%</span></div>
+          <div class="c"><span class="lb">Bản đồ nhiệt khung giờ</span>
+            <div class="heat" style="margin-top:4px"><span></span><span>16h</span><span>17h</span><span>18h</span><span>19h</span><span>20h</span><span>21h</span><span>22h</span><span>23h</span>
+              <span>T2</span><i style="opacity:.1"></i><i style="opacity:.2"></i><i style="opacity:.4"></i><i style="opacity:.8"></i><i style="opacity:1"></i><i style="opacity:.6"></i><i style="opacity:.2"></i><i style="opacity:.05"></i>
+              <span>T4</span><i style="opacity:.1"></i><i style="opacity:.25"></i><i style="opacity:.45"></i><i style="opacity:.9"></i><i style="opacity:.95"></i><i style="opacity:.5"></i><i style="opacity:.2"></i><i style="opacity:.05"></i>
+              <span>CN</span><i style="opacity:.3"></i><i style="opacity:.35"></i><i style="opacity:.3"></i><i style="opacity:.5"></i><i style="opacity:.6"></i><i style="opacity:.3"></i><i style="opacity:.1"></i><i style="opacity:.02"></i></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="c"><div class="tabs2"><span class="on">Chuỗi dài</span><span>Mới 7 ngày</span><span>Cần hỗ trợ 9</span> <span class="mk">1</span></div><div style="margin-top:6px">Nhà Mít · 6 ngày<br>Nhà Sóc · 5 ngày</div></div>
+            <div class="c"><span class="lb">NPS</span><b style="font-family:Mitr;font-size:22px;display:block">+48</b><span class="sub2">62 phản hồi · #con_tự_giác_hơn</span></div>
+          </div>
+        </div></div></div>
+      <div class="dkwrap"><div class="dk" style="min-width:520px"><div class="bar0"><i></i><i></i><i></i><span>/admin/cau-hinh/giao-dien</span></div>
+        <div class="main" style="padding:14px 16px 16px;gap:10px;min-height:420px">
+          <h3 style="font-size:18px">Cấu hình · [5] Giao diện app</h3>
+          <div class="c" style="padding:6px 8px"><table><thead><tr><th>Bộ giao diện</th><th>Hiện cho gia đình</th><th>Mặc định</th><th>Đang dùng</th></tr></thead><tbody>
+            <tr><td>Kẹo Bông</td><td><span class="tg"></span></td><td>◉ <span class="mk">2</span></td><td>132 nhà</td></tr>
+            <tr><td>Bạn Gấu</td><td><span class="tg"></span></td><td>○</td><td>41 nhà</td></tr>
+            <tr><td>Khu Vườn Đêm</td><td><span class="tg"></span></td><td>○</td><td>27 nhà</td></tr>
+            <tr><td>Bảng Phấn</td><td><span class="tg off"></span> <span class="mk">1</span></td><td>○</td><td>3 nhà</td></tr>
+            <tr><td colspan="4" class="sub2">… 4 bộ còn lại</td></tr></tbody></table></div>
+          <div style="height:40px"></div>
+          <div class="savebar">Có 1 thay đổi chưa lưu <span class="bt">Lưu thay đổi <span class="mk">3</span></span></div>
+        </div></div></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <ol class="ops card"><li><span class="k">1</span><span>Báo cáo: 3 nhóm gia đình; "Cần hỗ trợ" = nghỉ hơn 4 ngày hoặc hơn 50% buổi "mẹ hướng dẫn nhiều". Bấm tên → mở ngăn kéo gia đình.</span></li>
+        <li><span class="k">2</span><span>Xuất CSV (UTF-8 mở được bằng Excel) hoặc "In" ra trang in gọn để lưu PDF.</span></li></ol>
+      <ol class="ops card"><li><span class="k">1</span><span>Tắt một bộ → gia đình mới không thấy bộ đó; nhà đang dùng vẫn giữ tới khi tự đổi (xem điểm cần chốt).</span></li>
+        <li><span class="k">2</span><span>Chọn bộ mặc định cho gia đình mới và gia đình chưa từng chọn. <b>3</b> Lưu → app nhận trong tối đa 10 phút.</span></li></ol>
+    </div>
+
+    <div class="sub">5H · Giáo viên & Lớp học</div>
+    <div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>/admin/giao-vien</span></div>
+      <div class="shell">
+        <div class="side"><div class="brand"><svg width="30" height="30"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị</small></div></div>
+          <div class="nv">🏡 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình & Học sinh</div><div class="nv">📖 Nhật ký kèm học</div><div class="nv">📊 Báo cáo</div><div class="nv on">🏫 Giáo viên & Lớp học <span class="cnt">3</span></div><div class="nv">⚙️ Cấu hình AI & Hệ thống</div><div class="nv">🧰 Công cụ nội bộ</div></div>
+        <div class="main">
+          <div class="hd"><div class="srch">🔍 Tìm giáo viên, trường, lớp…</div><span class="clk">21:08</span><span class="bell">🔔<em>5</em></span></div>
+          <h3>Giáo viên & Lớp học</h3>
+          <div class="tabs2"><span class="on">Chờ duyệt 3</span><span>Đã duyệt 12</span><span>Tạm khoá 0</span><span>Lớp học 15</span><span>Báo cáo nội dung 0 <span class="mk">2</span></span></div>
+          <div class="c" style="padding:6px 8px"><table><thead><tr><th>Giáo viên</th><th>Trường · tỉnh</th><th>Khối</th><th>Liên hệ</th><th>Đăng ký</th><th>Thao tác</th></tr></thead><tbody>
+            <tr><td><b>Nguyễn Thị Hạnh</b></td><td>TH Nghĩa Tân · Hà Nội</td><td>3</td><td>hanh.nt@…edu.vn</td><td>2 giờ trước</td><td><span class="bt" style="padding:4px 10px">Duyệt</span> <span class="bt r" style="padding:4px 10px">Từ chối</span> <span class="mk">1</span></td></tr>
+            <tr><td><b>Trần Minh Quân</b></td><td>TH Kim Đồng · Đà Nẵng</td><td>4, 5</td><td>0905…</td><td>hôm qua</td><td><span class="bt" style="padding:4px 10px">Duyệt</span> <span class="bt r" style="padding:4px 10px">Từ chối</span></td></tr>
+          </tbody></table></div>
+        </div>
+      </div></div></div>
+    <div class="grid2" style="margin-top:10px">
+      <ol class="ops card"><li><span class="k">1</span><span><b>Duyệt</b> → cô vào được <code>/teacher</code> ở lần đăng nhập tới (chưa gửi email). <b>Từ chối</b> → hộp thoại bắt buộc ghi lý do (cô thấy lý do này). Mọi thao tác ghi nhật ký.</span></li></ol>
+      <ol class="ops card"><li><span class="k">2</span><span>Báo cáo nội dung từ phụ huynh: xem thông báo bị báo cáo → Ẩn thông báo / Tạm khoá giáo viên / Bỏ qua.</span></li></ol>
+    </div>
+
+    <div class="sub">5I · Khảo sát mức hài lòng (hiện ở app phụ huynh)</div>
+    <div class="shots">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:15</span><span>●●● ▮</span></div>
+          <div class="top"><h6 style="opacity:.4">Xong bài rồi! 🎉</h6></div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <h5 style="font-size:16px">Mẹ sẵn lòng giới thiệu Kèm Con Học cho bạn bè đến mức nào?</h5>
+            <div style="display:grid;grid-template-columns:repeat(11,1fr);gap:3px"><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">0</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">1</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">2</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">3</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">4</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">5</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">6</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">7</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">8</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:var(--pink);color:#fff;border-color:var(--pinkd)">9</span><span style="aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;border:2px solid var(--line);background:#fff">10</span></div>
+            <div style="display:flex;justify-content:space-between;color:var(--ink2);font-size:10px"><span>Không chút nào</span><span>Chắc chắn</span></div>
+            <div class="chips"><span class="chip on">Con tự giác hơn</span><span class="chip">Bớt cáu khi dạy con</span><span class="chip on">AI giảng dễ hiểu</span><span class="chip">Còn chậm</span><span class="chip">Còn sai</span></div>
+            <div class="ip">Góp ý thêm (không bắt buộc)</div>
+            <div class="bt">Gửi <span class="mk">1</span></div>
+            <div class="row" style="text-align:center;font-weight:900;color:var(--ink2)"><span>Để sau <span class="mk">2</span></span><span>Không hỏi nữa</span></div>
+          </div>
+        </div></div>
+        <span class="cap">5I · NPS</span><h4>Hỏi một lần sau mỗi 10 buổi hoàn thành</h4>
+        <ol class="ops"><li><span class="k">1</span><span>Gửi điểm 0 đến 10, chip và góp ý → admin xem ở Báo cáo (5F).</span></li>
+          <li><span class="k">2</span><span><b>Để sau</b> → hỏi lại sau 5 buổi; <b>Không hỏi nữa</b> → thôi hẳn.</span></li>
+          <li><span class="k s">·</span><span>Chỉ hiện sau khi đã nhận sticker, không chen giữa lúc đang học.</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 06 ================= -->
+  <section class="feat" id="s06">
+    <div class="sec-h"><div class="n">Tính năng 06 · prompt 06</div><h2>Sửa lỗi nhanh và bỏ dữ liệu giả</h2><p>Những chỗ app đang làm sai hoặc nói sai ngay bây giờ. Các mục không có giao diện (đổi con ở màn chính, lịch sử ghi đúng dạng bài, đánh dấu và ẩn sticker mẫu thay vì xoá, câu chữ quyền riêng tư) xem trong prompt 06.</p></div>
+    <div class="shots" style="margin-top:14px">
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>20:55</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Đọc đề bài</h6></div>
+          <div class="bd">
+            <div class="c warnc"><span style="font-size:16px">📶</span><h5 style="font-size:15.5px">Mạng đang chậm, chưa soạn được bài của con</h5><span>Mẹ thử lại nhé. Bài mẫu chỉ để làm quen, không phải bài của con.</span></div>
+            <div class="bt">Thử lại <span class="mk">1</span></div>
+            <div class="bt g">Xem bài mẫu để làm quen <span class="mk">2</span></div>
+            <div style="flex:1"></div>
+            <span class="lb">Nếu chọn bài mẫu, mọi màn sau có dải:</span>
+            <div style="background:#4A3B5C;color:#fff;border-radius:12px;padding:6px 10px;font-weight:900;text-align:center">Đây là bài mẫu, không phải bài của con</div>
+          </div>
+        </div></div>
+        <span class="cap">6A · Mạng chậm</span><h4>Không lặng lẽ chuyển sang bài mẫu</h4>
+        <ol class="ops"><li><span class="k">1</span><span><b>Thử lại</b> → gọi AI lại với đúng đề của con.</span></li>
+          <li><span class="k">2</span><span>Bài mẫu: có dải nhãn ở mọi màn sau, không ghi lịch sử, không tính sticker.</span></li></ol>
+      </div>
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:02</span><span>●●● ▮</span></div>
+          <div class="top"><h6 style="opacity:.4">Hỏi con từng bước</h6></div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <h5 style="font-size:17px">Con bí 2 lần rồi 🙈</h5>
+            <span style="color:var(--ink2)">Không sao đâu. Mình nghỉ một chút, hoặc thử bài dễ hơn rồi quay lại bài này.</span>
+            <div class="bt">🪜 Hạ độ khó <span class="mk">3</span></div>
+            <div class="bt g">Nghỉ 3 phút</div>
+          </div>
+        </div></div>
+        <span class="cap">6B · Hạ độ khó</span><h4>Dùng luật router "Con bí lần 2" đang bị bỏ quên</h4>
+        <ol class="ops"><li><span class="k">3</span><span>Gọi soạn lại với luật "Con bí lần 2 trở đi": bài cùng dạng, số nhỏ hơn, rồi quay lại bài gốc. Có màn chờ ngắn.</span></li></ol>
+      </div>
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>18:20</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Chơi gì với đồ trong nhà?</h6></div>
+          <div class="bd">
+            <div class="thumb">🪮</div>
+            <div class="c"><span class="lb">AI đoán đây là</span><h5 style="font-size:18px">Cây lược</h5><span style="color:var(--ink2)">Đúng chưa mẹ?</span></div>
+            <div class="row"><div class="bt">Đúng rồi <span class="mk">4</span></div><div class="bt g">Chọn đồ khác <span class="mk">5</span></div></div>
+            <div class="c" style="border-style:dashed;color:var(--ink2);font-size:11px">Bỏ dòng "Độ tin cậy 98.6%" (con số viết cứng, không do AI trả về).</div>
+          </div>
+        </div></div>
+        <span class="cap">6C · Chụp đồ chơi</span><h4>Hỏi lại thay vì con số giả</h4>
+        <ol class="ops"><li><span class="k">4</span><span><b>Đúng rồi</b> → sang trò chơi của đồ vật đó.</span></li>
+          <li><span class="k">5</span><span><b>Chọn đồ khác</b> → mở bộ chọn sửa đang có.</span></li></ol>
+      </div>
+      <div class="shot">
+        <div class="ph app"><div class="scr"><div class="notch"></div><div class="sb"><span>21:05</span><span>●●● ▮</span></div>
+          <div class="top"><span class="ib">‹</span><h6>Hỏi con từng bước</h6></div>
+          <div class="bd">
+            <div class="c"><span class="lb" style="color:#B83A70">Mẹ đọc to cho Mít</span><div style="font-family:'Baloo 2';font-size:14.5px;line-height:1.3">"Có 24 cây bút rồi. Cho bạn Na 5 cây thì nhiều lên hay bớt đi?"</div></div>
+            <div class="c warnc" style="display:grid;gap:6px"><b>💡 Mẹ cần AI gợi ý thêm cách giảng?</b>
+              <div class="ip on" style="color:var(--ink)">con chưa học phép nhân</div>
+              <div class="row"><div class="bt g">🎙️ Nói <span class="mk">6</span></div><div class="bt">Hỏi AI cách giảng <span class="mk">7</span></div></div></div>
+          </div>
+        </div></div>
+        <span class="cap">6D · Ghi chú bằng giọng nói</span><h4>Chữ nói ra đi vào câu hỏi gửi AI</h4>
+        <ol class="ops"><li><span class="k">6</span><span>Nói → chữ điền vào ô (trước đây chỉ hiện trong toast rồi mất); mẹ sửa được.</span></li>
+          <li><span class="k">7</span><span>Gửi kèm khung ghi chú (prompt p4b) sang màn "Hỏi thêm AI", dùng prompt <code>p4_chat</code> trong Prompt Studio.</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CHỐT ================= -->
+  <section class="feat" id="chot">
+    <div class="sec-h"><div class="n">Cần anh chị xem</div><h2>Điểm cần chốt trong bản vẽ này</h2><p>Các điểm dưới đây mình đã tự chọn khi vẽ; nếu đồng ý thì giữ, không thì ghi lại để mình cập nhật vào prompt.</p></div>
+    <div class="card tbl" style="margin-top:12px"><table>
+      <thead><tr><th>#</th><th>Chỗ</th><th>Mình đã chọn</th><th>Phương án khác</th></tr></thead><tbody>
+        <tr><td>1</td><td>Cổng giáo viên</td><td>Phong cách cố định Bento Mềm, chữ Be Vietnam Pro</td><td>Dùng bản Gấu như admin; hoặc cho cô chọn như phụ huynh</td></tr>
+        <tr><td>2</td><td>Admin tắt một bộ giao diện</td><td>Nhà đang dùng bộ đó vẫn giữ tới khi tự đổi</td><td>Ép chuyển sang bộ mặc định ngay</td></tr>
+        <tr><td>3</td><td>Thẻ "Cô giao bài" trên màn chính</td><td>Ẩn khi làm xong hết hoặc quá hạn 3 ngày</td><td>Luôn hiện tới khi cô đóng bài</td></tr>
+        <tr><td>4</td><td>Đặt lại mật khẩu ở admin</td><td>Admin đặt mật khẩu tạm, hiện 1 lần để tự gửi phụ huynh</td><td>Gửi link đặt lại (cần email hoặc số điện thoại, hiện app chưa thu)</td></tr>
+        <tr><td>5</td><td>Người "Kèm con" mời người khác</td><td>Chỉ mời được vai trò "Chỉ xem"</td><td>Chỉ chủ nhà được mời</td></tr>
+        <tr><td>6</td><td>Đề "Đề có chỗ chưa rõ"</td><td>Chỉ một nút "Xem lại đề"</td><td>Thêm nút "Vẫn soạn bài"</td></tr>
+        <tr><td>7</td><td>Hạn link báo cáo tuần</td><td>Mặc định 7 ngày, chọn được 14</td><td>Luôn 14 ngày</td></tr>
+        <tr><td>8</td><td>Vai trò admin "support"</td><td>Không xem nội dung buổi học (đề, bài giảng AI)</td><td>Cho xem như editor</td></tr>
+        <tr><td>9</td><td>Làm lại bài cô giao</td><td>Được, cô thấy kết quả lần mới nhất</td><td>Khoá sau lần đầu</td></tr>
+        <tr><td>10</td><td>Bài giảng cho bài cô giao</td><td>AI soạn một lần, cô duyệt, cả lớp dùng chung</td><td>Mỗi nhà AI soạn riêng (thống kê "bậc hay vướng" không so được)</td></tr>
+      </tbody></table></div>
+  </section>
+</main>
+<footer>Kèm Con Học · Giao diện và thao tác chốt · 24/10/2026 · đi kèm 6 file prompt trong thư mục re-design</footer>
+<button class="theme-btn" id="tb" type="button">🌓 Sáng / Tối</button>
+<script>
+  (function () {
+    var root = document.documentElement, key = "kch-ui-theme";
+    try { var s = localStorage.getItem(key); if (s) root.dataset.theme = s; } catch (e) {}
+    document.getElementById("tb").addEventListener("click", function () {
+      var dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = dark ? "light" : "dark";
+      try { localStorage.setItem(key, root.dataset.theme); } catch (e) {}
+    });
+  })();
+</script>
+</body>
+</html>

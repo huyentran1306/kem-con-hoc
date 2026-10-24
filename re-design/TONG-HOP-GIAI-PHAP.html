@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nâng cấp Kèm Con Học</title>
+<meta name="description" content="Tổng hợp giải pháp nâng cấp Kèm Con Học sau vòng trong: giao diện theo sở thích, kiểm tra ảnh ngoài phạm vi, nhóm gia đình và báo cáo Zalo, cổng giáo viên, làm lại trang admin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F4F1; --paper: #FFFFFF; --ink: #1D1B26; --ink-2: #4A4758; --muted: #7C7889; --line: #E6E1DA;
+    --accent: #E0457B; --accent-soft: #FDE7EF; --blue: #2563EB; --blue-soft: #E8F0FE; --green: #0F8A5F; --green-soft: #E2F5EC;
+    --amber: #B26A00; --amber-soft: #FFF2D9; --red: #B42318; --red-soft: #FDECEA; --violet: #6D4AE0; --violet-soft: #EEE9FF;
+    --r: 18px; --sh: 0 1px 2px rgba(29, 27, 38, .05), 0 10px 30px -18px rgba(29, 27, 38, .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+      --accent: #FF6E9C; --accent-soft: #3A1E2B; --blue: #7AA5FF; --blue-soft: #1D2A44; --green: #4CD39A; --green-soft: #173327;
+      --amber: #F5B451; --amber-soft: #3A2C14; --red: #FF8A7F; --red-soft: #3D1D1A; --violet: #A993FF; --violet-soft: #2A2342;
+      --sh: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+    --accent: #FF6E9C; --accent-soft: #3A1E2B; --blue: #7AA5FF; --blue-soft: #1D2A44; --green: #4CD39A; --green-soft: #173327;
+    --amber: #F5B451; --amber-soft: #3A2C14; --red: #FF8A7F; --red-soft: #3D1D1A; --violet: #A993FF; --violet-soft: #2A2342;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Be Vietnam Pro", system-ui, sans-serif; background: var(--bg); color: var(--ink-2); line-height: 1.65; font-size: 16px; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; }
+  b, strong { color: var(--ink); }
+  a { color: var(--blue); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .88em; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; color: var(--ink); }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+  header.hero { padding: 48px 0 24px; }
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -.8px; margin-top: 8px; }
+  .hero p.lead { font-size: 18px; margin-top: 12px; max-width: 820px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .meta span { font-size: 13.5px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; text-decoration: none; font-size: 13.5px; font-weight: 700; color: var(--ink-2); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); }
+  nav.toc a:hover { border-color: var(--ink-2); }
+  section { padding: 34px 0 10px; }
+  .sec-h { margin-bottom: 18px; }
+  .sec-h .n { font-size: 12.5px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .sec-h h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 800; letter-spacing: -.4px; margin-top: 2px; }
+  .sec-h p { margin-top: 6px; max-width: 820px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 20px 22px; box-shadow: var(--sh); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .p-red { background: var(--red-soft); color: var(--red); } .p-amber { background: var(--amber-soft); color: var(--amber); } .p-green { background: var(--green-soft); color: var(--green); }
+  .p-blue { background: var(--blue-soft); color: var(--blue); } .p-violet { background: var(--violet-soft); color: var(--violet); } .p-pink { background: var(--accent-soft); color: var(--accent); }
+  ul.list { padding-left: 20px; display: grid; gap: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+  tr:last-child td { border-bottom: 0; }
+  .tbl { overflow-x: auto; }
+
+  /* sơ đồ thứ tự */
+  .flow { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; align-items: center; gap: 0; }
+  .node { background: var(--paper); border: 1.5px solid var(--line); border-radius: 16px; padding: 14px 16px; box-shadow: var(--sh); }
+  .node h4 { font-size: 15.5px; } .node p { font-size: 13.5px; margin-top: 2px; }
+  .node.base { border-color: var(--red); } .node.ind { border-color: var(--green); }
+  .stack { display: grid; gap: 12px; }
+  .arrow { text-align: center; color: var(--muted); font-size: 24px; font-weight: 800; }
+  .lane-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+  /* tính năng */
+  .feat { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .feat-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .feat-h .num { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 17px; color: #fff; background: var(--c, var(--accent)); flex-shrink: 0; }
+  .feat-h h3 { font-size: 22px; flex: 1; min-width: 220px; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 6px 16px; font-size: 15px; }
+  .kv dt { font-weight: 800; color: var(--ink); }
+  .kv dd { margin: 0; }
+  .feat > *, .kv dd, .grid2 > *, .card { min-width: 0; }
+  .kv dd, .card li, .card p { overflow-wrap: anywhere; }
+  .file { max-width: 100%; overflow-wrap: anywhere; display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 700; background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 6px 10px; color: var(--ink); text-decoration: none; }
+  .demo { background: var(--green-soft); border-radius: 14px; padding: 12px 14px; font-size: 14.5px; color: var(--ink); }
+  .demo b { color: var(--green); }
+  .warn { background: var(--amber-soft); border-radius: 14px; padding: 12px 14px; font-size: 14.5px; color: var(--ink); }
+  .warn b { color: var(--amber); }
+  .swatch { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 6px; }
+  .swatch div { border-radius: 12px; padding: 10px 8px; font-size: 12px; font-weight: 800; text-align: center; border: 1px solid rgba(0, 0, 0, .08); }
+  .zalo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .zalo .card { padding: 16px 18px; }
+  .zalo h4 { font-size: 16px; margin: 6px 0 4px; }
+  .zalo p { font-size: 14px; }
+
+  /* quyết định */
+  .decide { display: grid; gap: 12px; }
+  .q { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+  .q .i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--accent-soft); color: var(--accent); }
+  .q h4 { font-size: 16px; }
+  .q p { font-size: 14.5px; margin-top: 2px; }
+  .plan { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .plan .card h4 { font-size: 15.5px; margin-bottom: 6px; }
+  .plan .card ul { padding-left: 18px; font-size: 14px; display: grid; gap: 4px; }
+  footer { color: var(--muted); font-size: 13.5px; text-align: center; padding: 40px 0 60px; }
+  .theme-btn { position: fixed; right: 16px; bottom: 16px; z-index: 6; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 700 13px "Be Vietnam Pro", sans-serif; box-shadow: var(--sh); cursor: pointer; }
+
+  @media (max-width: 860px) {
+    .grid2, .grid3, .zalo, .plan { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr; gap: 6px; }
+    .arrow { transform: rotate(90deg); }
+    .kv { grid-template-columns: 1fr; }
+    .swatch { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media print { nav.toc, .theme-btn { display: none; } .card { box-shadow: none; break-inside: avoid; } body { background: #fff; } }
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <div class="eyebrow">Kèm Con Học · Sau vòng trong</div>
+  <h1>Kế hoạch nâng cấp để vào chung kết</h1>
+  <p class="lead">Tổng hợp giải pháp cho 5 hướng nâng cấp anh chị đề ra, cộng một phần nền tảng bảo mật bắt buộc phát hiện khi đọc bản đang chạy. Mỗi hướng có một file prompt riêng trong thư mục này để giao cho AI lập trình.</p>
+  <div class="meta">
+    <span>📅 24/10/2026</span>
+    <span>🌐 Bản đã đọc: kem-con-hoc-5xf.pages.dev</span>
+    <span>📁 7 file prompt (00 đến 06) + thư mục tham-khao</span>
+    <span>🖼 <a href="UI-VA-THAO-TAC.html">Xem giao diện và thao tác từng màn</a></span>
+  </div>
+</header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#thu-tu">Thứ tự làm</a><a href="#phat-hien">Phát hiện ở bản live</a><a href="#f00">00 Nền tảng</a><a href="#f01">01 Giao diện</a><a href="#f02">02 Ảnh ngoài phạm vi</a><a href="#f03">03 Gia đình & Zalo</a><a href="#f04">04 Giáo viên</a><a href="#f05">05 Admin</a><a href="#f06">06 Sửa lỗi nhanh</a><a href="#review">Đã sửa sau review</a><a href="#quyet-dinh">Cần anh chị chốt</a><a href="#lo-trinh">Lộ trình</a>
+</div></nav>
+
+<main class="wrap">
+
+  <section id="thu-tu">
+    <div class="sec-h"><div class="n">Tổng quan</div><h2>Thứ tự làm và phụ thuộc</h2><p>Ba phần làm được ngay, độc lập (giao diện, kiểm tra ảnh, sửa lỗi nhanh). Ba hướng còn lại cần nền tảng tài khoản ở máy chủ làm trước, vì đụng tới dữ liệu của nhiều người và của trẻ em.</p></div>
+    <div class="card">
+      <div class="flow">
+        <div class="stack">
+          <div class="node ind"><h4>01 · Giao diện theo sở thích</h4><p>Độc lập, làm ngay</p></div>
+          <div class="node ind"><h4>02 · Ảnh ngoài phạm vi</h4><p>Độc lập, làm ngay</p></div>
+          <div class="node ind"><h4>06 · Sửa lỗi nhanh</h4><p>Độc lập, làm ngay</p></div>
+        </div>
+        <div class="arrow">·</div>
+        <div class="node base"><h4>00 · Nền tảng tài khoản & bảo mật</h4><p>Đăng nhập ở máy chủ, token, phân quyền, ghi nhận từng buổi học. Bắt buộc trước 03, 04, 05.</p></div>
+        <div class="arrow">→</div>
+        <div class="stack">
+          <div class="node"><h4>05 · Admin mới</h4><p>Cần dữ liệu buổi học thật</p></div>
+          <div class="node"><h4>03 · Nhóm gia đình & Zalo</h4><p>Cần tài khoản nhiều thành viên</p></div>
+          <div class="node"><h4>04 · Cổng giáo viên</h4><p>Cần phân quyền, dữ liệu trẻ</p></div>
+        </div>
+      </div>
+      <p class="lane-note">Viền xanh: làm song song được ngay. Viền đỏ: nền tảng phải xong trước. Các mục trong admin cho 01, 02, 03, 04 cắm vào khung admin của prompt 05 khi từng phần xong.</p>
+    </div>
+  </section>
+
+  <section id="phat-hien">
+    <div class="sec-h"><div class="n">Đọc bản đang chạy</div><h2>Những điều phát hiện khi đọc bản live</h2><p>Đọc trực tiếp mã của bản đang deploy (ngày 24/10). Các điểm "nghiêm trọng" là lý do có thêm prompt 00.</p></div>
+    <div class="card tbl">
+      <table>
+        <thead><tr><th>Mức</th><th>Phát hiện</th><th>Ảnh hưởng</th><th>Xử lý ở</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill p-red">Nghiêm trọng</span></td><td>Trình duyệt gửi <b>câu SQL tự do</b> lên <code>/db/query</code>, <code>/db/execute</code>, không cần đăng nhập</td><td>Ai biết địa chỉ gateway có thể đọc, có thể sửa xoá dữ liệu mọi gia đình (chưa thử, chỉ đọc code)</td><td>00</td></tr>
+          <tr><td><span class="pill p-red">Nghiêm trọng</span></td><td>Dữ liệu từng gia đình đọc ghi tự do qua <code>/db/kv/fam:{id}:state</code></td><td>Lộ tên con, lớp, lịch sử học của gia đình khác</td><td>00</td></tr>
+          <tr><td><span class="pill p-red">Nghiêm trọng</span></td><td>PIN admin so sánh <b>trên trình duyệt</b>, giá trị nằm trong file JS và hiện cả dòng gợi ý</td><td>Ai cũng vào được admin</td><td>00, 05</td></tr>
+          <tr><td><span class="pill p-amber">Cao</span></td><td>Không có bước kiểm tra ảnh có phải bài tập không; trường <code>can_hoi_lai</code> của AI bị bỏ qua</td><td>Ảnh selfie, đồ chơi vẫn được soạn "bài giảng"</td><td>02</td></tr>
+          <tr><td><span class="pill p-amber">Cao</span></td><td>App phụ huynh <b>không tự tải prompt</b> admin đã lưu, chỉ trang admin đọc</td><td>Câu "mọi gia đình nhận bản mới" của Prompt Studio chưa đúng</td><td>00</td></tr>
+          <tr><td><span class="pill p-amber">Cao</span></td><td>Trẻ mới tạo được gán sẵn 15 sticker mẫu; "Ai kèm Mẹ/Bố" lấy từ lịch chia ca; admin có thẻ số liệu viết cứng</td><td>Báo cáo hiện số liệu giả, giám khảo hỏi sâu sẽ lộ</td><td>03, 05, 06</td></tr>
+          <tr><td><span class="pill p-amber">Cao</span></td><td>Khoảng 40 KB tài liệu nội bộ (Team Prompts, URL worker phụ, tên thành viên) nằm trong bundle công khai</td><td>Lộ thông tin nội bộ</td><td>00</td></tr>
+          <tr><td><span class="pill p-blue">Trung bình</span></td><td>Một gia đình một tài khoản; "Mời bố" chỉ gửi link trang chủ và bảo bố tạo gia đình riêng</td><td>Bố không thấy tiến độ của con</td><td>03</td></tr>
+          <tr><td><span class="pill p-blue">Trung bình</span></td><td>Chọn con ở màn chính gọi hàm <code>patch</code> chưa định nghĩa (gia đình 2 con bấm là lỗi); câu hỏi bằng giọng nói ở màn Hỏi con không được chuyển vào chat</td><td>Lỗi chức năng</td><td>06</td></tr>
+          <tr><td><span class="pill p-blue">Trung bình</span></td><td>Lời cam kết "dữ liệu chỉ ở trên máy bạn", "ảnh xoá sau 24 giờ" không khớp thực tế (đồng bộ đám mây bật mặc định)</td><td>Rủi ro bị hỏi về quyền riêng tư</td><td>06</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 00 -->
+  <section id="f00">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:var(--red)">00</div><h3>Nền tảng tài khoản và bảo mật</h3><span class="pill p-red">Bắt buộc trước 03, 04, 05</span><span class="pill p-violet">Ước lượng: 2 đến 3 ngày</span></div>
+      <dl class="kv">
+        <dt>Vấn đề</dt><dd>Không có đăng nhập ở máy chủ: trình duyệt tự gửi SQL, tự kiểm tra PIN admin, mật khẩu băm một lượt trên trình duyệt.</dd>
+        <dt>Giải pháp</dt><dd>API mới <code>/api/v1</code> chạy song song API cũ: đăng ký, đăng nhập ra token, đọc ghi dữ liệu chỉ của gia đình mình, admin đăng nhập bằng email + mật khẩu kiểm tra ở worker, phân quyền superadmin / editor / support, nhật ký thao tác, giới hạn số lần đăng nhập sai. Thêm bảng <code>learning_sessions</code> ghi từng buổi học để có số liệu thật.</dd>
+        <dt>Cách chuyển</dt><dd>3 giai đoạn: A thêm API mới, B chuyển app sang, C khoá đường cũ. <b>Giai đoạn C chỉ làm khi anh chị xác nhận.</b> Giữ cách băm mật khẩu hiện tại để app cũ vẫn đăng nhập được. Người đang đăng nhập kiểu cũ chỉ phải nhập lại mật khẩu một lần.</dd>
+        <dt>Thêm</dt><dd>Bảng các con và dòng thời gian từng buổi học, chuyển dữ liệu cũ sang, không tự xoá dữ liệu người dùng (chỉ dọn dữ liệu kỹ thuật; tự dọn dữ liệu cũ là công tắc trong admin, mặc định tắt), phụ huynh tự xoá toàn bộ dữ liệu khi muốn, khoá dò PIN ở máy chủ. <b>Chạy trên gói Free:</b> giữ cách băm mật khẩu hiện tại nhưng chuyển việc kiểm tra lên máy chủ (hash không còn lộ ra trình duyệt); băm mạnh hơn để dành khi lên gói trả phí. Có bảng quy tắc để không vượt giới hạn gói Free.</dd>
+        <dt>File prompt</dt><dd><a class="file" href="00_NEN_TANG_TAI_KHOAN_VA_BAO_MAT.md">📄 00_NEN_TANG_TAI_KHOAN_VA_BAO_MAT.md</a></dd>
+      </dl>
+      <div class="warn"><b>Vì sao không bỏ qua được:</b> khi có giáo viên và nhiều gia đình, dữ liệu trẻ em (tên, lớp, tiến độ) bị lộ là rủi ro thật, và giám khảo kỹ thuật rất có thể hỏi "dữ liệu được bảo vệ thế nào".</div>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section id="f01">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:var(--accent)">01</div><h3>Giao diện theo sở thích gia đình</h3><span class="pill p-green">Làm ngay</span><span class="pill p-violet">Ước lượng: 2 ngày</span></div>
+      <dl class="kv">
+        <dt>Mong muốn</dt><dd>Có một giao diện mặc định; bố mẹ chọn giao diện mình thích, toàn app đổi theo.</dd>
+        <dt>Giải pháp</dt><dd>8 bộ giao diện từ file thiết kế, mỗi bộ là một bảng biến màu, font, bo góc và lớp trang trí riêng. Chọn ở "Con tôi → 🎨 Giao diện cả nhà" (xem thử ngay, bấm xác nhận mới lưu), thêm một bước tuỳ chọn trong onboarding. Lựa chọn lưu trong dữ liệu gia đình nên mọi máy của nhà cùng đổi. Chỉ tải font của bộ đang dùng. Tuỳ chọn "Hiệu ứng: Đầy đủ / Nhẹ / Tắt".</dd>
+        <dt>Việc nền</dt><dd>Thay hết màu viết thẳng trong code bằng biến (bản hiện tại có nhiều chỗ), đổi icon emoji ở thanh dưới và các nút chính sang icon nét đồng bộ, kiểm tra tương phản đạt chuẩn ở cả 8 bộ. Font Sora của bộ Bento không có tiếng Việt nên đổi sang Lexend; font tự host để tạo được ảnh báo cáo.</dd>
+        <dt>Admin</dt><dd>Bật tắt bộ nào được hiện, đặt bộ mặc định, xem số gia đình dùng mỗi bộ.</dd>
+        <dt>File prompt</dt><dd><a class="file" href="01_GIAO_DIEN_THEO_SO_THICH_GIA_DINH.md">📄 01_GIAO_DIEN_THEO_SO_THICH_GIA_DINH.md</a> · <a class="file" href="tham-khao/8-bo-giao-dien-app.html">🎨 tham-khao/8-bo-giao-dien-app.html</a></dd>
+      </dl>
+      <div class="swatch">
+        <div style="background:#0B1026;color:#22D3EE">Cực Quang</div>
+        <div style="background:#FFF7E6;color:#FF4F8B;border:2px solid #1B1B2F">Sticker</div>
+        <div style="background:#F6F1E7;color:#C4613A">Sổ Tay</div>
+        <div style="background:#F7F7FA;color:#FF6B57">Bento</div>
+        <div style="background:#0F2A24;color:#FFD166">Khu Vườn</div>
+        <div style="background:#2F4A41;color:#F9E07F">Bảng Phấn</div>
+        <div style="background:#FFF4F8;color:#FF6FA3">Kẹo Bông ★</div>
+        <div style="background:#FFF8EC;color:#E08E0B">Bạn Gấu</div>
+      </div>
+      <div class="demo"><b>Điểm cộng ở chung kết:</b> đổi giao diện ngay trên sân khấu, cả app đổi trong 1 giây. Hợp tiêu chí Sáng tạo và Sự chỉn chu. ★ Mặc định đề xuất: Kẹo Bông (gần màu hồng thương hiệu hiện tại nhất).</div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="f02">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:var(--amber)">02</div><h3>Ảnh và đề ngoài phạm vi</h3><span class="pill p-green">Làm ngay</span><span class="pill p-violet">Ước lượng: 1 đến 2 ngày</span></div>
+      <dl class="kv">
+        <dt>Mong muốn</dt><dd>Chụp hình ngoài phạm vi của con thì xử lý thế nào, có luật trong admin để kiểm soát.</dd>
+        <dt>Giải pháp</dt><dd>Gộp phân loại vào bước đọc ảnh (không thêm thời gian chờ): AI trả JSON gồm loại ảnh, môn và lớp ước đoán, số bài trong ảnh, đề bài. Đề gõ hoặc đọc bằng giọng nói đi qua luật nhanh trước, chỉ hỏi AI khi chưa chắc.</dd>
+        <dt>9 loại xử lý</dt><dd>Không phải bài tập, nhạy cảm (mặt người, giấy tờ), ảnh mờ, nhiều bài, ngoài chương trình (lớp 6+), lệch lớp so với hồ sơ của con, môn chưa hỗ trợ, nhờ làm hộ, không liên quan. Mỗi loại có hành động: chặn, chụp lại, cảnh báo cho tiếp tục, chọn một bài, chuyển hướng (gợi ý dàn ý thay vì làm hộ), cho qua.</dd>
+        <dt>Admin</dt><dd>Mục "🛡️ Luật phạm vi ảnh & đề": bật tắt, môn và lớp cho phép, ngưỡng lệch lớp, hành động và lời nhắn từng loại, từ khoá chặn, bàn thử với 6 mẫu có sẵn, nhật ký phạm vi (không lưu ảnh).</dd>
+        <dt>File prompt</dt><dd><a class="file" href="02_KIEM_TRA_ANH_NGOAI_PHAM_VI.md">📄 02_KIEM_TRA_ANH_NGOAI_PHAM_VI.md</a></dd>
+      </dl>
+      <div class="demo"><b>Điểm cộng ở chung kết:</b> giơ ảnh selfie trước camera, app trả lời nhẹ nhàng "Ảnh này chưa giống trang bài tập". Chứng minh sản phẩm chỉn chu và an toàn cho trẻ.</div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="f03">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:var(--blue)">03</div><h3>Nhóm gia đình và báo cáo qua Zalo</h3><span class="pill p-red">Cần 00</span><span class="pill p-violet">Ước lượng: 2 đến 3 ngày</span></div>
+      <dl class="kv">
+        <dt>Mong muốn</dt><dd>Nhiều người cùng vào một gia đình (hiện mỗi người một gia đình riêng); gửi báo cáo qua Zalo.</dd>
+        <dt>Nhóm gia đình</dt><dd>Vai trò Chủ nhà / Kèm con / Chỉ xem (ông bà ở xa chỉ xem), có ma trận quyền kiểm ở máy chủ. Máy mới đăng nhập bằng mã một lần, không lộ danh sách người thân. Mời bằng mã 6 ký tự + QR + link <code>/join/ABC234</code>, gửi qua Zalo bằng bảng chia sẻ của điện thoại. Người được mời đặt PIN cá nhân. Mọi buổi học ghi đúng người kèm, báo cáo "Ai kèm" thành số liệu thật. Gộp dữ liệu khi 2 người dùng cùng lúc không mất sticker.</dd>
+        <dt>Báo cáo Zalo</dt><dd>Ảnh báo cáo tuần theo giao diện của nhà, tạo sẵn khi mở tab (để chia sẻ được trên iPhone), có QR dẫn tới trang xem không cần đăng nhập: bản chụp số liệu lúc tạo, hạn mặc định 7 ngày, thu hồi được, không hiện họ tên đầy đủ. Nút "Gửi báo cáo vào nhóm Zalo gia đình" mở bảng chia sẻ để chọn nhóm. Tối Chủ nhật app nhắc "Báo cáo tuần đã sẵn sàng".</dd>
+        <dt>File prompt</dt><dd><a class="file" href="03_NHOM_GIA_DINH_VA_BAO_CAO_ZALO.md">📄 03_NHOM_GIA_DINH_VA_BAO_CAO_ZALO.md</a></dd>
+      </dl>
+      <h4 style="margin-top:4px">Ba mức tích hợp Zalo (đã tra cứu)</h4>
+      <div class="zalo">
+        <div class="card"><span class="pill p-green">Mức 1 · Làm ngay</span><h4>Bảng chia sẻ của điện thoại</h4><p>Gửi ảnh + link vào bất kỳ nhóm Zalo nào. Miễn phí, không cần đăng ký gì. Đây là cách duy nhất để đăng vào nhóm chat gia đình: Zalo không có API cho app tự đăng vào nhóm chat cá nhân.</p></div>
+        <div class="card"><span class="pill p-amber">Mức 2 · Cần OA</span><h4>Nút chia sẻ Zalo trên web</h4><p>Zalo Social Plugin (<code>sp.zalo.me/plugins/sdk.js</code>, thẻ <code>zalo-share-button</code>) cần mã Zalo Official Account. Đẹp hơn trên máy tính, giá trị thêm không nhiều so với mức 1.</p></div>
+        <div class="card"><span class="pill p-red">Mức 3 · Để sau</span><h4>ZNS gửi tự động</h4><p>Cần OA xác thực doanh nghiệp, mẫu tin được Zalo duyệt, link chỉ ở nút bấm thuộc tên miền của OA, có hạn mức theo giai đoạn, tính phí theo tin, cần số điện thoại và đồng ý của phụ huynh. Không kịp và không nên làm trước chung kết.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="f04">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:var(--green)">04</div><h3>Cổng giáo viên: lớp học, giao bài, thông báo</h3><span class="pill p-red">Cần 00</span><span class="pill p-violet">Ước lượng: 3 đến 5 ngày</span></div>
+      <dl class="kv">
+        <dt>Mong muốn</dt><dd>Giáo viên gửi bài tập, thông báo cho các con; admin có trang đăng ký cho cô, cô thêm học sinh vào.</dd>
+        <dt>Ý tưởng chính</dt><dd>Cô giao bài kèm ghi chú <b>"Cách cô dạy ở lớp"</b> (ví dụ "vẽ sơ đồ đoạn thẳng, chưa dùng phép nhân"). AI soạn câu hỏi gợi mở <b>đúng theo cách cô dạy</b>. Giải đúng nỗi đau "Cô không dạy thế!" trong phim mở đầu.</dd>
+        <dt>Luồng</dt><dd>Cô đăng ký, <b>admin duyệt</b>. Cô tạo lớp. Thêm học sinh bằng 2 cách: mã lớp chung gửi vào nhóm Zalo phụ huynh của lớp (cô duyệt từng yêu cầu), hoặc cô dán danh sách tên, mỗi em một mã riêng. <b>Phụ huynh là người kết nối con vào lớp</b> và đánh dấu đồng ý. Phụ huynh thấy thẻ "📚 Cô Hạnh giao 2 bài" trên màn chính, bấm là vào thẳng bài giảng.</dd>
+        <dt>Bài giảng</dt><dd>AI soạn bài giảng <b>một lần lúc cô giao</b>, cô xem trước và duyệt, cả lớp dùng chung. Nhờ vậy "bậc 2" là cùng một câu hỏi cho mọi nhà, lộ đáp án bị chặn trước khi tới trẻ, và tốn ít lượt gọi AI hơn.</dd>
+        <dt>Cô thấy gì</dt><dd>Tỉ lệ hoàn thành, mức con tự làm, <b>bậc cả lớp hay vướng nhất</b>, nhận xét của trợ lý (chỉ dùng số liệu tổng hợp, không gửi tên trẻ cho AI). Cô <b>không</b> thấy ảnh, nội dung chat, sticker, dữ liệu gia đình.</dd>
+        <dt>Cấu hình 3 tầng</dt><dd><b>Admin</b>: một trang cho toàn hệ thống (prompt, router, luật an toàn, duyệt giáo viên). <b>Giáo viên</b>: mỗi cô một trang "Cài đặt của cô" riêng (hồ sơ, thư viện "cách cô dạy" dùng lại theo dạng bài, cài đặt từng lớp), chỉ thấy lớp của mình, không sửa được prompt hay luật an toàn. <b>Gia đình</b>: mỗi nhà một cài đặt.</dd>
+        <dt>Thông báo</dt><dd>Một chiều, có ghim, có yêu cầu "Đã đọc" và xem ai chưa đọc; phụ huynh báo được nội dung không phù hợp. Chưa làm chat hai chiều để khỏi phải kiểm duyệt.</dd>
+        <dt>Pháp lý</dt><dd>Theo Điều 20 Nghị định 13/2023/NĐ-CP: trẻ từ đủ 7 tuổi <b>cần cả sự đồng ý của trẻ</b> bên cạnh cha mẹ, nên màn kết nối có 2 ô đồng ý. Rời lớp lúc nào cũng được, phụ huynh tự chọn xoá kết quả cũ (không có tự xoá). Luật Bảo vệ dữ liệu cá nhân 2025 có hiệu lực từ 1/1/2026: <b>cần người có chuyên môn pháp lý rà lại</b> trước khi mở cho trường thật.</dd>
+        <dt>File prompt</dt><dd><a class="file" href="04_GIAO_VIEN_LOP_HOC_GIAO_BAI.md">📄 04_GIAO_VIEN_LOP_HOC_GIAO_BAI.md</a></dd>
+      </dl>
+      <div class="demo"><b>Điểm cộng lớn nhất ở chung kết:</b> mở rộng từ "app cho mẹ" thành "cầu nối cô, mẹ và con". Hợp tiêu chí Triển khai ngang (mỗi trường, mỗi lớp dùng được) và Tính ứng dụng.</div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="f05">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:var(--violet)">05</div><h3>Làm lại trang Admin theo thiết kế Stitch</h3><span class="pill p-red">Cần 00</span><span class="pill p-violet">Ước lượng: 3 đến 4 ngày</span></div>
+      <dl class="kv">
+        <dt>Thiết kế có gì</dt><dd>11 màn, 2 phong cách: <b>Xanh dương</b> (bàn điều hành, nhiều bảng số liệu) và <b>Cute</b> (ấm áp, mascot). Màn: Xác thực PIN, Tổng quan, Gia đình & Học sinh, Nhật ký kèm học & Chất lượng AI, Cấu hình AI, Báo cáo gia đình.</dd>
+        <dt>Đã chốt</dt><dd><b>Bản "Gấu"</b> (cute, mascot gấu, màu mật ong và kem) làm mặc định, đồng bộ với bộ "Bạn Gấu" của app. Bố cục, bảng, bộ lọc lấy theo các màn xanh dương cho rõ số liệu. Chữ nhấn dùng nâu mật đậm cho đủ tương phản; mascot và emoji chỉ ở lời chào, màn khoá, trạng thái trống. Bảng màu xanh dương là tuỳ chọn trong menu.</dd>
+        <dt>File prompt</dt><dd><a class="file" href="05_ADMIN_REDESIGN_GIAO_DIEN_VA_TINH_NANG.md">📄 05_ADMIN_REDESIGN_GIAO_DIEN_VA_TINH_NANG.md</a> · thiết kế gốc: <code>Downloads\stitch_admin_dashboard_redesign (2)</code></dd>
+      </dl>
+      <div class="grid2">
+        <div>
+          <h4 style="margin-bottom:8px">Lấy từ thiết kế (làm bằng dữ liệu thật)</h4>
+          <ul class="list">
+            <li><b>Tổng quan:</b> 4 thẻ KPI so với kỳ trước, tỉ trọng môn, <b>khung giờ vàng</b>, sức khoẻ AI (độ trễ, lỗi), ô việc cần xử lý, bảng buổi kèm gần nhất tự làm mới, bảng vinh danh chuỗi ngày.</li>
+            <li><b>Gia đình & Học sinh:</b> bảng có lọc khối, trạng thái hoạt động, bộ sách, giao diện; ngăn kéo chi tiết; xuất CSV; chế độ xem dạng thẻ.</li>
+            <li><b>Nhật ký & Chất lượng AI:</b> chặn lộ đáp án <b>ngay lúc AI trả lời</b> (máy chủ soạn lại hoặc thay câu an toàn trước khi tới trẻ, không tính số có sẵn trong đề), KPI "Lọt: mục tiêu 0", ngăn kéo xem từng bậc, nút "Lưu làm ví dụ mẫu" cho Prompt Studio.</li>
+            <li><b>Báo cáo:</b> chỉ số gắn kết theo người kèm, tiến độ theo môn và khối, <b>bản đồ nhiệt khung giờ</b>, nhóm cần hỗ trợ, <b>NPS</b> (khảo sát mới sau mỗi 10 buổi).</li>
+            <li><b>Cấu hình AI & Hệ thống:</b> 9 tab: Mô hình & tham số, Prompt Studio, Router sư phạm, Luật phạm vi, Giao diện app, Quản trị viên & bảo mật, Nhật ký thao tác, Hạ tầng, Thông báo & Zalo.</li>
+            <li><b>Khoá màn hình PIN</b> với gấu "giữ cửa" và bàn phím số tròn, là lớp khoá nhanh sau đăng nhập email.</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="margin-bottom:8px">Cố ý không làm theo (và lý do)</h4>
+          <ul class="list">
+            <li><span class="pill p-red">Bảo mật</span> PIN <b>1102 hiện rõ</b> ở nhiều màn, viết cứng trong JavaScript; menu và tiến độ của trẻ hiện trước khi đăng nhập.</li>
+            <li><span class="pill p-red">Trái nguyên tắc</span> Vài câu cho thấy AI đưa đáp án ("tìm ra đáp án số 4", "không in đáp án ở 2 lần hỏi đầu"), system prompt nói chuyện thẳng với trẻ.</li>
+            <li><span class="pill p-amber">Không có trong sản phẩm</span> Gói cước, gia hạn, nhiều chi nhánh, số điện thoại phụ huynh, PIN của trẻ và SMS OTP, thu âm giọng bố mẹ, Telegram 2FA, "Khen ZNS".</li>
+            <li><span class="pill p-amber">Chưa có căn cứ</span> "COPPA", "Tiêu chuẩn sư phạm quốc gia", "Chứng nhận Viện Sư Phạm", "100%", "0 lỗi".</li>
+            <li><span class="pill p-blue">Lỗi thiết kế</span> Số liệu mẫu mâu thuẫn giữa các màn, ngày năm 2024, ảnh và logo là link tạm của Stitch, màn Báo cáo pha hồng với xanh, một màu bị thiếu dấu <code>#</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section id="f06">
+    <div class="card feat">
+      <div class="feat-h"><div class="num" style="--c:#0EA5A4">06</div><h3>Sửa lỗi nhanh và bỏ dữ liệu giả</h3><span class="pill p-green">Làm ngay</span><span class="pill p-violet">Ước lượng: 1 ngày</span></div>
+      <dl class="kv">
+        <dt>Vấn đề</dt><dd>Những chỗ app đang làm sai hoặc nói sai ngay bây giờ, đã kiểm tra lại trực tiếp trên mã bản live.</dd>
+        <dt>Lỗi chức năng</dt><dd>Đổi con ở màn chính làm app lỗi (gia đình 2 con); ghi chú bằng giọng nói không tới AI; màn "Hỏi thêm AI" không dùng prompt trong Prompt Studio; luật router "Con bí lần 2" không bao giờ chạy (thêm nút "Hạ độ khó"); lịch sử luôn ghi "Toán lời văn 2 bước"; mạng chậm thì lặng lẽ chuyển sang bài mẫu.</dd>
+        <dt>Dữ liệu giả</dt><dd>15 sticker mẫu gán sẵn cho trẻ mới (chỉ đánh dấu và ẩn khỏi báo cáo, không xoá); nhãn tuần cố định; "Độ tin cậy 98.6%" viết cứng; số ca Mẹ/Bố mặc định 4 và 1.</dd>
+        <dt>Câu chữ hứa sai</dt><dd>"Dữ liệu chỉ ở trên máy bạn" (thực tế đồng bộ đám mây bật mặc định); "nhắc lúc 19:45" (chưa có code nhắc).</dd>
+        <dt>File prompt</dt><dd><a class="file" href="06_SUA_LOI_NHANH_VA_BO_DU_LIEU_GIA.md">📄 06_SUA_LOI_NHANH_VA_BO_DU_LIEU_GIA.md</a></dd>
+      </dl>
+      <div class="demo"><b>Vì sao làm trước chung kết:</b> giám khảo bấm thử với gia đình 2 con, hoặc hỏi "dữ liệu lưu ở đâu", sẽ gặp đúng các lỗi này.</div>
+    </div>
+  </section>
+
+  <section id="quyet-dinh">
+    <div class="sec-h"><div class="n">Cần anh chị chốt</div><h2>Các quyết định mình đã tạm chọn</h2><p>Những điểm dưới đây đã ghi sẵn trong prompt theo lựa chọn của mình. Anh chị đổi thì sửa đúng chỗ ghi trong prompt tương ứng.</p></div>
+    <div class="card decide">
+      <div class="q"><div class="i">1</div><div><h4>Giao diện mặc định: Kẹo Bông</h4><p>Gần màu hồng hiện tại nhất, người dùng cũ ít bị lạ, hợp trẻ cấp 1. Phương án khác: Bạn Gấu (có nhân vật để giám khảo nhớ), Khu Vườn Đêm (dịu mắt buổi tối). Sửa ở prompt 01, hằng số <code>DEFAULT_THEME</code>.</p></div></div>
+      <div class="q"><div class="i">2</div><div><h4>Khi nào khoá API cũ (<code>/db/query</code>, <code>/db/execute</code>, <code>/db/kv</code>)</h4><p>Prompt 00 dừng ở giai đoạn B và liệt kê nơi còn gọi đường cũ. Khoá hẳn (giai đoạn C) chỉ khi anh chị xác nhận, vì có thể còn bản app cũ (ví dụ bản Vercel) đang dùng.</p></div></div>
+      <div class="q"><div class="i">3</div><div><h4>Admin dùng bản "Gấu" làm mặc định <span class="pill p-green">Đã chốt 24/10</span></h4><p>Theo ý anh chị: phong cách cute có mascot gấu, đồng bộ với app. Bố cục và bảng theo màn xanh dương cho dễ đọc số liệu; bảng màu xanh dương vẫn chuyển được trong menu.</p></div></div>
+      <div class="q"><div class="i">4</div><div><h4>Phạm vi cổng giáo viên cho chung kết</h4><p>Đề xuất làm bản tối thiểu: duyệt giáo viên, 1 lớp, kết nối học sinh bằng mã, giao bài có "cách cô dạy", bảng kết quả của cô, thông báo một chiều. Chat hai chiều, sổ điểm, thông báo đẩy để sau.</p></div></div>
+      <div class="q"><div class="i">5</div><div><h4>Zalo dừng ở mức 1 (bảng chia sẻ) trước chung kết</h4><p>ZNS cần OA xác thực doanh nghiệp, mẫu được duyệt và chi phí theo tin. Nếu đội đã có OA doanh nghiệp thì báo mình để viết thêm prompt cho mức 2 và 3.</p></div></div>
+      <div class="q"><div class="i">6</div><div><h4>Dùng gói Cloudflare Free <span class="pill p-green">Đã chốt 24/10</span></h4><p>Bỏ việc băm mật khẩu chuẩn mới (cần gói trả phí), giữ cách băm hiện tại nhưng kiểm tra ở máy chủ. Prompt 00 có bảng giới hạn gói Free (10 ms CPU, 50 truy vấn D1 mỗi lần gọi, 100.000 dòng ghi mỗi ngày, AI 10.000 neuron mỗi ngày, khôi phục dữ liệu 7 ngày) và cách thiết kế để không vượt.</p></div></div>
+      <div class="q"><div class="i">7</div><div><h4>Nhờ người có chuyên môn pháp lý rà phần dữ liệu trẻ em</h4><p>Đồng ý của trẻ từ 7 tuổi (Nghị định 13/2023), Luật Bảo vệ dữ liệu cá nhân 2025, việc gửi đề bài cho nhà cung cấp AI. Cần làm trước khi mở cổng giáo viên cho trường thật.</p></div></div>
+      <div class="q"><div class="i">8</div><div><h4>Thêm khảo sát NPS trong app phụ huynh</h4><p>Màn Báo cáo của thiết kế có NPS nhưng app chưa thu. Mình thêm câu hỏi 0 đến 10 sau mỗi 10 buổi hoàn thành (prompt 05, mục 7). Bỏ được nếu không muốn làm phiền phụ huynh.</p></div></div>
+    </div>
+  </section>
+
+  <section id="lo-trinh">
+    <div class="sec-h"><div class="n">Lộ trình đề xuất</div><h2>Bốn đợt làm</h2><p>Ước lượng cho một người làm cùng AI lập trình, chưa tính thời gian kiểm thử trên điện thoại thật. Đợt 1 và đợt 2 chạy song song được nếu có 2 người.</p></div>
+    <div class="plan">
+      <div class="card"><span class="pill p-green">Đợt 1</span><h4 style="margin-top:6px">Thấy ngay, an toàn</h4><ul><li>01 Giao diện theo sở thích</li><li>02 Ảnh ngoài phạm vi</li><li>06 Sửa lỗi nhanh, bỏ dữ liệu giả</li></ul></div>
+      <div class="card"><span class="pill p-red">Đợt 2</span><h4 style="margin-top:6px">Nền móng</h4><ul><li>00 giai đoạn A và B</li><li>Ghi nhận buổi học thật</li><li>Báo cáo bỏ qua dữ liệu mẫu (không xoá)</li></ul></div>
+      <div class="card"><span class="pill p-blue">Đợt 3</span><h4 style="margin-top:6px">Admin + gia đình</h4><ul><li>05 Admin mới</li><li>03 Nhóm gia đình, báo cáo Zalo mức 1</li></ul></div>
+      <div class="card"><span class="pill p-violet">Đợt 4</span><h4 style="margin-top:6px">Cú hích chung kết</h4><ul><li>04 Cổng giáo viên bản tối thiểu</li><li>Kịch bản demo: cô giao bài, mẹ kèm, cô thấy kết quả</li></ul></div>
+    </div>
+  </section>
+
+  <section id="review">
+    <div class="sec-h"><div class="n">Rà soát lại</div><h2>Đã sửa sau khi đọc chéo toàn bộ (24/10)</h2><p>Một người rà độc lập đọc lại cả 7 prompt và 2 file HTML, tìm chỗ mâu thuẫn, chỗ AI lập trình phải đoán, rủi ro kỹ thuật. Các điểm dưới đây đã sửa thẳng vào prompt và bản vẽ.</p></div>
+    <div class="card tbl"><table>
+      <thead><tr><th>Điểm</th><th>Vấn đề</th><th>Đã sửa thế nào</th><th>Ở đâu</th></tr></thead>
+      <tbody>
+        <tr><td><b>Mật khẩu</b></td><td>Băm lại mật khẩu sẽ làm app cũ không đăng nhập được</td><td>Giữ cách băm hiện tại (dùng gói Free), chỉ chuyển việc kiểm tra lên máy chủ; băm mạnh hơn để dành khi lên gói trả phí</td><td>00</td></tr>
+        <tr><td><b>Phiên đăng nhập</b></td><td>Bảng phiên chỉ có gia đình, không có giáo viên và admin; khoá PIN chỉ trên giao diện</td><td>Một bảng phiên cho cả 3 loại, khoá admin ở máy chủ (trả 423), khoá dò PIN theo thành viên trên mọi máy</td><td>00, 03, 05</td></tr>
+        <tr><td><b>Bậc hay vướng</b></td><td>Mỗi nhà AI soạn riêng nên "bậc 2" mỗi nhà một khác</td><td>AI soạn một lần lúc cô giao, cô duyệt, cả lớp dùng chung; đếm từ dòng thời gian buổi học</td><td>00, 04</td></tr>
+        <tr><td><b>Lộ đáp án</b></td><td>Chỉ ghi lại sau khi trẻ đã thấy; báo nhầm số có sẵn trong đề</td><td>Chặn ngay ở máy chủ cho p3, p4_chat, p6: soạn lại một lần, vẫn lộ thì thay câu an toàn</td><td>00, 05</td></tr>
+        <tr><td><b>Dữ liệu</b></td><td>Thiếu bảng các con, thiếu dòng thời gian, thiếu chuyển dữ liệu cũ, thiếu thời hạn giữ</td><td>Thêm các bảng, bước chuyển dữ liệu (chạy thử được), chỉ dọn dữ liệu kỹ thuật (tự dọn dữ liệu người dùng mặc định tắt), xoá dây chuyền khi phụ huynh tự xoá</td><td>00</td></tr>
+        <tr><td><b>Endpoint</b></td><td>Cổng giáo viên và phía phụ huynh chưa có danh sách API</td><td>Liệt kê đủ endpoint giáo viên, phụ huynh, admin</td><td>04</td></tr>
+        <tr><td><b>Chia sẻ Zalo</b></td><td>iPhone chặn chia sẻ nếu tạo ảnh sau khi bấm; trình duyệt trong Zalo không chia sẻ được file</td><td>Tạo ảnh sẵn, kiểm tra trước khi chia sẻ, dải "Mở bằng trình duyệt", font tự host, link là bản chụp số liệu, hạn 7 ngày</td><td>03</td></tr>
+        <tr><td><b>Quyền</b></td><td>Chưa có ma trận quyền; máy mới lộ danh sách người thân theo tên gia đình</td><td>Ma trận quyền kiểm ở máy chủ; máy mới dùng mã đăng nhập một lần</td><td>03</td></tr>
+        <tr><td><b>Phạm vi ảnh</b></td><td>Tên prompt lệch; thiếu tách từng câu; chưa có thứ tự ưu tiên; lời nhắn luôn gọi "Mẹ"</td><td>Một tên <code>p1_ocr_v2</code>, thêm <code>cac_bai</code> và độ tin cậy, thứ tự ưu tiên, biến xưng hô</td><td>02</td></tr>
+        <tr><td><b>Font</b></td><td>Sora không có tiếng Việt; màn chọn giao diện tải 8 font cùng lúc</td><td>Bento dùng Lexend; thẻ xem trước dùng font hệ thống</td><td>01</td></tr>
+        <tr><td><b>Pháp lý</b></td><td>Thiếu đồng ý của trẻ từ 7 tuổi; câu "ảnh không gửi đi đâu" chưa đúng</td><td>Thêm ô đồng ý của con, sửa câu chữ, ghi chú cần rà pháp lý</td><td>02, 04, UI</td></tr>
+        <tr><td><b>Bản vẽ</b></td><td>Thiếu một số màn; tên menu, tên miền, chip quan hệ lệch prompt</td><td>Vẽ thêm 11 màn (trang chủ cô, duyệt bài giảng AI, danh sách bài, hộp thông báo, mã máy mới, NPS, nhập lại mật khẩu, xoá dữ liệu, 4 màn của prompt 06), thống nhất tên</td><td>UI</td></tr>
+      </tbody></table></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><div class="n">Nguồn</div><h2>Tài liệu đã dùng</h2></div>
+    <div class="card">
+      <ul class="list">
+        <li>Mã bản đang chạy: <code>kem-con-hoc-5xf.pages.dev</code> (tải ngày 24/10/2026, lưu ở <code>D:\AI\kem-con-hoc-video\bundle5xf</code>).</li>
+        <li>Thiết kế admin: <code>Downloads\stitch_admin_dashboard_redesign (2)\stitch_admin_dashboard_redesign</code> (2 DESIGN.md, 11 màn).</li>
+        <li>Thiết kế 8 bộ giao diện app: <a href="tham-khao/8-bo-giao-dien-app.html">tham-khao/8-bo-giao-dien-app.html</a>.</li>
+        <li>Zalo share plugin: <a href="https://viblo.asia/q/share-link-qua-zalo-zXRJ8eeqLGq">hướng dẫn trên Viblo</a>, tài liệu chính thức <code>developers.zalo.me/docs/social/share</code>.</li>
+        <li>Điều kiện ZNS: <a href="https://helpcenter.esms.vn/cau-hoi-thuong-gap/zalo-oa">eSMS FAQ Zalo OA</a>, <a href="https://pos.manual.nhanh.vn/pos/cai-dat/gui-zalo-zns/cac-loai-tin-cua-oa">Nhanh.vn: các loại tin của OA</a>, <a href="https://www.infobip.com/docs/zalo/message-templates">Infobip: Zalo message templates</a>.</li>
+        <li>Zalo Mini App chia sẻ: <a href="https://mini.zalo.me/documents/api/openShareSheet">openShareSheet</a>.</li>
+      </ul>
+      <p style="margin-top:10px;font-size:14px;color:var(--muted)">Giá ZNS và điều kiện xác thực OA lấy từ các đơn vị tích hợp, cần kiểm tra lại trên trang chính thức của Zalo trước khi đăng ký.</p>
+    </div>
+  </section>
+</main>
+
+<footer>Kèm Con Học · Tổng hợp giải pháp nâng cấp · 24/10/2026</footer>
+<button class="theme-btn" id="tb" type="button">🌓 Sáng / Tối</button>
+<script>
+  (function () {
+    var root = document.documentElement, key = "kch-redesign-theme";
+    try { var s = localStorage.getItem(key); if (s) root.dataset.theme = s; } catch (e) {}
+    document.getElementById("tb").addEventListener("click", function () {
+      var dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = dark ? "light" : "dark";
+      try { localStorage.setItem(key, root.dataset.theme); } catch (e) {}
+    });
+  })();
+</script>
+</body>
+</html>

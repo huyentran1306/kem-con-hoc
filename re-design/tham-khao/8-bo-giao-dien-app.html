@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kèm Con Học · 8 bộ giao diện đầy đủ</title>
+<meta name="description" content="Ba bộ giao diện đầy đủ 8 màn cho Kèm Con Học: Bento Mềm, Khu Vườn Đêm, Bảng Phấn. Mỗi bộ có bảng màu, font chữ và hiệu ứng riêng.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=Inter:wght@400;500;600;700&family=Unbounded:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Paytone+One&family=Playfair+Display:ital,wght@0,700;0,900;1,600;1,900&family=Lora:ital,wght@0,400;0,600;1,400&family=Mali:wght@500;700&family=Baloo+2:wght@700;800&family=Mitr:wght@500;700&family=Comfortaa:wght@500;700&family=Nunito:wght@600;700;800;900&family=Coiny&family=Itim&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", "Be Vietnam Pro", system-ui, sans-serif; color: #3A3A48; background: #F2F1F4; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1260px; margin: 0 auto; padding: 0 20px; }
+  header.top { padding: 28px 0 0; }
+  .kick { font-weight: 700; font-size: 13px; letter-spacing: 2.5px; color: #FF6B57; }
+  header h1 { font-family: "Sora", sans-serif; font-weight: 800; font-size: clamp(34px, 5vw, 56px); color: #15161E; line-height: 1.08; margin-top: 10px; letter-spacing: -1px; }
+  header p { font-size: 18px; max-width: 840px; margin-top: 14px; }
+  .jump { display: flex; gap: 10px; flex-wrap: wrap; }
+  .jump a { text-decoration: none; font-weight: 700; font-size: 14.5px; color: #15161E; background: #fff; border: 1.5px solid #15161E; border-radius: 999px; padding: 8px 16px; }
+  section.dir { padding: 54px 0 60px; }
+  .dir-h { display: grid; grid-template-columns: 1.1fr 1fr; gap: 30px; align-items: end; margin-bottom: 30px; }
+  .dir-h .num { font-size: 13px; letter-spacing: 2.5px; font-weight: 800; }
+  .dir-h h2 { font-size: clamp(36px, 5vw, 62px); line-height: 1.02; margin-top: 6px; }
+  .dir-h p { font-size: 17px; max-width: 600px; margin-top: 12px; }
+  .tile { display: grid; gap: 8px; }
+  .tile .sw { display: flex; gap: 6px; }
+  .tile .sw i { flex: 1; height: 34px; border-radius: 8px; }
+  .tile .ft { font-size: 14px; }
+  .tile .ft b { font-size: 22px; display: block; line-height: 1.2; }
+  .tile ul { padding-left: 18px; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 274px); gap: 34px 24px; justify-content: start; }
+  .shot { display: grid; gap: 8px; }
+  .shot h3 { font-size: 18px; color: #15161E; margin-top: 4px; }
+  .shot p { font-size: 13.5px; }
+  .shot .cap { font-size: 12px; letter-spacing: 2px; font-weight: 800; color: #8A8A9A; }
+  .phone-wrap { width: 274px; height: 594px; position: relative; }
+  .phone { width: 390px; height: 844px; transform: scale(.7); transform-origin: 0 0; position: absolute; left: 0; top: 0; background: #101018; border-radius: 48px; padding: 12px; box-shadow: 0 40px 70px -30px rgba(16, 16, 24, .55), inset 0 0 0 2px #2a2a3a; }
+  .screen { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; display: flex; flex-direction: column; font-size: 15px; background: var(--bg); color: var(--fg); font-family: var(--f-body); }
+  .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 118px; height: 32px; background: #101018; border-radius: 999px; z-index: 9; }
+  .status { display: flex; justify-content: space-between; padding: 16px 28px 0; font-weight: 700; font-size: 15px; position: relative; z-index: 3; color: var(--fg); }
+  .body { flex: 1; padding: 12px 18px 18px; display: flex; flex-direction: column; gap: 11px; position: relative; z-index: 2; overflow: hidden; }
+  .grow { flex: 1; }
+  .verdict { background: #fff; border: 1.5px solid #15161E; border-radius: 22px; padding: 26px 30px; margin: 10px 0 60px; }
+  .verdict h2 { font-family: "Sora", sans-serif; font-size: 26px; color: #15161E; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1.5px solid #E8E9F0; vertical-align: top; }
+  th { font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A8A9A; }
+  td:first-child { font-weight: 800; color: #15161E; white-space: nowrap; }
+
+  /* ===== khung chung cho mọi màn (chỉ cấu trúc, màu và hình do từng bộ quyết định) ===== */
+  .top { display: flex; align-items: center; gap: 12px; }
+  .top .ic { width: 40px; height: 40px; border-radius: var(--r-ic, 50%); display: grid; place-items: center; background: var(--card); border: var(--bw) solid var(--line); font-weight: 800; }
+  .top h4 { font-family: var(--f-head); font-size: 19px; flex: 1; color: var(--fg); }
+  .lbl { font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 800; color: var(--fg2); }
+  .card { background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--sh); }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; border-radius: var(--r-btn); font-weight: 800; font-size: 15.5px; background: var(--btn); color: var(--btn-fg); box-shadow: var(--sh-btn); font-family: var(--f-body); }
+  .btn.ghost { background: transparent; color: var(--fg); border: var(--bw) solid var(--line); box-shadow: none; }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px; background: var(--card); border: var(--bw) solid var(--line); color: var(--fg); }
+  .nav { display: flex; justify-content: space-around; padding: 12px 10px 24px; background: var(--nav); border-top: var(--bw) solid var(--line); position: relative; z-index: 3; }
+  .nav div { text-align: center; font-size: 11px; font-weight: 800; color: var(--fg2); }
+  .nav div.on { color: var(--accent); }
+  .ic-svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .nav div .ic-svg { width: 25px; height: 25px; margin: 0 auto 3px; }
+  .nav div.on .ic-svg { stroke-width: 2.3; }
+  .nav div.on { position: relative; }
+  .nav div.on::before { content: ""; position: absolute; left: 50%; top: -6px; width: 44px; height: 36px; transform: translateX(-50%); border-radius: 14px; background: var(--accent); opacity: .14; }
+  .mode .ic-svg { width: 28px; height: 28px; margin: 0 auto 5px; stroke-width: 1.8; }
+  .top .ic .ic-svg { width: 20px; height: 20px; }
+  .mic .ic-svg { width: 62px; height: 62px; stroke-width: 1.6; color: var(--mic-fg, #fff); }
+  .ff { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .ff i { position: absolute; display: block; }
+  /* màn chính */
+  .greet .lbl { margin-bottom: 2px; }
+  .greet h3 { font-family: var(--f-head); font-size: 28px; line-height: 1.1; color: var(--fg); }
+  .greet p { font-size: 13.5px; color: var(--fg2); margin-top: 4px; }
+  .kid { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--card); border: var(--bw) solid var(--line); font-size: 12.5px; font-weight: 700; }
+  .kid i { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-style: normal; font-size: 18px; }
+  .start { position: relative; border-radius: var(--r); padding: 18px; background: var(--start); color: var(--start-fg); overflow: hidden; box-shadow: var(--sh-start); }
+  .start h4 { font-family: var(--f-head); font-size: 22px; }
+  .start p { font-size: 13px; opacity: .85; margin-top: 2px; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .mode { text-align: center; padding: 10px 6px 8px; border-radius: var(--r-sm); background: var(--mode); border: var(--bw) solid var(--mode-line); font-weight: 800; font-size: 12.5px; color: var(--mode-fg); position: relative; }
+  .mode.hot { background: var(--mode-hot); border-color: var(--accent); color: var(--mode-hot-fg); }
+  .mode.hot::after { content: "MỚI"; position: absolute; top: -8px; right: 6px; font-size: 9px; letter-spacing: 1px; background: var(--accent); color: var(--accent-fg); border-radius: 999px; padding: 2px 6px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mini { border-radius: var(--r); padding: 12px 13px; background: var(--card); border: var(--bw) solid var(--line); box-shadow: var(--sh); }
+  .mini i { font-style: normal; font-size: 22px; }
+  .mini b { display: block; font-size: 14px; margin-top: 4px; color: var(--fg); }
+  .mini span { font-size: 12px; color: var(--fg2); }
+  /* đọc đề */
+  .micwrap { display: grid; place-items: center; height: 220px; position: relative; }
+  .mic { width: 140px; height: 140px; border-radius: 50%; display: grid; place-items: center; font-size: 56px; background: var(--mic); box-shadow: var(--sh-mic); position: relative; z-index: 1; }
+  .ring { position: absolute; border-radius: 50%; border: 2px solid var(--ring); animation: ringp 2.4s ease-out infinite; }
+  .ring.r2 { animation-delay: .8s; } .ring.r3 { animation-delay: 1.6s; }
+  @keyframes ringp { from { width: 140px; height: 140px; opacity: .8; } to { width: 250px; height: 250px; opacity: 0; } }
+  .wave { display: flex; gap: 4px; align-items: center; justify-content: center; height: 40px; }
+  .wave i { width: 5px; border-radius: 4px; background: var(--accent); height: var(--h); animation: wv 1s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+  @keyframes wv { to { height: 8px; } }
+  .transcript { background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r); padding: 12px 14px; font-size: 16px; line-height: 1.5; color: var(--fg); min-height: 100px; box-shadow: var(--sh); }
+  .transcript .lbl { display: block; margin-bottom: 4px; }
+  .cur { display: inline-block; width: 2px; height: 1.1em; background: var(--accent); vertical-align: -3px; animation: pulse 1s steps(2) infinite; }
+  @keyframes pulse { 50% { opacity: 0; } }
+  /* soát đề */
+  .page { background: var(--page); border: var(--bw) solid var(--line); border-radius: var(--r); padding: 14px 16px; font-size: 16.5px; line-height: 1.7; color: var(--page-fg); box-shadow: var(--sh); }
+  .bad { background: var(--bad); color: var(--bad-fg); text-decoration: line-through; border-radius: 6px; padding: 0 4px; }
+  .good { background: var(--good-bg); color: var(--good-fg); border-radius: 6px; padding: 0 6px; font-weight: 800; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fact { background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r-sm); padding: 8px 12px; font-size: 12.5px; color: var(--fg2); }
+  .fact b { display: block; font-family: var(--f-head); font-size: 17px; color: var(--fg); }
+  .fact.q { grid-column: 1 / -1; background: var(--soft); border-color: var(--accent2); }
+  /* trước khi giảng */
+  .method { border-radius: var(--r); padding: 14px 16px; background: var(--method); border: var(--bw) solid var(--method-line); box-shadow: var(--sh); }
+  .method h4 { font-family: var(--f-head); font-size: 19px; margin: 2px 0 8px; color: var(--fg); }
+  .badge { display: inline-flex; gap: 6px; align-items: center; font-weight: 800; font-size: 12.5px; padding: 5px 11px; border-radius: 999px; background: var(--accent); color: var(--accent-fg); }
+  .cpa { display: grid; grid-template-columns: 1fr 14px 1fr 14px 1fr; align-items: center; gap: 4px; margin-top: 12px; }
+  .cpa .st { text-align: center; background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r-sm); padding: 8px 4px; }
+  .cpa .st i { font-style: normal; font-size: 24px; display: block; }
+  .cpa .st b { font-size: 11px; display: block; color: var(--fg); }
+  .cpa .ar { text-align: center; color: var(--fg2); font-weight: 800; }
+  .warn { background: var(--warn-bg); border: var(--bw) solid var(--warn-line); border-radius: var(--r-sm); padding: 10px 14px; font-size: 13.5px; color: var(--fg); }
+  .warn .lb { display: block; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--warn-fg); margin-bottom: 2px; font-weight: 800; }
+  /* hỏi con */
+  .rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .rail i { height: 6px; border-radius: 6px; background: var(--line); }
+  .rail i.done { background: var(--good); } .rail i.cur { background: var(--accent); animation: pulse 1.6s ease-in-out infinite; }
+  .read { background: var(--read); border: var(--bw) solid var(--read-line); border-radius: var(--r); padding: 16px 18px 14px; box-shadow: var(--sh-read); }
+  .read .lbl { color: var(--accent); }
+  .read p { font-family: var(--f-head); font-size: 20px; line-height: 1.3; margin-top: 6px; color: var(--read-fg); }
+  .read .say { display: inline-flex; gap: 6px; margin-top: 10px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: var(--bw) solid var(--line); font-size: 12.5px; font-weight: 800; color: var(--fg); }
+  .hint { display: grid; grid-template-columns: 38px 1fr; gap: 10px; align-items: center; background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; box-shadow: var(--sh); }
+  .hint.l1 { background: var(--hint1); border-color: var(--hint1-line); }
+  .hint.l2 { opacity: .7; }
+  .hint i { font-style: normal; font-size: 26px; text-align: center; }
+  .hint b { display: block; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--warn-fg); }
+  .hint.l2 b { color: var(--accent2); }
+  .hint p { font-size: 13px; color: var(--fg); line-height: 1.4; }
+  .peek { position: relative; background: var(--card); border: var(--bw) dashed var(--fg2); border-radius: var(--r-sm); padding: 12px 14px; overflow: hidden; }
+  .peek p { filter: blur(6px); font-size: 14.5px; color: var(--fg); }
+  .peek span { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; font-size: 12.5px; color: var(--fg); background: var(--peek); }
+  /* xong bài */
+  .medal { width: 130px; height: 130px; margin: 6px auto 0; border-radius: 50%; display: grid; place-items: center; font-size: 58px; background: var(--medal); box-shadow: var(--sh-medal); animation: floaty 3.5s ease-in-out infinite; }
+  @keyframes floaty { 50% { transform: translateY(-7px); } }
+  .done-h { font-family: var(--f-head); font-size: 24px; text-align: center; color: var(--fg); }
+  .done-p { font-size: 13px; text-align: center; color: var(--fg2); }
+  .teach { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .teach div { text-align: center; padding: 10px 4px 8px; border-radius: var(--r-sm); background: var(--card); border: var(--bw) solid var(--line); font-size: 11px; font-weight: 800; color: var(--fg); box-shadow: var(--sh); }
+  .teach div i { font-style: normal; font-size: 32px; display: block; }
+  .teach div.on { background: var(--good-bg); border-color: var(--good); }
+  /* báo cáo */
+  .stat { display: flex; align-items: baseline; gap: 8px; }
+  .stat b { font-family: var(--f-head); font-size: 36px; color: var(--fg); line-height: 1; }
+  .stat span { font-size: 12.5px; color: var(--fg2); font-weight: 700; }
+  .bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 86px; margin-top: 10px; border-bottom: var(--bw) solid var(--line); padding-bottom: 2px; }
+  .bars div { position: relative; background: var(--accent); border-radius: 4px 4px 0 0; height: var(--h); }
+  .bars div.off { background: var(--line); }
+  .bars div em { position: absolute; top: -19px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--fg); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; font-size: 10.5px; color: var(--fg2); font-weight: 700; margin-top: 4px; }
+  .ringwrap { display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center; }
+  .ring2 { width: 84px; height: 84px; border-radius: 50%; background: conic-gradient(var(--good) 0 75%, var(--line) 75% 100%); display: grid; place-items: center; }
+  .ring2 b { width: 60px; height: 60px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-family: var(--f-head); font-size: 18px; color: var(--fg); }
+  .insight { display: grid; gap: 6px; }
+  .insight div { display: flex; gap: 8px; font-size: 12.5px; background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r-sm); padding: 8px 11px; color: var(--fg); }
+  /* góc hạ hoả */
+  .calm { background: var(--calm) !important; color: var(--calm-fg) !important; }
+  .calm .status, .calm .top h4 { color: var(--calm-fg); }
+  .calm .top .ic { background: transparent; border-color: var(--calm-line); color: var(--calm-fg); }
+  .breath { width: 210px; height: 210px; border-radius: 50%; margin: 6px auto 0; display: grid; place-items: center; background: var(--breath); box-shadow: var(--sh-breath); animation: br 8s ease-in-out infinite; }
+  @keyframes br { 0%, 100% { transform: scale(.86); } 50% { transform: scale(1.06); } }
+  .breath b { width: 118px; height: 118px; border-radius: 50%; background: var(--breath-core); display: grid; place-items: center; font-family: var(--f-head); font-size: 20px; color: var(--breath-fg); text-align: center; line-height: 1.1; }
+  .calm .quote { font-family: var(--f-hand, var(--f-head)); font-size: 18px; text-align: center; color: var(--calm-accent); line-height: 1.35; }
+  .calm .btn { background: var(--calm-accent); color: var(--calm); box-shadow: none; }
+  .calm .chip { background: transparent; border-color: var(--calm-line); color: var(--calm-fg); }
+
+  /* =====================================================
+     BỘ D · BENTO MỀM
+     ===================================================== */
+  .D { --mic-fg: #fff; --bg: #F7F7FA; --fg: #15161E; --fg2: #6B6E80; --card: #FFFFFF; --line: #E9EAF1; --soft: #F1EEFF; --accent: #FF6B57; --accent-fg: #fff; --accent2: #8A7CFF; --good: #22B07D; --good-bg: #E6F7EF; --good-fg: #15814F;
+    --r: 24px; --r-sm: 18px; --r-btn: 999px; --bw: 1px; --sh: 0 10px 26px -20px rgba(21, 22, 30, .35); --nav: #fff;
+    --btn: #15161E; --btn-fg: #fff; --sh-btn: 0 12px 24px -14px rgba(21, 22, 30, .5);
+    --start: linear-gradient(135deg, #FF6B57, #FF8A7A 45%, #8A7CFF); --start-fg: #fff; --sh-start: 0 24px 40px -22px rgba(255, 107, 87, .7);
+    --mode: rgba(255, 255, 255, .22); --mode-line: rgba(255, 255, 255, .45); --mode-fg: #fff; --mode-hot: #fff; --mode-hot-fg: #15161E;
+    --mic: linear-gradient(135deg, #FF6B57, #8A7CFF); --sh-mic: 0 24px 50px -16px rgba(255, 107, 87, .7); --ring: rgba(255, 107, 87, .45);
+    --page: #fff; --page-fg: #15161E; --bad: #FFE4E0; --bad-fg: #B42318;
+    --method: #fff; --method-line: #E9EAF1; --warn-bg: #FFF6E5; --warn-line: #FFE2B0; --warn-fg: #9A6700;
+    --read: linear-gradient(135deg, #15161E, #2A2B3A); --read-line: transparent; --read-fg: #fff; --sh-read: 0 20px 40px -22px rgba(21, 22, 30, .7);
+    --hint1: #FFF6E5; --hint1-line: #FFE2B0; --peek: rgba(247, 247, 250, .55);
+    --medal: radial-gradient(circle at 35% 30%, #FFF0B8, #FFC94A 50%, #F59E0B); --sh-medal: 0 24px 40px -18px rgba(245, 158, 11, .7);
+    --calm: linear-gradient(170deg, #ECE9FF, #FFE9E4); --calm-fg: #15161E; --calm-line: rgba(21, 22, 30, .2); --calm-accent: #8A7CFF; --breath: radial-gradient(circle, rgba(138, 124, 255, .35), rgba(138, 124, 255, .08) 65%, transparent 70%); --sh-breath: none; --breath-core: #fff; --breath-fg: #15161E;
+    --f-head: "Sora", sans-serif; --f-body: "Inter", sans-serif; }
+  .D .dir-h .num { color: #FF6B57; } .D .dir-h h2 { font-family: "Sora", sans-serif; font-weight: 800; color: #15161E; letter-spacing: -1.5px; }
+  .D .read .say { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .25); color: #fff; }
+  .D .read .lbl { color: #FFB3A8; }
+  .D .start::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255, 255, 255, .18); }
+  .D .greet h3 { letter-spacing: -.5px; }
+  .D .calm .btn { color: #fff; }
+
+  /* =====================================================
+     BỘ E · KHU VƯỜN ĐÊM
+     ===================================================== */
+  .E { --mic-fg: #0F2A24; --bg: #0F2A24; --fg: #F2F7EE; --fg2: #A9C4B5; --card: #163B33; --line: #2A5248; --soft: #1C4A3F; --accent: #FFD166; --accent-fg: #0F2A24; --accent2: #6EE7B7; --good: #6EE7B7; --good-bg: #1B4A3B; --good-fg: #6EE7B7;
+    --r: 28px 28px 28px 10px; --r-sm: 20px 20px 20px 8px; --r-btn: 999px; --bw: 1.5px; --sh: 0 14px 30px -22px rgba(0, 0, 0, .8); --nav: #0C221D;
+    --btn: #FFD166; --btn-fg: #0F2A24; --sh-btn: 0 0 34px -8px rgba(255, 209, 102, .8);
+    --start: #163B33; --start-fg: #F2F7EE; --sh-start: 0 0 0 1.5px #2A5248;
+    --mode: #0F2A24; --mode-line: #2A5248; --mode-fg: #F2F7EE; --mode-hot: #FFD166; --mode-hot-fg: #0F2A24;
+    --mic: radial-gradient(circle at 35% 30%, #FFF1B8, #FFD166 55%, #E0A81F); --sh-mic: 0 0 60px rgba(255, 209, 102, .55); --ring: rgba(255, 209, 102, .5);
+    --page: #F6F1DD; --page-fg: #2A2A1E; --bad: #FFD9D4; --bad-fg: #A32A1A;
+    --method: #163B33; --method-line: #FFD166; --warn-bg: #3A3A1F; --warn-line: #7C7A34; --warn-fg: #FFD166;
+    --read: #163B33; --read-line: #6EE7B7; --read-fg: #F2F7EE; --sh-read: 0 0 40px -14px rgba(110, 231, 183, .5);
+    --hint1: #3A3A1F; --hint1-line: #FFD166; --peek: rgba(15, 42, 36, .55);
+    --medal: radial-gradient(circle at 35% 30%, #FFF1B8, #FFD166 55%, #E0A81F); --sh-medal: 0 0 70px rgba(255, 209, 102, .6);
+    --calm: radial-gradient(circle at 50% 20%, #1B4A3B, #0A1F1A 65%); --calm-fg: #F2F7EE; --calm-line: rgba(242, 247, 238, .3); --calm-accent: #FFD166; --breath: radial-gradient(circle, rgba(255, 209, 102, .9), rgba(255, 209, 102, .2) 60%, transparent 70%); --sh-breath: 0 0 80px rgba(255, 209, 102, .35); --breath-core: #FFF1B8; --breath-fg: #0F2A24;
+    --f-head: "Comfortaa", sans-serif; --f-body: "Nunito", sans-serif; --f-hand: "Comfortaa", sans-serif; }
+  .E .dir-h .num { color: #E0A81F; } .E .dir-h h2 { font-family: "Comfortaa", sans-serif; font-weight: 700; color: #0F2A24; }
+  .E .screen::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(240px 160px at 110% -10%, #1B4A3B, transparent 70%), radial-gradient(260px 200px at -20% 110%, #163B33, transparent 70%); }
+  .E .screen::after { content: ""; position: absolute; left: -30px; top: -30px; width: 150px; height: 150px; border-radius: 0 100% 0 100%; background: #14352E; opacity: .9; z-index: 0; transform: rotate(10deg); pointer-events: none; }
+  .E .screen .ff { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .E .screen .ff i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #FFD166; box-shadow: 0 0 10px 3px rgba(255, 209, 102, .6); animation: fly 6s ease-in-out infinite alternate; opacity: .9; }
+  @keyframes fly { 0% { transform: translate(0, 0); opacity: .2; } 50% { opacity: 1; } 100% { transform: translate(24px, -40px); opacity: .3; } }
+  .E .start { border-radius: 30px 30px 30px 8px; }
+  .E .start::after { content: "🏮"; position: absolute; right: 16px; top: 10px; font-size: 30px; filter: drop-shadow(0 0 14px rgba(255, 209, 102, .9)); animation: sway 3s ease-in-out infinite; }
+  @keyframes sway { 50% { transform: rotate(6deg); } }
+  .E .btn { font-family: "Nunito", sans-serif; }
+  .E .medal { animation: floaty 3.5s ease-in-out infinite, glowp 2s ease-in-out infinite alternate; }
+  @keyframes glowp { to { box-shadow: 0 0 100px rgba(255, 209, 102, .8); } }
+  .E .calm .btn { color: #0F2A24; }
+
+  /* =====================================================
+     BỘ F · BẢNG PHẤN
+     ===================================================== */
+  .F { --mic-fg: #2F4A41; --bg: #2F4A41; --fg: #F6F1E6; --fg2: #CFC8B8; --card: rgba(246, 241, 230, .05); --line: rgba(246, 241, 230, .75); --soft: rgba(154, 208, 245, .14); --accent: #F9E07F; --accent-fg: #2F4A41; --accent2: #9AD0F5; --good: #B5E8A8; --good-bg: rgba(181, 232, 168, .16); --good-fg: #B5E8A8;
+    --r: 18px 6px 16px 8px; --r-sm: 12px 5px 14px 6px; --r-btn: 14px 6px 12px 8px; --bw: 2px; --sh: none; --nav: #27403A;
+    --btn: #F9E07F; --btn-fg: #2F4A41; --sh-btn: 3px 3px 0 rgba(246, 241, 230, .5);
+    --start: rgba(246, 241, 230, .06); --start-fg: #F6F1E6; --sh-start: 0 0 0 2px rgba(246, 241, 230, .75);
+    --mode: transparent; --mode-line: rgba(246, 241, 230, .6); --mode-fg: #F6F1E6; --mode-hot: #F9E07F; --mode-hot-fg: #2F4A41;
+    --mic: #F7A1C4; --sh-mic: 0 0 0 6px #2F4A41, 0 0 0 9px rgba(246, 241, 230, .7); --ring: rgba(246, 241, 230, .5);
+    --page: #F6F1E6; --page-fg: #2A2A22; --bad: #FFD9D4; --bad-fg: #A32A1A;
+    --method: transparent; --method-line: #F9E07F; --warn-bg: rgba(247, 161, 196, .14); --warn-line: #F7A1C4; --warn-fg: #F7A1C4;
+    --read: rgba(246, 241, 230, .06); --read-line: #F9E07F; --read-fg: #F6F1E6; --sh-read: none;
+    --hint1: rgba(249, 224, 127, .14); --hint1-line: #F9E07F; --peek: rgba(47, 74, 65, .6);
+    --medal: #F9E07F; --sh-medal: 0 0 0 8px #2F4A41, 0 0 0 11px rgba(246, 241, 230, .7);
+    --calm: #23382F; --calm-fg: #F6F1E6; --calm-line: rgba(246, 241, 230, .5); --calm-accent: #F9E07F; --breath: transparent; --sh-breath: 0 0 0 3px rgba(246, 241, 230, .75), 0 0 0 14px rgba(246, 241, 230, .08); --breath-core: #F9E07F; --breath-fg: #2F4A41;
+    --f-head: "Coiny", cursive; --f-body: "Nunito", sans-serif; --f-hand: "Itim", cursive; }
+  .F .dir-h .num { color: #C04C7A; } .F .dir-h h2 { font-family: "Coiny", cursive; color: #2F4A41; text-shadow: 4px 4px 0 #F9E07F; }
+  .F .screen { background-image: radial-gradient(260px 120px at 20% 30%, rgba(246, 241, 230, .06), transparent 70%), radial-gradient(220px 160px at 80% 75%, rgba(246, 241, 230, .05), transparent 70%); }
+  .F .top h4, .F .greet h3, .F .start h4, .F .done-h, .F .read p, .F .method h4 { font-family: "Coiny", cursive; letter-spacing: .3px; }
+  .F .greet p, .F .start p, .F .done-p, .F .transcript, .F .hint p, .F .insight div, .F .mini span, .F .fact { font-family: "Itim", cursive; }
+  .F .mode, .F .chip, .F .hint, .F .fact, .F .mini, .F .teach div, .F .insight div, .F .peek, .F .warn, .F .read, .F .method, .F .start, .F .transcript, .F .card { border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; }
+  .F .mode.hot, .F .btn { box-shadow: 2px 2px 0 rgba(246, 241, 230, .4); }
+  .F .page { border-radius: 10px 6px 12px 6px; }
+  .F .bars div { background: #F7A1C4; } .F .bars div.off { background: rgba(246, 241, 230, .2); }
+  .F .rail i { background: rgba(246, 241, 230, .2); } .F .rail i.done { background: #B5E8A8; } .F .rail i.cur { background: #F9E07F; }
+  .F .lbl { color: #9AD0F5; }
+  .F .start::after { content: "★"; position: absolute; right: 16px; top: 8px; font-size: 34px; color: #F9E07F; font-family: "Coiny", cursive; animation: tw 2s ease-in-out infinite alternate; }
+  @keyframes tw { to { transform: rotate(20deg) scale(1.15); opacity: .7; } }
+  .F .medal { font-size: 54px; }
+  .F .ring2 b { background: #2F4A41; }
+  .F .calm .quote { font-family: "Itim", cursive; }
+  .F .calm .btn { color: #2F4A41; }
+
+
+  /* =====================================================
+     BỘ A · CỰC QUANG
+     ===================================================== */
+  .A { --bg: #0B1026; --fg: #F3F4FF; --fg2: rgba(243, 244, 255, .72); --card: rgba(255, 255, 255, .07); --line: rgba(255, 255, 255, .16); --soft: rgba(167, 139, 250, .2); --accent: #22D3EE; --accent-fg: #0B1026; --accent2: #A78BFA; --good: #34D399; --good-bg: rgba(52, 211, 153, .16); --good-fg: #34D399;
+    --r: 24px; --r-sm: 18px; --r-btn: 999px; --bw: 1px; --sh: 0 20px 50px -30px rgba(0, 0, 0, .8); --nav: rgba(11, 16, 38, .55);
+    --btn: linear-gradient(90deg, #22D3EE, #34D399); --btn-fg: #0B1026; --sh-btn: 0 14px 30px -10px rgba(34, 211, 238, .8);
+    --start: rgba(255, 255, 255, .07); --start-fg: #F3F4FF; --sh-start: 0 0 0 1px rgba(255, 255, 255, .16), 0 0 40px -10px rgba(34, 211, 238, .5);
+    --mode: rgba(255, 255, 255, .06); --mode-line: rgba(255, 255, 255, .14); --mode-fg: #F3F4FF; --mode-hot: rgba(34, 211, 238, .16); --mode-hot-fg: #fff;
+    --mic: radial-gradient(circle at 35% 30%, #A5F3FC, #22D3EE 50%, #A78BFA); --sh-mic: 0 0 70px rgba(34, 211, 238, .6); --ring: rgba(34, 211, 238, .55);
+    --page: #F3F4FF; --page-fg: #0B1026; --bad: #FFE4E0; --bad-fg: #B42318;
+    --method: rgba(255, 255, 255, .07); --method-line: #A78BFA; --warn-bg: rgba(244, 114, 182, .14); --warn-line: #F472B6; --warn-fg: #F9A8D4;
+    --read: rgba(255, 255, 255, .08); --read-line: #22D3EE; --read-fg: #F3F4FF; --sh-read: 0 0 40px -14px rgba(34, 211, 238, .8);
+    --hint1: rgba(34, 211, 238, .12); --hint1-line: #22D3EE; --peek: rgba(11, 16, 38, .55);
+    --medal: radial-gradient(circle at 35% 30%, #fff5c2, #FFC928 45%, #E29A00 80%); --sh-medal: 0 0 0 10px rgba(255, 201, 40, .18), 0 0 60px rgba(255, 201, 40, .5);
+    --calm: radial-gradient(circle at 50% 25%, #2A2F6B, #0B1026 65%); --calm-fg: #F3F4FF; --calm-line: rgba(243, 244, 255, .3); --calm-accent: #A78BFA; --breath: radial-gradient(circle, rgba(167, 139, 250, .9), rgba(167, 139, 250, .2) 60%, transparent 70%); --sh-breath: 0 0 80px rgba(167, 139, 250, .4); --breath-core: #F3F4FF; --breath-fg: #0B1026;
+    --f-head: "Unbounded", sans-serif; --f-body: "Plus Jakarta Sans", sans-serif; }
+  .A .dir-h .num { color: #22D3EE; } .A .dir-h h2 { font-family: "Unbounded", sans-serif; font-weight: 900; color: #0B1026; letter-spacing: -1px; }
+  .A .screen::before { content: ""; position: absolute; inset: -40%; z-index: 0; filter: blur(46px); opacity: .7; pointer-events: none;
+    background: radial-gradient(30% 30% at 20% 20%, #A78BFA, transparent 70%), radial-gradient(30% 30% at 80% 35%, #22D3EE, transparent 70%), radial-gradient(30% 30% at 40% 85%, #34D399, transparent 70%), radial-gradient(22% 22% at 80% 80%, #F472B6, transparent 70%);
+    animation: aurA 16s ease-in-out infinite alternate; }
+  @keyframes aurA { to { transform: translate(8%, 6%) scale(1.2) rotate(8deg); } }
+  .A .card, .A .start, .A .mini, .A .hint, .A .read, .A .method, .A .transcript, .A .peek, .A .teach div, .A .insight div, .A .fact, .A .chip, .A .mode { backdrop-filter: blur(16px); }
+  .A .greet h3, .A .read p, .A .done-h { letter-spacing: -.3px; }
+  .A .read p { font-weight: 500; font-size: 18px; }
+  .A .hint.l1 i { filter: drop-shadow(0 0 10px #22D3EE); }
+  .A .mode.hot { box-shadow: 0 0 22px -6px #22D3EE, inset 0 0 18px -12px #22D3EE; }
+  .A .teach div.on { box-shadow: 0 0 24px -6px #34D399; }
+  .A .calm .btn { color: #0B1026; }
+  .A .peek span { font-size: 12px; }
+
+  /* =====================================================
+     BỘ B · STICKER STUDIO
+     ===================================================== */
+  .B { --bg: #FFF7E6; --fg: #1B1B2F; --fg2: #5C5A70; --card: #FFFFFF; --line: #1B1B2F; --soft: #FFF1C9; --accent: #FF4F8B; --accent-fg: #fff; --accent2: #5B6CFF; --good: #39C6A5; --good-bg: #D7F5EC; --good-fg: #1B1B2F;
+    --r: 20px; --r-sm: 16px; --r-btn: 18px; --bw: 3px; --sh: 5px 5px 0 #1B1B2F; --nav: #fff;
+    --btn: #FF4F8B; --btn-fg: #fff; --sh-btn: 4px 4px 0 #1B1B2F;
+    --start: #FFC928; --start-fg: #1B1B2F; --sh-start: 5px 5px 0 #1B1B2F, 0 0 0 3px #1B1B2F;
+    --mode: #fff; --mode-line: #1B1B2F; --mode-fg: #1B1B2F; --mode-hot: #39C6A5; --mode-hot-fg: #1B1B2F;
+    --mic: #FF4F8B; --sh-mic: 6px 6px 0 #1B1B2F, 0 0 0 3px #1B1B2F; --ring: rgba(27, 27, 47, .5);
+    --page: #fff; --page-fg: #1B1B2F; --bad: #FFD9D4; --bad-fg: #B42318;
+    --method: #fff; --method-line: #1B1B2F; --warn-bg: #FFC928; --warn-line: #1B1B2F; --warn-fg: #1B1B2F;
+    --read: #fff; --read-line: #1B1B2F; --read-fg: #1B1B2F; --sh-read: 6px 6px 0 #FF4F8B;
+    --hint1: #FFC928; --hint1-line: #1B1B2F; --peek: rgba(255, 247, 230, .6);
+    --medal: #FFC928; --sh-medal: 6px 6px 0 #1B1B2F, 0 0 0 3px #1B1B2F;
+    --calm: #5B6CFF; --calm-fg: #fff; --calm-line: rgba(255, 255, 255, .6); --calm-accent: #FFC928; --breath: #fff; --sh-breath: 0 0 0 3px #1B1B2F, 8px 8px 0 #1B1B2F; --breath-core: #FFC928; --breath-fg: #1B1B2F;
+    --f-head: "Paytone One", sans-serif; --f-body: "Nunito", sans-serif; }
+  .B .dir-h .num { color: #FF4F8B; } .B .dir-h h2 { font-family: "Paytone One", sans-serif; color: #1B1B2F; text-shadow: 5px 5px 0 #FFC928; }
+  .B .screen { background-image: radial-gradient(rgba(27, 27, 47, .14) 1.4px, transparent 1.6px); background-size: 18px 18px; font-weight: 700; }
+  .B .greet h3 { font-size: 27px; text-shadow: 3px 3px 0 #FFC928; }
+  .B .btn, .B .mic, .B .medal, .B .ring2 { border: 3px solid #1B1B2F; }
+  .B .btn:not(.ghost) { animation: bobB 1.8s ease-in-out infinite; }
+  @keyframes bobB { 50% { transform: translateY(-3px); box-shadow: 4px 7px 0 #1B1B2F; } }
+  .B .kid i, .B .medal { animation: wobB 3s ease-in-out infinite; }
+  @keyframes wobB { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } }
+  .B .mode:nth-child(1) { transform: rotate(-3deg); } .B .mode:nth-child(2) { transform: rotate(2deg); } .B .mode:nth-child(3) { transform: rotate(-2deg); }
+  .B .hint.l1 { margin-right: 22px; } .B .hint.l2 { margin-left: 22px; opacity: 1; }
+  .B .peek { background: repeating-linear-gradient(45deg, #fff 0 10px, #FFF1C9 10px 20px); }
+  .B .lbl { color: #1B1B2F; opacity: .6; }
+  .B .read .lbl { color: #FF4F8B; opacity: 1; }
+  .B .rail i { border: 2.5px solid #1B1B2F; height: 14px; background: #fff; } .B .rail i.done { background: #39C6A5; } .B .rail i.cur { background: #FF4F8B; }
+  .B .teach div i { font-size: 36px; }
+  .B .calm .btn { color: #1B1B2F; border-color: #1B1B2F; }
+  .B .calm .breath { animation: br 8s ease-in-out infinite; }
+
+  /* =====================================================
+     BỘ C · SỔ TAY BUỔI TỐI
+     ===================================================== */
+  .C { --bg: #F6F1E7; --fg: #2A2622; --fg2: #7A7262; --card: #FFFFFF; --line: #D9D0BE; --soft: #EFE8DA; --accent: #C4613A; --accent-fg: #fff; --accent2: #5A4B7A; --good: #7D9A6B; --good-bg: #E6EDE0; --good-fg: #4F6B3F;
+    --r: 4px; --r-sm: 4px; --r-btn: 4px; --bw: 1px; --sh: 0 12px 26px -20px rgba(42, 38, 34, .5); --nav: #F6F1E7;
+    --btn: #2A2622; --btn-fg: #F6F1E7; --sh-btn: none;
+    --start: #fff; --start-fg: #2A2622; --sh-start: 0 0 0 1px #D9D0BE, 0 14px 30px -22px rgba(42, 38, 34, .5);
+    --mode: #F6F1E7; --mode-line: #D9D0BE; --mode-fg: #2A2622; --mode-hot: #C4613A; --mode-hot-fg: #fff;
+    --mic: #C4613A; --sh-mic: 0 20px 40px -18px rgba(196, 97, 58, .7); --ring: rgba(196, 97, 58, .4);
+    --page: #fff; --page-fg: #2A2622; --bad: #FFD9D4; --bad-fg: #A32A1A;
+    --method: #fff; --method-line: #D8A334; --warn-bg: #FBF3DC; --warn-line: #D8A334; --warn-fg: #9A6700;
+    --read: transparent; --read-line: transparent; --read-fg: #2A2622; --sh-read: none;
+    --hint1: #FBF3DC; --hint1-line: #D8A334; --peek: rgba(246, 241, 231, .6);
+    --medal: #fff; --sh-medal: 0 0 0 1px #D9D0BE, 0 14px 30px -20px rgba(42, 38, 34, .5);
+    --calm: #2A2622; --calm-fg: #F6F1E7; --calm-line: rgba(246, 241, 231, .4); --calm-accent: #D8A334; --breath: radial-gradient(circle, rgba(216, 163, 52, .7), rgba(216, 163, 52, .15) 60%, transparent 70%); --sh-breath: none; --breath-core: #D8A334; --breath-fg: #2A2622;
+    --f-head: "Playfair Display", serif; --f-body: "Lora", serif; --f-hand: "Mali", cursive; }
+  .C .dir-h .num { color: #C4613A; } .C .dir-h h2 { font-family: "Playfair Display", serif; font-weight: 900; font-style: italic; color: #2A2622; }
+  .C .screen { background-image: linear-gradient(rgba(42, 38, 34, .07) 1px, transparent 1px); background-size: 100% 28px; }
+  .C .lbl, .C .nav div, .C .chip, .C .btn, .C .kid, .C .mode, .C .badge, .C .status, .C .teach div, .C .fact { font-family: "Inter", sans-serif; }
+  .C .greet h3 { font-weight: 900; font-size: 32px; letter-spacing: -.5px; }
+  .C .greet h3::after { content: ""; display: block; height: 3px; width: 120px; margin-top: 4px; background: #C4613A; border-radius: 2px; }
+  .C .greet p, .C .done-p, .C .mini span, .C .hint p { font-family: "Mali", cursive; }
+  .C .start::before { content: ""; position: absolute; width: 84px; height: 22px; left: 50%; top: -11px; transform: translateX(-50%) rotate(-2deg); background: rgba(216, 163, 52, .55); mix-blend-mode: multiply; }
+  .C .start { overflow: visible; }
+  .C .read { padding: 10px 6px 6px 22px; position: relative; }
+  .C .read::before { content: "“"; position: absolute; left: -6px; top: -28px; font-family: "Playfair Display", serif; font-size: 90px; color: #C4613A; opacity: .55; line-height: 1; }
+  .C .read p { font-weight: 700; font-size: 21px; }
+  .C .read .say { font-family: "Mali", cursive; border: 0; background: transparent; color: #C4613A; padding: 4px 0; }
+  .C .hint { border: 0; border-top: 1.5px solid #2A2622; border-radius: 0; background: transparent; box-shadow: none; padding: 8px 2px; }
+  .C .hint.l1 { background: transparent; }
+  .C .hint b { font-family: "Mali", cursive; text-transform: none; letter-spacing: 0; font-size: 13px; color: #C4613A; }
+  .C .hint.l2 b { color: #5A4B7A; }
+  .C .peek { border: 1px solid #D9D0BE; }
+  .C .peek span { font-family: "Mali", cursive; color: #C4613A; }
+  .C .done-h { font-style: italic; font-weight: 900; color: #C4613A; font-size: 30px; animation: stampC .6s cubic-bezier(.3, 1.4, .5, 1) both .3s; }
+  @keyframes stampC { from { transform: rotate(-6deg) scale(2); opacity: 0; } }
+  .C .medal { font-size: 50px; }
+  .C .calm .quote { font-family: "Mali", cursive; }
+  .C .calm .btn { color: #2A2622; }
+  .C .rail i { border-radius: 0; height: 4px; }
+
+
+  /* =====================================================
+     BỘ G · KẸO BÔNG
+     ===================================================== */
+  .G { --bg: #FFF4F8; --fg: #4A3B5C; --fg2: #9A8AA8; --card: #FFFFFF; --line: #F3D9E6; --soft: #EDE4FF; --accent: #FF8FB8; --accent-fg: #fff; --accent2: #B9A3FF; --good: #7FD8C4; --good-bg: #E3F8F2; --good-fg: #2E8C78;
+    --r: 28px; --r-sm: 20px; --r-btn: 999px; --bw: 2px; --sh: 0 7px 0 #F3D9E6; --nav: #fff;
+    --btn: linear-gradient(#FFA3C6, #FF7FAE); --btn-fg: #fff; --sh-btn: 0 6px 0 #E0598E, inset 0 2px 0 rgba(255, 255, 255, .6);
+    --start: linear-gradient(160deg, #FFE1EC, #E9DEFF); --start-fg: #4A3B5C; --sh-start: 0 8px 0 #E7CFEA;
+    --mode: #fff; --mode-line: #F3D9E6; --mode-fg: #4A3B5C; --mode-hot: #FFF3B0; --mode-hot-fg: #4A3B5C;
+    --mic: radial-gradient(circle at 35% 30%, #FFD1E1, #FF8FB8 60%, #FF6FA3); --sh-mic: 0 10px 0 #E0598E, 0 0 0 14px #FFE1EC; --ring: rgba(255, 143, 184, .5);
+    --page: #fff; --page-fg: #4A3B5C; --bad: #FFE4E0; --bad-fg: #B42318;
+    --method: #fff; --method-line: #B9A3FF; --warn-bg: #FFF8D6; --warn-line: #FFE58A; --warn-fg: #B5860A;
+    --read: #fff; --read-line: #FF8FB8; --read-fg: #4A3B5C; --sh-read: 0 8px 0 #FFD1E1;
+    --hint1: #FFF8D6; --hint1-line: #FFE58A; --peek: rgba(255, 244, 248, .6);
+    --medal: radial-gradient(circle at 35% 30%, #FFF6C9, #FFD36E 55%, #FFB13B); --sh-medal: 0 10px 0 #F3D9E6, 0 0 0 14px #FFE1EC;
+    --calm: linear-gradient(170deg, #E9DEFF, #FFE1EC); --calm-fg: #4A3B5C; --calm-line: rgba(74, 59, 92, .25); --calm-accent: #B9A3FF; --breath: radial-gradient(circle, rgba(185, 163, 255, .55), rgba(185, 163, 255, .12) 60%, transparent 70%); --sh-breath: none; --breath-core: #fff; --breath-fg: #4A3B5C;
+    --f-head: "Baloo 2", cursive; --f-body: "Nunito", sans-serif; }
+  .G .dir-h .num { color: #FF6FA3; } .G .dir-h h2 { font-family: "Baloo 2", cursive; font-weight: 800; color: #4A3B5C; text-shadow: 4px 4px 0 #FFD1E1; }
+  .G .screen { font-weight: 700; }
+  .G .screen::before { content: ""; position: absolute; left: -60px; top: -40px; width: 220px; height: 120px; border-radius: 50%; background: #fff; opacity: .8; z-index: 0; box-shadow: 160px 30px 0 -10px #fff, 300px -20px 0 -30px #fff; }
+  .G .ff i { width: 0; height: 0; background: none; box-shadow: none; animation: twG 2.4s ease-in-out infinite alternate; }
+  .G .ff i::before { content: "✦"; color: #FFD36E; font-size: 16px; font-style: normal; }
+  @keyframes twG { from { opacity: .2; transform: scale(.6) rotate(0deg); } to { opacity: 1; transform: scale(1.1) rotate(25deg); } }
+  .G .greet h3 { font-size: 30px; color: #FF6FA3; }
+  .G .start::after { content: "• ‿ •"; position: absolute; right: 16px; top: 10px; font-family: "Baloo 2", cursive; font-weight: 800; font-size: 22px; color: #4A3B5C; letter-spacing: 2px; animation: blink 4s steps(1) infinite; }
+  @keyframes blink { 0%, 92%, 100% { content: "• ‿ •"; } 94%, 98% { content: "- ‿ -"; } }
+  .G .btn:not(.ghost) { transition: transform .1s; }
+  .G .mode.hot i { animation: bounceG 1.4s ease-in-out infinite; display: inline-block; }
+  @keyframes bounceG { 50% { transform: translateY(-5px); } }
+  .G .kid i { background: #FFD1E1; }
+  .G .hint.l1 { box-shadow: 0 6px 0 #FFE58A; }
+  .G .teach div.on { box-shadow: 0 6px 0 #7FD8C4; }
+  .G .calm .btn { color: #fff; background: linear-gradient(#C9B8FF, #B9A3FF); box-shadow: 0 6px 0 #8C72E8; }
+  .G .lbl { color: #C27AA0; }
+  .G .ring2 b { background: #fff; }
+
+  /* =====================================================
+     BỘ H · BẠN GẤU
+     ===================================================== */
+  .H { --bg: #FFF8EC; --fg: #4B3621; --fg2: #9C7B5A; --card: #FFFFFF; --line: #F0DDC2; --soft: #FFEBD1; --accent: #F6A623; --accent-fg: #4B3621; --accent2: #7FB7F5; --good: #8CC98B; --good-bg: #E8F6E6; --good-fg: #3F7A3E;
+    --r: 26px; --r-sm: 18px; --r-btn: 999px; --bw: 2px; --sh: 0 6px 0 #F0DDC2; --nav: #fff;
+    --btn: #F6A623; --btn-fg: #4B3621; --sh-btn: 0 6px 0 #C47F0E;
+    --start: #FFEBD1; --start-fg: #4B3621; --sh-start: 0 8px 0 #F0DDC2;
+    --mode: #fff; --mode-line: #F0DDC2; --mode-fg: #4B3621; --mode-hot: #F6A623; --mode-hot-fg: #4B3621;
+    --mic: radial-gradient(circle at 35% 30%, #FFD98A, #F6A623 60%, #E08E0B); --sh-mic: 0 10px 0 #C47F0E, 0 0 0 14px #FFEBD1; --ring: rgba(246, 166, 35, .5);
+    --page: #fff; --page-fg: #4B3621; --bad: #FFE4E0; --bad-fg: #B42318;
+    --method: #fff; --method-line: #F6A623; --warn-bg: #FFF1D6; --warn-line: #F6C56A; --warn-fg: #9A6700;
+    --read: #fff; --read-line: #F0DDC2; --read-fg: #4B3621; --sh-read: 0 8px 0 #F0DDC2;
+    --hint1: #FFF1D6; --hint1-line: #F6C56A; --peek: rgba(255, 248, 236, .6);
+    --medal: radial-gradient(circle at 35% 30%, #FFD98A, #F6A623 60%, #E08E0B); --sh-medal: 0 10px 0 #C47F0E, 0 0 0 14px #FFEBD1;
+    --calm: radial-gradient(circle at 50% 20%, #4F77B5, #2D4A7A 70%); --calm-fg: #fff; --calm-line: rgba(255, 255, 255, .4); --calm-accent: #FFD36E; --breath: radial-gradient(circle, rgba(255, 211, 110, .8), rgba(255, 211, 110, .2) 60%, transparent 70%); --sh-breath: 0 0 70px rgba(255, 211, 110, .35); --breath-core: #FFD36E; --breath-fg: #4B3621;
+    --f-head: "Mitr", sans-serif; --f-body: "Nunito", sans-serif; }
+  .H .dir-h .num { color: #E08E0B; } .H .dir-h h2 { font-family: "Mitr", sans-serif; font-weight: 700; color: #4B3621; text-shadow: 4px 4px 0 #FFD98A; }
+  .H .screen { font-weight: 700; }
+  .H .ff i { width: 0; height: 0; background: none; box-shadow: none; animation: none; }
+  .H .ff i::before { content: "🐾"; font-size: 18px; opacity: .18; font-style: normal; display: block; transform: rotate(-20deg); }
+  .H .greet h3::after { content: " 🐻"; }
+  .H .read { margin-top: 22px; position: relative; overflow: visible; }
+  .H .read::before { content: "🧸"; position: absolute; right: 14px; top: -34px; font-size: 42px; animation: bearH 2.6s ease-in-out infinite; }
+  @keyframes bearH { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-6px) rotate(6deg); } }
+  .H .read::after { content: ""; position: absolute; right: 34px; top: -10px; width: 16px; height: 16px; background: #fff; border-left: 2px solid #F0DDC2; border-top: 2px solid #F0DDC2; transform: rotate(45deg); }
+  .H .read .lbl::before { content: "Gấu nhắc: "; }
+  .H .start::after { content: "🧸"; position: absolute; right: 14px; top: 8px; font-size: 32px; animation: bearH 2.6s ease-in-out infinite; }
+  .H .kid i { background: #FFD98A; }
+  .H .medal { animation: bearH 2.6s ease-in-out infinite; }
+  .H .hint.l1 i::after { content: " 🐾"; font-size: 12px; }
+  .H .teach div.on { box-shadow: 0 6px 0 #8CC98B; }
+  .H .calm .btn { color: #4B3621; }
+  .H .calm .quote::before { content: "🧸 "; }
+  .H .lbl { color: #C48A3A; }
+
+  @media (max-width: 1240px) { .grid { grid-template-columns: repeat(3, 274px); } }
+  @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, 274px); } .dir-h { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .grid { grid-template-columns: 274px; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/><path d="M17 4l.6 1.4L19 6l-1.4.6L17 8l-.6-1.4L15 6l1.4-.6z"/></symbol>
+  <symbol id="i-game" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5" y="11" width="3.5" height="7" rx="1.2"/><rect x="10.25" y="6" width="3.5" height="12" rx="1.2"/><rect x="15.5" y="9" width="3.5" height="9" rx="1.2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5h3l1.5-2.5h7L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.3"/></symbol>
+  <symbol id="i-keys" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M6.5 13.5h.01M17 13.5h.01M9 14.5h6"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 6.5 9 12l5.5 5.5"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.8a7.5 7.5 0 0 1 0 10.4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-8L7 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 10.5h8M8 13h5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></symbol>
+</defs></svg>
+
+<header class="top wrap">
+  <div class="jump"><a href="#A">A · Cực Quang</a><a href="#B">B · Sticker Studio</a><a href="#C">C · Sổ Tay Buổi Tối</a><a href="#D">D · Bento Mềm</a><a href="#E">E · Khu Vườn Đêm</a><a href="#F">F · Bảng Phấn</a><a href="#G">G · Kẹo Bông</a><a href="#H">H · Bạn Gấu</a><a href="#verdict">So sánh</a></div>
+</header>
+
+<!-- ===== 8 màn hình dùng chung cấu trúc, mỗi bộ tự đổi màu, hình, font ===== -->
+<template id="screens">
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:40px;top:90px"></i><i style="left:300px;top:60px;animation-delay:-2s"></i><i style="left:200px;top:300px;animation-delay:-4s"></i><i style="left:330px;top:500px;animation-delay:-1s"></i><i style="left:70px;top:620px;animation-delay:-3s"></i></div>
+      <div class="status"><span>21:00</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="greet"><div class="lbl">Thứ tư 21/10 · Lớp 3</div><h3>Chào buổi tối, mẹ</h3><p>Tối nay Mít học gì? Mẹ soát xong, AI mới soạn bài.</p><div class="kid"><i>🧒</i>Mít · 🔥 3 tối liên tiếp · ⭐ 12 sticker</div></div>
+        <div class="start"><h4>Bài tối nay</h4><p>Chụp vở, gõ hoặc đọc đề</p>
+          <div class="modes"><div class="mode"><svg class="ic-svg"><use href="#i-camera"/></svg>Chụp vở</div><div class="mode"><svg class="ic-svg"><use href="#i-keys"/></svg>Gõ đề</div><div class="mode hot"><svg class="ic-svg"><use href="#i-mic"/></svg>Đọc đề</div></div></div>
+        <div class="two"><div class="mini"><i>🎲</i><b>Trò chơi 5 phút</b><span>Ôn bài bằng đồ trong nhà</span></div><div class="mini"><i>🫧</i><b>Góc hạ hoả</b><span>30 giây cho mẹ thở</span></div></div>
+        <div><div class="lbl" style="margin-bottom:6px">Tuần này Mít hay vướng</div><div class="chips"><span class="chip">📏 Toán lời văn 2 bước</span><span class="chip">🕒 Giờ hơn, giờ kém</span></div></div>
+        <div class="grow"></div>
+      </div>
+      <div class="nav"><div class="on"><svg class="ic-svg"><use href="#i-moon"/></svg>Tối nay</div><div><svg class="ic-svg"><use href="#i-game"/></svg>Trò chơi</div><div><svg class="ic-svg"><use href="#i-chart"/></svg>Báo cáo</div><div><svg class="ic-svg"><use href="#i-user"/></svg>Hồ sơ</div></div>
+    </div></div></div>
+    <span class="cap">01 · MÀN CHÍNH</span><h3>Một nút bắt đầu, ba cách nhập đề</h3><p>Chuỗi ngày và sticker nằm cạnh tên con. Trò chơi, Góc hạ hoả ở hàng phụ.</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:60px;top:120px"></i><i style="left:310px;top:200px;animation-delay:-2s"></i><i style="left:120px;top:560px;animation-delay:-4s"></i></div>
+      <div class="status"><span>21:01</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="top"><div class="ic"><svg class="ic-svg"><use href="#i-back"/></svg></div><h4>Đọc đề</h4><div class="ic"><svg class="ic-svg"><use href="#i-keys"/></svg></div></div>
+        <div class="micwrap"><div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div><div class="mic"><svg class="ic-svg"><use href="#i-mic"/></svg></div></div>
+        <div class="wave"><i style="--h:14px"></i><i style="--h:28px;--d:.1s"></i><i style="--h:40px;--d:.2s"></i><i style="--h:22px;--d:.3s"></i><i style="--h:36px;--d:.4s"></i><i style="--h:18px;--d:.5s"></i><i style="--h:30px;--d:.6s"></i><i style="--h:40px;--d:.7s"></i><i style="--h:16px;--d:.8s"></i><i style="--h:26px;--d:.9s"></i></div>
+        <p style="text-align:center;font-weight:800">Đang nghe mẹ đọc… <span style="opacity:.6;font-weight:600">0:07</span></p>
+        <div class="transcript"><span class="lbl">Máy nghe được</span>Bài 3. Mỗi hộp có 8 cây bút chì. Mẹ mua 3 hộp bút, sau đó mẹ cho bạn Na 5 kỳ bút chì. Hỏi<span class="cur"></span></div>
+        <div class="chips" style="justify-content:center"><span class="chip">🇻🇳 Tiếng Việt</span><span class="chip">⏱ Tự dừng sau 30 giây</span></div>
+        <div class="grow"></div>
+        <div class="btn">⏹ Dừng và soát đề</div>
+      </div>
+    </div></div></div>
+    <span class="cap">02 · ĐỌC ĐỀ</span><h3>Mic lớn, vòng sóng lan ra</h3><p>Chữ đổ xuống ngay trong lúc nói. Chỗ nghe nhầm sửa ở màn sau.</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:330px;top:130px"></i><i style="left:40px;top:640px;animation-delay:-3s"></i></div>
+      <div class="status"><span>21:02</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="top"><div class="ic"><svg class="ic-svg"><use href="#i-back"/></svg></div><h4>Mẹ soát đề</h4><div class="ic"><svg class="ic-svg"><use href="#i-mic"/></svg></div></div>
+        <p style="font-size:13px;color:var(--fg2)">Chạm vào chữ để sửa. <b style="color:var(--fg)">Mẹ bấm Tiếp tục thì AI mới soạn bài.</b></p>
+        <div class="page">Bài 3. Mỗi hộp có 8 cây bút chì. Mẹ mua 3 hộp bút, sau đó mẹ cho bạn Na 5 <span class="bad">kỳ</span> <span class="good">cây</span> bút chì. Hỏi mẹ còn lại bao nhiêu cây bút chì?</div>
+        <div class="lbl">Dữ kiện nhặt được</div>
+        <div class="facts"><div class="fact"><b>8 cây</b>mỗi hộp</div><div class="fact"><b>3 hộp</b>mẹ mua</div><div class="fact"><b>5 cây</b>cho bạn Na</div><div class="fact"><b>Lớp 3</b>nhân rồi trừ</div><div class="fact q"><b style="font-size:14.5px">❓ Còn lại bao nhiêu cây bút chì?</b>Câu hỏi của bài</div></div>
+        <div class="grow"></div>
+        <div class="row"><div class="btn ghost">✏️ Sửa chữ</div><div class="btn">Tiếp tục ➜</div></div>
+      </div>
+    </div></div></div>
+    <span class="cap">03 · SOÁT ĐỀ</span><h3>Gạch đỏ, sửa xanh, dữ kiện tách riêng</h3><p>Mẹ kiểm trong 5 giây rồi mới gửi AI.</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:60px;top:100px"></i><i style="left:320px;top:420px;animation-delay:-2s"></i></div>
+      <div class="status"><span>21:02</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="top"><div class="ic"><svg class="ic-svg"><use href="#i-back"/></svg></div><h4>Trước khi giảng</h4><div class="ic"><svg class="ic-svg"><use href="#i-sound"/></svg></div></div>
+        <div class="method"><div class="lbl">Dạng bài</div><h4>Toán có lời văn, hai bước tính</h4><span class="badge">📐 Singapore CPA + hỏi gợi mở</span>
+          <div class="cpa"><div class="st"><i>🧺</i><b>Đồ vật thật</b></div><span class="ar">›</span><div class="st"><i>✏️</i><b>Hình vẽ</b></div><span class="ar">›</span><div class="st"><i>🔢</i><b>Phép tính</b></div></div></div>
+        <div class="warn"><span class="lb">⚠️ Mẹ lưu ý</span>Bố mẹ hay sốt ruột làm phép trừ trước. Hãy để con tự tìm ra <b>tổng số bút</b> trước đã.</div>
+        <div class="card"><div class="lbl">Cách lớp 3 đang học</div><p style="font-size:13.5px;margin-top:2px">Tính tổng trong các hộp trước (8 × 3), rồi mới trừ phần cho bạn.</p></div>
+        <div class="grow"></div>
+        <div class="row"><div class="btn ghost">🔊 Nghe</div><div class="btn ghost">🚩 Chưa đúng</div></div>
+        <div class="btn">Bắt đầu hỏi con từng bước</div>
+      </div>
+    </div></div></div>
+    <span class="cap">04 · TRƯỚC KHI GIẢNG</span><h3>Thẻ phương pháp, ba bước vẽ bằng hình</h3><p>Mẹ xem 20 giây trước khi gọi con.</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:330px;top:110px"></i><i style="left:50px;top:300px;animation-delay:-2s"></i><i style="left:300px;top:600px;animation-delay:-4s"></i></div>
+      <div class="status"><span>21:05</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="top"><div class="ic"><svg class="ic-svg"><use href="#i-back"/></svg></div><h4>Hỏi con từng bước</h4><div class="ic"><svg class="ic-svg"><use href="#i-chat"/></svg></div></div>
+        <div class="rail"><i class="done"></i><i class="cur"></i><i></i><i></i></div>
+        <div class="lbl" style="margin-top:-4px">Bậc 2 / 4 · Mít đang tìm tổng số bút</div>
+        <div class="read"><div class="lbl">Mẹ đọc to cho Mít</div><p>"Có 24 cây bút rồi. Cho bạn Na 5 cây thì số bút nhiều lên hay bớt đi, con nhỉ?"</p><span class="say">🔊 Đọc hộ mẹ</span></div>
+        <div class="hint l1"><i>🧺</i><div><b>Mức 1 · đồ vật thật</b><p>Cất 5 que tính vào túi áo mẹ, hỏi con đĩa còn mấy que.</p></div></div>
+        <div class="hint l2"><i>✏️</i><div><b>Mức 2 · hình vẽ</b><p>Vẽ 24 chấm, gạch chéo 5 chấm.</p></div></div>
+        <div class="peek"><p>Bớt đi. 24 − 5 = 19 cây bút.</p><span>🔒 Đáp án cho mẹ · giữ 1,5 giây</span></div>
+        <div class="grow"></div>
+        <div class="row"><div class="btn ghost">🙈 Mít bí</div><div class="btn">✓ Trả lời được</div></div>
+      </div>
+    </div></div></div>
+    <span class="cap">05 · HỎI CON TỪNG BƯỚC</span><h3>Một câu đọc to, gợi ý mở từng nấc</h3><p>Đáp án sau lớp mờ, giữ mới hiện.</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:40px;top:100px"></i><i style="left:330px;top:140px;animation-delay:-1s"></i><i style="left:80px;top:260px;animation-delay:-3s"></i><i style="left:300px;top:300px;animation-delay:-5s"></i></div>
+      <div class="status"><span>21:14</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="medal">🏅</div>
+        <div class="done-h">Mít xong bài 3 rồi!</div>
+        <p class="done-p">9 phút · tự làm 3 trong 4 bậc · sticker mới: Đom đóm vàng</p>
+        <div class="lbl">Con dạy lại mẹ: Mít giải thích thế nào?</div>
+        <div class="teach"><div class="on"><i>😄</i>Tự làm được</div><div><i>🙂</i>Cần gợi ý</div><div><i>😅</i>Mẹ dẫn nhiều</div></div>
+        <div class="two"><div class="mini"><i>🎯</i><b>Bài anh em</b><span>4 túi kẹo, mỗi túi 5 cái…</span></div><div class="mini"><i>🎲</i><b>Trò chơi 5 phút</b><span>3 cái bát, giấu sỏi</span></div></div>
+        <div class="grow"></div>
+        <div class="btn">🌙 Xong tối nay, đi ngủ thôi</div>
+      </div>
+    </div></div></div>
+    <span class="cap">06 · XONG BÀI</span><h3>Sticker, ba mặt cười, bài anh em</h3><p>Không có điểm số, chỉ có sticker và câu hỏi "con hiểu thật chưa".</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen">
+      <div class="notch"></div><div class="ff"><i style="left:320px;top:100px"></i><i style="left:60px;top:560px;animation-delay:-3s"></i></div>
+      <div class="status"><span>21:20</span><span>●●● ᯤ ▮</span></div>
+      <div class="body">
+        <div class="top"><h4>Tuần này của Mít</h4><div class="ic"><svg class="ic-svg"><use href="#i-share"/></svg></div></div>
+        <div class="card"><div class="lbl">14 đến 20/10</div><div class="stat"><b>4 tối</b><span>· 52 phút · 5 bài</span></div>
+          <div class="bars"><div style="--h:70%"></div><div class="off" style="--h:6%"></div><div style="--h:48%"></div><div class="off" style="--h:6%"></div><div style="--h:100%"><em>18′</em></div><div style="--h:62%"></div><div class="off" style="--h:6%"></div></div>
+          <div class="days"><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div></div>
+        <div class="card ringwrap"><div class="ring2"><b>3/4</b></div><div><div class="lbl">Hiểu thật</div><p style="font-size:13.5px;margin-top:2px"><b>3 trong 4 bài</b> Mít tự làm được bài anh em ngay sau đó.</p></div></div>
+        <div class="lbl">Nhận xét</div>
+        <div class="insight"><div>🧮 <span>Mít <b>vướng bước trừ</b> ở 2 bài. Mai thử trò "cất que tính vào túi".</span></div><div>🌟 <span>Bậc 1 toàn tự làm: con <b>kể dữ kiện rất tốt</b>.</span></div></div>
+        <div class="grow"></div>
+      </div>
+      <div class="nav"><div><svg class="ic-svg"><use href="#i-moon"/></svg>Tối nay</div><div><svg class="ic-svg"><use href="#i-game"/></svg>Trò chơi</div><div class="on"><svg class="ic-svg"><use href="#i-chart"/></svg>Báo cáo</div><div><svg class="ic-svg"><use href="#i-user"/></svg>Hồ sơ</div></div>
+    </div></div></div>
+    <span class="cap">07 · BÁO CÁO TUẦN</span><h3>Ít số, nhiều lời khuyên</h3><p>Một con số lớn, một biểu đồ, một vòng "hiểu thật", hai nhận xét làm được ngay.</p>
+  </div>
+
+  <div class="shot">
+    <div class="phone-wrap"><div class="phone"><div class="screen calm">
+      <div class="notch"></div><div class="ff"><i style="left:60px;top:150px"></i><i style="left:320px;top:220px;animation-delay:-2s"></i><i style="left:200px;top:640px;animation-delay:-4s"></i></div>
+      <div class="status"><span>21:09</span><span>●●● ᯤ ▮</span></div>
+      <div class="body" style="align-items:center;text-align:center">
+        <div class="top" style="width:100%"><div class="ic"><svg class="ic-svg"><use href="#i-back"/></svg></div><h4>Góc hạ hoả</h4></div>
+        <p style="font-size:14px;opacity:.85;max-width:280px">Mẹ nghỉ 30 giây. Con không sao đâu, bài đang được giữ chỗ.</p>
+        <div class="breath"><b>Hít vào<br>4 giây</b></div>
+        <p class="quote">"Con đang học cách nghĩ, không phải học cách làm nhanh."</p>
+        <div class="grow"></div>
+        <div class="chips"><span class="chip">🔁 Thêm 30 giây</span></div>
+        <div class="btn" style="width:100%">Quay lại bài với con</div>
+      </div>
+    </div></div></div>
+    <span class="cap">08 · GÓC HẠ HOẢ</span><h3>Màn duy nhất không có việc gì để làm</h3><p>Vòng sáng phồng xẹp theo nhịp thở, một câu nhắc viết cho mẹ.</p>
+  </div>
+</template>
+
+<section class="dir A" id="A" style="background:#ECEFF8">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ A</div><h2>Cực Quang</h2><p>Bầu trời đêm có cực quang trôi chậm phía sau, thẻ kính mờ nổi lên trên, viền phát sáng xanh ngọc. Cảm giác "sản phẩm công nghệ" rõ nhất, hợp sân khấu tối và màn chiếu lớn.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#0B1026"></i><i style="background:#22D3EE"></i><i style="background:#A78BFA"></i><i style="background:#34D399"></i><i style="background:#F472B6"></i></div>
+        <div class="ft"><b style="font-family:'Unbounded';font-weight:900">Unbounded</b>cho tiêu đề và câu đọc to · <b style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:18px;display:inline">Plus Jakarta Sans</b> cho phần còn lại</div>
+        <ul><li>Cực quang trôi 16 giây một vòng, không lặp giống nhau</li><li>Mọi thẻ là kính mờ, nhìn thấy cực quang phía sau</li><li>Mic, gợi ý mức 1, huy chương đều phát sáng</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="A"></div>
+  </div>
+</section>
+
+<section class="dir B" id="B" style="background:#FFF1C9">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ B</div><h2>Sticker Studio</h2><p>Viền đen dày, bóng đổ cứng, màu kẹo, sticker dán nghiêng. Năng lượng của Duolingo và truyện tranh. Trẻ con nhìn vào là muốn chạm, giám khảo nhìn vào là nhớ.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#FF4F8B"></i><i style="background:#FFC928"></i><i style="background:#39C6A5"></i><i style="background:#5B6CFF"></i><i style="background:#1B1B2F"></i></div>
+        <div class="ft"><b style="font-family:'Paytone One'">Paytone One</b>cho tiêu đề · <b style="font-family:'Nunito';font-weight:900;font-size:18px;display:inline">Nunito</b> cho phần còn lại</div>
+        <ul><li>Nút chính nhún lên xuống như đang gọi</li><li>Avatar và huy chương lắc nhẹ, ba ô nhập đề dán nghiêng</li><li>Hai bậc gợi ý xếp lệch như cầu thang</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="B"></div>
+  </div>
+</section>
+
+<section class="dir C" id="C" style="background:#EFE8DA">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ C</div><h2>Sổ Tay Buổi Tối</h2><p>Giấy ngà kẻ dòng, chữ serif in sách, ghi chú viết tay, băng dính. Đẹp kiểu tạp chí, bình tĩnh và tử tế. Khác hẳn mọi app học tập mà giám khảo từng thấy.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#F6F1E7;border:1px solid #D9D0BE"></i><i style="background:#C4613A"></i><i style="background:#7D9A6B"></i><i style="background:#D8A334"></i><i style="background:#2A2622"></i></div>
+        <div class="ft"><b style="font-family:'Playfair Display';font-weight:900;font-style:italic">Playfair Display</b>cho tiêu đề và câu đọc to · <b style="font-family:'Lora';font-size:18px;display:inline">Lora</b> đọc thân · <b style="font-family:'Mali';font-size:18px;display:inline;color:#5A4B7A">Mali</b> viết tay</div>
+        <ul><li>Câu đọc to là trích dẫn có dấu ngoặc kép lớn</li><li>Gợi ý là chú thích cuối trang, viết tay</li><li>"Xong rồi" đóng xuống như con dấu</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="C"></div>
+  </div>
+</section>
+
+<section class="dir D" id="D">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ D</div><h2>Bento Mềm</h2><p>Sáng, sạch, nhiều khoảng trắng, các ô bo tròn xếp như hộp bento. Một dải màu cam san hô sang tím oải hương làm điểm nhấn duy nhất. Cảm giác app cao cấp kiểu Apple hay Headspace, mẹ nào cũng thấy dễ dùng.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#F7F7FA;border:1px solid #E9EAF1"></i><i style="background:#FF6B57"></i><i style="background:#8A7CFF"></i><i style="background:#22B07D"></i><i style="background:#15161E"></i></div>
+        <div class="ft"><b style="font-family:'Sora';font-weight:800">Sora</b>cho tiêu đề và câu đọc to · <b style="font-family:'Inter';font-weight:700;font-size:18px;display:inline">Inter</b> cho phần còn lại</div>
+        <ul><li>Thẻ "Bài tối nay" đổ màu cam sang tím, các ô khác trắng tinh</li><li>Câu đọc to đặt trên thẻ đen để nổi bật nhất màn</li><li>Hiệu ứng nhẹ: vòng sóng mic, nhịp thở, huy chương lơ lửng</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="D"></div>
+  </div>
+</section>
+
+<section class="dir E" id="E" style="background:#E6EEE9">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ E</div><h2>Khu Vườn Đêm</h2><p>Nền xanh rừng thẫm, lá cây ở góc, đom đóm bay chậm, đèn lồng vàng ấm là nút chính. Kể đúng câu chuyện "buổi tối trong nhà" nhưng bằng thiên nhiên thay vì công nghệ. Dịu mắt lúc 21 giờ, trẻ con thích đom đóm.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#0F2A24"></i><i style="background:#163B33"></i><i style="background:#FFD166"></i><i style="background:#6EE7B7"></i><i style="background:#F2F7EE;border:1px solid #ccc"></i></div>
+        <div class="ft"><b style="font-family:'Comfortaa';font-weight:700">Comfortaa</b>cho tiêu đề, chữ tròn mềm · <b style="font-family:'Nunito';font-weight:800;font-size:18px;display:inline">Nunito</b> cho phần còn lại</div>
+        <ul><li>Đom đóm bay trên mọi màn, mỗi màn vài con, không che chữ</li><li>Đèn lồng 🏮 đung đưa trên thẻ "Bài tối nay"; mic và huy chương phát sáng vàng</li><li>Góc bo lệch (3 góc tròn, 1 góc nhọn) như chiếc lá</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="E"></div>
+  </div>
+</section>
+
+<section class="dir F" id="F" style="background:#EAE6DC">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ F</div><h2>Bảng Phấn</h2><p>Cái bảng con treo trong bếp. Nền xanh bảng, viền vẽ tay bằng phấn trắng hơi run, chữ phấn vàng, hồng, xanh. Thân mật, hoài niệm, và rất khác mọi app học tập. Nhìn vào là nhớ "mẹ dạy con ở nhà".</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#2F4A41"></i><i style="background:#F6F1E6"></i><i style="background:#F9E07F"></i><i style="background:#F7A1C4"></i><i style="background:#9AD0F5"></i></div>
+        <div class="ft"><b style="font-family:'Coiny'">Coiny</b>cho tiêu đề như chữ phấn to · <b style="font-family:'Itim';font-size:19px;display:inline">Itim</b> cho ghi chú viết tay · <b style="font-family:'Nunito';font-weight:800;font-size:18px;display:inline">Nunito</b> cho nút và nhãn</div>
+        <ul><li>Viền hộp vẽ tay không đều, như kẻ bằng phấn</li><li>Ngôi sao phấn nhấp nháy trên thẻ "Bài tối nay"</li><li>Soát đề trên tờ giấy trắng dán lên bảng, tương phản rõ</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="F"></div>
+  </div>
+</section>
+
+<section class="dir G" id="G" style="background:#FFE9F1">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ G</div><h2>Kẹo Bông</h2><p>Mây trắng, hồng kẹo, tím oải hương, vàng chanh. Nút mềm như kẹo dẻo, bấm là lún xuống. Thẻ "Bài tối nay" có gương mặt nhỏ biết chớp mắt, sao vàng nhấp nháy khắp màn. Dành cho bé lớp 1 đến lớp 3, mẹ nhìn cũng thấy dịu.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#FFF4F8;border:1px solid #F3D9E6"></i><i style="background:#FF8FB8"></i><i style="background:#B9A3FF"></i><i style="background:#7FD8C4"></i><i style="background:#FFD36E"></i></div>
+        <div class="ft"><b style="font-family:'Baloo 2';font-weight:800">Baloo 2</b>chữ tròn mập cho tiêu đề · <b style="font-family:'Nunito';font-weight:800;font-size:18px;display:inline">Nunito</b> cho phần còn lại</div>
+        <ul><li>Nút và thẻ có "đáy" dày như kẹo dẻo, bấm lún xuống</li><li>Gương mặt • ‿ • trên thẻ chính, 4 giây chớp mắt một lần</li><li>Mây ở góc trên, sao vàng lấp lánh, mic và huy chương bọc vòng hồng</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="G"></div>
+  </div>
+</section>
+
+<section class="dir H" id="H" style="background:#FFEFD6">
+  <div class="wrap">
+    <div class="dir-h">
+      <div><div class="num">BỘ H</div><h2>Bạn Gấu</h2><p>Một chú gấu bông đi cùng con suốt buổi học: ngồi trên thẻ "Bài tối nay", nhắc câu hỏi qua bong bóng thoại, nhún nhảy khi xong bài. Màu mật ong, kem sữa và xanh da trời. Ấm như phòng ngủ của bé.</p></div>
+      <div class="tile">
+        <div class="sw"><i style="background:#FFF8EC;border:1px solid #F0DDC2"></i><i style="background:#F6A623"></i><i style="background:#FFD98A"></i><i style="background:#7FB7F5"></i><i style="background:#4B3621"></i></div>
+        <div class="ft"><b style="font-family:'Mitr';font-weight:700">Mitr</b>chữ tròn thân thiện cho tiêu đề · <b style="font-family:'Nunito';font-weight:800;font-size:18px;display:inline">Nunito</b> cho phần còn lại</div>
+        <ul><li>Gấu 🧸 lắc lư trên thẻ chính và trên bong bóng câu hỏi</li><li>Câu mẹ đọc to hiện trong bong bóng thoại "Gấu nhắc"</li><li>Dấu chân 🐾 mờ rải trên nền, nút màu mật ong có đáy dày</li></ul>
+      </div>
+    </div>
+    <div class="grid" data-theme="H"></div>
+  </div>
+</section>
+
+<section class="wrap" id="verdict">
+  <div class="verdict">
+    <h2>So sánh tám bộ</h2>
+    <table>
+      <thead><tr><th>Bộ</th><th>Ấn tượng 3 giây đầu</th><th>Hợp với</th><th>Rủi ro</th><th>Công đưa vào code</th></tr></thead>
+      <tbody>
+        <tr><td>A · Cực Quang</td><td>"Ồ, xịn" trên màn chiếu tối</td><td>Sân khấu, video demo, giám khảo công nghệ</td><td>Tối màu, cần kiểm tra ngoài trời sáng và máy yếu</td><td>Vừa: kính mờ và cực quang cần tối ưu</td></tr>
+        <tr><td>B · Sticker Studio</td><td>Vui, rực, nhớ ngay</td><td>Trẻ con, tiêu chí sáng tạo, mạng xã hội</td><td>Dễ bị coi là "app cho bé" thay vì "cho mẹ"</td><td>Thấp: toàn viền và bóng CSS</td></tr>
+        <tr><td>C · Sổ Tay Buổi Tối</td><td>Lạ, lịch sự, bình tĩnh</td><td>Thông điệp "mẹ bình tĩnh", giám khảo thích tinh tế</td><td>Ít "wow" tức thì; serif nhỏ cần chỉnh kỹ</td><td>Vừa: font và vài hình vẽ tay</td></tr>
+        <tr><td>D · Bento Mềm</td><td>Sạch, cao cấp, "app thật"</td><td>Giám khảo doanh nghiệp, tiêu chí chỉn chu và triển khai ngang</td><td>Ít cá tính, dễ giống app khác</td><td>Thấp nhất: màu và bo góc</td></tr>
+        <tr><td>E · Khu Vườn Đêm</td><td>Ấm, có chuyện để kể, dịu mắt</td><td>Câu chuyện "buổi tối trong nhà", video demo, trẻ con</td><td>Nền tối cần kiểm tra ngoài trời sáng; đom đóm phải tiết chế</td><td>Vừa: hiệu ứng đom đóm và glow</td></tr>
+        <tr><td>F · Bảng Phấn</td><td>Lạ, thân mật, nhớ ngay</td><td>Tiêu chí sáng tạo, sân khấu, mạng xã hội</td><td>Font phấn to khó đọc đoạn dài; dễ bị coi là "lớp học" nếu lạm dụng</td><td>Vừa: viền vẽ tay là CSS, font Coiny và Itim có sẵn</td></tr>
+        <tr><td>G · Kẹo Bông</td><td>Đáng yêu, mềm, "muốn bấm"</td><td>Bé lớp 1 đến 3, mẹ trẻ, mạng xã hội</td><td>Hồng pastel dễ bị coi là "cho bé gái"; cần cân màu cho bé trai</td><td>Thấp: màu, bo góc, bóng đáy</td></tr>
+        <tr><td>H · Bạn Gấu</td><td>Ấm, có nhân vật, trẻ con gọi tên được</td><td>Bé lớp 1 đến 4, câu chuyện "bạn học cùng con"</td><td>Gấu emoji cần thay bằng hình vẽ riêng để không giống app khác</td><td>Thấp: thêm hình gấu, còn lại là CSS</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:16px;font-size:16px"><b>Gợi ý khi đưa cho mọi người chọn:</b> hỏi hai câu. Một, giám khảo chung kết thiên về doanh nghiệp (chọn D) hay sáng tạo (A, B, F) hay tinh tế (C, E)? Hai, đội có 2 đến 3 ngày để làm hiệu ứng (A, E, F) hay chỉ 1 ngày (B, C, D)? Cả sáu bộ dùng chung cấu trúc 8 màn nên đổi bộ không phải làm lại luồng, chỉ đổi màu, font và vài hình trang trí. Nếu phải chọn một để "tranh giải nhất": <b>A</b> cho sân khấu, <b>E</b> nếu muốn vừa đẹp vừa dịu cho mẹ dùng thật, <b>H</b> nếu muốn giám khảo nhớ một nhân vật (gấu) thay vì nhớ một màu.</p>
+  </div>
+</section>
+
+<script>
+  // nhân bản 8 màn vào từng bộ
+  const tpl = document.getElementById("screens");
+  document.querySelectorAll(".grid[data-theme]").forEach((g) => g.appendChild(tpl.content.cloneNode(true)));
+</script>
+</body>
+</html>
