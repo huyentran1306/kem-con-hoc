@@ -496,7 +496,11 @@ export async function cloudLoadState(famId) {
       })
       if (r.ok) {
         const data = await r.json()
-        return { state: data.state, ts: data.ts ? new Date(data.ts).getTime() : 0 }
+        return {
+          state: data.state,
+          ts: data.ts ? new Date(data.ts).getTime() : 0,
+          serverTs: data.ts,
+        }
       }
     } catch (e) {
       console.warn('V1 family state load failed, falling back:', e)
@@ -515,7 +519,7 @@ export async function cloudSaveState(famId, state, baseTs = null) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ state, baseTs }),
+        body: JSON.stringify({ state, baseTs: baseTs || null }),
       })
       if (r.status === 409) {
         const errData = await r.json()
@@ -523,7 +527,8 @@ export async function cloudSaveState(famId, state, baseTs = null) {
           ok: false,
           conflict: true,
           serverState: errData.serverState,
-          serverTs: errData.serverTs ? new Date(errData.serverTs).getTime() : Date.now(),
+          serverTs: errData.serverTs || null,
+          serverTsMs: errData.serverTs ? new Date(errData.serverTs).getTime() : Date.now(),
         }
       }
       if (r.ok) {

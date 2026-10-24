@@ -157,6 +157,8 @@ export default function App() {
   const scrollRef = useRef(null)
   const toastTimer = useRef(null)
   const cloudTimer = useRef(null)
+  const lastServerTsRef = useRef(null)
+  const isMergingRef = useRef(false)
   const hydratedRef = useRef(false)
   const [hydrated, setHydrated] = useState(false)
 
@@ -243,6 +245,10 @@ export default function App() {
           if (localRaw) localTs = JSON.parse(localRaw)._ts || 0
         } catch (e) { }
 
+        if (cloud && cloud.serverTs) {
+          lastServerTsRef.current = cloud.serverTs
+        }
+
         // Đồng bộ khi máy này chưa có dữ liệu HOẶC dữ liệu trên cloud mới hơn máy này
         if (cloud && cloud.state && cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) {
           let nextState = { ...initialState(), ...cloud.state, _ts: cloud.ts }
@@ -254,6 +260,7 @@ export default function App() {
               nextState.theme = currentTheme
             }
           }
+          isMergingRef.current = true
           setS(nextState)
           toast('Đã đồng bộ dữ liệu mới nhất từ đám mây ☁️')
         }
@@ -274,11 +281,20 @@ export default function App() {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(payload))
     } catch (e) { }
+
+    if (isMergingRef.current) {
+      isMergingRef.current = false
+      return
+    }
+
     if (!S.cloudSync) return
     clearTimeout(cloudTimer.current)
     cloudTimer.current = setTimeout(async () => {
-      const saveRes = await cloudSaveState(famId, payload, S._ts)
-      if (saveRes && saveRes.conflict) {
+      const saveRes = await cloudSaveState(famId, payload, lastServerTsRef.current)
+      if (saveRes && saveRes.saved && saveRes.ts) {
+        lastServerTsRef.current = saveRes.ts
+      } else if (saveRes && saveRes.conflict) {
+        lastServerTsRef.current = saveRes.serverTs || null
         // Gộp state khi có xung đột (Section 3 Prompt 00)
         const serverStickers = saveRes.serverState?.stickerHistory || []
         const localStickers = payload.stickerHistory || []
@@ -286,11 +302,13 @@ export default function App() {
         serverStickers.forEach((st) => mergedMap.set(st.id || `${st.name}_${st.earnedAt}`, st))
         localStickers.forEach((st) => mergedMap.set(st.id || `${st.name}_${st.earnedAt}`, st))
         const mergedHistory = Array.from(mergedMap.values())
+        
+        isMergingRef.current = true
         setS((prev) => ({
           ...saveRes.serverState,
           ...prev,
           stickerHistory: mergedHistory,
-          _ts: saveRes.serverTs,
+          _ts: saveRes.serverTsMs || Date.now(),
         }))
         toast('Đã gộp dữ liệu đồng bộ an toàn ⭐️')
       }
