@@ -6,9 +6,11 @@ const prompt00Md = fs.readFileSync('/Users/pro/Downloads/re-design/00_NEN_TANG_T
 const prompt01Md = fs.readFileSync('/Users/pro/Downloads/re-design/01_GIAO_DIEN_THEO_SO_THICH_GIA_DINH.md', 'utf8')
 const prompt02Md = fs.readFileSync('/Users/pro/Downloads/re-design/02_KIEM_TRA_ANH_NGOAI_PHAM_VI.md', 'utf8')
 const prompt03Md = fs.readFileSync('/Users/pro/Downloads/re-design/03_NHOM_GIA_DINH_VA_BAO_CAO_ZALO.md', 'utf8')
+const prompt04Md = fs.readFileSync('/Users/pro/Downloads/workspace (2)/re-design/04_GIAO_VIEN_LOP_HOC_GIAO_BAI.md', 'utf8')
 const prompt06Md = fs.readFileSync('/Users/pro/Downloads/re-design/06_SUA_LOI_NHANH_VA_BO_DU_LIEU_GIA.md', 'utf8')
 const schema00Sql = fs.readFileSync('/Users/pro/Downloads/workspace (2)/scripts/schema-prompt-00.sql', 'utf8')
 const schema03Sql = fs.readFileSync('/Users/pro/Downloads/workspace (2)/scripts/schema-prompt-03.sql', 'utf8')
+const schema04Sql = fs.readFileSync('/Users/pro/Downloads/workspace (2)/scripts/schema-prompt-04.sql', 'utf8')
 
 async function run() {
   console.log('Fetching team_prompts_sync:v1 from D1 KV...')
@@ -121,6 +123,25 @@ ${schema03Sql}`,
       promptDetail: prompt03Md,
       createdAt: '2026-10-24 19:30',
       updatedAt: '2026-10-24 19:45'
+    },
+    {
+      id: 'tp_prompt_04_teacher',
+      title: 'Prompt 04: Cổng Giáo Viên: Lớp Học, Giao Bài Kèm "Cách Cô Dạy" & Thông Báo',
+      category: 'general',
+      targetAi: 'VideFlow',
+      author: 'Huyền (Tech Lead)',
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
+      migrationScript: `-- ============================================================
+-- PROMPT 04: SCHEMA D1 CHO CỔNG GIÁO VIÊN, LỚP HỌC, BÀI TẬP VÀ THÔNG BÁO
+-- Lệnh chạy: npx wrangler d1 execute <tên-db> --remote --file=scripts/schema-prompt-04.sql
+-- ============================================================
+\${schema04Sql}`,
+      promptDetail: prompt04Md,
+      createdAt: '2026-10-24 19:50',
+      updatedAt: '2026-10-24 20:05'
     }
   ]
 

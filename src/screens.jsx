@@ -8,7 +8,7 @@ import {
 import { Header, SpeakBtn, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent } from './api'
+import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken } from './api'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
@@ -130,8 +130,167 @@ export function Onboarding() {
 }
 
 /* ============================================================
-   2. TRANG CHỦ
+   2. TRANG CHỦ & THẺ BÀI TẬP CÔ GIÁO GIAO (PROMPT 04)
    ============================================================ */
+function TeacherAssignmentBanner({ child, S, patch, go }) {
+  const [assignment, setAssignment] = useState(null)
+  const [items, setItems] = useState([])
+  const [showItemsModal, setShowItemsModal] = useState(false)
+
+  useEffect(() => {
+    const token = getAuthToken()
+    if (!token) return
+    fetch('https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family/assignments', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && Array.isArray(data.assignments) && data.assignments.length > 0) {
+          const first = data.assignments[0]
+          setAssignment(first)
+          fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family/assignments/${first.assignment_id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+            .then(r => r.json())
+            .then(d => {
+              if (d.ok && d.items) setItems(d.items)
+            })
+            .catch(() => {})
+        }
+      })
+      .catch(() => {})
+  }, [child?.id])
+
+  if (!assignment) return null
+
+  const startProblem = (item) => {
+    let preLesson = null
+    try {
+      preLesson = JSON.parse(item.ai_lesson_json)
+    } catch {}
+
+    const problemObj = {
+      ocr: item.problem_text,
+      grade: child?.grade || 'Lớp 3',
+      subject: assignment.subject,
+      category: 'teacher_assignment',
+      isTeacherAssigned: true,
+      teacherName: assignment.teacher_name,
+      teacherMethodNote: item.teacher_method_note,
+      teacherAnswer: item.teacher_answer,
+      steps: preLesson?.steps || [
+        {
+          stepNumber: 1,
+          guidanceForParent: item.teacher_method_note || "Hỏi con đọc kỹ đề bài.",
+          questionForChild: "Con hãy đọc to đề bài nhé!",
+          hintLevel1: "Nhìn vào các con số trong đề.",
+          hintLevel2: "Thử giải từng bước một con nhé."
+        }
+      ]
+    }
+
+    patch({
+      problem: problemObj,
+      studySource: 'teacher',
+      assignmentId: assignment.assignment_id,
+      assignmentItemId: item.id,
+      flow: { step: 0, stuck: 0, peeks: 0 }
+    })
+
+    setShowItemsModal(false)
+    go('prep')
+  }
+
+  const dueDayName = assignment.due_at ? new Date(assignment.due_at).toLocaleDateString('vi-VN', { weekday: 'long' }) : 'sớm'
+
+  return (
+    <>
+      <div
+        className="card mint pop"
+        style={{
+          border: '2px solid #10B981',
+          background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+          padding: '13px 15px',
+          marginBottom: 12,
+          boxShadow: '0 4px 14px rgba(16, 185, 129, 0.18)',
+          cursor: 'pointer',
+        }}
+        onClick={() => setShowItemsModal(true)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#047857', backgroundColor: '#A7F3D0', padding: '2px 8px', borderRadius: 6 }}>
+            🏫 Lớp học của con
+          </span>
+          <span style={{ fontSize: 11.5, color: '#065F46', fontWeight: 600 }}>
+            Hạn {dueDayName}
+          </span>
+        </div>
+        <b style={{ color: '#064E3B', fontSize: 15.5, display: 'block', margin: '3px 0' }}>
+          📚 Cô {assignment.teacher_name} giao {assignment.item_count} bài ({assignment.title})
+        </b>
+        <p style={{ color: '#047857', fontSize: 12.5, margin: '2px 0 10px 0', lineHeight: 1.4 }}>
+          Đã kèm con xong: {assignment.completed_count || 0}/{assignment.item_count} câu · Bấm để kèm đúng cách cô dạy
+        </p>
+        <button
+          className="btn solid"
+          style={{ width: '100%', background: '#059669', borderColor: '#047857', fontWeight: 700, fontSize: 13.5 }}
+          onClick={(e) => { e.stopPropagation(); setShowItemsModal(true) }}
+        >
+          ✍️ Kèm con làm bài cô giao ➔
+        </button>
+      </div>
+
+      {showItemsModal && (
+        <div className="sheet" onClick={(e) => e.target === e.currentTarget && setShowItemsModal(false)}>
+          <div className="pn" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="grabber" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div>
+                <p className="title" style={{ fontSize: 18, margin: 0 }}>📚 {assignment.title}</p>
+                <p className="sub" style={{ margin: '2px 0 0 0' }}>Cô {assignment.teacher_name} · Môn {assignment.subject}</p>
+              </div>
+              <button className="round-btn" onClick={() => setShowItemsModal(false)}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+              {items.map((it, idx) => (
+                <div
+                  key={it.id}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 12,
+                    padding: 14,
+                    border: '1.5px solid #E2E8F0',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <b style={{ fontSize: 14, color: '#2563EB' }}>Câu {it.position || (idx + 1)}</b>
+                    {it.teacher_method_note && (
+                      <span style={{ fontSize: 11, backgroundColor: '#F0FDF4', color: '#047857', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
+                        Theo cách cô dạy
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 13.5, color: '#1E293B', margin: '4px 0 10px 0', lineHeight: 1.45 }}>
+                    {it.problem_text}
+                  </p>
+                  <button
+                    className="btn solid"
+                    style={{ width: '100%', background: '#2563EB', borderColor: '#1D4ED8', fontSize: 13, padding: '8px 12px' }}
+                    onClick={() => startProblem(it)}
+                  >
+                    🚀 Kèm con làm câu này
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export function Home() {
   const { S, patch, stats, go, openSheet, toast, soundOn, toggleSound } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
@@ -244,6 +403,9 @@ export function Home() {
           </button>
         </div>
       )}
+
+      {/* Thẻ bài tập cô giáo giao (Prompt 04) */}
+      <TeacherAssignmentBanner child={child} S={S} patch={patch} go={go} />
 
       <button className="big-card plum" onClick={() => go('snap')}>
         <span className="ic">📷</span>
@@ -1100,6 +1262,26 @@ export function Explain() {
   return (
     <>
       <Header title="Trước khi giảng cho con…" back="home" />
+      {problem?.isTeacherAssigned && (
+        <div
+          style={{
+            background: '#ECFDF5',
+            color: '#065F46',
+            border: '1.5px solid #A7F3D0',
+            padding: '10px 14px',
+            borderRadius: 12,
+            fontSize: 13,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 12,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>👩‍🏫</span>
+          <span>Theo cách cô {problem.teacherName || 'giáo'} dạy: {problem.teacherMethodNote || 'Bám sát phương pháp lớp'}</span>
+        </div>
+      )}
       {problem?.isSample && (
         <div
           className="sample-banner"
@@ -1747,6 +1929,12 @@ export function Done() {
         <b>Hỏi thêm AI về bài này</b>
         <span className="sub">AI trả lời cho {S.parent.toLowerCase()}, không đưa đáp án cho con</span>
       </button>
+
+      {problem?.isTeacherAssigned && (
+        <div style={{ textAlign: 'center', margin: '12px 0 6px 0', fontSize: 13, color: '#059669', fontWeight: 600 }}>
+          ✅ Kết quả đã gửi cô (chỉ trạng thái, không gửi bài làm)
+        </div>
+      )}
 
       <button className="btn solid" onClick={saveResult}>Lưu & về trang chủ</button>
     </>
@@ -4162,6 +4350,12 @@ export function Profile() {
         <span className="ic">👨‍👩‍👧</span>
         <b>Thành viên gia đình</b>
         <span className="sub">Mời người thân (Bố, Ông Bà, Gia sư) cùng kèm con, chia sẻ buổi học</span>
+      </button>
+
+      <button className="big-card mint" onClick={() => openSheet('familyClasses')}>
+        <span className="ic">🏫</span>
+        <b>Lớp học của con</b>
+        <span className="sub">Kết nối với cô giáo ở trường, nhận bài tập về nhà theo cách cô dạy</span>
       </button>
 
       <button className="big-card" style={{ borderColor: 'var(--c-accent)' }} onClick={() => openSheet('themePicker')}>

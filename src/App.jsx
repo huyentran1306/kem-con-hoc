@@ -15,6 +15,8 @@ import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
 import { FamilyMembersSheet } from './FamilyMembersSheet'
 import { JoinFamilyView } from './JoinFamilyView'
 import { PublicReportView } from './PublicReportView'
+import TeacherPortal from './TeacherPortal'
+import { FamilyClassSheet } from './FamilyClassSheet'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -25,6 +27,13 @@ const isAdminRoute = () => {
   const p = window.location.pathname.toLowerCase()
   const h = window.location.hash.toLowerCase()
   return p === '/admin' || p.startsWith('/admin/') || p === '/admingraph' || p.startsWith('/admingraph/') || h === '#admin' || h.startsWith('#admin')
+}
+
+const isTeacherRoute = () => {
+  if (typeof window === 'undefined') return false
+  const p = window.location.pathname.toLowerCase()
+  const h = window.location.hash.toLowerCase()
+  return p === '/teacher' || p.startsWith('/teacher/') || h === '#teacher' || h.startsWith('#teacher')
 }
 
 const getJoinCodeFromUrl = () => {
@@ -137,6 +146,7 @@ const TAB_OF = {
 export default function App() {
   const [session, setSession] = useState(readSession)
   const [showAdmin, setShowAdmin] = useState(isAdminRoute)
+  const [showTeacher, setShowTeacher] = useState(isTeacherRoute)
   const [joinCode, setJoinCode] = useState(getJoinCodeFromUrl)
   const [reportToken, setReportToken] = useState(getReportTokenFromUrl)
   const famId = session ? session.id : null
@@ -156,6 +166,7 @@ export default function App() {
   useEffect(() => {
     const onHash = () => {
       if (isAdminRoute()) setShowAdmin(true)
+      if (isTeacherRoute()) setShowTeacher(true)
     }
     window.addEventListener('hashchange', onHash)
     window.addEventListener('popstate', onHash)
@@ -409,6 +420,21 @@ export default function App() {
     )
   }
 
+  if (showTeacher) {
+    return (
+      <TeacherPortal
+        onExit={() => {
+          setShowTeacher(false)
+          if (window.location.pathname.startsWith('/teacher')) {
+            window.history.pushState(null, '', '/')
+          } else {
+            window.location.hash = ''
+          }
+        }}
+      />
+    )
+  }
+
   if (reportToken) {
     return (
       <PublicReportView
@@ -577,6 +603,17 @@ function SheetView({ type, session }) {
         currentUser={session?.member || { role: 'owner', displayName: S.parent }}
         familyName={session ? session.name : S.familyName || 'Gia đình'}
       />
+    )
+  }
+  if (type === 'familyClasses') {
+    return (
+      <Sheet>
+        <FamilyClassSheet
+          token={getAuthToken()}
+          activeChild={child}
+          onClose={closeSheet}
+        />
+      </Sheet>
     )
   }
   if (type === 'reportIssue') return <ReportIssueSheet problem={S.problem || PROBLEM} />
