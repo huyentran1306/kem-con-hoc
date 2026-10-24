@@ -13,21 +13,39 @@ import { AdminReportsTab } from './AdminReportsTab'
 import { AdminTeachersTab } from './AdminTeachersTab'
 import { AdminConfigTab } from './AdminConfigTab'
 import { AdminToolsTab } from './AdminToolsTab'
+import {
+  BearOverviewIcon,
+  BearFamiliesIcon,
+  BearSessionsIcon,
+  BearReportsIcon,
+  BearTeachersIcon,
+  BearConfigIcon,
+  BearToolsIcon,
+  BearSubModelIcon,
+  BearSubPromptIcon,
+  BearSubRouterIcon,
+  BearSubScopeIcon,
+  BearSubThemesIcon,
+  BearSubAdminsIcon,
+  BearSubAuditIcon,
+  BearSubInfraIcon,
+  BearSubZaloIcon,
+} from './AdminBearIcons'
 
 const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
 const ADMIN_THEME_KEY = 'kem-con-hoc:admin-theme'
 const ADMIN_PROFILE_KEY = 'kem-con-hoc:admin-profile'
 
 export const CONFIG_SUBTABS = [
-  { id: 'model', label: 'Mô hình & Tham số', icon: '⚙️' },
-  { id: 'prompts', label: 'Prompt Studio', icon: '🧪' },
-  { id: 'router', label: 'Router Sư phạm', icon: '🔀' },
-  { id: 'scope', label: 'Phạm vi Đề & Ảnh', icon: '🛡️' },
-  { id: 'themes', label: 'Giao diện App', icon: '🎨' },
-  { id: 'admins', label: 'Quản trị viên & PIN', icon: '👥' },
-  { id: 'audit', label: 'Nhật ký thao tác', icon: '📜' },
-  { id: 'infra', label: 'Hạ tầng Cloudflare', icon: '☁️' },
-  { id: 'zalo', label: 'Thông báo & Zalo', icon: '💬' },
+  { id: 'model', label: 'Mô hình & Tham số', icon: <BearSubModelIcon size={18} /> },
+  { id: 'prompts', label: 'Prompt Studio', icon: <BearSubPromptIcon size={18} /> },
+  { id: 'router', label: 'Router Sư phạm', icon: <BearSubRouterIcon size={18} /> },
+  { id: 'scope', label: 'Phạm vi Đề & Ảnh', icon: <BearSubScopeIcon size={18} /> },
+  { id: 'themes', label: 'Giao diện App', icon: <BearSubThemesIcon size={18} /> },
+  { id: 'admins', label: 'Quản trị viên & PIN', icon: <BearSubAdminsIcon size={18} /> },
+  { id: 'audit', label: 'Nhật ký thao tác', icon: <BearSubAuditIcon size={18} /> },
+  { id: 'infra', label: 'Hạ tầng Cloudflare', icon: <BearSubInfraIcon size={18} /> },
+  { id: 'zalo', label: 'Thông báo & Zalo', icon: <BearSubZaloIcon size={18} /> },
 ]
 
 export default function AdminPortal({ onExit }) {
@@ -313,7 +331,7 @@ export default function AdminPortal({ onExit }) {
             className={`stitch-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => { setActiveTab('overview'); setShowMobileNav(false) }}
           >
-            <span className="stitch-nav-icon">📊</span>
+            <span className="stitch-nav-icon"><BearOverviewIcon size={24} /></span>
             <span>Tổng quan</span>
           </button>
 
@@ -322,7 +340,7 @@ export default function AdminPortal({ onExit }) {
             className={`stitch-nav-item ${activeTab === 'families' ? 'active' : ''}`}
             onClick={() => { setActiveTab('families'); setShowMobileNav(false) }}
           >
-            <span className="stitch-nav-icon">👨‍👩‍👧</span>
+            <span className="stitch-nav-icon"><BearFamiliesIcon size={24} /></span>
             <span>Gia đình & Học sinh</span>
           </button>
 
@@ -331,7 +349,7 @@ export default function AdminPortal({ onExit }) {
             className={`stitch-nav-item ${activeTab === 'sessions' ? 'active' : ''}`}
             onClick={() => { setActiveTab('sessions'); setShowMobileNav(false) }}
           >
-            <span className="stitch-nav-icon">📓</span>
+            <span className="stitch-nav-icon"><BearSessionsIcon size={24} /></span>
             <span>Nhật ký & AI</span>
           </button>
 
@@ -340,7 +358,7 @@ export default function AdminPortal({ onExit }) {
             className={`stitch-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => { setActiveTab('reports'); setShowMobileNav(false) }}
           >
-            <span className="stitch-nav-icon">📈</span>
+            <span className="stitch-nav-icon"><BearReportsIcon size={24} /></span>
             <span>Báo cáo & NPS</span>
           </button>
 
@@ -349,7 +367,7 @@ export default function AdminPortal({ onExit }) {
             className={`stitch-nav-item ${activeTab === 'teachers' ? 'active' : ''}`}
             onClick={() => { setActiveTab('teachers'); setShowMobileNav(false) }}
           >
-            <span className="stitch-nav-icon">🎓</span>
+            <span className="stitch-nav-icon"><BearTeachersIcon size={24} /></span>
             <span>Giáo viên & Lớp</span>
           </button>
 
@@ -365,7 +383,7 @@ export default function AdminPortal({ onExit }) {
                 style={{ justifyContent: 'space-between' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span className="stitch-nav-icon">⚙️</span>
+                  <span className="stitch-nav-icon"><BearConfigIcon size={24} /></span>
                   <span>Cấu hình AI & Hệ thống</span>
                 </div>
                 <span style={{ fontSize: '11px', opacity: 0.7 }}>
@@ -401,7 +419,7 @@ export default function AdminPortal({ onExit }) {
               className={`stitch-nav-item ${activeTab === 'tools' ? 'active' : ''}`}
               onClick={() => { setActiveTab('tools'); setShowMobileNav(false) }}
             >
-              <span className="stitch-nav-icon">🛠️</span>
+              <span className="stitch-nav-icon"><BearToolsIcon size={24} /></span>
               <span>Công cụ nội bộ</span>
             </button>
           )}

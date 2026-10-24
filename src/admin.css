@@ -233,6 +233,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+}
+
+.stitch-nav-item:hover .stitch-nav-icon {
+  transform: scale(1.15) rotate(-3deg);
+}
+
+.stitch-nav-item.active .stitch-nav-icon {
+  transform: scale(1.12);
+  filter: drop-shadow(0 2px 5px rgba(217, 119, 6, 0.28));
 }
 
 /* Sub-menu bên ngoài sidebar cho Cấu hình */
@@ -283,6 +296,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.stitch-nav-subitem:hover .sub-icon {
+  transform: scale(1.18);
+}
+
+.stitch-nav-subitem.active .sub-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 1px 3px rgba(217, 119, 6, 0.25));
 }
 
 /* Thẻ "Gấu nhắc hôm nay" */
