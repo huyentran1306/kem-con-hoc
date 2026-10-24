@@ -14,6 +14,7 @@ import {
 import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
 import { toast } from './utils'
 import { AdminThemesSection } from './AdminThemesSection'
+import { AdminScopeSection } from './AdminScopeSection'
 
 export const AVAILABLE_AI_MODELS = [
   {
@@ -753,6 +754,21 @@ export default function PromptStudioTab() {
             >
               🎨 Giao diện app (8 Themes)
             </button>
+            <button
+              type="button"
+              className="admin-btn sm"
+              style={{
+                background: activeView === 'scope_rules' ? '#FFFFFF' : 'transparent',
+                color: activeView === 'scope_rules' ? '#1E1B4B' : '#E0E7FF',
+                border: 'none',
+                fontWeight: 800,
+                boxShadow: activeView === 'scope_rules' ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
+                cursor: 'pointer',
+              }}
+              onClick={() => setActiveView('scope_rules')}
+            >
+              🛡️ Luật phạm vi ảnh & đề
+            </button>
           </div>
 
           <button
@@ -878,6 +894,37 @@ export default function PromptStudioTab() {
               </div>
               <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
                 Bật/tắt & Bộ mặc định
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('scope_rules')}
+              style={{
+                width: '100%',
+                marginTop: 6,
+                textAlign: 'left',
+                padding: '10px 12px',
+                borderRadius: 12,
+                border: activeView === 'scope_rules' ? '2px solid #0284C7' : '1px solid #E2E8F0',
+                background: activeView === 'scope_rules' ? '#F0F9FF' : '#F8FAFC',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                transition: 'all .15s',
+                boxSizing: 'border-box',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                <b style={{ fontSize: 13, color: activeView === 'scope_rules' ? '#0369A1' : '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🛡️</span> Luật phạm vi
+                </b>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 999, background: '#0284C7', color: '#fff' }}>
+                  SCOPE RULES
+                </span>
+              </div>
+              <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
+                Ảnh nhạy cảm, đồ chơi, lệch lớp
               </span>
             </button>
           </div>
@@ -1601,9 +1648,13 @@ export default function PromptStudioTab() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : activeView === 'themes' ? (
           <div className="prompt-studio-main" style={{ minWidth: 0, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}>
             <AdminThemesSection />
+          </div>
+        ) : (
+          <div className="prompt-studio-main" style={{ minWidth: 0, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}>
+            <AdminScopeSection adminKey={adminKey} />
           </div>
         )}
       </div>
