@@ -494,6 +494,7 @@ export function applyTheme(id, motion = 'full', customConfig = null) {
   try {
     localStorage.setItem('kem-con-hoc:theme', theme.id)
     localStorage.setItem('kem-con-hoc:motion', motion)
+    localStorage.setItem('kem-con-hoc:user-custom-theme', 'true')
   } catch (e) {}
 
   return theme

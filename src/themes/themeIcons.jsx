@@ -60,6 +60,7 @@ export function InputModeIcon({ mode, size = 20, className = '' }) {
  */
 export function ThemedTabIcon({ themeId = 'bear', tab = 'home', active = false, size = 22 }) {
   const t = themeId || 'bear'
+  tab = tab === 'toy' ? 'game' : tab === 'profile' ? 'child' : tab
 
   // A · AURORA (Cực Quang)
   if (t === 'aurora') {

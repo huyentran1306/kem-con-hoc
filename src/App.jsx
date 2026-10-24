@@ -117,9 +117,18 @@ const initialState = () => ({
 function loadState(lsKey) {
   try {
     const raw = localStorage.getItem(lsKey)
-    if (!raw) return initialState()
+    const savedTheme = typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:theme') : null
+    const savedMotion = typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:motion') : null
+    if (!raw) {
+      const init = initialState()
+      if (savedTheme) init.theme = savedTheme
+      if (savedMotion) init.motion = savedMotion
+      return init
+    }
     const saved = JSON.parse(raw)
     const base = { ...initialState(), ...saved }
+    if (savedTheme && !saved.theme) base.theme = savedTheme
+    if (savedMotion && !saved.motion) base.motion = savedMotion
     if (base.stats) {
       Object.keys(base.stats).forEach((k) => {
         if (base.stats[k]?.stickerHistory) {
@@ -230,9 +239,7 @@ export default function App() {
 
   /* ---------- áp dụng theme và hiệu ứng chuyển động ---------- */
   useEffect(() => {
-    const userCustom = typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:user-custom-theme') : null
-    const themeToApply = userCustom ? (S.theme || 'bear') : (S.theme || 'bear')
-    applyTheme(themeToApply, S.motion || 'full')
+    applyTheme(S.theme || 'bear', S.motion || 'full')
   }, [S.theme, S.motion])
 
   /* ---------- đồng bộ screen theo trạng thái onboarded ---------- */

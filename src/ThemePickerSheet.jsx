@@ -2,7 +2,7 @@
    🎨 MÀN CHỌN GIAO DIỆN CẢ NHÀ (THEME PICKER)
    8 thẻ xem trước trực quan, xem thử tức thì, tuỳ chỉnh hiệu ứng
    ============================================================ */
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useRef } from 'react'
 import { AppCtx } from './ctx'
 import { THEMES, getTheme, applyTheme } from './themes'
 import { Check, Sparkles, Sliders } from 'lucide-react'
@@ -12,9 +12,10 @@ import { decodeThemeCode } from './themes/customThemeCode'
 export function ThemePickerSheet({ onClose }) {
   const { S, patch, toast } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
-  const initialTheme = S.theme || 'candy'
+  const initialTheme = S.theme || 'bear'
   const initialMotion = S.motion || 'full'
 
+  const savedRef = useRef(false)
   const [selectedTheme, setSelectedTheme] = useState(initialTheme)
   const [selectedMotion, setSelectedMotion] = useState(initialMotion)
   const [showDesigner, setShowDesigner] = useState(false)
@@ -33,6 +34,7 @@ export function ThemePickerSheet({ onClose }) {
 
   // Xác nhận lưu cho cả nhà
   const handleSave = () => {
+    savedRef.current = true
     try {
       localStorage.setItem('kem-con-hoc:user-custom-theme', 'true')
     } catch (e) {}
@@ -47,16 +49,19 @@ export function ThemePickerSheet({ onClose }) {
 
   // Huỷ bỏ -> khôi phục theme cũ
   const handleCancel = () => {
+    savedRef.current = false
     applyTheme(initialTheme, initialMotion)
     onClose?.()
   }
 
-  // Khôi phục nếu user bấm ngoài sheet đóng lại
+  // Khôi phục nếu user bấm ngoài sheet đóng lại mà chưa bấm Lưu
   useEffect(() => {
     return () => {
-      applyTheme(S.theme || 'bear', S.motion || 'full')
+      if (!savedRef.current) {
+        applyTheme(initialTheme, initialMotion)
+      }
     }
-  }, [S.theme, S.motion])
+  }, [initialTheme, initialMotion])
 
   return (
     <div className="theme-picker-pn">
@@ -339,6 +344,10 @@ export function ThemePickerSheet({ onClose }) {
           childName={child?.name || 'con'}
           currentCustomTheme={S.customTheme}
           onSave={(cfg) => {
+            savedRef.current = true
+            try {
+              localStorage.setItem('kem-con-hoc:user-custom-theme', 'true')
+            } catch (e) {}
             patch({ theme: 'custom', customTheme: cfg })
             applyTheme('custom', selectedMotion, cfg)
             setSelectedTheme('custom')
