@@ -15,6 +15,8 @@ export function AdminThemesSection() {
   const [config, setConfig] = useState({
     default: DEFAULT_THEME,
     enabled: THEMES.map((t) => t.id),
+    forceAll: false,
+    forceVersion: 0,
   })
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -31,6 +33,8 @@ export function AdminThemesSection() {
         setConfig({
           default: val.default || DEFAULT_THEME,
           enabled: val.enabled,
+          forceAll: Boolean(val.forceAll),
+          forceVersion: val.forceVersion || 0,
         })
       }
     } catch (e) {
@@ -43,6 +47,31 @@ export function AdminThemesSection() {
   useEffect(() => {
     loadConfig()
   }, [])
+
+  // Bật / Tắt chế độ Ép giao diện cho TẤT CẢ người dùng (Force UI for all)
+  const toggleForceAll = async (newVal) => {
+    const nextConfig = {
+      ...config,
+      forceAll: newVal,
+      forceVersion: Date.now(),
+    }
+    setConfig(nextConfig)
+    try {
+      await Promise.all([
+        dbKvSet('app_config:themes', nextConfig),
+        dbKvSet('app_config%3Athemes', nextConfig),
+      ])
+      const themeObj = getTheme(config.default)
+      toast(
+        newVal
+          ? `⚡ ĐÃ BẬT ÉP GIAO DIỆN: Toàn bộ người dùng sẽ được chuyển về "${themeObj?.name || config.default}" (kể cả ai đã tự setup)!`
+          : 'ĐÃ TẮT ÉP GIAO DIỆN: Người dùng đã tự setup trước đó sẽ được giữ giao diện riêng.'
+      )
+    } catch (e) {
+      console.warn('Auto-save forceAll error:', e)
+      toast('Lỗi lưu cài đặt ép giao diện!')
+    }
+  }
 
   // 2. Bật / Tắt một bộ giao diện (tự động lưu lên Cloudflare)
   const toggleTheme = async (themeId) => {
@@ -61,7 +90,12 @@ export function AdminThemesSection() {
       newDefault = newEnabled[0]
     }
 
-    const nextConfig = { default: newDefault, enabled: newEnabled }
+    const nextConfig = {
+      ...config,
+      default: newDefault,
+      enabled: newEnabled,
+      forceVersion: config.forceAll ? Date.now() : config.forceVersion,
+    }
     setConfig(nextConfig)
 
     try {
@@ -90,7 +124,12 @@ export function AdminThemesSection() {
       newEnabled.push(themeId)
     }
 
-    const nextConfig = { default: themeId, enabled: newEnabled }
+    const nextConfig = {
+      ...config,
+      default: themeId,
+      enabled: newEnabled,
+      forceVersion: config.forceAll ? Date.now() : config.forceVersion,
+    }
     setConfig(nextConfig)
 
     // Áp dụng thử preview cho theme này
@@ -105,7 +144,8 @@ export function AdminThemesSection() {
         dbKvSet('app_config%3Athemes', nextConfig),
       ])
       const themeObj = getTheme(themeId)
-      toast(`Đã đặt "${themeObj?.name || themeId}" làm mặc định toàn app ⭐`)
+      const forceNotice = config.forceAll ? ' (Đang ép áp dụng cho TẤT CẢ người dùng)' : ' (Chỉ áp dụng cho người chưa từng setup)'
+      toast(`Đã đặt "${themeObj?.name || themeId}" làm mặc định${forceNotice} ⭐`)
     } catch (e) {
       console.warn('Auto-save default theme error:', e)
       toast('Đã đổi tạm thời, vui lòng bấm "Lưu lên Cloudflare" để chốt!')
@@ -163,6 +203,72 @@ export function AdminThemesSection() {
             <Check size={15} /> {saving ? 'Đang lưu...' : '☁️ Đã tự lưu'}
           </button>
         </div>
+      </div>
+
+      {/* FORCE UI FOR ALL USERS TOGGLE */}
+      <div
+        style={{
+          background: config.forceAll ? '#FEF2F2' : '#F8FAFC',
+          border: config.forceAll ? '1.5px solid #EF4444' : '1px solid var(--adm-border)',
+          borderRadius: 14,
+          padding: '16px 20px',
+          marginBottom: 20,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16,
+          boxShadow: config.forceAll ? '0 4px 16px rgba(239, 68, 68, 0.12)' : 'none',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <div style={{ flex: '1 1 340px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 24 }}>{config.forceAll ? '⚡' : '🛡️'}</span>
+            <div>
+              <b style={{ fontSize: 15, color: config.forceAll ? '#991B1B' : '#0F172A' }}>
+                Bắt buộc áp dụng cho TẤT CẢ người dùng (Force UI cho toàn bộ)
+              </b>
+              <div style={{ fontSize: 11.5, fontWeight: 700, marginTop: 2, color: config.forceAll ? '#DC2626' : '#64748B' }}>
+                {config.forceAll
+                  ? '🔴 ĐANG BẬT: Bất kể ai đang tự setup giao diện riêng cũng sẽ bị chuyển sang giao diện mặc định này!'
+                  : '🟢 ĐANG TẮT: Chỉ đổi giao diện cho ai chưa từng setup (ai đã tự chọn sẽ giữ nguyên giao diện riêng)'}
+              </div>
+            </div>
+          </div>
+          <p style={{ margin: '8px 0 0', fontSize: 12.5, color: '#475569', lineHeight: 1.5 }}>
+            {config.forceAll
+              ? 'Mọi máy phụ huynh và học sinh khi mở ứng dụng sẽ được tự động đồng bộ sang bộ giao diện được chọn làm mặc định.'
+              : 'Tôn trọng cài đặt của từng gia đình. Chỉ những người dùng mới hoặc chưa từng đổi giao diện mới áp dụng bộ mặc định.'}
+          </p>
+        </div>
+
+        <label
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            cursor: 'pointer',
+            padding: '10px 18px',
+            borderRadius: 10,
+            background: config.forceAll ? '#DC2626' : '#FFFFFF',
+            border: config.forceAll ? '1.5px solid #B91C1C' : '1.5px solid #CBD5E1',
+            color: config.forceAll ? '#FFFFFF' : '#334155',
+            fontWeight: 800,
+            fontSize: 13,
+            userSelect: 'none',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={Boolean(config.forceAll)}
+            onChange={(e) => toggleForceAll(e.target.checked)}
+            style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#DC2626' }}
+          />
+          <span>{config.forceAll ? '⚡ Đang Ép Toàn Bộ' : 'Bật Ép Cho Tất Cả'}</span>
+        </label>
       </div>
 
       <div

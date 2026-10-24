@@ -202,12 +202,30 @@ export default function App() {
   useEffect(() => {
     loadPublicConfig(true)
       .then((cfg) => {
-        const defaultTheme = cfg?.themesConfig?.default
+        const themesCfg = cfg?.themesConfig
+        const defaultTheme = themesCfg?.default
+        const forceAll = Boolean(themesCfg?.forceAll)
+        const forceVersion = themesCfg?.forceVersion || 0
+        const lastAppliedForce = parseInt(localStorage.getItem('kem-con-hoc:last-applied-force-theme') || '0', 10)
+
         if (defaultTheme) {
           const userCustomized = localStorage.getItem('kem-con-hoc:user-custom-theme')
-          if (!userCustomized) {
-            applyTheme(defaultTheme, S.motion || 'full')
-            setS((prev) => ({ ...prev, theme: defaultTheme }))
+          if (forceAll) {
+            // Admin ép đổi giao diện cho TẤT CẢ người dùng (kể cả ai đã tự setup)
+            if (forceVersion > lastAppliedForce || localStorage.getItem('kem-con-hoc:theme') !== defaultTheme) {
+              try {
+                localStorage.removeItem('kem-con-hoc:user-custom-theme')
+                localStorage.setItem('kem-con-hoc:last-applied-force-theme', String(forceVersion || Date.now()))
+              } catch (e) {}
+              applyTheme(defaultTheme, S.motion || 'full')
+              setS((prev) => ({ ...prev, theme: defaultTheme }))
+            }
+          } else {
+            // Chỉ áp dụng cho người dùng chưa từng tự setup giao diện
+            if (!userCustomized) {
+              applyTheme(defaultTheme, S.motion || 'full')
+              setS((prev) => ({ ...prev, theme: defaultTheme }))
+            }
           }
         }
       })
@@ -230,7 +248,16 @@ export default function App() {
 
         // Đồng bộ khi máy này chưa có dữ liệu HOẶC dữ liệu trên cloud mới hơn máy này
         if (cloud && cloud.state && cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) {
-          setS({ ...initialState(), ...cloud.state, _ts: cloud.ts })
+          let nextState = { ...initialState(), ...cloud.state, _ts: cloud.ts }
+          const userCustomized = localStorage.getItem('kem-con-hoc:user-custom-theme')
+          const lastAppliedForce = parseInt(localStorage.getItem('kem-con-hoc:last-applied-force-theme') || '0', 10)
+          if (!userCustomized && lastAppliedForce > 0) {
+            const currentTheme = localStorage.getItem('kem-con-hoc:theme')
+            if (currentTheme) {
+              nextState.theme = currentTheme
+            }
+          }
+          setS(nextState)
           toast('Đã đồng bộ dữ liệu mới nhất từ đám mây ☁️')
         }
         hydratedRef.current = true
