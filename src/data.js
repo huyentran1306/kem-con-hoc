@@ -136,23 +136,23 @@ export const AVAILABLE_STICKERS = [
 /* Dữ liệu mẫu lịch sử Sticker theo thời gian (Big Data Longitudinal History) */
 export const SAMPLE_STICKER_HISTORY = [
   // Tuần trước (Tuần 1): Nhiều sáng tạo, ít kiên nhẫn do bài dễ
-  { id: 'h1', stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Số học & phép tính', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 8 },
-  { id: 'h2', stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Đố vui que tính', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 8 },
-  { id: 'h3', stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Tiếng Việt', problemType: 'Đặt câu mở rộng', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 7 },
-  { id: 'h4', stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Tiếng Anh', problemType: 'Từ vựng đồ vật', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 7 },
-  { id: 'h5', stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Hình học phẳng', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 6 },
-  { id: 'h6', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 6 },
-  { id: 'h7', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 5 },
-  { id: 'h8', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Tiếng Việt', problemType: 'Viết đoạn văn', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 5 },
+  { id: 'h1', sample: true, stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Số học & phép tính', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 8 },
+  { id: 'h2', sample: true, stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Đố vui que tính', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 8 },
+  { id: 'h3', sample: true, stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Tiếng Việt', problemType: 'Đặt câu mở rộng', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 7 },
+  { id: 'h4', sample: true, stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Tiếng Anh', problemType: 'Từ vựng đồ vật', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 7 },
+  { id: 'h5', sample: true, stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Hình học phẳng', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 6 },
+  { id: 'h6', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 6 },
+  { id: 'h7', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 5 },
+  { id: 'h8', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Tiếng Việt', problemType: 'Viết đoạn văn', week: 'Tuần trước', timestamp: Date.now() - 86400000 * 5 },
 
   // Tuần này (Tuần 2): Kiên nhẫn tăng lên 4, Sáng tạo tụt xuống còn 1 do bài toán khó & lặp dạng
-  { id: 'h9', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn 2 bước', week: 'Tuần này', timestamp: Date.now() - 86400000 * 4 },
-  { id: 'h10', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn 2 bước', week: 'Tuần này', timestamp: Date.now() - 86400000 * 3 },
-  { id: 'h11', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn 2 bước', week: 'Tuần này', timestamp: Date.now() - 86400000 * 2 },
-  { id: 'h12', stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Tiếng Việt', problemType: 'Chính tả phân biệt d/gi/r', week: 'Tuần này', timestamp: Date.now() - 86400000 * 1 },
-  { id: 'h13', stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Trò chơi đồ vật', week: 'Tuần này', timestamp: Date.now() - 86400000 * 1 },
-  { id: 'h14', stickerId: 's8', name: 'Vương miện Tập trung', trait: 'Tập trung', fa: 'fa-solid fa-bullseye', color: '#4F46E5', subject: 'Toán', problemType: 'Luyện tập chung', week: 'Tuần này', timestamp: Date.now() - 3600000 * 5 },
-  { id: 'h15', stickerId: 's4', name: 'Gấu trúc Tỉ mỉ', trait: 'Tỉ mỉ', fa: 'fa-solid fa-compass-drafting', color: '#059669', subject: 'Toán', problemType: 'Trình bày vở', week: 'Tuần này', timestamp: Date.now() - 3600000 * 2 },
+  { id: 'h9', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn 2 bước', week: 'Tuần này', timestamp: Date.now() - 86400000 * 4 },
+  { id: 'h10', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn 2 bước', week: 'Tuần này', timestamp: Date.now() - 86400000 * 3 },
+  { id: 'h11', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Toán', problemType: 'Toán có lời văn 2 bước', week: 'Tuần này', timestamp: Date.now() - 86400000 * 2 },
+  { id: 'h12', sample: true, stickerId: 's1', name: 'Kỳ lân Kiên trì', trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', subject: 'Tiếng Việt', problemType: 'Chính tả phân biệt d/gi/r', week: 'Tuần này', timestamp: Date.now() - 86400000 * 1 },
+  { id: 'h13', sample: true, stickerId: 's3', name: 'Ngôi sao Sáng tạo', trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', subject: 'Toán', problemType: 'Trò chơi đồ vật', week: 'Tuần này', timestamp: Date.now() - 86400000 * 1 },
+  { id: 'h14', sample: true, stickerId: 's8', name: 'Vương miện Tập trung', trait: 'Tập trung', fa: 'fa-solid fa-bullseye', color: '#4F46E5', subject: 'Toán', problemType: 'Luyện tập chung', week: 'Tuần này', timestamp: Date.now() - 3600000 * 5 },
+  { id: 'h15', sample: true, stickerId: 's4', name: 'Gấu trúc Tỉ mỉ', trait: 'Tỉ mỉ', fa: 'fa-solid fa-compass-drafting', color: '#059669', subject: 'Toán', problemType: 'Trình bày vở', week: 'Tuần này', timestamp: Date.now() - 3600000 * 2 },
 ]
 
 /* Đố vui 5 giây giải tỏa căng thẳng trong lúc chờ AI phân tích */

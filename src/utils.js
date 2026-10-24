@@ -115,3 +115,47 @@ export function boom() {
     setTimeout(() => confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#1F7A5C', '#F1D08A'] }), 320)
   } catch (e) {}
 }
+
+/**
+ * Đánh dấu 15 bản ghi sticker mẫu với sample: true (id h1..h15)
+ * Chạy idempotent, không xoá bản ghi, chạy lại không đổi gì (B1)
+ */
+export function markSampleStickers(history = []) {
+  if (!Array.isArray(history)) return []
+  return history.map((item) => {
+    if (item && item.id && /^h(1[0-5]|[1-9])$/.test(String(item.id))) {
+      return { ...item, sample: true }
+    }
+    return item
+  })
+}
+
+/**
+ * Trả về timestamp Thứ Hai 00:00:00.000 theo múi giờ Việt Nam (UTC+7) (B2)
+ */
+export function getVnMondayStart(ts = Date.now()) {
+  const d = new Date(ts)
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000
+  const vnTime = new Date(utc + 7 * 3600000)
+  const day = vnTime.getDay() // 0 = CN, 1 = T2, ...
+  const diffToMonday = day === 0 ? 6 : day - 1
+  vnTime.setDate(vnTime.getDate() - diffToMonday)
+  vnTime.setHours(0, 0, 0, 0)
+  return vnTime.getTime() - 7 * 3600000 - d.getTimezoneOffset() * 60000
+}
+
+/**
+ * Tính nhãn "Tuần này" / "Tuần trước" động từ timestamp (B2)
+ */
+export function getWeekLabel(timestamp, currentTs = Date.now()) {
+  if (!timestamp) return 'Tuần này'
+  const currentMonday = getVnMondayStart(currentTs)
+  const oneWeekMs = 7 * 86400000
+  const prevMonday = currentMonday - oneWeekMs
+  if (timestamp >= currentMonday) {
+    return 'Tuần này'
+  } else if (timestamp >= prevMonday && timestamp < currentMonday) {
+    return 'Tuần trước'
+  }
+  return 'Trước đó'
+}

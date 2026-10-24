@@ -3,6 +3,7 @@
    ============================================================ */
 import { PROBLEM } from './data'
 import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio'
+import { getWeekLabel } from './utils'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -549,8 +550,9 @@ export async function adminFetchFeedback() {
    Phân tích sự biến động phẩm chất (Kiên nhẫn, Sáng tạo,...) & điểm nghẽn
    ============================================================ */
 export async function aiAnalyzeLongitudinalProgress({ child, stats, stickerHistory = [] }) {
-  const thisWeek = stickerHistory.filter((s) => s.week === 'Tuần này')
-  const lastWeek = stickerHistory.filter((s) => s.week === 'Tuần trước')
+  const validHistory = (stickerHistory || []).filter((s) => !s.sample)
+  const thisWeek = validHistory.filter((s) => getWeekLabel(s.timestamp) === 'Tuần này')
+  const lastWeek = validHistory.filter((s) => getWeekLabel(s.timestamp) === 'Tuần trước')
 
   const countTraits = (list) => {
     const map = {}

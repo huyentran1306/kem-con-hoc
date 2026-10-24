@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { AppCtx } from './ctx'
 import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
-import { toast, onToast, speak, boom, fmtTime } from './utils'
+import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
 import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback } from './api'
@@ -32,13 +32,14 @@ const readSession = () => {
 const defaultStats = (id) => ({
   stickers: 0,
   stickersList: [],
-  stickerHistory: [...SAMPLE_STICKER_HISTORY],
+  stickerHistory: [],
   aiLongitudinalInsight: null,
   weak: [],
   strong: [],
   history: [],
   calmWeek: 0,
   calmLast: 0,
+  calmHistory: [],
   sessionsMom: 0,
   sessionsDad: 0,
 })
@@ -57,7 +58,7 @@ const initialState = () => ({
         { id: 's1', e: '🦄', n: 'Kỳ lân Kiên trì', desc: 'Không bỏ cuộc trước bài khó', when: 'T2' },
         { id: 's3', e: '🌟', n: 'Ngôi sao Sáng tạo', desc: 'Nghĩ ra cách giải độc đáo', when: 'T3' },
       ],
-      stickerHistory: [...SAMPLE_STICKER_HISTORY],
+      stickerHistory: markSampleStickers(SAMPLE_STICKER_HISTORY),
       aiLongitudinalInsight: null,
       weak: [
         { n: 'Toán có lời văn 2 bước', v: 3, t: 4 },
@@ -70,8 +71,9 @@ const initialState = () => ({
       ],
       calmWeek: 3,
       calmLast: 6,
-      sessionsMom: 4,
-      sessionsDad: 1,
+      calmHistory: [Date.now() - 86400000 * 3, Date.now() - 86400000 * 2, Date.now() - 86400000 * 1],
+      sessionsMom: 0,
+      sessionsDad: 0,
     },
   },
   schedule: SCHEDULE_DEFAULT,
@@ -86,7 +88,15 @@ function loadState(lsKey) {
     const raw = localStorage.getItem(lsKey)
     if (!raw) return initialState()
     const saved = JSON.parse(raw)
-    return { ...initialState(), ...saved }
+    const base = { ...initialState(), ...saved }
+    if (base.stats) {
+      Object.keys(base.stats).forEach((k) => {
+        if (base.stats[k]?.stickerHistory) {
+          base.stats[k].stickerHistory = markSampleStickers(base.stats[k].stickerHistory)
+        }
+      })
+    }
+    return base
   } catch (e) {
     return initialState()
   }
@@ -230,16 +240,41 @@ export default function App() {
   }
   const openSheet = (type, data) => {
     if (type === 'calm') {
+      const nowTs = Date.now()
+      const curStats = S.stats[S.activeId] || defaultStats(S.activeId)
+      const calmHist = [...(curStats.calmHistory || []), nowTs]
+      const currentMonday = getVnMondayStart(nowTs)
+      const prevMonday = currentMonday - 7 * 86400000
+      const cWeek = calmHist.filter((t) => t >= currentMonday).length
+      const cLast = calmHist.filter((t) => t >= prevMonday && t < currentMonday).length
       setS((prev) => ({
         ...prev,
-        stats: { ...prev.stats, [prev.activeId]: { ...prev.stats[prev.activeId], calmWeek: prev.stats[prev.activeId].calmWeek + 1 } },
+        stats: {
+          ...prev.stats,
+          [prev.activeId]: {
+            ...prev.stats[prev.activeId],
+            calmHistory: calmHist,
+            calmWeek: cWeek,
+            calmLast: cLast,
+          },
+        },
       }))
     }
     setSheet({ type, data })
   }
   const closeSheet = () => setSheet(null)
 
-  const stats = S.stats[S.activeId] || defaultStats(S.activeId)
+  const rawStats = S.stats[S.activeId] || defaultStats(S.activeId)
+  const stats = useMemo(() => {
+    const calmHist = rawStats.calmHistory || []
+    if (calmHist.length === 0) return rawStats
+    const currentMonday = getVnMondayStart(Date.now())
+    const prevMonday = currentMonday - 7 * 86400000
+    const cWeek = calmHist.filter((t) => t >= currentMonday).length
+    const cLast = calmHist.filter((t) => t >= prevMonday && t < currentMonday).length
+    return { ...rawStats, calmWeek: cWeek, calmLast: cLast }
+  }, [rawStats])
+
   const setStats = (obj) =>
     setS((prev) => ({ ...prev, stats: { ...prev.stats, [prev.activeId]: { ...prev.stats[prev.activeId], ...obj } } }))
 
@@ -873,7 +908,7 @@ function StickerBookSheet() {
   const { S, openSheet, closeSheet, boom } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const curStats = S.stats[child.id] || {}
-  const list = curStats.stickersList || []
+  const list = (curStats.stickersList || []).filter((x) => !x.sample)
   const distinct = new Set(list.map((x) => x.id || x.e || x.name)).size
   const [selected, setSelected] = useState(null)
 

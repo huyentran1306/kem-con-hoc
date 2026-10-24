@@ -6,7 +6,7 @@ import {
   AVAILABLE_STICKERS, WAITING_QUIZZES,
 } from './data'
 import { Header, SpeakBtn, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
-import { fmtTime, speak, compressImage, uid, boom } from './utils'
+import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
 import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress } from './api'
 import { renderPrompt } from './promptStudio'
@@ -3382,16 +3382,16 @@ function BowlGame() {
 export function Report() {
   const { S, stats, toast, boom } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
-  const momDays = S.schedule.filter((d) => d.owner === 'Mẹ').length
-  const dadDays = S.schedule.filter((d) => d.owner === 'Bố').length
-  const total = momDays + dadDays
-  const momPct = total ? Math.round((momDays / total) * 100) : 0
-  const dadPct = 100 - momPct
+  const momSessions = stats.sessionsMom || 0
+  const dadSessions = stats.sessionsDad || 0
+  const totalSessions = momSessions + dadSessions
+  const momPct = totalSessions ? Math.round((momSessions / totalSessions) * 100) : 0
+  const dadPct = totalSessions ? 100 - momPct : 0
 
-  // 📈 Phân tích Big Data Sticker History dài hạn (không bị mất khi đổi quà)
-  const stickerHistory = stats.stickerHistory || []
-  const thisWeekStickers = stickerHistory.filter((s) => s.week === 'Tuần này')
-  const lastWeekStickers = stickerHistory.filter((s) => s.week === 'Tuần trước')
+  // 📈 Phân tích Big Data Sticker History dài hạn (bỏ qua bản ghi mẫu sample: true)
+  const stickerHistory = (stats.stickerHistory || []).filter((s) => !s.sample)
+  const thisWeekStickers = stickerHistory.filter((s) => getWeekLabel(s.timestamp) === 'Tuần này')
+  const lastWeekStickers = stickerHistory.filter((s) => getWeekLabel(s.timestamp) === 'Tuần trước')
 
   // Thống kê phẩm chất theo tuần
   const countTraitMap = (list) => {
@@ -3468,8 +3468,20 @@ export function Report() {
   return (
     <>
       <Header title={`Tuần này của ${child.name}`} />
-      <p className="sub">{total} ca · mẹ kèm {momDays} ca, bố kèm {dadDays} ca · {stickerHistory.length} mốc dữ liệu phẩm chất</p>
+      <p className="sub">{totalSessions} ca · mẹ kèm {momSessions} ca, bố kèm {dadSessions} ca · {stickerHistory.length} mốc dữ liệu phẩm chất</p>
 
+      {thisWeekStickers.length === 0 ? (
+        <div className="card dimmed" style={{ textAlign: 'center', padding: '24px 16px', margin: '12px 0' }}>
+          <div style={{ fontSize: 32, marginBottom: 6 }}>🌱 📚</div>
+          <p className="sub" style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#475569' }}>
+            Chưa có buổi học nào tuần này
+          </p>
+          <span style={{ fontSize: 12.5, color: '#64748B', display: 'block', marginTop: 4 }}>
+            Bắt đầu buổi học đầu tiên để AI ghi nhận phẩm chất và theo dõi tiến bộ của {child.name} nhé!
+          </span>
+        </div>
+      ) : (
+        <>
       {/* 1. AI Phân tích Lộ trình Sư phạm & Biến động phẩm chất */}
       <div
         className="card pop"
@@ -3619,6 +3631,8 @@ export function Report() {
           💡 <b>Góc nhìn sư phạm:</b> Khi bài tập chuyển sang dạng dài và khó, số sticker <i>Kiên nhẫn</i> thường tăng cao và <i>Sáng tạo</i> tạm thời giảm. Đây là nhịp chuyển tự nhiên, không nên sốt ruột.
         </span>
       </div>
+      </>
+      )}
 
       {/* 3. Phân chia ca kèm giữa Bố và Mẹ */}
       <div className="card">
@@ -3628,10 +3642,12 @@ export function Report() {
           <i style={{ width: `${dadPct}%`, background: 'var(--sky)' }} />
         </div>
         <span className="sub">
-          Mẹ {momPct}% · Bố {dadPct}% →{' '}
-          {dadDays === 0
+          Mẹ {momSessions} ca ({momPct}%) · Bố {dadSessions} ca ({dadPct}%) →{' '}
+          {totalSessions === 0
+            ? <b>tuần này chưa ghi nhận ca học nào.</b>
+            : dadSessions === 0
             ? <b>gợi ý: thử giao 1-2 ca cho bố để mẹ nghỉ ngơi nhé.</b>
-            : momDays === 0
+            : momSessions === 0
             ? <b>tuần này bố đảm nhiệm hết — cảm ơn bố nhiều!</b>
             : <b>hai người cân sức rồi, giữ nếp nhé!</b>}
         </span>
