@@ -27,8 +27,10 @@ const QUICK_QUERIES = [
   },
 ]
 
-export function AdminToolsTab({ token, adminProfile }) {
-  const [subTool, setSubTool] = useState('sql') // sql | team_prompts
+export function AdminToolsTab({ token, adminProfile, activeSubTab: propSubTab, onSubTabChange }) {
+  const [localSubTool, setLocalSubTool] = useState('sql')
+  const subTool = propSubTab || localSubTool
+  const setSubTool = onSubTabChange || setLocalSubTool
 
   // SQL State
   const [sqlQuery, setSqlQuery] = useState('SELECT id, name, created_at FROM families ORDER BY created_at DESC LIMIT 10;')
@@ -77,23 +79,6 @@ export function AdminToolsTab({ token, adminProfile }) {
 
   return (
     <div className="stitch-tools-container">
-      {/* Subtools Selector */}
-      <div className="stitch-subtabs-nav" style={{ marginBottom: '20px' }}>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${subTool === 'sql' ? 'active' : ''}`}
-          onClick={() => setSubTool('sql')}
-        >
-          💻 [1] D1 SQL Studio (Chỉ đọc)
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${subTool === 'team_prompts' ? 'active' : ''}`}
-          onClick={() => setSubTool('team_prompts')}
-        >
-          🔄 [2] Team Prompts Sync (VideFlow)
-        </button>
-      </div>
 
       {subTool === 'sql' && (
         <div className="stitch-subtab-content">

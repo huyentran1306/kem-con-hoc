@@ -30,6 +30,8 @@ import {
   BearSubAuditIcon,
   BearSubInfraIcon,
   BearSubZaloIcon,
+  BearSubSqlIcon,
+  BearSubSyncIcon,
 } from './AdminBearIcons'
 
 const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
@@ -46,6 +48,11 @@ export const CONFIG_SUBTABS = [
   { id: 'audit', label: 'Nhật ký thao tác', icon: <BearSubAuditIcon size={18} /> },
   { id: 'infra', label: 'Hạ tầng Cloudflare', icon: <BearSubInfraIcon size={18} /> },
   { id: 'zalo', label: 'Thông báo & Zalo', icon: <BearSubZaloIcon size={18} /> },
+]
+
+export const TOOLS_SUBTABS = [
+  { id: 'sql', label: 'D1 SQL Studio (Chỉ đọc)', icon: <BearSubSqlIcon size={18} /> },
+  { id: 'team_prompts', label: 'Team Prompts Sync', icon: <BearSubSyncIcon size={18} /> },
 ]
 
 export default function AdminPortal({ onExit }) {
@@ -81,6 +88,7 @@ export default function AdminPortal({ onExit }) {
   const [isLocked, setIsLocked] = useState(false)
   const [activeTab, setActiveTab] = useState('overview') // overview | families | sessions | reports | teachers | config | tools
   const [configSubTab, setConfigSubTab] = useState('model') // model | prompts | router | scope | themes | admins | audit | infra | zalo
+  const [toolsSubTab, setToolsSubTab] = useState('sql') // sql | team_prompts
   const [showMobileNav, setShowMobileNav] = useState(false)
 
   // Login form state
@@ -414,14 +422,45 @@ export default function AdminPortal({ onExit }) {
           )}
 
           {!isSupport && (
-            <button
-              type="button"
-              className={`stitch-nav-item ${activeTab === 'tools' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('tools'); setShowMobileNav(false) }}
-            >
-              <span className="stitch-nav-icon"><BearToolsIcon size={24} /></span>
-              <span>Công cụ nội bộ</span>
-            </button>
+            <div>
+              <button
+                type="button"
+                className={`stitch-nav-item ${activeTab === 'tools' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('tools')
+                  setShowMobileNav(false)
+                }}
+                style={{ justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span className="stitch-nav-icon"><BearToolsIcon size={24} /></span>
+                  <span>Công cụ nội bộ & SQL</span>
+                </div>
+                <span style={{ fontSize: '11px', opacity: 0.7 }}>
+                  {activeTab === 'tools' ? '▾' : '▸'}
+                </span>
+              </button>
+
+              {activeTab === 'tools' && (
+                <div className="stitch-nav-subgroup">
+                  {TOOLS_SUBTABS.map((sub) => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      className={`stitch-nav-subitem ${toolsSubTab === sub.id ? 'active' : ''}`}
+                      onClick={() => {
+                        setActiveTab('tools')
+                        setToolsSubTab(sub.id)
+                        setShowMobileNav(false)
+                      }}
+                    >
+                      <span className="sub-icon">{sub.icon}</span>
+                      <span>{sub.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </nav>
 
@@ -499,7 +538,7 @@ export default function AdminPortal({ onExit }) {
               {activeTab === 'reports' && 'Báo cáo Sư phạm & Chỉ số NPS'}
               {activeTab === 'teachers' && 'Duyệt Giáo viên & Lớp học'}
               {activeTab === 'config' && `Cấu hình AI & Hệ thống · ${CONFIG_SUBTABS.find((s) => s.id === configSubTab)?.label || ''}`}
-              {activeTab === 'tools' && 'Công cụ nội bộ & SQL Studio'}
+              {activeTab === 'tools' && `Công cụ nội bộ · ${TOOLS_SUBTABS.find((s) => s.id === toolsSubTab)?.label || 'D1 SQL Studio'}`}
             </div>
           </div>
 
@@ -581,6 +620,8 @@ export default function AdminPortal({ onExit }) {
             <AdminToolsTab
               token={token}
               adminProfile={adminProfile}
+              activeSubTab={toolsSubTab}
+              onSubTabChange={(sub) => setToolsSubTab(sub)}
             />
           )}
         </div>

@@ -393,3 +393,30 @@ export function BearSubZaloIcon({ size = 18, className = '' }) {
     </svg>
   )
 }
+
+// Sub 10: D1 SQL Studio (Terminal D1 tai gấu)
+export function BearSubSqlIcon({ size = 18, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <circle cx="6" cy="4" r="2.2" fill="#D97706" />
+      <circle cx="18" cy="4" r="2.2" fill="#D97706" />
+      <rect x="3" y="6" width="18" height="15" rx="3" fill="#0F172A" stroke="#F59E0B" strokeWidth="1.4" />
+      <path d="M7 11L10 13.5L7 16" stroke="#38BDF8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="12" y1="16" x2="16" y2="16" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// Sub 11: Team Prompts Sync (Vòng tròn đồng bộ 2 mũi tên tai gấu)
+export function BearSubSyncIcon({ size = 18, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <circle cx="6" cy="4" r="2" fill="#8B5CF6" />
+      <circle cx="18" cy="4" r="2" fill="#8B5CF6" />
+      <path d="M19 12A7 7 0 0 1 7.5 17.5L5 15M5 12A7 7 0 0 1 16.5 6.5L19 9" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 5V9H15" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M5 19V15H9" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="12" cy="12" r="1.5" fill="#F59E0B" />
+    </svg>
+  )
+}
