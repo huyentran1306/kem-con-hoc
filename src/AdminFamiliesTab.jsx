@@ -10,6 +10,7 @@ import {
   MoreVertical, Key, Edit3, Trash2, X, AlertCircle, ShieldAlert, Check
 } from 'lucide-react';
 import { toast } from './utils';
+import { adminFetch } from './adminApi';
 
 export function AdminFamiliesTab({ token }) {
   const [families, setFamilies] = useState([]);
@@ -44,9 +45,7 @@ export function AdminFamiliesTab({ token }) {
   async function loadFamilies() {
     setLoading(true);
     try {
-      const res = await fetch('https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/families', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await adminFetch('/api/v1/admin/families');
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         setFamilies(data.families || []);
@@ -57,6 +56,7 @@ export function AdminFamiliesTab({ token }) {
       setLoading(false);
     }
   }
+
 
   // Lọc dữ liệu
   const filteredFamilies = useMemo(() => {

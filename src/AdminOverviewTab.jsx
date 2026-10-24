@@ -11,6 +11,7 @@ import {
   AlertTriangle, Play, Pause, RefreshCw, ArrowUpRight,
   ChevronRight, ShieldCheck, Zap, UserCheck
 } from 'lucide-react';
+import { adminFetch } from './adminApi';
 
 export function AdminOverviewTab({ token, onNavigateTab }) {
   const [range, setRange] = useState('7d'); // today | 7d | 30d
@@ -34,9 +35,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
   async function fetchOverview(showLoading = true) {
     if (showLoading) setLoading(true);
     try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/overview?range=${range}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await adminFetch(`/api/v1/admin/overview?range=${range}`);
       const resData = await res.json().catch(() => ({}));
       if (res.ok && resData.ok) {
         setData(resData);
@@ -47,6 +46,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
       if (showLoading) setLoading(false);
     }
   }
+
 
   // Lời chào theo giờ hiện tại
   const hour = new Date().getHours();

@@ -12,6 +12,8 @@ import {
   ExternalLink, Bookmark, Clock, CheckCircle2, RotateCcw
 } from 'lucide-react';
 import { toast } from './utils';
+import { adminFetch } from './adminApi';
+
 
 export function AdminSessionsTab({ token, onOpenPromptStudio }) {
   const [sessions, setSessions] = useState([]);
@@ -48,9 +50,7 @@ export function AdminSessionsTab({ token, onOpenPromptStudio }) {
       if (statusFilter) params.append('status', statusFilter);
       if (searchTerm.trim()) params.append('q', searchTerm.trim());
 
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/learning-sessions?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await adminFetch(`/api/v1/admin/learning-sessions?${params.toString()}`);
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         setSessions(data.sessions || []);
@@ -70,9 +70,7 @@ export function AdminSessionsTab({ token, onOpenPromptStudio }) {
     setDetailEvents([]);
     setLoadingDetail(true);
     try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/learning-sessions/${session.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await adminFetch(`/api/v1/admin/learning-sessions/${session.id}`);
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         setDetailSession(data.session);
@@ -90,12 +88,8 @@ export function AdminSessionsTab({ token, onOpenPromptStudio }) {
     if (!detailSession) return;
     setSavingExample(true);
     try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/examples`, {
+      const res = await adminFetch('/api/v1/admin/examples', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           title: `${detailSession.subject || 'Toán'} Lớp ${detailSession.grade || 3} - ${detailSession.family_name || 'Gia đình'}`,
           subject: detailSession.subject || 'Toán',
@@ -103,6 +97,7 @@ export function AdminSessionsTab({ token, onOpenPromptStudio }) {
           problemText: detailSession.problem_text || '',
         }),
       });
+
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         toast('Đã lưu vào thư viện ví dụ mẫu Prompt Studio ⭐');

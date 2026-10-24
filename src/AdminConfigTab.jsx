@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { GATEWAY } from './api'
 import { toast, fmtTime } from './utils'
+import { adminFetch } from './adminApi'
 import PromptStudioTab from './PromptStudioTab'
 import { AdminScopeSection } from './AdminScopeSection'
 import { AdminThemesSection } from './AdminThemesSection'
@@ -69,9 +70,7 @@ export function AdminConfigTab({ token, adminProfile }) {
   const fetchAdmins = async () => {
     setAdminsLoading(true)
     try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/admins`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await adminFetch('/api/v1/admin/admins')
       if (res.ok) {
         const data = await res.json()
         setAdminsList(data.admins || [])
@@ -86,9 +85,7 @@ export function AdminConfigTab({ token, adminProfile }) {
   const fetchAuditLogs = async () => {
     setAuditLoading(true)
     try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/audit-logs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await adminFetch('/api/v1/admin/audit-logs')
       if (res.ok) {
         const data = await res.json()
         setAuditLogs(data.audit_logs || [])
@@ -104,18 +101,15 @@ export function AdminConfigTab({ token, adminProfile }) {
     e.preventDefault()
     if (!newAdminEmail.trim()) return
     try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/admins`, {
+      const res = await adminFetch('/api/v1/admin/admins', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           email: newAdminEmail.trim(),
           name: newAdminName.trim() || newAdminEmail.split('@')[0],
           role: newAdminRole
         })
       })
+
       const data = await res.json()
       if (res.ok) {
         setCreatedAdminResult(data)

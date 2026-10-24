@@ -49,18 +49,19 @@
 
   --adm-danger: #DC2626;
 
-  /* Font */
-  --adm-font-head: 'Mitr', cursive, sans-serif;
-  --adm-font-body: 'Nunito', -apple-system, sans-serif;
+  /* Font: Modern, crisp, professional typography */
+  --adm-font-head: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --adm-font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Bo góc & Đổ bóng có đáy */
-  --adm-card-radius: 24px;
-  --adm-input-radius: 16px;
-  --adm-btn-radius: 999px;
-  --adm-card-shadow: 0 6px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, .18);
-  --adm-btn-shadow: 0 4px 0 #C47F0E;
-  --adm-modal-backdrop: rgba(75, 54, 33, .45);
+  /* Bo góc & Đổ bóng hiện đại */
+  --adm-card-radius: 14px;
+  --adm-input-radius: 8px;
+  --adm-btn-radius: 8px;
+  --adm-card-shadow: 0 1px 3px rgba(75, 54, 33, 0.05), 0 4px 16px rgba(75, 54, 33, 0.04);
+  --adm-btn-shadow: 0 2px 0 #C47F0E;
+  --adm-modal-backdrop: rgba(45, 35, 25, 0.55);
 }
+
 
 /* 2. BẢN XANH DƯƠNG (EXECUTIVE BLUE) - TUỲ CHỌN */
 [data-admin-theme="blue"] {
@@ -767,3 +768,194 @@
     width: 220px;
   }
 }
+
+/* ------------------------------------------------------------
+   8. FORM, SUBTABS, BADGES & TIỆN ÍCH QUẢN TRỊ NÂNG CAO
+   ------------------------------------------------------------ */
+.stitch-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .stitch-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Subtabs Navigation (Pill Selector) */
+.stitch-subtabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--adm-border);
+}
+
+.stitch-subtab-btn {
+  padding: 8px 16px;
+  border-radius: var(--adm-btn-radius);
+  border: 1px solid var(--adm-border);
+  background: var(--adm-card);
+  color: var(--adm-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.stitch-subtab-btn:hover {
+  background: var(--adm-bg-sub);
+  color: var(--adm-text);
+  border-color: var(--adm-primary);
+}
+
+.stitch-subtab-btn.active {
+  background: var(--adm-primary);
+  color: #FFFFFF;
+  border-color: var(--adm-primary-border);
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Form inputs & Groups */
+.stitch-form-group {
+  margin-bottom: 16px;
+}
+
+.stitch-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--adm-text);
+  margin-bottom: 6px;
+}
+
+.stitch-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--adm-input-radius);
+  border: 1.5px solid var(--adm-border);
+  background: var(--adm-card);
+  color: var(--adm-text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stitch-input:focus {
+  outline: none;
+  border-color: var(--adm-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+[data-admin-theme="bear"] .stitch-input:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+/* Badges */
+.stitch-badge-primary {
+  background: var(--adm-sky-bg);
+  color: var(--adm-sky-text);
+  border: 1px solid var(--adm-sky-border);
+}
+
+.stitch-badge-success {
+  background: var(--adm-mint-bg);
+  color: var(--adm-mint-text);
+  border: 1px solid var(--adm-mint-border);
+}
+
+.stitch-badge-warning {
+  background: var(--adm-warn-bg);
+  color: var(--adm-warn-text);
+  border: 1px solid var(--adm-warn-border);
+}
+
+.stitch-badge-neutral {
+  background: var(--adm-bg-sub);
+  color: var(--adm-sub);
+  border: 1px solid var(--adm-border);
+}
+
+/* Modal Card */
+.stitch-modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--adm-card);
+  border: 2px solid var(--adm-border);
+  border-radius: var(--adm-card-radius);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
+  padding: 28px;
+}
+
+/* Sticky Save Bar */
+.stitch-sticky-save-bar {
+  position: fixed;
+  bottom: 24px;
+  left: calc(256px + 28px);
+  right: 28px;
+  background: var(--adm-card);
+  border: 2px solid var(--adm-primary);
+  border-radius: var(--adm-card-radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 999;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 1024px) {
+  .stitch-sticky-save-bar {
+    left: 16px;
+    right: 16px;
+    bottom: 80px;
+  }
+}
+
+/* Empty State Widget */
+.stitch-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--adm-card);
+  border-radius: var(--adm-card-radius);
+  border: 1px dashed var(--adm-border);
+  margin: 12px 0;
+}
+
+.stitch-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.stitch-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--adm-text);
+  margin: 0 0 6px 0;
+}
+
+.stitch-empty-desc {
+  font-size: 13.5px;
+  color: var(--adm-sub);
+  max-width: 360px;
+  line-height: 1.5;
+  margin: 0;
+}
+

@@ -10,6 +10,7 @@ import {
   Calendar, Smile, Meh, Frown, ThumbsUp, MessageSquare
 } from 'lucide-react';
 import { toast } from './utils';
+import { adminFetch } from './adminApi';
 
 export function AdminReportsTab({ token }) {
   const [timeRange, setTimeRange] = useState('week'); // week | month
@@ -23,9 +24,7 @@ export function AdminReportsTab({ token }) {
   async function loadNps() {
     setLoadingNps(true);
     try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/nps`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await adminFetch('/api/v1/admin/nps');
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         setNpsData(data);
@@ -36,6 +35,7 @@ export function AdminReportsTab({ token }) {
       setLoadingNps(false);
     }
   }
+
 
   // Khung giờ heatmap (Thứ 2 đến Chủ nhật x 4 khung giờ chính)
   const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
