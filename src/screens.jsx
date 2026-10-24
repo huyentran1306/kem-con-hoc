@@ -12,6 +12,7 @@ import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLong
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
+import { ZaloReportModal } from './ZaloReportModal'
 
 /* ============================================================
    1. ONBOARDING
@@ -3790,6 +3791,7 @@ export function Report() {
   // State phân tích AI Lộ trình Sư phạm
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [showZaloReport, setShowZaloReport] = useState(false)
 
   const handleRunAiAnalysis = async () => {
     soundPop(550)
@@ -4069,30 +4071,32 @@ export function Report() {
 
       <button
         className="btn solid"
-        onClick={async () => {
+        onClick={() => {
           soundPop(600)
-          const text = `Bố ơi, tuần này ${child.name} đã hoàn thành ${total} ca học (${momDays} ca mẹ kèm, ${dadDays} ca bố kèm). Con đạt ${thisTraits['Kiên nhẫn'] || 4} sticker Kiên nhẫn, ${thisTraits['Sáng tạo'] || 1} Sáng tạo. Bố xem qua rồi tối nay về nhớ khen ${child.name} nhé 💚`
-          if (typeof navigator !== 'undefined' && navigator.share) {
-            try {
-              await navigator.share({
-                title: `Báo cáo tuần này của ${child.name}`,
-                text,
-                url: window.location.origin,
-              })
-              toast('Đã mở chia sẻ cho Bố 📲')
-              return
-            } catch (e) {}
-          }
-          try {
-            await navigator.clipboard.writeText(text)
-            toast('Đã copy nội dung tóm tắt — mở Zalo dán gửi Bố nhé! 📋')
-          } catch (e) {
-            toast('Đã gửi tóm tắt cho Bố 📲')
-          }
+          setShowZaloReport(true)
+        }}
+        style={{
+          width: '100%',
+          background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+          boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
+          fontWeight: 800,
+          fontSize: 15,
         }}
       >
-        📲 Gửi tóm tắt cho bố (Zalo / SMS)
+        💬 Gửi báo cáo vào nhóm Zalo gia đình
       </button>
+
+      {showZaloReport && (
+        <ZaloReportModal
+          child={child}
+          stats={stats}
+          weekLabel={getWeekLabel?.() || 'Tuần này'}
+          onClose={() => setShowZaloReport(false)}
+          toast={toast}
+          boom={boom}
+          currentTheme={S.theme || 'candy'}
+        />
+      )}
     </>
   )
 }
@@ -4154,10 +4158,10 @@ export function Profile() {
         <span className="sub">Mỗi bé 1 lớp,1 bộ sách riêng</span>
       </button>
 
-      <button className="big-card sky" onClick={() => openSheet('invite')}>
-        <span className="ic">📲</span>
-        <b>{S.partner ? '✓ Đã mời bố — gửi lại link' : 'Mời bố cùng kèm con'}</b>
-        <span className="sub">Gửi link app cho bố, chia ca kèm con</span>
+      <button className="big-card sky" onClick={() => openSheet('members')}>
+        <span className="ic">👨‍👩‍👧</span>
+        <b>Thành viên gia đình</b>
+        <span className="sub">Mời người thân (Bố, Ông Bà, Gia sư) cùng kèm con, chia sẻ buổi học</span>
       </button>
 
       <button className="big-card" style={{ borderColor: 'var(--c-accent)' }} onClick={() => openSheet('themePicker')}>

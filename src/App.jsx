@@ -12,6 +12,9 @@ import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
 import { applyTheme } from './themes'
 import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
+import { FamilyMembersSheet } from './FamilyMembersSheet'
+import { JoinFamilyView } from './JoinFamilyView'
+import { PublicReportView } from './PublicReportView'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -22,6 +25,22 @@ const isAdminRoute = () => {
   const p = window.location.pathname.toLowerCase()
   const h = window.location.hash.toLowerCase()
   return p === '/admin' || p.startsWith('/admin/') || p === '/admingraph' || p.startsWith('/admingraph/') || h === '#admin' || h.startsWith('#admin')
+}
+
+const getJoinCodeFromUrl = () => {
+  if (typeof window === 'undefined') return ''
+  const p = window.location.pathname
+  if (p.startsWith('/join/')) return p.replace('/join/', '').trim().toUpperCase()
+  const params = new URLSearchParams(window.location.search)
+  return (params.get('join') || params.get('join_code') || '').trim().toUpperCase()
+}
+
+const getReportTokenFromUrl = () => {
+  if (typeof window === 'undefined') return ''
+  const p = window.location.pathname
+  if (p.startsWith('/r/')) return p.replace('/r/', '').trim()
+  const params = new URLSearchParams(window.location.search)
+  return (params.get('report') || params.get('r') || '').trim()
 }
 
 const readSession = () => {
@@ -118,6 +137,8 @@ const TAB_OF = {
 export default function App() {
   const [session, setSession] = useState(readSession)
   const [showAdmin, setShowAdmin] = useState(isAdminRoute)
+  const [joinCode, setJoinCode] = useState(getJoinCodeFromUrl)
+  const [reportToken, setReportToken] = useState(getReportTokenFromUrl)
   const famId = session ? session.id : null
   const LS_KEY = famId ? famLsKey(famId) : 'kem-con-hoc:v1'
   const CLOUD_KEY = famId ? famCloudKey(famId) : 'kem-con-hoc:state'
@@ -388,11 +409,46 @@ export default function App() {
     )
   }
 
+  if (reportToken) {
+    return (
+      <PublicReportView
+        reportToken={reportToken}
+        onHome={() => {
+          window.history.pushState(null, '', '/')
+          setReportToken('')
+        }}
+      />
+    )
+  }
+
+  if (joinCode) {
+    return (
+      <JoinFamilyView
+        inviteCode={joinCode === 'ENTER_CODE' ? '' : joinCode}
+        onJoined={(res) => {
+          window.history.pushState(null, '', '/')
+          setJoinCode('')
+          window.location.reload()
+        }}
+        onCancel={() => {
+          window.history.pushState(null, '', '/')
+          setJoinCode('')
+        }}
+        toast={toast}
+        boom={boom}
+      />
+    )
+  }
+
   const hasToken = typeof window !== 'undefined' ? Boolean(getAuthToken()) : true
   if (!session || (session && !hasToken)) {
     return (
       <AppCtx.Provider value={ctx}>
-        <LoginScreen onAuthed={handleAuthed} reauthSession={session && !hasToken ? session : null} />
+        <LoginScreen
+          onAuthed={handleAuthed}
+          reauthSession={session && !hasToken ? session : null}
+          onOpenJoin={() => setJoinCode('ENTER_CODE')}
+        />
       </AppCtx.Provider>
     )
   }
@@ -443,7 +499,7 @@ export default function App() {
 
           <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
 
-          {sheet && <SheetView type={sheet.type} data={sheet.data} />}
+          {sheet && <SheetView type={sheet.type} data={sheet.data} session={session} />}
         </div>
       </div>
     </AppCtx.Provider>
@@ -459,7 +515,7 @@ const TAB_CAP = {
 /* ============================================================
    CÁC POPUP (BOTTOM SHEET)
    ============================================================ */
-function SheetView({ type }) {
+function SheetView({ type, session }) {
   const { S, patch, go, closeSheet, toast, stats, setStats, boom } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
 
@@ -513,7 +569,16 @@ function SheetView({ type }) {
 
   if (type === 'practice') return <PracticeSheet />
   if (type === 'addChild') return <AddChildSheet />
-  if (type === 'invite') return <InviteSheet />
+  if (type === 'invite' || type === 'members') {
+    return (
+      <FamilyMembersSheet
+        onClose={closeSheet}
+        toast={toast}
+        currentUser={session?.member || { role: 'owner', displayName: S.parent }}
+        familyName={session ? session.name : S.familyName || 'Gia đình'}
+      />
+    )
+  }
   if (type === 'reportIssue') return <ReportIssueSheet problem={S.problem || PROBLEM} />
   if (type === 'wipe') return <WipeSheet />
   if (type === 'typeProblem') return <TypeProblemSheet />

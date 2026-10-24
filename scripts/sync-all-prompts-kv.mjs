@@ -5,8 +5,10 @@ const GATEWAY = 'https://ai-gateway-worker.trannth1306.workers.dev'
 const prompt00Md = fs.readFileSync('/Users/pro/Downloads/re-design/00_NEN_TANG_TAI_KHOAN_VA_BAO_MAT.md', 'utf8')
 const prompt01Md = fs.readFileSync('/Users/pro/Downloads/re-design/01_GIAO_DIEN_THEO_SO_THICH_GIA_DINH.md', 'utf8')
 const prompt02Md = fs.readFileSync('/Users/pro/Downloads/re-design/02_KIEM_TRA_ANH_NGOAI_PHAM_VI.md', 'utf8')
+const prompt03Md = fs.readFileSync('/Users/pro/Downloads/re-design/03_NHOM_GIA_DINH_VA_BAO_CAO_ZALO.md', 'utf8')
 const prompt06Md = fs.readFileSync('/Users/pro/Downloads/re-design/06_SUA_LOI_NHANH_VA_BO_DU_LIEU_GIA.md', 'utf8')
 const schema00Sql = fs.readFileSync('/Users/pro/Downloads/workspace (2)/scripts/schema-prompt-00.sql', 'utf8')
+const schema03Sql = fs.readFileSync('/Users/pro/Downloads/workspace (2)/scripts/schema-prompt-03.sql', 'utf8')
 
 async function run() {
   console.log('Fetching team_prompts_sync:v1 from D1 KV...')
@@ -100,6 +102,25 @@ node scripts/sync-prompt-02-kv.mjs
       promptDetail: prompt02Md,
       createdAt: '2026-10-24 17:21',
       updatedAt: '2026-10-24 18:30'
+    },
+    {
+      id: 'tp_prompt_03_zalo',
+      title: 'Prompt 03: Nhóm Gia Đình Nhiều Người & Gửi Báo Cáo Tuần Qua Zalo',
+      category: 'general',
+      targetAi: 'VideFlow',
+      author: 'Huyền (Tech Lead)',
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
+      migrationScript: `-- ============================================================
+-- PROMPT 03: SCHEMA D1 CHO NHÓM GIA ĐÌNH, MÃ MỜI VÀ BÁO CÁO ZALO
+-- Lệnh chạy: npx wrangler d1 execute <tên-db> --remote --file=scripts/schema-prompt-03.sql
+-- ============================================================
+${schema03Sql}`,
+      promptDetail: prompt03Md,
+      createdAt: '2026-10-24 19:30',
+      updatedAt: '2026-10-24 19:45'
     }
   ]
 

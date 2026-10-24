@@ -922,3 +922,138 @@ export async function getScopeStats() {
     return { byCategory: [], recentEvents: [] }
   }
 }
+
+/* ============================================================
+   👨‍👩‍👧 PROMPT 03: API NHÓM GIA ĐÌNH & BÁO CÁO ZALO
+   ============================================================ */
+
+export async function createFamilyInvite({ role = 'guardian', relationHint = '' }) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/family/invites`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ role, relationHint }),
+  })
+  return res.json()
+}
+
+export async function getFamilyInvites() {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/family/invites`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function revokeFamilyInvite(code) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/family/invites/${code}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function getPublicInvite(code) {
+  const res = await fetch(`${GATEWAY}/api/v1/invites/${code}`)
+  return res.json()
+}
+
+export async function acceptInvite(code, { displayName, relation, pin }) {
+  const res = await fetch(`${GATEWAY}/api/v1/invites/${code}/accept`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ displayName, relation, pin }),
+  })
+  return res.json()
+}
+
+export async function getFamilyMembers() {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/family/members`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function updateFamilyMember(id, payload) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/family/members/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+  return res.json()
+}
+
+export async function deleteFamilyMember(id) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/family/members/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function createDeviceCode(memberId = null) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/auth/device-code`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ memberId }),
+  })
+  return res.json()
+}
+
+export async function loginWithDeviceCode({ code, pin }) {
+  const res = await fetch(`${GATEWAY}/api/v1/auth/login-device`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, pin }),
+  })
+  return res.json()
+}
+
+export async function shareWeeklyReport({ childId, week, snapshot, expiresDays = 7 }) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/reports/weekly/share`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ childId, week, snapshot, expiresDays }),
+  })
+  return res.json()
+}
+
+export async function getPublicReport(token) {
+  const res = await fetch(`${GATEWAY}/api/v1/reports/shared/${token}`)
+  return res.json()
+}
+
+export async function getSharedReportsList() {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/reports/shared-list`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function revokeSharedReport(token) {
+  const authToken = localStorage.getItem('auth_token')
+  const res = await fetch(`${GATEWAY}/api/v1/reports/shared/${token}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${authToken}` },
+  })
+  return res.json()
+}

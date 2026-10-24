@@ -2,7 +2,7 @@ import { useState, useContext } from 'react'
 import { AppCtx } from './ctx'
 import { familyLogin, familyRegister } from './api'
 
-export default function LoginScreen({ onAuthed, reauthSession = null }) {
+export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null }) {
   const { openAdmin } = useContext(AppCtx) || {}
   const [mode, setMode] = useState('login')
   const [name, setName] = useState(reauthSession?.name || '')
@@ -145,6 +145,19 @@ export default function LoginScreen({ onAuthed, reauthSession = null }) {
             <p className="notice">
               Mỗi gia đình một tài khoản riêng — dữ liệu tách biệt, đồng bộ qua đám mây ☁️
             </p>
+
+            {onOpenJoin && (
+              <div style={{ marginTop: 10, textAlign: 'center' }}>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ fontSize: 13, color: '#4F46E5', fontWeight: 700 }}
+                  onClick={onOpenJoin}
+                >
+                  💌 Bạn có mã mời tham gia gia đình?
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

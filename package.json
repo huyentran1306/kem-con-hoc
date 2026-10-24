@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-theme-contrast.mjs && node scripts/test-scope-rules.mjs && node scripts/test-prompt-00-auth.mjs",
+    "test": "node scripts/test-theme-contrast.mjs && node scripts/test-scope-rules.mjs && node scripts/test-prompt-00-auth.mjs && node scripts/test-prompt-03-family-zalo.mjs",
     "db:clone": "node scripts/sync-db-clone.js"
   },
   "dependencies": {
