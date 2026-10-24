@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { GATEWAY } from './api';
 import { BearMascot } from './AdminMascot';
 import { Delete, Eye, EyeOff, Lock, LogOut } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export function AdminLockScreen({ onUnlock, onLogout, token }) {
     if (busy || !pinToSubmit) return;
     setBusy(true);
     try {
-      const res = await fetch('https://ai-gateway-worker.trannth1306.workers.dev/api/v1/admin/auth/unlock', {
+      const res = await fetch(`${GATEWAY}/api/v1/admin/auth/unlock`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

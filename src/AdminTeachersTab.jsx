@@ -4,7 +4,7 @@
    Hỗ trợ Duyệt, Từ chối kèm lý do, Tạm khoá / Kích hoạt lại.
    ============================================================ */
 import React, { useState, useEffect, useMemo } from 'react'
-import { GATEWAY } from './api'
+import { adminFetch } from './adminApi'
 import { toast } from './utils'
 import {
   CheckCircle,
@@ -24,9 +24,7 @@ import {
   PauseCircle,
 } from 'lucide-react'
 
-const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
-
-export function AdminTeachersTab({ token: propToken }) {
+export function AdminTeachersTab() {
   const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all') // all | pending | approved | rejected | suspended
@@ -37,34 +35,12 @@ export function AdminTeachersTab({ token: propToken }) {
   const [rejectingTeacher, setRejectingTeacher] = useState(null)
   const [rejectReason, setRejectReason] = useState('Thông tin trường học hoặc thông tin liên hệ chưa xác thực được')
 
-  const getAdminAuthHeader = (useSecret = false) => {
-    let t = ''
-    if (!useSecret) {
-      try {
-        t = propToken || localStorage.getItem(ADMIN_STORAGE_KEY) || ''
-      } catch (e) {}
-    }
-    if (!t) t = 'kem-con-hoc-admin-secret-2026'
-    return {
-      Authorization: `Bearer ${t}`,
-      'Content-Type': 'application/json',
-    }
-  }
-
   // 1. Tải danh sách giáo viên
   const loadTeachers = async () => {
     setLoading(true)
     try {
-      const url = `${GATEWAY}/api/v1/admin/teachers${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`
-      let res = await fetch(url, {
-        headers: getAdminAuthHeader(),
-      })
-      if (res.status === 401) {
-        // Fallback to master secret if session token was stale/expired
-        res = await fetch(url, {
-          headers: getAdminAuthHeader(true),
-        })
-      }
+      const endpoint = `/api/v1/admin/teachers${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`
+      const res = await adminFetch(endpoint)
       const data = await res.json().catch(() => ({}))
       if (res.ok && Array.isArray(data.teachers)) {
         setTeachers(data.teachers)
@@ -81,7 +57,6 @@ export function AdminTeachersTab({ token: propToken }) {
 
   useEffect(() => {
     loadTeachers()
-
   }, [statusFilter])
 
   // 2. Duyệt giáo viên (Approve)
@@ -91,16 +66,9 @@ export function AdminTeachersTab({ token: propToken }) {
     }
     setActionBusyId(teacher.id)
     try {
-      let res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/approve`, {
+      const res = await adminFetch(`/api/v1/admin/teachers/${teacher.id}/approve`, {
         method: 'POST',
-        headers: getAdminAuthHeader(),
       })
-      if (res.status === 401) {
-        res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/approve`, {
-          method: 'POST',
-          headers: getAdminAuthHeader(true),
-        })
-      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         toast(`✅ Đã duyệt thành công cho cô/thầy "${teacher.display_name}"!`)
@@ -122,18 +90,10 @@ export function AdminTeachersTab({ token: propToken }) {
     if (!rejectingTeacher) return
     setActionBusyId(rejectingTeacher.id)
     try {
-      let res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${rejectingTeacher.id}/reject`, {
+      const res = await adminFetch(`/api/v1/admin/teachers/${rejectingTeacher.id}/reject`, {
         method: 'POST',
-        headers: getAdminAuthHeader(),
         body: JSON.stringify({ reason: rejectReason.trim() }),
       })
-      if (res.status === 401) {
-        res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${rejectingTeacher.id}/reject`, {
-          method: 'POST',
-          headers: getAdminAuthHeader(true),
-          body: JSON.stringify({ reason: rejectReason.trim() }),
-        })
-      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         toast(`❌ Đã từ chối hồ sơ giáo viên "${rejectingTeacher.display_name}".`)
@@ -162,16 +122,9 @@ export function AdminTeachersTab({ token: propToken }) {
     }
     setActionBusyId(teacher.id)
     try {
-      let res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/suspend`, {
+      const res = await adminFetch(`/api/v1/admin/teachers/${teacher.id}/suspend`, {
         method: 'POST',
-        headers: getAdminAuthHeader(),
       })
-      if (res.status === 401) {
-        res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/suspend`, {
-          method: 'POST',
-          headers: getAdminAuthHeader(true),
-        })
-      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         toast(`Đã ${actionLabel.toLowerCase()} giáo viên "${teacher.display_name}".`)
@@ -182,7 +135,6 @@ export function AdminTeachersTab({ token: propToken }) {
         toast(data.error?.message || 'Lỗi khi thao tác')
       }
     } catch (e) {
-
       toast('Lỗi kết nối máy chủ')
     } finally {
       setActionBusyId(null)
@@ -477,7 +429,7 @@ export function AdminTeachersTab({ token: propToken }) {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Calendar size={14} color="#64748B" />
-                      <span>Đăng ký: {tc.created_at ? new Date(tc.created_at).toLocaleString('vi-VN') : 'Mới'}</span>
+                      <span>Đăng ký: {tc.created_at ? new Date((tc.created_at || '').replace(' ', 'T')).toLocaleString('vi-VN') : 'Mới'}</span>
                     </div>
                   </div>
 

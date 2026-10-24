@@ -537,13 +537,12 @@ export function AdminConfigTab({ token, adminProfile }) {
 
               <div className="stitch-form-group">
                 <label className="stitch-label">Thời gian tự động khoá màn hình</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="stitch-segmented-group">
                   {[15, 30, 60].map((m) => (
                     <button
                       key={m}
                       type="button"
-                      className={`stitch-btn-secondary ${autoLockMins === m ? 'active' : ''}`}
-                      style={{ flex: 1, borderColor: autoLockMins === m ? 'var(--admin-primary)' : 'var(--admin-border)' }}
+                      className={`stitch-segmented-btn ${autoLockMins === m ? 'active' : ''}`}
                       onClick={() => {
                         setAutoLockMins(m)
                         setDirty(true)

@@ -217,7 +217,7 @@ export function AdminReportsTab({ token }) {
                     {fb.family_name || 'Gia đình'} · <span style={{ color: '#047857' }}>{fb.score}/10 điểm</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--adm-sub)' }}>
-                    {fb.created_at ? new Date(fb.created_at).toLocaleDateString('vi-VN') : ''}
+                    {fb.created_at ? new Date((fb.created_at || '').replace(' ', 'T')).toLocaleDateString('vi-VN') : ''}
                   </div>
                 </div>
                 {fb.tags && (

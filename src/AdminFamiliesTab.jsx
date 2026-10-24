@@ -64,9 +64,10 @@ export function AdminFamiliesTab({ token }) {
       const q = searchTerm.trim().toLowerCase();
       const matchSearch = !q || (f.name && f.name.toLowerCase().includes(q)) || (f.id && f.id.toLowerCase().includes(q));
       
-      // Giả lập trạng thái hoạt động dựa trên ngày tạo hoặc ngày dùng gần nhất
-      const createdTs = new Date(f.created_at || Date.now()).getTime();
-      const daysAgo = (Date.now() - createdTs) / (86400000);
+      // Trạng thái hoạt động dựa trên ngày tạo hoặc ngày dùng gần nhất
+      const safeDateStr = (f.created_at || '').replace(' ', 'T');
+      const createdTs = new Date(safeDateStr).getTime() || Date.now();
+      const daysAgo = Math.max(0, (Date.now() - createdTs) / (86400000));
       let status = 'active';
       if (daysAgo > 30) status = 'dormant';
       else if (daysAgo > 7) status = 'inactive';
@@ -75,6 +76,7 @@ export function AdminFamiliesTab({ token }) {
       return matchSearch && matchStatus;
     });
   }, [families, searchTerm, statusFilter]);
+
 
   // Phân trang
   const totalPages = Math.ceil(filteredFamilies.length / pageSize) || 1;
@@ -377,8 +379,9 @@ export function AdminFamiliesTab({ token }) {
                         </code>
                       </td>
                       <td style={{ fontSize: 13, color: 'var(--adm-sub)' }}>
-                        {f.created_at ? new Date(f.created_at).toLocaleDateString('vi-VN') : 'Mới đây'}
+                        {f.created_at ? new Date((f.created_at || '').replace(' ', 'T')).toLocaleDateString('vi-VN') : 'Mới đây'}
                       </td>
+
                       <td>
                         <span className="stitch-badge completed">Đang hoạt động</span>
                       </td>
