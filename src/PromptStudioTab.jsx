@@ -13,6 +13,7 @@ import {
 } from './promptStudio'
 import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
 import { toast } from './utils'
+import { AdminThemesSection } from './AdminThemesSection'
 
 export const AVAILABLE_AI_MODELS = [
   {
@@ -737,6 +738,21 @@ export default function PromptStudioTab() {
             >
               ⚙️ Tham số AI & Router Sư phạm
             </button>
+            <button
+              type="button"
+              className="admin-btn sm"
+              style={{
+                background: activeView === 'themes' ? '#FFFFFF' : 'transparent',
+                color: activeView === 'themes' ? '#1E1B4B' : '#E0E7FF',
+                border: 'none',
+                fontWeight: 800,
+                boxShadow: activeView === 'themes' ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
+                cursor: 'pointer',
+              }}
+              onClick={() => setActiveView('themes')}
+            >
+              🎨 Giao diện app (8 Themes)
+            </button>
           </div>
 
           <button
@@ -831,6 +847,37 @@ export default function PromptStudioTab() {
               </div>
               <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
                 Model, Temperature & Router Sư phạm
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('themes')}
+              style={{
+                width: '100%',
+                marginTop: 6,
+                textAlign: 'left',
+                padding: '10px 12px',
+                borderRadius: 12,
+                border: activeView === 'themes' ? '2px solid #8B5CF6' : '1px solid #E2E8F0',
+                background: activeView === 'themes' ? '#F5F3FF' : '#F8FAFC',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                transition: 'all .15s',
+                boxSizing: 'border-box',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                <b style={{ fontSize: 13, color: activeView === 'themes' ? '#6D28D9' : '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🎨</span> Giao diện app
+                </b>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 999, background: '#8B5CF6', color: '#fff' }}>
+                  8 THEMES
+                </span>
+              </div>
+              <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
+                Bật/tắt & Bộ mặc định
               </span>
             </button>
           </div>
@@ -1225,7 +1272,7 @@ export default function PromptStudioTab() {
             )}
           </div>
         </div>
-        ) : (
+        ) : activeView === 'ai_config' ? (
           /* ============================================================
              AI CONFIG & PEDAGOGY ROUTER PANEL (CHẾ ĐỘ CẤU HÌNH NÂNG CAO)
              ============================================================ */
@@ -1553,6 +1600,10 @@ export default function PromptStudioTab() {
                 })}
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="prompt-studio-main" style={{ minWidth: 0, maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}>
+            <AdminThemesSection />
           </div>
         )}
       </div>
