@@ -145,6 +145,7 @@ export default function TeamPromptSyncTab() {
   const [formTargetAi, setFormTargetAi] = useState('VideFlow')
   const [formAuthor, setFormAuthor] = useState(() => localStorage.getItem(LAST_AUTHOR_KEY) || 'Thành viên Team')
   const [formDetail, setFormDetail] = useState('')
+  const [formMigrationScript, setFormMigrationScript] = useState('')
   const [formIsRun, setFormIsRun] = useState(false)
   const [formRunBy, setFormRunBy] = useState('')
   const [formAiResult, setFormAiResult] = useState('')
@@ -234,6 +235,7 @@ export default function TeamPromptSyncTab() {
     setFormCategory('math')
     setFormTargetAi('VideFlow')
     setFormDetail('')
+    setFormMigrationScript('')
     setFormIsRun(false)
     setFormRunBy('')
     setFormAiResult('')
@@ -248,6 +250,7 @@ export default function TeamPromptSyncTab() {
     setFormTargetAi(item.targetAi || 'VideFlow')
     setFormAuthor(item.author || '')
     setFormDetail(item.promptDetail || '')
+    setFormMigrationScript(item.migrationScript || '')
     setFormIsRun(!!item.isRunCompanyAi)
     setFormRunBy(item.runBy || '')
     setFormAiResult(item.aiResult || '')
@@ -294,6 +297,7 @@ export default function TeamPromptSyncTab() {
             targetAi: formTargetAi,
             author: formAuthor.trim() || 'Thành viên Team',
             promptDetail: formDetail.trim(),
+            migrationScript: formMigrationScript.trim(),
             isRunCompanyAi: formIsRun,
             runBy: formIsRun ? (formRunBy.trim() || formAuthor.trim() || 'Team') : '',
             runAt: formIsRun ? (p.runAt || nowStr) : '',
@@ -311,6 +315,7 @@ export default function TeamPromptSyncTab() {
         targetAi: formTargetAi,
         author: formAuthor.trim() || 'Thành viên Team',
         promptDetail: formDetail.trim(),
+        migrationScript: formMigrationScript.trim(),
         isRunCompanyAi: formIsRun,
         runBy: formIsRun ? (formRunBy.trim() || formAuthor.trim() || 'Team') : '',
         runAt: formIsRun ? nowStr : '',
@@ -968,6 +973,56 @@ export default function TeamPromptSyncTab() {
                     </div>
                   )}
 
+                  {/* PHẦN SCRIPT DATABASE & LỆNH DI CHUYỂN D1 */}
+                  {item.migrationScript && (
+                    <div
+                      style={{
+                        background: '#0F172A',
+                        borderRadius: 12,
+                        padding: '12px 16px',
+                        border: '1px solid #1E293B',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          📦 Script Database / D1 Migration Cần Chạy:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyPrompt(item.migrationScript, `Script DB ${item.title}`)}
+                          style={{
+                            background: '#1E293B',
+                            color: '#F8FAFC',
+                            border: '1px solid #334155',
+                            borderRadius: 6,
+                            padding: '4px 10px',
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          📋 Copy Script SQL
+                        </button>
+                      </div>
+                      <pre
+                        style={{
+                          margin: 0,
+                          fontFamily: 'ui-monospace, Menlo, Monaco, Consolas, monospace',
+                          fontSize: 12,
+                          color: '#E2E8F0',
+                          lineHeight: 1.45,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                          maxHeight: isExpanded ? 'none' : '120px',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {item.migrationScript}
+                      </pre>
+                    </div>
+                  )}
+
                   {/* QUICK TEST FOOTER */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, paddingTop: 4 }}>
                     <button
@@ -1230,6 +1285,32 @@ export default function TeamPromptSyncTab() {
                     outline: 'none',
                     boxSizing: 'border-box',
                     resize: 'vertical',
+                  }}
+                />
+              </div>
+
+              {/* 📦 SCRIPT DATABASE / D1 MIGRATION */}
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 5 }}>
+                  📦 Script Database / D1 Migration Cần Chạy (SQL / Lệnh CLI)
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="VD: CREATE TABLE IF NOT EXISTS ... hoặc lệnh npx wrangler d1 execute..."
+                  value={formMigrationScript}
+                  onChange={(e) => setFormMigrationScript(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1.5px solid #CBD5E1',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    fontSize: 12.5,
+                    lineHeight: 1.5,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    resize: 'vertical',
+                    background: '#F8FAFC',
                   }}
                 />
               </div>
