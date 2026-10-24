@@ -13,6 +13,7 @@ import { AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
 import { toast, fmtTime } from './utils'
 import PromptStudioTab from './PromptStudioTab'
 import TeamPromptSyncTab from './TeamPromptSyncTab'
+import { AdminTeachersTab } from './AdminTeachersTab'
 import './admin.css'
 
 const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
@@ -512,6 +513,25 @@ export default function AdminPortal({ onExit }) {
 
         <div className="admin-header-actions">
           <button
+            type="button"
+            className={`admin-btn sm ${activeTab === 'teachers' ? 'active-gradient' : ''}`}
+            onClick={() => setActiveTab('teachers')}
+            title="Duyệt hồ sơ giáo viên đăng ký cổng Teacher Portal"
+            style={{
+              background: activeTab === 'teachers' ? 'linear-gradient(135deg, #16A34A, #059669)' : '#F0FDF4',
+              color: activeTab === 'teachers' ? '#FFFFFF' : '#15803D',
+              border: '1.5px solid #BBF7D0',
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>👩‍🏫</span>
+            <span>Duyệt Giáo Viên</span>
+          </button>
+          <button
             className={`admin-btn sm ${activeTab === 'team_sync' ? 'active-gradient' : ''}`}
             onClick={() => setActiveTab('team_sync')}
             title="Bảng Đồng Bộ Prompt Team — Đã chạy ở AI công ty chưa"
@@ -645,6 +665,19 @@ export default function AdminPortal({ onExit }) {
             >
               <span className="seg-icon">📝</span>
               Prompt Studio
+            </button>
+            <button
+              className={`admin-seg-btn ${activeTab === 'teachers' ? 'active' : ''}`}
+              onClick={() => setActiveTab('teachers')}
+              style={{
+                background: activeTab === 'teachers' ? '#F0FDF4' : '',
+                borderColor: activeTab === 'teachers' ? '#16A34A' : '',
+                color: activeTab === 'teachers' ? '#15803D' : '',
+                fontWeight: activeTab === 'teachers' ? 800 : 600,
+              }}
+            >
+              <span className="seg-icon">👩‍🏫</span>
+              Duyệt Giáo Viên
             </button>
             <button
               className={`admin-seg-btn ${activeTab === 'team_sync' ? 'active' : ''}`}
@@ -1393,6 +1426,11 @@ export default function AdminPortal({ onExit }) {
            TAB 5: TEAM PROMPT SYNC (AI CÔNG TY)
            ============================================================ */}
         {activeTab === 'team_sync' && <TeamPromptSyncTab />}
+
+        {/* ============================================================
+           TAB 6: TEACHER MANAGEMENT & REVIEW (DUYỆT GIÁO VIÊN)
+           ============================================================ */}
+        {activeTab === 'teachers' && <AdminTeachersTab />}
       </div>
 
       {/* ============================================================
@@ -1628,6 +1666,17 @@ export default function AdminPortal({ onExit }) {
         >
           <span className="bnav-icon">📝</span>
           <span className="bnav-label">Prompts</span>
+        </button>
+
+        <button
+          className={`bnav-item ${activeTab === 'teachers' && !showMobileMenu ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('teachers')
+            setShowMobileMenu(false)
+          }}
+        >
+          <span className="bnav-icon">👩‍🏫</span>
+          <span className="bnav-label">Giáo viên</span>
         </button>
 
         <button
