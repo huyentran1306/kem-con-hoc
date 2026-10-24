@@ -8,6 +8,10 @@ import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback } from '.
 import LoginScreen from './Login'
 import AdminPortal from './Admin'
 import * as Scr from './screens'
+import { ThemePickerSheet } from './ThemePickerSheet'
+import { ThemeDecor } from './ThemeDecor'
+import { applyTheme } from './themes'
+import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -79,6 +83,8 @@ const initialState = () => ({
   schedule: SCHEDULE_DEFAULT,
   flow: { step: 0, stuck: 0, unlocked: false, result: null, ocr: PROBLEM.ocr },
   problem: PROBLEM,
+  theme: 'candy',
+  motion: 'full',
   cloudSync: true,
   _ts: 0,
 })
@@ -146,6 +152,11 @@ export default function App() {
     })
     return off
   }, [])
+
+  /* ---------- áp dụng theme và hiệu ứng chuyển động ---------- */
+  useEffect(() => {
+    applyTheme(S.theme || 'candy', S.motion || 'full')
+  }, [S.theme, S.motion])
 
   /* ---------- đồng bộ screen theo trạng thái onboarded ---------- */
   useEffect(() => {
@@ -357,6 +368,7 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
+        <ThemeDecor themeId={S.theme || 'candy'} motion={S.motion || 'full'} />
         <div className="app">
           <div className="scroll" ref={scrollRef}>
             {study && study.running && (
@@ -373,16 +385,21 @@ export default function App() {
           {S.onboarded && (
             <nav className="tabs">
               {[
-                ['home', '📚', 'Học tối nay'],
-                ['toy', '🧸', 'Trò chơi'],
-                ['report', '📊', 'Báo cáo'],
-                ['profile', '👧', 'Con tôi'],
-              ].map(([k, ic, l]) => (
-                <button key={k} className={TAB_OF[screen] === k ? 'on' : ''} onClick={() => go(k)}>
-                  <span className="ic">{ic}</span>
-                  {l}
-                </button>
-              ))}
+                ['home', BookOpen, 'Học tối nay'],
+                ['toy', Sparkles, 'Trò chơi'],
+                ['report', BarChart3, 'Báo cáo'],
+                ['profile', User, 'Con tôi'],
+              ].map(([k, IconComp, l]) => {
+                const isOn = TAB_OF[screen] === k
+                return (
+                  <button key={k} className={isOn ? 'on' : ''} onClick={() => go(k)}>
+                    <span className="ic" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <IconComp size={21} strokeWidth={isOn ? 2.4 : 1.8} />
+                    </span>
+                    <span>{l}</span>
+                  </button>
+                )
+              })}
             </nav>
           )}
 
@@ -471,6 +488,7 @@ function SheetView({ type }) {
   if (type === 'stickerBook') return <StickerBookSheet />
   if (type === 'pwa') return <PwaSheet />
   if (type === 'redeem') return <RedeemRewardSheet />
+  if (type === 'themePicker') return <Sheet><ThemePickerSheet onClose={closeSheet} /></Sheet>
   return null
 }
 

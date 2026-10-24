@@ -10,6 +10,7 @@ import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
 import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress } from './api'
 import { renderPrompt } from './promptStudio'
+import { THEMES, getTheme } from './themes'
 
 /* ============================================================
    1. ONBOARDING
@@ -95,6 +96,18 @@ export function Onboarding() {
               {x}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <span className="lbl plum">🎨 Giao diện con thích (tuỳ chọn)</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+          <span style={{ fontSize: 13.5 }}>
+            Đang chọn: <b>{getTheme(S.theme || 'candy').name}</b>
+          </span>
+          <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => openSheet('themePicker')}>
+            Đổi giao diện
+          </button>
         </div>
       </div>
 
@@ -3811,6 +3824,14 @@ export function Profile() {
         <span className="ic">📲</span>
         <b>{S.partner ? '✓ Đã mời bố — gửi lại link' : 'Mời bố cùng kèm con'}</b>
         <span className="sub">Gửi link app cho bố, chia ca kèm con</span>
+      </button>
+
+      <button className="big-card" style={{ borderColor: 'var(--c-accent)' }} onClick={() => openSheet('themePicker')}>
+        <span className="ic">🎨</span>
+        <b>Giao diện cả nhà</b>
+        <span className="sub">
+          Đang dùng: <b>{getTheme(S.theme || 'candy').name}</b> · 8 bộ phong cách đổi 1 chạm
+        </span>
       </button>
 
       <div className="card sky">
