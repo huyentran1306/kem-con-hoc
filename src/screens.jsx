@@ -117,8 +117,8 @@ export function Onboarding() {
    2. TRANG CHỦ
    ============================================================ */
 export function Home() {
-  const { S, stats, go, openSheet, toast, soundOn, toggleSound } = useContext(AppCtx)
-  const child = S.children.find((c) => c.id === S.activeId)
+  const { S, patch, stats, go, openSheet, toast, soundOn, toggleSound } = useContext(AppCtx)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const now = new Date()
   const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })
   const hour = now.getHours()
