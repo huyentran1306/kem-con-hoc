@@ -13,6 +13,8 @@ import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
 import { ZaloReportModal } from './ZaloReportModal'
+import { NpsSurveyCard } from './NpsSurveySheet'
+
 
 /* ============================================================
    1. ONBOARDING
@@ -1936,7 +1938,30 @@ export function Done() {
         </div>
       )}
 
+      {(() => {
+        const totalSessions = (stats.sessionsMom || 0) + (stats.sessionsDad || 0) + (stats.history || []).length
+        let optOut = false
+        try {
+          const status = localStorage.getItem('kem-con-hoc:nps-opt-out')
+          const snooze = parseInt(localStorage.getItem('kem-con-hoc:nps-snooze-until') || '0', 10)
+          if (status === 'never' || status === 'done' || (snooze && totalSessions < snooze)) {
+            optOut = true
+          }
+        } catch (e) {}
+        if (totalSessions >= 10 && !optOut) {
+          return (
+            <NpsSurveyCard
+              familyId={S.familyId || (S.family && S.family.id)}
+              memberId={S.parent}
+              sessionCount={totalSessions}
+            />
+          )
+        }
+        return null
+      })()}
+
       <button className="btn solid" onClick={saveResult}>Lưu & về trang chủ</button>
+
     </>
   )
 }
