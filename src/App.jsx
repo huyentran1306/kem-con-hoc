@@ -435,16 +435,23 @@ export default function App() {
 
   if (showTeacher) {
     return (
-      <TeacherPortal
-        onExit={() => {
-          setShowTeacher(false)
-          if (window.location.pathname.startsWith('/teacher')) {
-            window.history.pushState(null, '', '/')
-          } else {
-            window.location.hash = ''
-          }
-        }}
-      />
+      <>
+        <TeacherPortal
+          onExit={() => {
+            setShowTeacher(false)
+            if (window.location.pathname.startsWith('/teacher')) {
+              window.history.pushState(null, '', '/')
+            } else {
+              window.location.hash = ''
+            }
+          }}
+        />
+        {msg && (
+          <div className="toast" role="status" style={{ zIndex: 99999 }}>
+            {msg}
+          </div>
+        )}
+      </>
     )
   }
 

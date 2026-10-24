@@ -172,13 +172,16 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
   const [grades, setGrades] = useState('Khối 3');
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setFormError('');
     setSubmitting(true);
     try {
       if (mode === 'register') {
         if (!consent) {
+          setFormError('Vui lòng tích chọn đồng ý cam kết dành cho giáo viên');
           toast('Vui lòng đồng ý điều khoản dành cho giáo viên', 'warn');
           setSubmitting(false);
           return;
@@ -190,12 +193,14 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
             email, password, displayName, phone, schoolName, province, grades, consent
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok) {
           toast('Đăng ký thành công! Hồ sơ đang chờ duyệt', 'success');
           onLoginSuccess(data.token, data.teacher);
         } else {
-          toast(data.error?.message || 'Đăng ký thất bại', 'error');
+          const errMsg = data.error?.message || (res.status === 409 ? 'Email này đã được đăng ký tài khoản giáo viên' : 'Đăng ký thất bại');
+          setFormError(errMsg);
+          toast(errMsg, 'error');
         }
       } else {
         const res = await fetch(`${API_BASE}/api/v1/teacher/auth/login`, {
@@ -203,15 +208,18 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok) {
           toast('Đăng nhập thành công', 'success');
           onLoginSuccess(data.token, data.teacher);
         } else {
-          toast(data.error?.message || 'Sai email hoặc mật khẩu', 'error');
+          const errMsg = data.error?.message || 'Sai email hoặc mật khẩu';
+          setFormError(errMsg);
+          toast(errMsg, 'error');
         }
       }
     } catch {
+      setFormError('Lỗi kết nối máy chủ. Vui lòng thử lại sau.');
       toast('Lỗi kết nối máy chủ', 'error');
     } finally {
       setSubmitting(false);
@@ -326,6 +334,48 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
               />
               <span>Tôi cam kết là giáo viên tiểu học và đồng ý tuân thủ nguyên tắc bảo vệ quyền riêng tư của học sinh.</span>
             </label>
+          )}
+
+          {formError && (
+            <div style={{
+              background: '#FEF2F2',
+              border: '1.5px solid #FECACA',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              color: '#991B1B',
+              fontSize: '13.5px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              lineHeight: 1.4,
+              marginTop: 4,
+            }}>
+              <AlertCircle size={20} style={{ flexShrink: 0, color: '#DC2626' }} />
+              <div style={{ flex: 1, fontWeight: 600 }}>{formError}</div>
+              {formError.includes('đã được đăng ký') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setFormError('');
+                  }}
+                  style={{
+                    background: '#2563EB',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 6px rgba(37,99,235,0.25)',
+                  }}
+                >
+                  Đăng nhập ngay 👉
+                </button>
+              )}
+            </div>
           )}
 
           <button type="submit" disabled={submitting} style={styles.primaryBtn}>
