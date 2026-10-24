@@ -31,9 +31,11 @@ export function AdminTeachersTab() {
   const [searchTerm, setSearchTerm] = useState('')
   const [actionBusyId, setActionBusyId] = useState(null)
 
-  // Modal từ chối
+  // Modal states
+  const [approvingTeacher, setApprovingTeacher] = useState(null)
   const [rejectingTeacher, setRejectingTeacher] = useState(null)
   const [rejectReason, setRejectReason] = useState('Thông tin trường học hoặc thông tin liên hệ chưa xác thực được')
+  const [suspendingTeacher, setSuspendingTeacher] = useState(null)
 
   // 1. Tải danh sách giáo viên
   const loadTeachers = async () => {
@@ -59,22 +61,21 @@ export function AdminTeachersTab() {
     loadTeachers()
   }, [statusFilter])
 
-  // 2. Duyệt giáo viên (Approve)
-  const handleApprove = async (teacher) => {
-    if (!window.confirm(`Xác nhận duyệt cho giáo viên "${teacher.display_name}" (${teacher.email})?`)) {
-      return
-    }
-    setActionBusyId(teacher.id)
+  // 2. Phê duyệt giáo viên (Approve)
+  const handleConfirmApprove = async () => {
+    if (!approvingTeacher) return
+    setActionBusyId(approvingTeacher.id)
     try {
-      const res = await adminFetch(`/api/v1/admin/teachers/${teacher.id}/approve`, {
+      const res = await adminFetch(`/api/v1/admin/teachers/${approvingTeacher.id}/approve`, {
         method: 'POST',
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
-        toast(`✅ Đã duyệt thành công cho cô/thầy "${teacher.display_name}"!`)
+        toast(`✅ Đã duyệt thành công cho cô/thầy "${approvingTeacher.display_name}"!`)
         setTeachers((prev) =>
-          prev.map((t) => (t.id === teacher.id ? { ...t, status: 'approved', review_note: null } : t))
+          prev.map((t) => (t.id === approvingTeacher.id ? { ...t, status: 'approved', review_note: null } : t))
         )
+        setApprovingTeacher(null)
       } else {
         toast(data.error?.message || 'Lỗi khi duyệt giáo viên')
       }
@@ -114,23 +115,22 @@ export function AdminTeachersTab() {
   }
 
   // 4. Tạm khoá / Mở lại giáo viên (Suspend)
-  const handleToggleSuspend = async (teacher) => {
-    const isSuspended = teacher.status === 'suspended'
+  const handleConfirmSuspend = async () => {
+    if (!suspendingTeacher) return
+    const isSuspended = suspendingTeacher.status === 'suspended'
     const actionLabel = isSuspended ? 'MỞ KHOÁ' : 'TẠM KHOÁ'
-    if (!window.confirm(`Bạn có chắc muốn ${actionLabel} tài khoản giáo viên "${teacher.display_name}"?`)) {
-      return
-    }
-    setActionBusyId(teacher.id)
+    setActionBusyId(suspendingTeacher.id)
     try {
-      const res = await adminFetch(`/api/v1/admin/teachers/${teacher.id}/suspend`, {
+      const res = await adminFetch(`/api/v1/admin/teachers/${suspendingTeacher.id}/suspend`, {
         method: 'POST',
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
-        toast(`Đã ${actionLabel.toLowerCase()} giáo viên "${teacher.display_name}".`)
+        toast(`Đã ${actionLabel.toLowerCase()} giáo viên "${suspendingTeacher.display_name}".`)
         setTeachers((prev) =>
-          prev.map((t) => (t.id === teacher.id ? { ...t, status: data.status } : t))
+          prev.map((t) => (t.id === suspendingTeacher.id ? { ...t, status: data.status } : t))
         )
+        setSuspendingTeacher(null)
       } else {
         toast(data.error?.message || 'Lỗi khi thao tác')
       }
@@ -457,7 +457,7 @@ export function AdminTeachersTab() {
                     <>
                       <button
                         type="button"
-                        onClick={() => handleApprove(tc)}
+                        onClick={() => setApprovingTeacher(tc)}
                         disabled={isBusy}
                         style={{
                           background: '#16A34A',
@@ -510,7 +510,7 @@ export function AdminTeachersTab() {
                       </span>
                       <button
                         type="button"
-                        onClick={() => handleToggleSuspend(tc)}
+                        onClick={() => setSuspendingTeacher(tc)}
                         disabled={isBusy}
                         style={{
                           background: '#F8FAFC',
@@ -534,7 +534,7 @@ export function AdminTeachersTab() {
                   {isSuspended && (
                     <button
                       type="button"
-                      onClick={() => handleToggleSuspend(tc)}
+                      onClick={() => setSuspendingTeacher(tc)}
                       disabled={isBusy}
                       style={{
                         background: '#EEF2FF',
@@ -557,7 +557,7 @@ export function AdminTeachersTab() {
                   {isRejected && (
                     <button
                       type="button"
-                      onClick={() => handleApprove(tc)}
+                      onClick={() => setApprovingTeacher(tc)}
                       disabled={isBusy}
                       style={{
                         background: '#F0FDF4',
@@ -583,55 +583,226 @@ export function AdminTeachersTab() {
         </div>
       )}
 
-      {/* MODAL TỪ CHỐI GIÁO VIÊN */}
-      {rejectingTeacher && (
-        <div className="admin-modal-bg" onClick={() => setRejectingTeacher(null)}>
-          <div className="admin-modal" style={{ maxWidth: 440 }} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 24 }}>❌</span>
-                <h3 style={{ margin: 0, fontSize: 16 }}>Từ chối hồ sơ giáo viên</h3>
+      {/* 1. MODAL PHÊ DUYỆT GIÁO VIÊN */}
+      {approvingTeacher && (
+        <div className="stitch-modal-overlay" onClick={() => !actionBusyId && setApprovingTeacher(null)}>
+          <div className="stitch-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                👩‍🏫
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--adm-text)' }}>
+                  Xác nhận duyệt giáo viên
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--adm-sub)' }}>
+                  Cấp quyền truy cập Cổng Giáo Viên (Teacher Portal)
+                </p>
               </div>
             </div>
 
-            <div style={{ padding: '16px 20px' }}>
-              <p style={{ margin: 0, fontSize: 13.5, color: '#334155' }}>
-                Từ chối giáo viên: <b>{rejectingTeacher.display_name}</b> ({rejectingTeacher.email})
-              </p>
+            {/* Thông tin giáo viên */}
+            <div
+              style={{
+                background: 'var(--adm-bg)',
+                border: '1.5px solid var(--adm-border)',
+                borderRadius: 12,
+                padding: '14px 16px',
+                marginBottom: 16,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                fontSize: 13,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--adm-sub)', fontWeight: 600 }}>Họ và tên:</span>
+                <strong style={{ color: 'var(--adm-text)' }}>{approvingTeacher.display_name}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--adm-sub)', fontWeight: 600 }}>Email:</span>
+                <span style={{ color: 'var(--adm-text)', fontFamily: 'monospace' }}>{approvingTeacher.email}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--adm-sub)', fontWeight: 600 }}>Trường học:</span>
+                <span><strong>{approvingTeacher.school_name || 'Chưa cập nhật'}</strong> {approvingTeacher.province ? `(${approvingTeacher.province})` : ''}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--adm-sub)', fontWeight: 600 }}>Khối lớp:</span>
+                <span style={{ color: 'var(--adm-accent-text)', fontWeight: 700 }}>{approvingTeacher.grades || 'Toàn trường'}</span>
+              </div>
+            </div>
 
-              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, marginTop: 12, marginBottom: 6, color: '#475569' }}>
+            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, color: '#047857', marginBottom: 20, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 16 }}>✨</span>
+              <span>
+                Sau khi duyệt, giáo viên có thể đăng nhập ngay để tạo lớp học, chia sẻ mã tham gia cho phụ huynh và giao bài tập kèm phản hồi tự động.
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button
+                type="button"
+                className="stitch-btn-secondary"
+                disabled={Boolean(actionBusyId)}
+                onClick={() => setApprovingTeacher(null)}
+              >
+                Huỷ bỏ
+              </button>
+              <button
+                type="button"
+                className="stitch-btn-primary"
+                disabled={Boolean(actionBusyId)}
+                onClick={handleConfirmApprove}
+                style={{ background: '#16A34A', color: '#FFFFFF', borderColor: '#15803D' }}
+              >
+                {actionBusyId ? 'Đang duyệt...' : '✅ Xác nhận phê duyệt'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. MODAL TỪ CHỐI GIÁO VIÊN */}
+      {rejectingTeacher && (
+        <div className="stitch-modal-overlay" onClick={() => !actionBusyId && setRejectingTeacher(null)}>
+          <div className="stitch-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                ❌
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#991B1B' }}>
+                  Từ chối hồ sơ giáo viên
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--adm-sub)' }}>
+                  Hồ sơ: <strong>{rejectingTeacher.display_name}</strong> ({rejectingTeacher.email})
+                </p>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label className="stitch-label" style={{ marginBottom: 6, display: 'block' }}>
                 Lý do từ chối (hiển thị khi giáo viên đăng nhập):
               </label>
+
+              {/* Gợi ý lý do nhanh */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                {[
+                  'Thông tin trường học chưa xác thực được',
+                  'Số điện thoại không liên lạc được',
+                  'Khối lớp chưa phù hợp với chương trình',
+                  'Hồ sơ đăng ký thiếu thông tin',
+                ].map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    onClick={() => setRejectReason(reason)}
+                    style={{
+                      border: '1px solid var(--adm-border)',
+                      background: rejectReason === reason ? 'var(--adm-bg-sub)' : 'var(--adm-card)',
+                      color: rejectReason === reason ? 'var(--adm-accent-text)' : 'var(--adm-text)',
+                      borderRadius: 999,
+                      padding: '4px 10px',
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+
               <textarea
                 rows={3}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                style={{
-                  width: '100%',
-                  borderRadius: 8,
-                  border: '1px solid #CBD5E1',
-                  padding: 8,
-                  fontSize: 13,
-                  boxSizing: 'border-box',
-                }}
+                className="stitch-input"
+                placeholder="Nhập lý do từ chối cụ thể..."
+                style={{ width: '100%', boxSizing: 'border-box' }}
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '12px 20px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button
                 type="button"
-                className="admin-btn sm"
+                className="stitch-btn-secondary"
+                disabled={Boolean(actionBusyId)}
                 onClick={() => setRejectingTeacher(null)}
               >
                 Huỷ bỏ
               </button>
               <button
                 type="button"
-                className="admin-btn sm"
+                className="stitch-btn-primary"
+                disabled={Boolean(actionBusyId) || !rejectReason.trim()}
                 onClick={handleConfirmReject}
-                style={{ background: '#DC2626', color: '#FFFFFF', border: 'none', fontWeight: 700 }}
+                style={{ background: '#DC2626', color: '#FFFFFF', borderColor: '#B91C1C' }}
               >
-                Xác nhận từ chối
+                {actionBusyId ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. MODAL TẠM KHOÁ / MỞ KHOÁ GIÁO VIÊN */}
+      {suspendingTeacher && (
+        <div className="stitch-modal-overlay" onClick={() => !actionBusyId && setSuspendingTeacher(null)}>
+          <div className="stitch-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: suspendingTeacher.status === 'suspended' ? '#EEF2FF' : '#FEF3C7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 24,
+                }}
+              >
+                {suspendingTeacher.status === 'suspended' ? '▶️' : '⏸️'}
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--adm-text)' }}>
+                  {suspendingTeacher.status === 'suspended' ? 'Mở khoá tài khoản giáo viên' : 'Tạm khoá tài khoản giáo viên'}
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--adm-sub)' }}>
+                  Giáo viên: <strong>{suspendingTeacher.display_name}</strong> ({suspendingTeacher.email})
+                </p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: 13.5, color: 'var(--adm-sub)', lineHeight: 1.6, margin: '0 0 20px 0' }}>
+              {suspendingTeacher.status === 'suspended'
+                ? 'Sau khi mở khoá, giáo viên sẽ tiếp tục được truy cập vào các lớp học hiện có và tương tác với phụ huynh bình thường.'
+                : 'Khi tạm khoá, tài khoản giáo viên sẽ tạm dừng quyền tạo lớp và giao bài mới cho tới khi được quản trị viên kích hoạt lại.'}
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button
+                type="button"
+                className="stitch-btn-secondary"
+                disabled={Boolean(actionBusyId)}
+                onClick={() => setSuspendingTeacher(null)}
+              >
+                Huỷ bỏ
+              </button>
+              <button
+                type="button"
+                className="stitch-btn-primary"
+                disabled={Boolean(actionBusyId)}
+                onClick={handleConfirmSuspend}
+                style={{
+                  background: suspendingTeacher.status === 'suspended' ? '#4F46E5' : '#D97706',
+                  color: '#FFFFFF',
+                  borderColor: suspendingTeacher.status === 'suspended' ? '#4338CA' : '#B45309',
+                }}
+              >
+                {actionBusyId ? 'Đang xử lý...' : (suspendingTeacher.status === 'suspended' ? 'Xác nhận mở khoá' : 'Xác nhận tạm khoá')}
               </button>
             </div>
           </div>
