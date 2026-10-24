@@ -828,6 +828,16 @@ export function Scaffold() {
       </p>
       <Bar pct={(step / steps.length) * 100} color="var(--mint)" />
 
+      {S.flow?.lowering && (
+        <div className="card sunset pop" style={{ textAlign: 'center', padding: '18px 14px', margin: '12px 0', border: '1.5px solid #F59E0B' }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🪜 ⚡ 🧠</div>
+          <b style={{ fontSize: 15, color: '#92400E' }}>AI đang hạ độ khó câu hỏi cho con...</b>
+          <p className="sub" style={{ margin: '4px 0 0', fontSize: 13 }}>
+            Tạm đổi sang bài toán số nhỏ hơn để con hiểu bản chất rồi tự tin làm lại bài gốc!
+          </p>
+        </div>
+      )}
+
       {steps.map((s, i) => {
         if (i < step)
           return (

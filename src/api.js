@@ -177,7 +177,7 @@ export function fastClassifyProblem(deBai = '', lop = 'Lớp 2') {
    🧠 AI GIẢNG BÀI — Scaffold Socratic theo Router phương pháp
    Hỗ trợ 4 bậc câu hỏi, mức 1 vật thật, mức 2 hình vẽ, bài anh em & 5p game
    ============================================================ */
-export async function aiExplain(ocr, child, tone, parentNote = '') {
+export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = false) {
   const grade = child?.grade || 'Lớp 2'
   const book = child?.book || 'Kết nối tri thức'
   const classification = fastClassifyProblem(ocr, grade)
@@ -192,6 +192,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '') {
     giong: tone || 'Dịu dàng',
     de_bai: ocr,
     ghi_chu: parentNote,
+    isStuck,
   })
 
   const aiCfg = getActiveAiConfig()

@@ -4,7 +4,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, saveTeachingFeedback } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback } from './api'
 import LoginScreen from './Login'
 import AdminPortal from './Admin'
 import * as Scr from './screens'
@@ -381,7 +381,30 @@ function SheetView({ type }) {
 
   if (type === 'calm') return <CalmSheet />
   if (type === 'timer') return <TimerSheet />
-  if (type === 'breakHint')
+  if (type === 'breakHint') {
+    const handleLowerDifficulty = async () => {
+      closeSheet()
+      patch({ flow: { ...S.flow, stuck: 0, lowering: true } })
+      toast('AI đang hạ độ khó với số nhỏ hơn 🪜⚡')
+      try {
+        const textToUse = S.problem?.ocr || S.flow?.ocr || PROBLEM.ocr
+        const lowerRes = await aiExplain(textToUse, child, S.tone, '', true)
+        if (lowerRes && lowerRes.steps && lowerRes.steps.length > 0) {
+          patch({
+            problem: { ...lowerRes, isSample: false },
+            flow: { ...S.flow, step: 0, stuck: 0, lowering: false },
+          })
+          toast('✅ Đã hạ độ khó! Con thử làm với số dễ hơn nhé')
+        } else {
+          patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
+          toast('Mạng chậm — thử lại sau nhé')
+        }
+      } catch (err) {
+        patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
+        toast('Mạng chậm — thử lại sau nhé')
+      }
+    }
+
     return (
       <Sheet>
         <p className="title">Con bí 2 lần rồi 🙈</p>
@@ -392,11 +415,17 @@ function SheetView({ type }) {
           <span className="lbl coral">Nói với con</span>
           <span style={{ fontSize: 14 }}>"Bài này khó thật, {S.parent.toLowerCase()} cũng phải nghĩ. Mình uống nước rồi vẽ lại nha."</span>
         </div>
-        <button className="btn solid" onClick={() => { patch({ flow: { ...S.flow, stuck: 1 } }); closeSheet() }}>
-          Nghỉ xong, quay lại
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+          <button className="btn solid" onClick={handleLowerDifficulty} style={{ background: '#D97706', borderColor: '#B45309' }}>
+            🪜 Hạ độ khó (đổi số nhỏ hơn)
+          </button>
+          <button className="btn ghost" onClick={() => { patch({ flow: { ...S.flow, stuck: 1 } }); closeSheet() }}>
+            Nghỉ xong, quay lại bài hiện tại
+          </button>
+        </div>
       </Sheet>
     )
+  }
 
 if (type === 'answerBlock') {
     const p = S.problem || PROBLEM
