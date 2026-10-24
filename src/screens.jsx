@@ -8,9 +8,10 @@ import {
 import { Header, SpeakBtn, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress } from './api'
+import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent } from './api'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
+import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
 
 /* ============================================================
    1. ONBOARDING
@@ -469,12 +470,15 @@ const detectSubject = (t) => {
 export function Analyze() {
   const { S, patch, go, openSheet, toast } = useContext(AppCtx)
   const [done, setDone] = useState(0)
-  const [aiState, setAiState] = useState('loading') // loading | cleaning | done | error | ocr_failed | review
+  const [aiState, setAiState] = useState('loading') // loading | cleaning | done | error | ocr_failed | review | scope_blocked | scope_warn | scope_pick_one
   const [shotImg, setShotImg] = useState(null)
   const [ocrText, setOcrText] = useState(null)
   const [editedText, setEditedText] = useState('')
   const [showSkip, setShowSkip] = useState(false)
   const [quizIdx, setQuizIdx] = useState(0)
+  const [scopeResult, setScopeResult] = useState(null)
+  const [redirectNote, setRedirectNote] = useState('')
+  const [reAskReason, setReAskReason] = useState(null)
   const reqRef = useRef(null)
   const child = S.children.find((c) => c.id === S.activeId)
 
@@ -484,12 +488,22 @@ export function Analyze() {
     go('explain')
   }
 
-  const startExplain = async (textToUse) => {
+  const startExplain = async (textToUse, customParentNote = '') => {
     setAiState('loading')
     setDone(3)
     try {
-      const explainRes = await aiExplain(textToUse, child, S.tone)
+      const combinedNote = [customParentNote, redirectNote].filter(Boolean).join('. ')
+      const explainRes = await aiExplain(textToUse, child, S.tone, combinedNote)
       setDone(4)
+
+      // Nếu AI phản hồi can_hoi_lai (đề không rõ hoặc thiếu dữ kiện)
+      if (explainRes && explainRes.needReAsk && String(explainRes.needReAsk).trim()) {
+        setReAskReason(String(explainRes.needReAsk).trim())
+        setAiState('review')
+        toast('⚠️ Đề có chỗ chưa rõ, vui lòng kiểm tra lại ✏️')
+        return
+      }
+
       if (explainRes && explainRes.steps && explainRes.steps.length > 0) {
         patch({ problem: { ...explainRes, isSample: false } })
         setAiState('done')
@@ -501,6 +515,49 @@ export function Analyze() {
     } catch (e) {
       setAiState('network_slow')
     }
+  }
+
+  // Xử lý khi mẹ chọn 1 bài trong ảnh nhiều bài (pick_one)
+  const handleSelectExercise = (chosenText) => {
+    soundTap()
+    // Chạy lại luật phạm vi cho bài được chọn (có thể phát hiện lệch lớp)
+    const subScope = evaluateTextScope(chosenText, {
+      childGrade: child?.grade,
+      childName: child?.name,
+      parentRole: S.parent,
+    })
+    if (subScope.action === 'warn') {
+      setScopeResult(subScope)
+      setOcrText(chosenText)
+      setEditedText(chosenText)
+      setAiState('scope_warn')
+      return
+    }
+    setOcrText(chosenText)
+    setEditedText(chosenText)
+    patch({ flow: { ...S.flow, ocr: chosenText } })
+    setDone(2)
+    setAiState('review')
+  }
+
+  // Xử lý khi mẹ bấm "Vẫn tiếp tục" ở thẻ cảnh báo phạm vi
+  const handleContinueWarn = () => {
+    soundTap()
+    if (scopeResult) {
+      logScopeEvent({
+        familyId: S.user?.family_id || 'default_family',
+        source: shotImg ? 'camera' : 'text',
+        category: scopeResult.category,
+        action: scopeResult.action,
+        confidence: scopeResult.confidence,
+        reason: scopeResult.reason,
+        gradeGuess: scopeResult.lop_doan,
+        childGrade: parseGradeNum(child?.grade),
+        overridden: 1,
+      })
+    }
+    setDone(2)
+    setAiState('review')
   }
 
   useEffect(() => {
@@ -518,12 +575,101 @@ export function Analyze() {
         let ocr = S.flow.ocr
         if (shot) {
           setDone(1) // Bước 1: Bắt đầu OCR
-          const raw = await aiOcr(shot.blob)
+          const ocrRes = await aiOcr(shot.blob, 15000, {
+            childGrade: child?.grade,
+            childName: child?.name,
+            parentRole: S.parent,
+          })
           if (cancelled) return null
+
+          let raw = ''
+          let scope = null
+
+          if (ocrRes) {
+            if (typeof ocrRes === 'object' && ocrRes.text !== undefined) {
+              raw = ocrRes.text
+              scope = ocrRes.scopeResult
+            } else if (typeof ocrRes === 'string') {
+              raw = ocrRes.trim()
+              scope = parseOcrV2Result(raw, {
+                childGrade: child?.grade,
+                childName: child?.name,
+                parentRole: S.parent,
+              })
+            }
+          }
+
+          if (!raw && !scope) {
+            return { error: 'ocr_failed' }
+          }
+
+          // 1. KIỂM TRA PHẠM VI ẢNH
+          if (scope) {
+            // Ảnh nhạy cảm: lập tức xoá ảnh khỏi bộ nhớ và state trình duyệt
+            if (scope.category === 'nhay_cam') {
+              setShotImg(null)
+              try {
+                if (shot?.dataUrl && shot.dataUrl.startsWith('blob:')) {
+                  URL.revokeObjectURL(shot.dataUrl)
+                }
+              } catch (e) {}
+              logScopeEvent({
+                familyId: S.user?.family_id || 'default_family',
+                source: 'camera',
+                category: 'nhay_cam',
+                action: 'block',
+                confidence: scope.confidence || 0.95,
+                reason: scope.reason || 'Ảnh nhạy cảm / giấy tờ riêng tư',
+                childGrade: parseGradeNum(child?.grade),
+              })
+              setScopeResult(scope)
+              setAiState('scope_blocked')
+              return { blocked: true, scope }
+            }
+
+            // Chặn hoặc yêu cầu chụp lại (ảnh mờ, không phải bài tập)
+            if (scope.action === 'block' || scope.action === 'retake') {
+              logScopeEvent({
+                familyId: S.user?.family_id || 'default_family',
+                source: 'camera',
+                category: scope.category,
+                action: scope.action,
+                confidence: scope.confidence || 0.9,
+                reason: scope.reason,
+                gradeGuess: scope.lop_doan,
+                childGrade: parseGradeNum(child?.grade),
+              })
+              setScopeResult(scope)
+              setAiState('scope_blocked')
+              return { blocked: true, scope }
+            }
+
+            // Có nhiều bài tập trong ảnh: yêu cầu mẹ chọn 1 bài
+            if (scope.category === 'nhieu_bai' || scope.action === 'pick_one') {
+              setScopeResult(scope)
+              setAiState('scope_pick_one')
+              return { pick_one: true, scope }
+            }
+
+            // Cảnh báo (lệch lớp, ngoài chương trình, môn chưa hỗ trợ)
+            if (scope.action === 'warn') {
+              setScopeResult(scope)
+              setOcrText(raw)
+              setEditedText(raw)
+              setAiState('scope_warn')
+              return { warn: true, scope, raw }
+            }
+
+            // Làm hộ / viết hộ bài văn
+            if (scope.category === 'lam_ho' || scope.action === 'redirect') {
+              setRedirectNote(scope.redirectNote || 'Phụ huynh muốn làm hộ: chỉ gợi ý dàn ý và câu hỏi, không viết sẵn bài')
+            }
+          }
+
           if (raw && raw.trim()) {
             setOcrText(raw.trim())
             setEditedText(raw.trim())
-            // Bước 2: làm sạch đề qua aiChat (chuẩn chính tả, giữ nguyên số liệu)
+            // Bước 2: làm sạch đề qua aiExtractProblem
             setAiState('cleaning')
             const cleaned = await aiExtractProblem(raw.trim())
             if (cancelled) return null
@@ -531,13 +677,34 @@ export function Analyze() {
             setOcrText(ocr)
             setEditedText(ocr)
             patch({ flow: { ...S.flow, ocr } })
-            setDone(2) // Bước 2 xong: đã làm sạch đề
+            setDone(2)
             setAiState('review')
             return { review: true, ocr }
           } else {
             return { error: 'ocr_failed' }
           }
         } else {
+          // Luồng gõ đề hoặc bài có sẵn
+          const textScope = evaluateTextScope(ocr, {
+            childGrade: child?.grade,
+            childName: child?.name,
+            parentRole: S.parent,
+          })
+          if (textScope.action === 'block') {
+            setScopeResult(textScope)
+            setAiState('scope_blocked')
+            return { blocked: true, scope: textScope }
+          }
+          if (textScope.action === 'warn') {
+            setScopeResult(textScope)
+            setOcrText(ocr)
+            setEditedText(ocr)
+            setAiState('scope_warn')
+            return { warn: true, scope: textScope }
+          }
+          if (textScope.category === 'lam_ho') {
+            setRedirectNote(textScope.redirectNote || 'Phụ huynh muốn làm hộ: chỉ gợi ý dàn ý và câu hỏi, không viết sẵn bài')
+          }
           setDone(2)
           setOcrText(ocr)
           setEditedText(ocr)
@@ -552,7 +719,6 @@ export function Analyze() {
       if (res.error === 'ocr_failed') {
         setAiState('ocr_failed')
       } else if (res.review) {
-        // Feature 2: dừng lại chờ phụ huynh xác nhận đề — KHÔNG tự động gọi AI
         setAiState('review')
       }
     })
@@ -603,16 +769,167 @@ export function Analyze() {
         </div>
       )}
 
+      {/* SCOPE BLOCKED (Ảnh nhạy cảm, Không phải bài tập, Ảnh mờ) */}
+      {aiState === 'scope_blocked' && scopeResult && (
+        <div className="card sun pop" style={{ border: '2px solid #EF4444', background: '#FEF2F2', margin: '12px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 22 }}>{scopeResult.category === 'nhay_cam' ? '🛡️' : scopeResult.category === 'anh_mo' ? '📷' : '⚠️'}</span>
+            <span style={{ fontWeight: 800, fontSize: 16, color: '#991B1B' }}>
+              {scopeResult.category === 'nhay_cam' ? 'Bảo mật & Quyền riêng tư' : scopeResult.category === 'anh_mo' ? 'Ảnh chưa rõ nét' : 'Ngoài phạm vi bài tập'}
+            </span>
+          </div>
+          <p style={{ fontSize: 14, color: '#7F1D1D', lineHeight: 1.5, margin: '4px 0 14px' }}>
+            {scopeResult.message}
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {scopeResult.isToyCandidate && (
+              <button
+                className="btn solid"
+                style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1)', color: '#fff', padding: '11px' }}
+                onClick={() => { soundTap(); go('toy') }}
+              >
+                🧸 Sang Chơi với đồ vật (Nhận diện đồ chơi)
+              </button>
+            )}
+            <button
+              className="btn solid"
+              style={{ padding: '11px' }}
+              onClick={() => { soundPop(500); go('snap') }}
+            >
+              📷 Chụp lại trang bài tập
+            </button>
+            <button
+              className="btn ghost"
+              style={{ background: '#fff', padding: '10px' }}
+              onClick={() => { soundTap(); openSheet('typeProblem') }}
+            >
+              ⌨️ Gõ nhanh đề bài của con
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SCOPE PICK ONE (Ảnh có nhiều bài tập) */}
+      {aiState === 'scope_pick_one' && scopeResult && (
+        <div className="card sky pop" style={{ border: '2px solid #0284C7', background: '#F0F9FF', margin: '12px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 20 }}>📑</span>
+            <span style={{ fontWeight: 800, fontSize: 16, color: '#0369A1' }}>
+              Trong ảnh có {scopeResult.so_bai || (scopeResult.cac_bai?.length || 2)} bài tập
+            </span>
+          </div>
+          <p style={{ fontSize: 13.5, color: '#0C4A6E', margin: '2px 0 12px' }}>
+            {scopeResult.message}
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(scopeResult.cac_bai && scopeResult.cac_bai.length > 0
+              ? scopeResult.cac_bai
+              : [scopeResult.de_bai || 'Bài tập 1']
+            ).map((cau, idx) => (
+              <div
+                key={idx}
+                onClick={() => handleSelectExercise(cau)}
+                style={{
+                  background: '#FFFFFF',
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  border: '1.5px solid #BAE6FD',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span style={{ background: '#0284C7', color: '#fff', fontSize: 12, fontWeight: 800, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>
+                  Câu {idx + 1}
+                </span>
+                <span style={{ fontSize: 14, color: '#1E293B', lineHeight: 1.45, flex: 1 }}>
+                  {cau}
+                </span>
+              </div>
+            ))}
+          </div>
+          <button
+            className="btn ghost"
+            style={{ width: '100%', marginTop: 10, background: '#fff', borderColor: '#93C5FD' }}
+            onClick={() => { soundPop(500); go('snap') }}
+          >
+            📷 Chụp lại ảnh khác
+          </button>
+        </div>
+      )}
+
+      {/* SCOPE WARN (Lệch lớp, Ngoài chương trình, Môn chưa hỗ trợ) */}
+      {aiState === 'scope_warn' && scopeResult && (
+        <div className="card sun pop" style={{ border: '2px solid #F59E0B', background: '#FFFBEB', margin: '12px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 22 }}>💡</span>
+            <span style={{ fontWeight: 800, fontSize: 16, color: '#92400E' }}>
+              {scopeResult.category === 'lech_lop' ? 'Độ khó lệch với lớp của con' : scopeResult.category === 'ngoai_chuong_trinh' ? 'Ngoài phạm vi tiểu học' : 'Lưu ý về môn học'}
+            </span>
+          </div>
+          <p style={{ fontSize: 14, color: '#78350F', lineHeight: 1.5, margin: '4px 0 14px' }}>
+            {scopeResult.message}
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {scopeResult.category === 'lech_lop' ? (
+              <button
+                className="btn ghost"
+                style={{ flex: 1, padding: '10px 8px', fontSize: 13, background: '#fff' }}
+                onClick={() => { soundTap(); openSheet('childSelect') }}
+              >
+                ✏️ Sửa hồ sơ con
+              </button>
+            ) : scopeResult.category === 'ngoai_chuong_trinh' ? (
+              <button
+                className="btn ghost"
+                style={{ flex: 1, padding: '10px 8px', fontSize: 13, background: '#fff' }}
+                onClick={() => { soundPop(500); go('snap') }}
+              >
+                📷 Chụp lại
+              </button>
+            ) : (
+              <button
+                className="btn ghost"
+                style={{ flex: 1, padding: '10px 8px', fontSize: 13, background: '#fff' }}
+                onClick={() => { soundTap(); openSheet('typeProblem') }}
+              >
+                ⌨️ Gõ đề khác
+              </button>
+            )}
+            <button
+              className="btn solid"
+              style={{ flex: 1.4, padding: '10px 12px', fontSize: 13.5 }}
+              onClick={handleContinueWarn}
+            >
+              Vẫn tiếp tục ➔
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Feature 2: Xác nhận OCR — chỉ khi bấm "Tiếp tục" mới gọi AI */}
       {aiState === 'review' && (
         <div className="card mint pop" style={{ border: '2px solid #10B981', margin: '10px 0' }}>
+          {reAskReason && (
+            <div style={{ background: '#FEF2F2', border: '1px solid #FECDD3', padding: '8px 12px', borderRadius: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 700 }}>
+                ⚠️ Đề có chỗ chưa rõ: {reAskReason}. {S.parent} xem lại và chỉnh sửa đề bài giúp con nhé.
+              </span>
+            </div>
+          )}
           <span className="pill g">✅ AI nhận diện đề bài như sau</span>
           <div style={{ marginTop: 8 }}>
             <textarea
               className="field"
               rows={5}
               value={editedText}
-              onChange={(e) => setEditedText(e.target.value)}
+              onChange={(e) => {
+                setEditedText(e.target.value)
+                setReAskReason(null)
+              }}
               placeholder="Sửa lại số liệu nếu camera chụp bị mờ hoặc sai..."
               style={{ fontSize: 14.5, lineHeight: 1.5 }}
             />
@@ -634,9 +951,26 @@ export function Analyze() {
               onClick={() => {
                 const t = (editedText || '').trim()
                 if (!t) { toast('Đề bài đang trống — hãy nhập đề hoặc chụp lại nhé ✏️'); return }
+                
+                // Chạy lại luật kiểm tra đề chữ trước khi gửi AI
+                const textScope = evaluateTextScope(t, {
+                  childGrade: child?.grade,
+                  childName: child?.name,
+                  parentRole: S.parent,
+                })
+                if (textScope.action === 'block') {
+                  toast(`⚠️ ${textScope.message}`)
+                  return
+                }
+
+                let noteToSend = redirectNote
+                if (textScope.category === 'lam_ho') {
+                  noteToSend = 'Phụ huynh muốn làm hộ: chỉ gợi ý dàn ý và câu hỏi, không viết sẵn bài'
+                }
+
                 soundTap()
                 patch({ flow: { ...S.flow, ocr: t } })
-                startExplain(t)
+                startExplain(t, noteToSend)
               }}
             >
               Tiếp tục ➔
