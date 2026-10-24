@@ -23,6 +23,7 @@ import {
   UserX,
   PauseCircle,
 } from 'lucide-react'
+import { AdminPageLoading } from './AdminMascot'
 
 export function AdminTeachersTab() {
   const [teachers, setTeachers] = useState([])
@@ -315,10 +316,11 @@ export function AdminTeachersTab() {
 
       {/* TEACHERS LIST */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', background: '#FFFFFF', borderRadius: 14 }}>
-          <RefreshCw size={24} className="spin" color="#4F46E5" />
-          <p style={{ marginTop: 12, color: '#64748B', fontSize: 13.5 }}>Đang tải danh sách hồ sơ giáo viên...</p>
-        </div>
+        <AdminPageLoading
+          title="Đang tải danh sách hồ sơ giáo viên..."
+          subtitle="Bạn Gấu đang đồng bộ hồ sơ trường học và trạng thái xét duyệt 🍯"
+          minHeight="360px"
+        />
       ) : filteredTeachers.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', background: '#FFFFFF', borderRadius: 14, border: '1px solid #E2E8F0' }}>
           <p style={{ fontSize: 32, margin: 0 }}>👩‍🏫</p>

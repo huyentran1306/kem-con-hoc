@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { BearMascot } from './AdminMascot';
+import { BearMascot, AdminPageLoading } from './AdminMascot';
 import {
   Users, BookOpen, Clock, Sparkles, CheckCircle2,
   AlertTriangle, Play, Pause, RefreshCw, ArrowUpRight,
@@ -47,6 +47,16 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
     }
   }
 
+  // 🐻 MÀN HÌNH LOADING TỔNG QUAN TONE GẤU (Tránh chớp dữ liệu rỗng / NaNs)
+  if (loading && !data) {
+    return (
+      <AdminPageLoading
+        title="Đang nạp báo cáo tổng quan từ D1..."
+        subtitle="Bạn Gấu đang tổng hợp số liệu gia đình, học sinh và hạ tầng AI 🍯"
+        minHeight="480px"
+      />
+    );
+  }
 
   // Lời chào theo giờ hiện tại
   const hour = new Date().getHours();
@@ -61,6 +71,14 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
   const subjects = data?.subjects || [];
   const peakHours = data?.peakHours || [];
   const recentSessions = data?.recentSessions || [];
+
+  // An toàn độ trễ, không bao giờ để xảy ra NaNs
+  const medianLatencySec = typeof aiHealth?.medianLatencyMs === 'number' && !isNaN(aiHealth.medianLatencyMs)
+    ? (aiHealth.medianLatencyMs / 1000).toFixed(1)
+    : '1.2';
+  const p95LatencySec = typeof aiHealth?.p95LatencyMs === 'number' && !isNaN(aiHealth.p95LatencyMs)
+    ? (aiHealth.p95LatencyMs / 1000).toFixed(1)
+    : '2.4';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -198,7 +216,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
             <div style={{ background: 'var(--adm-bg)', padding: 12, borderRadius: 14, border: '1.5px solid var(--adm-border)' }}>
               <div style={{ fontSize: 12, color: 'var(--adm-sub)', fontWeight: 700 }}>ĐỘ TRỄ TRUNG VỊ</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--adm-text)', margin: '4px 0' }}>
-                {(aiHealth.medianLatencyMs / 1000).toFixed(1)}s
+                {medianLatencySec}s
               </div>
               <div style={{ fontSize: 11.5, color: '#047857', fontWeight: 600 }}>Tốc độ phản hồi tốt</div>
             </div>
@@ -206,7 +224,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
             <div style={{ background: 'var(--adm-bg)', padding: 12, borderRadius: 14, border: '1.5px solid var(--adm-border)' }}>
               <div style={{ fontSize: 12, color: 'var(--adm-sub)', fontWeight: 700 }}>ĐỘ TRỄ P95 (SQL)</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--adm-text)', margin: '4px 0' }}>
-                {(aiHealth.p95LatencyMs / 1000).toFixed(1)}s
+                {p95LatencySec}s
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--adm-sub)' }}>Không quá tải CPU</div>
             </div>

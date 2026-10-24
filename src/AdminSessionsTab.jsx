@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from './utils';
 import { adminFetch } from './adminApi';
+import { AdminPageLoading, AdminTableLoading } from './AdminMascot';
 
 
 export function AdminSessionsTab({ token, onOpenPromptStudio }) {
@@ -109,6 +110,17 @@ export function AdminSessionsTab({ token, onOpenPromptStudio }) {
     } finally {
       setSavingExample(false);
     }
+  }
+
+  // 🐻 MÀN HÌNH LOADING NHẬT KÝ TONE GẤU
+  if (loading && sessions.length === 0) {
+    return (
+      <AdminPageLoading
+        title="Đang nạp nhật ký buổi học từ D1..."
+        subtitle="Bạn Gấu đang đồng bộ lịch sử các buổi kèm và kiểm định AI 🍯"
+        minHeight="440px"
+      />
+    );
   }
 
   return (
@@ -226,11 +238,7 @@ export function AdminSessionsTab({ token, onOpenPromptStudio }) {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--adm-sub)' }}>
-                    Đang nạp nhật ký buổi học từ D1...
-                  </td>
-                </tr>
+                <AdminTableLoading colSpan={7} text="Đang nạp nhật ký buổi học từ D1..." />
               ) : sessions.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--adm-sub)' }}>

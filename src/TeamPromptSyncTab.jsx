@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
 import { toast } from './utils'
-import { BearMascot } from './AdminMascot'
+import { BearMascot, AdminPageLoading } from './AdminMascot'
 
 const TEAM_PROMPTS_KV_KEY = 'team_prompts_sync:v1'
 const LOCAL_STORAGE_KEY = 'kem-con-hoc:team-prompts-cache'
@@ -442,6 +442,17 @@ export default function TeamPromptSyncTab() {
       return true
     })
   }, [prompts, search, filterCategory, filterRunStatus])
+
+  // 🐻 MÀN HÌNH LOADING THƯ VIỆN PROMPT TONE GẤU
+  if (loading && prompts.length === 0) {
+    return (
+      <AdminPageLoading
+        title="Đang đồng bộ thư viện Prompt từ Cloud D1..."
+        subtitle="Bạn Gấu đang tải danh sách Prompts và kịch bản SQL mới nhất 🍯"
+        minHeight="420px"
+      />
+    )
+  }
 
   return (
     <div className="prompt-studio-root" style={{ width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>

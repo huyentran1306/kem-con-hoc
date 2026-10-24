@@ -138,3 +138,109 @@ export function BearMascot({ mood = 'greeting', size = 80, className = '' }) {
     </svg>
   );
 }
+
+/**
+ * 🐻 MÀN HÌNH LOADING CHUẨN STITCH BEAR CHO TẤT CẢ CÁC TAB ADMIN
+ */
+export function AdminPageLoading({
+  title = "Đang nạp dữ liệu từ Cloudflare D1...",
+  subtitle = "Bạn Gấu đang đồng bộ thông tin mới nhất cho bạn nhé 🍯",
+  size = 72,
+  minHeight = '340px'
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '60px 24px',
+        minHeight,
+        background: 'var(--adm-card, #FFFFFF)',
+        borderRadius: 'var(--adm-card-radius, 16px)',
+        border: '1.5px solid var(--adm-border, #F0DDC2)',
+        boxShadow: '0 4px 16px rgba(75, 54, 33, 0.04)',
+        textAlign: 'center',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div style={{ animation: 'stitch-bounce 1.6s infinite ease-in-out' }}>
+        <BearMascot mood="greeting" size={size} />
+      </div>
+      <h3 style={{ fontSize: 16.5, fontWeight: 800, color: 'var(--adm-text, #4B3621)', margin: '16px 0 6px' }}>
+        {title}
+      </h3>
+      <p style={{ fontSize: 13, color: 'var(--adm-sub, #8A6A4A)', margin: '0 0 16px', maxWidth: 440 }}>
+        {subtitle}
+      </p>
+      {/* Animated Honey Bar */}
+      <div
+        style={{
+          width: 180,
+          height: 6,
+          background: 'var(--adm-bg-sub, #FFF1D6)',
+          borderRadius: 999,
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            width: '45%',
+            height: '100%',
+            background: 'var(--adm-primary, #F6A623)',
+            borderRadius: 999,
+            animation: 'stitch-indeterminate 1.4s infinite ease-in-out',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 🐻 DÒNG LOADING CHO BẢNG DỮ LIỆU
+ */
+export function AdminTableLoading({ colSpan = 6, text = "Đang nạp dữ liệu từ D1..." }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} style={{ textAlign: 'center', padding: '48px 16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ animation: 'stitch-bounce 1.6s infinite ease-in-out' }}>
+            <BearMascot mood="greeting" size={52} />
+          </div>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--adm-text, #4B3621)' }}>
+            {text}
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--adm-sub, #8A6A4A)' }}>
+            Bạn Gấu đang đồng bộ dữ liệu, vui lòng chờ trong giây lát 🍯
+          </span>
+          <div
+            style={{
+              width: 140,
+              height: 4,
+              background: 'var(--adm-bg-sub, #FFF1D6)',
+              borderRadius: 999,
+              overflow: 'hidden',
+              position: 'relative',
+              marginTop: 4,
+            }}
+          >
+            <div
+              style={{
+                width: '40%',
+                height: '100%',
+                background: 'var(--adm-primary, #F6A623)',
+                borderRadius: 999,
+                animation: 'stitch-indeterminate 1.4s infinite ease-in-out',
+              }}
+            />
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+

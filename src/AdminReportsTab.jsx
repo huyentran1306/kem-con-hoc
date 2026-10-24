@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from './utils';
 import { adminFetch } from './adminApi';
+import { AdminPageLoading } from './AdminMascot';
 
 export function AdminReportsTab({ token }) {
   const [timeRange, setTimeRange] = useState('week'); // week | month
@@ -34,6 +35,17 @@ export function AdminReportsTab({ token }) {
     } finally {
       setLoadingNps(false);
     }
+  }
+
+  // 🐻 MÀN HÌNH LOADING BÁO CÁO NPS TONE GẤU
+  if (loadingNps && !npsData) {
+    return (
+      <AdminPageLoading
+        title="Đang nạp báo cáo NPS & Mức độ hài lòng..."
+        subtitle="Bạn Gấu đang tổng hợp khảo sát ý kiến phụ huynh từ D1 🍯"
+        minHeight="420px"
+      />
+    );
   }
 
 

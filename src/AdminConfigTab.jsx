@@ -5,7 +5,7 @@ import { adminFetch } from './adminApi'
 import PromptStudioTab from './PromptStudioTab'
 import { AdminScopeSection } from './AdminScopeSection'
 import { AdminThemesSection } from './AdminThemesSection'
-import { BearMascot } from './AdminMascot'
+import { BearMascot, AdminPageLoading } from './AdminMascot'
 
 export function AdminConfigTab({ token, adminProfile }) {
   const [activeSubTab, setActiveSubTab] = useState('model') // model | prompts | router | scope | themes | admins | audit | infra | zalo
@@ -490,9 +490,12 @@ export function AdminConfigTab({ token, adminProfile }) {
               </div>
 
               {adminsLoading ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--admin-text-sub)' }}>
-                  Đang tải danh sách admin...
-                </div>
+                <AdminPageLoading
+                  size={52}
+                  title="Đang nạp danh sách quản trị viên..."
+                  subtitle="Bạn Gấu đang bảo mật phân quyền hệ thống 🍯"
+                  minHeight="220px"
+                />
               ) : (
                 <div className="stitch-table-wrapper">
                   <table className="stitch-table">
@@ -698,9 +701,12 @@ export function AdminConfigTab({ token, adminProfile }) {
             </div>
 
             {auditLoading ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--admin-text-sub)' }}>
-                Đang tải nhật ký thao tác...
-              </div>
+              <AdminPageLoading
+                size={52}
+                title="Đang nạp nhật ký kiểm toán từ D1..."
+                subtitle="Bạn Gấu đang tổng hợp lịch sử thao tác hệ thống 🍯"
+                minHeight="220px"
+              />
             ) : auditLogs.length === 0 ? (
               <div style={{ padding: '40px', textAlign: 'center', color: 'var(--admin-text-sub)' }}>
                 Chưa có nhật ký ghi nhận thao tác nào.

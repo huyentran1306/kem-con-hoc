@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { dbQuery } from './api'
 import { toast } from './utils'
 import TeamPromptSyncTab from './TeamPromptSyncTab'
+import { AdminPageLoading } from './AdminMascot'
 
 const QUICK_QUERIES = [
   {
@@ -177,7 +178,17 @@ export function AdminToolsTab({ token, adminProfile }) {
             </div>
           </div>
 
-          {/* Results Card */}
+          {sqlBusy && (
+            <div style={{ marginTop: '20px' }}>
+              <AdminPageLoading
+                size={52}
+                title="Đang thực thi câu lệnh SQL trên Cloudflare D1..."
+                subtitle="Máy chủ đang truy vấn SQLite an toàn ở chế độ Chỉ Đọc 🍯"
+                minHeight="180px"
+              />
+            </div>
+          )}
+
           {sqlResult && (
             <div className="stitch-card" style={{ marginTop: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>

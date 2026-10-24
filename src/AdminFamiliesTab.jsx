@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from './utils';
 import { adminFetch } from './adminApi';
+import { AdminPageLoading, AdminTableLoading } from './AdminMascot';
 
 export function AdminFamiliesTab({ token }) {
   const [families, setFamilies] = useState([]);
@@ -227,6 +228,17 @@ export function AdminFamiliesTab({ token }) {
     }
   }
 
+  // 🐻 MÀN HÌNH LOADING GIA ĐÌNH TONE GẤU
+  if (loading && families.length === 0) {
+    return (
+      <AdminPageLoading
+        title="Đang nạp danh sách gia đình từ D1..."
+        subtitle="Bạn Gấu đang đồng bộ danh sách học sinh và phụ huynh 🍯"
+        minHeight="440px"
+      />
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* 1. TIÊU ĐỀ & 4 Ô TỔNG HỢP */}
@@ -338,11 +350,7 @@ export function AdminFamiliesTab({ token }) {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--adm-sub)' }}>
-                    Đang nạp danh sách gia đình từ D1...
-                  </td>
-                </tr>
+                <AdminTableLoading colSpan={6} text="Đang nạp danh sách gia đình từ D1..." />
               ) : paginatedFamilies.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--adm-sub)' }}>
