@@ -7,6 +7,7 @@ import {
   adminFetchFeedback,
   dbQuery,
   aiAnalyzeLongitudinalProgress,
+  GATEWAY,
 } from './api'
 import { AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
 import { toast, fmtTime } from './utils'
@@ -20,14 +21,17 @@ const ADMIN_THEME_KEY = 'kem-con-hoc:admin-theme'
 export default function AdminPortal({ onExit }) {
   const [authed, setAuthed] = useState(() => {
     try {
-      return localStorage.getItem(ADMIN_STORAGE_KEY) === 'true'
+      return Boolean(localStorage.getItem(ADMIN_STORAGE_KEY))
     } catch (e) {
       return false
     }
   })
 
-  const [pin, setPin] = useState('')
-  const [pinError, setPinError] = useState('')
+  const [adminEmail, setAdminEmail] = useState('admin@kemconhoc.vn')
+  const [adminPass, setAdminPass] = useState('')
+  const [adminError, setAdminError] = useState('')
+  const [adminBusy, setAdminBusy] = useState(false)
+  const [showAdminPass, setShowAdminPass] = useState(false)
   const [families, setFamilies] = useState([])
   const [feedback, setFeedback] = useState({ counts: [], recent: [] })
   const [loading, setLoading] = useState(false)
@@ -124,16 +128,34 @@ export default function AdminPortal({ onExit }) {
     }
   }, [loading, families.length])
 
-  const verifyPin = (inputPin) => {
-    if (inputPin === '1102' || inputPin === '8888' || inputPin.toLowerCase() === 'admin') {
-      try {
-        localStorage.setItem(ADMIN_STORAGE_KEY, 'true')
-      } catch (e) {}
-      setAuthed(true)
-      setPinError('')
-      toast('Đăng nhập Quản trị viên thành công 👑')
-    } else {
-      setPinError('Mã PIN bảo mật không chính xác (Thử: 1102 hoặc 8888)')
+  const handleAdminLogin = async () => {
+    if (!adminEmail.trim() || !adminPass) {
+      setAdminError('Vui lòng nhập email và mật khẩu quản trị viên')
+      return
+    }
+    setAdminBusy(true)
+    setAdminError('')
+    try {
+      const res = await fetch(`${GATEWAY}/api/v1/admin/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail.trim(), password: adminPass }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.token) {
+        try {
+          localStorage.setItem(ADMIN_STORAGE_KEY, data.token)
+        } catch (e) {}
+        setAuthed(true)
+        setAdminError('')
+        toast('Đăng nhập Quản trị viên thành công 👑')
+      } else {
+        setAdminError(data.error?.message || 'Email hoặc mật khẩu không chính xác')
+      }
+    } catch (e) {
+      setAdminError('Không kết nối được máy chủ')
+    } finally {
+      setAdminBusy(false)
     }
   }
 
@@ -142,7 +164,7 @@ export default function AdminPortal({ onExit }) {
       localStorage.removeItem(ADMIN_STORAGE_KEY)
     } catch (e) {}
     setAuthed(false)
-    setPin('')
+    setAdminPass('')
     toast('Đã khoá trang Quản trị an toàn')
   }
 
@@ -354,59 +376,58 @@ export default function AdminPortal({ onExit }) {
             Bảng điều khiển quản lý toàn bộ học sinh, tiến độ kèm con & cơ sở dữ liệu
           </p>
 
-          {/* PIN DOTS INDICATOR */}
-          <div className="admin-pin-dots">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={`admin-pin-dot ${pin.length > i ? 'filled' : ''} ${pinError ? 'error' : ''}`}
-              />
-            ))}
+          <div style={{ margin: '14px 0 10px', textAlign: 'left' }}>
+            <span className="admin-label">EMAIL QUẢN TRỊ VIÊN</span>
+            <input
+              type="email"
+              className="admin-input"
+              style={{ width: '100%', boxSizing: 'border-box', marginTop: 4, padding: '10px 14px' }}
+              placeholder="admin@kemconhoc.vn"
+              value={adminEmail}
+              autoFocus
+              onChange={(e) => {
+                setAdminEmail(e.target.value)
+                if (adminError) setAdminError('')
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+            />
           </div>
 
-          <div style={{ margin: '14px 0 20px' }}>
-            <span className="admin-label">MÃ PIN XÁC THỰC (4 SỐ)</span>
+          <div style={{ margin: '10px 0 16px', textAlign: 'left' }}>
+            <span className="admin-label">MẬT KHẨU BẢO MẬT</span>
             <div style={{ position: 'relative' }}>
               <input
-                type={showPin ? 'text' : 'password'}
-                maxLength={8}
-                className="admin-input pin-box"
-                placeholder="Nhập mã PIN..."
-                value={pin}
-                autoFocus
+                type={showAdminPass ? 'text' : 'password'}
+                className="admin-input"
+                style={{ width: '100%', boxSizing: 'border-box', marginTop: 4, padding: '10px 42px 10px 14px' }}
+                placeholder="••••••••"
+                value={adminPass}
                 onChange={(e) => {
-                  setPin(e.target.value)
-                  if (pinError) setPinError('')
-                  if (e.target.value.length === 4) {
-                    verifyPin(e.target.value)
-                  }
+                  setAdminPass(e.target.value)
+                  if (adminError) setAdminError('')
                 }}
-                onKeyDown={(e) => e.key === 'Enter' && verifyPin(pin)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
               />
               <button
                 type="button"
                 className="pin-eye-btn"
-                onClick={() => setShowPin(!showPin)}
-                title={showPin ? 'Ẩn mã PIN' : 'Hiện mã PIN'}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-35%)' }}
+                onClick={() => setShowAdminPass(!showAdminPass)}
+                title={showAdminPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
-                {showPin ? '👁️' : '👁️‍🗨️'}
+                {showAdminPass ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
-            {pinError && <p className="admin-err">{pinError}</p>}
+            {adminError && <p className="admin-err" style={{ marginTop: 8 }}>{adminError}</p>}
           </div>
 
-          {/* Quick Demo PIN Chips */}
-          <div className="admin-pin-hint-box" onClick={() => { setPin('1102'); verifyPin('1102') }}>
-            <span>💡 <b>Mẹo quản trị:</b> Bấm nhanh để nhập mã PIN mẫu: <code className="admin-code-chip">1102</code></span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
             <button
               className="admin-btn primary lg"
-              onClick={() => verifyPin(pin)}
-              disabled={!pin.trim()}
+              onClick={handleAdminLogin}
+              disabled={adminBusy || !adminPass.trim()}
             >
-              Mở khoá Dashboard ➔
+              {adminBusy ? 'Đang xác thực…' : 'Đăng nhập Dashboard ➔'}
             </button>
             <button className="admin-btn ghost" onClick={onExit}>
               ‹ Quay lại Ứng dụng Phụ huynh

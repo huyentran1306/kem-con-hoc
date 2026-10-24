@@ -9,26 +9,60 @@ import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_K
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const CLOUD_KEY = 'kem-con-hoc:state'
+export const AUTH_STORAGE_KEY = 'kem-con-hoc:auth'
 
-async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY) {
+/* ---------- Quản lý Auth Token ---------- */
+export function getAuthToken() {
+  try {
+    return localStorage.getItem(AUTH_STORAGE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+export function setAuthToken(token) {
+  try {
+    if (token) localStorage.setItem(AUTH_STORAGE_KEY, token)
+    else localStorage.removeItem(AUTH_STORAGE_KEY)
+  } catch {}
+}
+
+export function removeAuthToken() {
+  try {
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+  } catch {}
+}
+
+async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeaders = {}) {
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json', ...extraHeaders }
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
   try {
     const r = await fetch(baseUrl + path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
       signal: ctrl.signal,
     })
-    if (!r.ok) throw new Error('HTTP ' + r.status)
-    return await r.json()
+    const data = await r.json().catch(() => ({}))
+    if (!r.ok) {
+      const err = new Error(data.error?.message || 'HTTP ' + r.status)
+      err.status = r.status
+      err.data = data
+      throw err
+    }
+    return data
   } finally {
     clearTimeout(t)
   }
 }
 
-async function postAi(path, body, timeoutMs = 25000) {
-  return post(path, body, timeoutMs, AI_GATEWAY)
+async function postAi(path, body, timeoutMs = 25000, extraHeaders = {}) {
+  return post(path, body, timeoutMs, AI_GATEWAY, extraHeaders)
 }
 
 /* Lấy JSON từ response (gateway có thể trả object hoặc chuỗi) */
@@ -404,34 +438,171 @@ async function ensureFamilies() {
   )
 }
 
-export async function familyRegister(name, password) {
+export async function familyRegister(name, password, displayName = '', relation = '') {
   try {
-    await ensureFamilies()
-    const salt = Math.random().toString(36).slice(2) + Date.now().toString(36)
-    const hash = await hashPass(password, salt)
-    const id = 'fam_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-    const r = await dbExecute('INSERT INTO families (id, name, salt, pass_hash) VALUES (?, ?, ?, ?)', [
-      id, name, salt, hash,
-    ])
-    if (r.error) return { ok: false, error: 'Tên gia đình đã có người dùng' }
-    return { ok: true, id }
+    const res = await post('/api/v1/auth/register', {
+      familyName: name,
+      password,
+      displayName,
+      relation,
+    })
+    if (res.token) {
+      setAuthToken(res.token)
+    }
+    return { ok: true, id: res.family.id, name: res.family.name, member: res.member, token: res.token }
   } catch (e) {
-    return { ok: false, error: 'Không kết nối được máy chủ' }
+    return { ok: false, error: e.data?.error?.message || e.message || 'Không kết nối được máy chủ' }
   }
 }
 
 export async function familyLogin(name, password) {
   try {
-    await ensureFamilies()
-    const r = await dbQuery('SELECT id, salt, pass_hash FROM families WHERE name = ?', [name])
-    const row = r.results && r.results[0]
-    if (!row) return { ok: false, error: 'Không tìm thấy gia đình "' + name + '"' }
-    const hash = await hashPass(password, row.salt)
-    if (hash !== row.pass_hash) return { ok: false, error: 'Sai mật khẩu rồi' }
-    return { ok: true, id: row.id }
+    const res = await post('/api/v1/auth/login', {
+      familyName: name,
+      password,
+    })
+    if (res.token) {
+      setAuthToken(res.token)
+    }
+    return { ok: true, id: res.family.id, name: res.family.name, member: res.member, token: res.token }
   } catch (e) {
-    return { ok: false, error: 'Không kết nối được máy chủ' }
+    return { ok: false, error: e.data?.error?.message || e.message || 'Không kết nối được máy chủ' }
   }
+}
+
+export async function familyLogout() {
+  try {
+    const token = getAuthToken()
+    if (token) {
+      await post('/api/v1/auth/logout', {}).catch(() => {})
+    }
+  } finally {
+    removeAuthToken()
+  }
+  return { ok: true }
+}
+
+/* ============================================================
+   ☁️ ĐỒNG BỘ TRẠNG THÁI GIA ĐÌNH QUA /api/v1/family/state
+   Có kiểm soát xung đột đồng thời (409 Conflict)
+   ============================================================ */
+export async function cloudLoadState(famId) {
+  const token = getAuthToken()
+  if (token) {
+    try {
+      const r = await fetch(GATEWAY + '/api/v1/family/state', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (r.ok) {
+        const data = await r.json()
+        return { state: data.state, ts: data.ts ? new Date(data.ts).getTime() : 0 }
+      }
+    } catch (e) {
+      console.warn('V1 family state load failed, falling back:', e)
+    }
+  }
+  return dbKvGet(famCloudKey(famId))
+}
+
+export async function cloudSaveState(famId, state, baseTs = null) {
+  const token = getAuthToken()
+  if (token) {
+    try {
+      const r = await fetch(GATEWAY + '/api/v1/family/state', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ state, baseTs }),
+      })
+      if (r.status === 409) {
+        const errData = await r.json()
+        return {
+          ok: false,
+          conflict: true,
+          serverState: errData.serverState,
+          serverTs: errData.serverTs ? new Date(errData.serverTs).getTime() : Date.now(),
+        }
+      }
+      if (r.ok) {
+        const data = await r.json()
+        return { ok: true, saved: true, ts: data.ts }
+      }
+    } catch (e) {
+      console.warn('V1 family state save failed, falling back:', e)
+    }
+  }
+  return dbKvSet(famCloudKey(famId), { ts: state._ts, state })
+}
+
+export async function cloudDeleteFamily(password) {
+  const token = getAuthToken()
+  if (!token) return { ok: false, error: 'Chưa đăng nhập' }
+  try {
+    const res = await post('/api/v1/family', { password }, 25000, GATEWAY, {
+      method: 'DELETE',
+    })
+    removeAuthToken()
+    return { ok: true, deleted: true }
+  } catch (e) {
+    return { ok: false, error: e.data?.error?.message || e.message }
+  }
+}
+
+/* ============================================================
+   📝 GHI NHẬN BUỔI HỌC & SỰ KIỆN QUA /api/v1/sessions
+   ============================================================ */
+export async function startSession(sessionData) {
+  try {
+    return await post('/api/v1/sessions', sessionData)
+  } catch (e) {
+    console.warn('startSession warning:', e)
+    return null
+  }
+}
+
+export async function updateSession(sessionId, updateData) {
+  try {
+    const r = await fetch(`${GATEWAY}/api/v1/sessions/${sessionId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(updateData),
+    })
+    return await r.json().catch(() => ({}))
+  } catch (e) {
+    console.warn('updateSession warning:', e)
+    return null
+  }
+}
+
+/* ============================================================
+   🌐 TẢI CẤU HÌNH CÔNG KHAI (PROMPT, AI CONFIG, SCOPE)
+   Cache 10 phút theo chuẩn gói Free Tier
+   ============================================================ */
+let publicConfigCache = null
+let publicConfigCachedAt = 0
+
+export async function loadPublicConfig(force = false) {
+  const now = Date.now()
+  if (!force && publicConfigCache && now - publicConfigCachedAt < 600000) {
+    return publicConfigCache
+  }
+  try {
+    const res = await fetch(GATEWAY + '/api/v1/config/public')
+    if (res.ok) {
+      const data = await res.json()
+      publicConfigCache = data
+      publicConfigCachedAt = now
+      return data
+    }
+  } catch (e) {
+    console.warn('loadPublicConfig error:', e)
+  }
+  return publicConfigCache
 }
 
 /* ============================================================

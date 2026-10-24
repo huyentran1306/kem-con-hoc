@@ -2,10 +2,10 @@ import { useState, useContext } from 'react'
 import { AppCtx } from './ctx'
 import { familyLogin, familyRegister } from './api'
 
-export default function LoginScreen({ onAuthed }) {
+export default function LoginScreen({ onAuthed, reauthSession = null }) {
   const { openAdmin } = useContext(AppCtx) || {}
   const [mode, setMode] = useState('login')
-  const [name, setName] = useState('')
+  const [name, setName] = useState(reauthSession?.name || '')
   const [pass, setPass] = useState('')
   const [pass2, setPass2] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -53,6 +53,13 @@ export default function LoginScreen({ onAuthed }) {
           </div>
 
           <div className="card" style={{ gap: 12, marginTop: 8 }}>
+            {reauthSession && (
+              <div className="card sun pop" style={{ padding: '10px 14px', borderRadius: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
+                  🔒 Nhập lại mật khẩu một lần để bảo vệ dữ liệu gia đình "{reauthSession.name}" với tiêu chuẩn bảo mật mới.
+                </span>
+              </div>
+            )}
             <div className="opt-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
               <button className={`opt ${mode === 'login' ? 'on' : ''}`} onClick={() => { setMode('login'); setErr('') }}>
                 Đăng nhập

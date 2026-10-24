@@ -4,7 +4,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig } from './api'
 import LoginScreen from './Login'
 import AdminPortal from './Admin'
 import * as Scr from './screens'
@@ -164,12 +164,17 @@ export default function App() {
     else if (S.onboarded && screen === 'onb') setScreen('home')
   }, [S.onboarded])
 
+  /* ---------- tải cấu hình công khai (Prompt, Scope rules) ---------- */
+  useEffect(() => {
+    loadPublicConfig().catch(() => {})
+  }, [])
+
   /* ---------- hydrate từ đám mây (D1) khi mở app ---------- */
   useEffect(() => {
     if (!famId) return
     let cancelled = false
     ;(async () => {
-      const cloud = await dbKvGet(CLOUD_KEY)
+      const cloud = await cloudLoadState(famId)
       if (cancelled) return
       let localRaw = null
       let localTs = 0
@@ -202,8 +207,24 @@ export default function App() {
     } catch (e) {}
     if (!S.cloudSync) return
     clearTimeout(cloudTimer.current)
-    cloudTimer.current = setTimeout(() => {
-      dbKvSet(CLOUD_KEY, { ts: payload._ts, state: payload })
+    cloudTimer.current = setTimeout(async () => {
+      const saveRes = await cloudSaveState(famId, payload, S._ts)
+      if (saveRes && saveRes.conflict) {
+        // Gộp state khi có xung đột (Section 3 Prompt 00)
+        const serverStickers = saveRes.serverState?.stickerHistory || []
+        const localStickers = payload.stickerHistory || []
+        const mergedMap = new Map()
+        serverStickers.forEach((st) => mergedMap.set(st.id || `${st.name}_${st.earnedAt}`, st))
+        localStickers.forEach((st) => mergedMap.set(st.id || `${st.name}_${st.earnedAt}`, st))
+        const mergedHistory = Array.from(mergedMap.values())
+        setS((prev) => ({
+          ...saveRes.serverState,
+          ...prev,
+          stickerHistory: mergedHistory,
+          _ts: saveRes.serverTs,
+        }))
+        toast('Đã gộp dữ liệu đồng bộ an toàn ⭐️')
+      }
     }, 2500)
   }, [S, hydrated, famId])
 
@@ -306,6 +327,7 @@ export default function App() {
   const logout = () => {
     try {
       localStorage.removeItem(SESSION_KEY)
+      removeAuthToken()
     } catch (e) {}
     setSession(null)
     setStudy(null)
@@ -313,12 +335,21 @@ export default function App() {
     setScreen('onb')
   }
 
-  const wipe = () => {
+  const wipe = async () => {
+    const confirmWipe = window.confirm('Bạn có chắc chắn muốn xoá toàn bộ dữ liệu gia đình không? Thao tác này sẽ xoá vĩnh viễn trên máy chủ.')
+    if (!confirmWipe) return
+    const pass = window.prompt('Nhập mật khẩu gia đình để xác nhận xoá toàn bộ:')
+    if (!pass) return
+    const delRes = await cloudDeleteFamily(pass)
+    if (!delRes.ok) {
+      alert(delRes.error || 'Mật khẩu xác nhận không đúng')
+      return
+    }
     try {
       localStorage.removeItem(LS_KEY)
       localStorage.removeItem(SESSION_KEY)
+      removeAuthToken()
     } catch (e) {}
-    dbKvSet(CLOUD_KEY, { ts: 0, state: null })
     location.reload()
   }
 
@@ -357,10 +388,11 @@ export default function App() {
     )
   }
 
-  if (!session) {
+  const hasToken = typeof window !== 'undefined' ? Boolean(getAuthToken()) : true
+  if (!session || (session && !hasToken)) {
     return (
       <AppCtx.Provider value={ctx}>
-        <LoginScreen onAuthed={handleAuthed} />
+        <LoginScreen onAuthed={handleAuthed} reauthSession={session && !hasToken ? session : null} />
       </AppCtx.Provider>
     )
   }
