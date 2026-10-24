@@ -8,10 +8,23 @@ export const PROMPT_STORAGE_KEY = 'kem-con-hoc:prompt-studio-config'
 export const PROMPT_HISTORY_KEY = 'kem-con-hoc:prompt-studio-history'
 
 export const DEFAULT_PROMPTS = {
+  p0_scope_text: {
+    id: 'p0_scope_text',
+    name: '0. Phân loại đề chữ ngoài phạm vi',
+    desc: 'Chạy khi luật nhanh không quyết được đề gõ/giọng nói (chặn từ khoá, giải hộ, ngoài chương trình)',
+    variables: ['{{de_bai}}'],
+    requiredVars: ['{{de_bai}}'],
+    template: `Phân tích đề bài sau và trả về DUY NHẤT một đối tượng JSON, không thêm bất kỳ chữ nào khác:
+{"pham_vi": "bai_tap" | "khong_lien_quan" | "lam_ho" | "ngoai_chuong_trinh", "do_tin_cay": 0.0-1.0, "mon_doan": "toan" | "tieng_viet" | "tieng_anh" | "khac", "lop_doan": 1-12 hoặc null, "ly_do": "<tối đa 15 chữ>"}
+
+Đề bài cần phân loại:
+"""{{de_bai}}"""`,
+  },
+
   p1_ocr: {
     id: 'p1_ocr',
-    name: '1. Đọc đề từ ảnh',
-    desc: 'Mẹ chụp ảnh bài tập, AI đọc chữ trong ảnh',
+    name: '1. Đọc đề từ ảnh (kiểu cũ)',
+    desc: 'Mẹ chụp ảnh bài tập, AI đọc chữ trong ảnh (văn bản thuần)',
     variables: [],
     requiredVars: [],
     template: `Đọc giúp mình toàn bộ chữ trong ảnh bài tập này nhé (chữ in sách hoặc chữ viết tay vở ô ly).
@@ -20,6 +33,24 @@ Quy tắc:
 - Viết lại đúng chính tả tiếng Việt có dấu giúp mình. Nếu nét viết tay bị mờ hoặc dính chữ thì tự sửa đúng chính tả luôn (vd: me mua -> Mẹ mua, con may qua -> còn mấy quả).
 - Nếu ảnh có nhiều câu (Câu 1, Câu 2...), hãy tách rõ ràng từng câu.
 - Chỉ trả về duy nhất nội dung đề bài đọc được, không thêm lời chào, câu dẫn hay bình luận mở đầu/kết thúc.`,
+  },
+
+  p1_ocr_v2: {
+    id: 'p1_ocr_v2',
+    name: '1b. Đọc ảnh & Kiểm tra phạm vi (v2 JSON)',
+    desc: 'Gộp đọc chữ và phân loại phạm vi (bài tập, nhạy cảm, đồ chơi, ảnh mờ, nhiều bài)',
+    variables: [],
+    requiredVars: [],
+    template: `Nhìn ảnh và trả về DUY NHẤT một JSON, không thêm chữ nào khác:
+{"pham_vi": "bai_tap" | "khong_phai_bai_tap" | "nhay_cam" | "anh_mo" | "nhieu_bai", "do_tin_cay": 0.0-1.0, "ly_do": "<tối đa 15 chữ>", "mon_doan": "toan" | "tieng_viet" | "tieng_anh" | "khac", "lop_doan": 1-12 hoặc null, "so_bai": 1, "cac_bai": ["<Câu 1 ...>", "<Câu 2 ...>"], "de_bai": "<toàn bộ chữ của đề, giữ nguyên số liệu, đúng chính tả>"}
+
+QUY TẮC BẮT BUỘC:
+- "bai_tap": chỉ khi ảnh là trang sách, vở, phiếu bài tập có đề bài rõ ràng.
+- "nhay_cam": khi có mặt người rõ, giấy tờ riêng tư, bằng lái, cccd, bạo lực, nội dung người lớn. Khi đó để "de_bai": "".
+- "khong_phai_bai_tap": đồ vật gia đình, đồ chơi, thú cưng, màn hình game, phong cảnh.
+- "anh_mo": ảnh mờ, rung tay, mất góc hoặc thiếu sáng không đọc được.
+- "nhieu_bai": có từ 2 bài tập trở lên trong ảnh. Tách rõ từng câu vào "cac_bai".
+- Tuyệt đối không tự giải bài toán hay trả lời câu hỏi.`,
   },
 
   p2_clean: {

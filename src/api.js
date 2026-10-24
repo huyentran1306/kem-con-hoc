@@ -4,6 +4,7 @@
 import { PROBLEM } from './data'
 import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio'
 import { getWeekLabel } from './utils'
+import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -43,19 +44,20 @@ function extractJson(raw) {
 }
 
 /* ============================================================
-   🔍 OCR — đọc chữ từ ảnh chụp bài tập (multipart → /vision/ocr)
-   Có AbortController timeout 12s tránh treo mạng
+   🔍 OCR — đọc chữ từ ảnh chụp bài tập (multipart → /vision/ocr & /vision/analyze)
+   Hỗ trợ p1_ocr_v2 gộp phân loại phạm vi (bài tập, nhạy cảm, đồ chơi, ảnh mờ, nhiều bài)
    ============================================================ */
-export async function aiOcr(file, timeoutMs = 15000) {
+export async function aiOcr(file, timeoutMs = 15000, context = {}) {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
     const fd = new FormData()
     fd.append('image', file, 'homework.jpg')
-    const ocrPrompt = renderPrompt('p1_ocr')
+    // Ưu tiên p1_ocr_v2 gộp kiểm tra phạm vi, fallback sang p1_ocr cũ
+    const ocrPrompt = renderPrompt('p1_ocr_v2') || renderPrompt('p1_ocr')
     fd.append('prompt', ocrPrompt)
 
-    // Ưu tiên 1: Llama 3.2 Vision qua /vision/analyze (Đọc chữ viết tay tiếng Việt & chữ in tốt nhất)
+    // Ưu tiên 1: Llama 3.2 Vision qua /vision/analyze
     try {
       const rVision = await fetch(AI_GATEWAY + '/vision/analyze', {
         method: 'POST',
@@ -72,8 +74,14 @@ export async function aiOcr(file, timeoutMs = 15000) {
             .replace(/^Đề bài toán tiểu học là:\s*/i, '')
             .replace(/Tôi hy vọng điều đó.*$/is, '')
             .trim()
-          if (analysis.length >= 5 && !analysis.includes('không thể đọc') && !analysis.includes('Chơi gì với đồ')) {
-            return analysis
+          if (analysis.length >= 3) {
+            const scope = parseOcrV2Result(analysis, context)
+            const text = (scope.de_bai || analysis).trim()
+            return {
+              text,
+              scopeResult: scope,
+              raw: analysis,
+            }
           }
         }
       }
@@ -93,7 +101,13 @@ export async function aiOcr(file, timeoutMs = 15000) {
       const j = await r.json()
       const text = j.extracted_text || null
       if (text && !text.includes('There is no text') && text.length >= 4 && !text.includes('The image shows')) {
-        return text.trim()
+        const cleanText = text.trim()
+        const scope = parseOcrV2Result(cleanText, context)
+        return {
+          text: scope.de_bai || cleanText,
+          scopeResult: scope,
+          raw: cleanText,
+        }
       }
     }
 
@@ -600,5 +614,140 @@ export async function aiAnalyzeLongitudinalProgress({ child, stats, stickerHisto
   } catch (e) {
     console.warn('Longitudinal analysis failed:', e)
     return null
+  }
+}
+
+/* ============================================================
+   🛡️ SCOPE ENGINE & AUDIT LOGGING (D1 DATABASE)
+   Ghi nhật ký vi phạm phạm vi mà KHÔNG lưu ảnh hoặc đề bài nhạy cảm
+   ============================================================ */
+
+export async function classifyScopeTextWithAi(deBai, timeoutMs = 6000) {
+  try {
+    const prompt = renderPrompt('p0_scope_text', { de_bai: deBai })
+    const j = await postAi(
+      '/chat',
+      {
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 120,
+        temperature: 0,
+      },
+      timeoutMs
+    )
+    const raw = j?.response || j
+    return extractJson(raw)
+  } catch (e) {
+    console.warn('classifyScopeTextWithAi timeout or error:', e)
+    return null
+  }
+}
+
+let scopeTableEnsured = false
+async function ensureScopeEventsTable() {
+  if (scopeTableEnsured) return
+  try {
+    await dbExecute(`
+      CREATE TABLE IF NOT EXISTS scope_events (
+        id TEXT PRIMARY KEY,
+        family_id TEXT,
+        source TEXT,
+        category TEXT,
+        action TEXT,
+        confidence REAL,
+        reason TEXT,
+        grade_guess INTEGER,
+        subject_guess TEXT,
+        child_grade INTEGER,
+        overridden INTEGER DEFAULT 0,
+        created_at INTEGER
+      );
+    `)
+    scopeTableEnsured = true
+  } catch (e) {
+    console.warn('ensureScopeEventsTable warning:', e)
+  }
+}
+
+export async function logScopeEvent({
+  familyId = 'default_family',
+  source = 'camera', // 'camera' | 'text' | 'voice'
+  category = 'bai_tap',
+  action = 'allow',
+  confidence = 1.0,
+  reason = '',
+  gradeGuess = null,
+  subjectGuess = 'toan',
+  childGrade = null,
+  overridden = 0,
+}) {
+  try {
+    await ensureScopeEventsTable()
+    const id = 'se-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7)
+    const createdAt = Date.now()
+    // TUYỆT ĐỐI KHÔNG LƯU ẢNH VÀ KHÔNG LƯU ĐỀ CỦA LOẠI NHẠY CẢM
+    const cleanReason = (category === 'nhay_cam' ? 'Phát hiện ảnh riêng tư' : String(reason || '')).slice(0, 100)
+    await dbExecute(
+      `INSERT INTO scope_events (id, family_id, source, category, action, confidence, reason, grade_guess, subject_guess, child_grade, overridden, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        familyId,
+        source,
+        category,
+        action,
+        typeof confidence === 'number' ? confidence : 1.0,
+        cleanReason,
+        typeof gradeGuess === 'number' ? gradeGuess : null,
+        subjectGuess || 'toan',
+        typeof childGrade === 'number' ? childGrade : null,
+        overridden ? 1 : 0,
+        createdAt,
+      ]
+    )
+    return { success: true, id }
+  } catch (e) {
+    console.warn('logScopeEvent error (soft fail):', e)
+    return { success: false, error: e.message }
+  }
+}
+
+export async function getScopeEvents(limit = 20) {
+  try {
+    await ensureScopeEventsTable()
+    const res = await dbQuery(
+      `SELECT * FROM scope_events ORDER BY created_at DESC LIMIT ?`,
+      [limit]
+    )
+    return Array.isArray(res?.results) ? res.results : []
+  } catch (e) {
+    console.warn('getScopeEvents error:', e)
+    return []
+  }
+}
+
+export async function getScopeStats() {
+  try {
+    await ensureScopeEventsTable()
+    const now = Date.now()
+    const thirtyDaysAgo = now - 30 * 86400000
+
+    const countRes = await dbQuery(
+      `SELECT category, COUNT(*) as cnt, SUM(overridden) as overridden_cnt
+       FROM scope_events
+       WHERE created_at >= ?
+       GROUP BY category`,
+      [thirtyDaysAgo]
+    )
+
+    const recentRes = await dbQuery(
+      `SELECT * FROM scope_events ORDER BY created_at DESC LIMIT 20`
+    )
+
+    return {
+      byCategory: Array.isArray(countRes?.results) ? countRes.results : [],
+      recentEvents: Array.isArray(recentRes?.results) ? recentRes.results : [],
+    }
+  } catch (e) {
+    return { byCategory: [], recentEvents: [] }
   }
 }
