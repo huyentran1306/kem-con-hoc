@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="paper" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Paper -->
+  <rect width="600" height="800" fill="url(#paper)" stroke="#CBD5E1" stroke-width="2"/>
+  
+  <!-- Header -->
+  <rect x="40" y="40" width="520" height="60" rx="8" fill="#EEF2FF"/>
+  <text x="60" y="78" font-family="sans-serif" font-size="20" font-weight="bold" fill="#3730A3">VỞ BÀI TẬP TOÁN LỚP 3 — TUẦN 12</text>
+  
+  <!-- Grid Lines -->
+  <line x1="40" y1="130" x2="560" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+  
+  <!-- Exercise 1 -->
+  <text x="50" y="170" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1E293B">Bài 1: Tính nhẩm</text>
+  <text x="70" y="210" font-family="sans-serif" font-size="15" fill="#334155">a) 4 × 6 = ..............            b) 35 : 5 = ..............</text>
+  <text x="70" y="250" font-family="sans-serif" font-size="15" fill="#334155">c) 3 × 9 = ..............            d) 48 : 6 = ..............</text>
+
+  <!-- Exercise 2 -->
+  <text x="50" y="320" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1E293B">Bài 2: Giải bài toán có lời văn</text>
+  <text x="70" y="360" font-family="sans-serif" font-size="15" fill="#334155">Một cửa hàng có 45 kg gạo, buổi sáng đã bán</text>
+  <text x="70" y="390" font-family="sans-serif" font-size="15" fill="#334155">được 1/5 số gạo đó. Hỏi cửa hàng còn lại bao nhiêu</text>
+  <text x="70" y="420" font-family="sans-serif" font-size="15" fill="#334155">ki-lô-gam gạo?</text>
+
+  <!-- Answer Area -->
+  <rect x="70" y="460" width="460" height="240" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-dasharray="4,4"/>
+  <text x="90" y="495" font-family="sans-serif" font-size="14" font-style="italic" fill="#64748B">Bài giải:</text>
+  <line x1="90" y1="535" x2="510" y2="535" stroke="#CBD5E1" stroke-width="1"/>
+  <line x1="90" y1="575" x2="510" y2="575" stroke="#CBD5E1" stroke-width="1"/>
+  <line x1="90" y1="615" x2="510" y2="615" stroke="#CBD5E1" stroke-width="1"/>
+  <line x1="90" y1="655" x2="510" y2="655" stroke="#CBD5E1" stroke-width="1"/>
+</svg>

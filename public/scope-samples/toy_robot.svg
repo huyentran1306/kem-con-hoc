@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <radialGradient id="desk" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="100%" stop-color="#FDE68A"/>
+    </radialGradient>
+  </defs>
+  <!-- Background table surface -->
+  <rect width="600" height="600" fill="url(#desk)"/>
+  
+  <!-- Robot Toy Illustration (No text) -->
+  <g transform="translate(180, 100)">
+    <!-- Antenna -->
+    <line x1="120" y1="20" x2="120" y2="70" stroke="#0284C7" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="120" cy="15" r="14" fill="#EF4444"/>
+
+    <!-- Head -->
+    <rect x="50" y="70" width="140" height="100" rx="20" fill="#38BDF8" stroke="#0284C7" stroke-width="6"/>
+    <!-- Eyes -->
+    <circle cx="85" cy="115" r="18" fill="#F8FAFC" stroke="#0F172A" stroke-width="4"/>
+    <circle cx="85" cy="115" r="8" fill="#0284C7"/>
+    <circle cx="155" cy="115" r="18" fill="#F8FAFC" stroke="#0F172A" stroke-width="4"/>
+    <circle cx="155" cy="115" r="8" fill="#0284C7"/>
+    <!-- Mouth -->
+    <rect x="80" y="145" width="80" height="10" rx="5" fill="#0F172A"/>
+
+    <!-- Body -->
+    <rect x="30" y="190" width="180" height="180" rx="16" fill="#0284C7" stroke="#0369A1" stroke-width="6"/>
+    <!-- Chest Screen & dials -->
+    <rect x="55" y="215" width="130" height="85" rx="10" fill="#E0F2FE"/>
+    <circle cx="85" cy="255" r="16" fill="#F59E0B"/>
+    <circle cx="140" cy="255" r="16" fill="#10B981"/>
+    <rect x="55" y="320" width="130" height="30" rx="6" fill="#0369A1"/>
+
+    <!-- Arms -->
+    <rect x="-15" y="210" width="35" height="110" rx="16" fill="#38BDF8" stroke="#0284C7" stroke-width="5"/>
+    <circle cx="2" cy="330" r="14" fill="#EF4444"/>
+    <rect x="220" y="210" width="35" height="110" rx="16" fill="#38BDF8" stroke="#0284C7" stroke-width="5"/>
+    <circle cx="238" cy="330" r="14" fill="#EF4444"/>
+
+    <!-- Legs -->
+    <rect x="60" y="380" width="40" height="70" rx="10" fill="#0369A1"/>
+    <rect x="140" y="380" width="40" height="70" rx="10" fill="#0369A1"/>
+    <rect x="45" y="440" width="65" height="25" rx="8" fill="#EF4444"/>
+    <rect x="130" y="440" width="65" height="25" rx="8" fill="#EF4444"/>
+  </g>
+</svg>
