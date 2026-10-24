@@ -433,7 +433,7 @@ export function Analyze() {
   const child = S.children.find((c) => c.id === S.activeId)
 
   const useSampleProblem = () => {
-    patch({ problem: PROBLEM })
+    patch({ problem: { ...PROBLEM, isSample: true } })
     toast('Đang mở bài mẫu minh họa 📖')
     go('explain')
   }
@@ -444,21 +444,16 @@ export function Analyze() {
     try {
       const explainRes = await aiExplain(textToUse, child, S.tone)
       setDone(4)
-      if (explainRes) {
-        patch({ problem: explainRes })
+      if (explainRes && explainRes.steps && explainRes.steps.length > 0) {
+        patch({ problem: { ...explainRes, isSample: false } })
         setAiState('done')
         toast('✅ AI đã soạn bài giảng xong!')
         setTimeout(() => go('explain'), 600)
       } else {
-        patch({ problem: PROBLEM })
-        setAiState('error')
-        toast('Mạng chậm — đã chuyển sang bài mẫu')
-        setTimeout(() => go('explain'), 800)
+        setAiState('network_slow')
       }
     } catch (e) {
-      patch({ problem: PROBLEM })
-      setAiState('error')
-      setTimeout(() => go('explain'), 800)
+      setAiState('network_slow')
     }
   }
 
@@ -651,10 +646,31 @@ export function Analyze() {
           <span className="lbl mint">✅ AI đã soạn bài giảng</span>
           <span className="sub">Sẵn sàng hướng dẫn {S.parent.toLowerCase()} đặt 4 câu hỏi gợi mở cho con.</span>
         </div>
-      ) : aiState === 'error' ? (
-        <div className="card sun pop">
-          <span className="lbl sun">⚠️ Mạng chậm — dùng bài mẫu</span>
-          <span className="sub">Đang mở bài toán mẫu để bạn đối chiếu phương pháp.</span>
+      ) : (aiState === 'network_slow' || aiState === 'error') ? (
+        <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
+          <span className="lbl sun">⚠️ Mạng đang chậm, chưa soạn được bài của con</span>
+          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
+            Kết nối mạng chập chờn khiến AI chưa hoàn tất phân tích đề bài. Bạn muốn thử lại hay xem bài tập mẫu tương tự để làm quen?
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              className="btn solid"
+              style={{ width: '100%', padding: '12px' }}
+              onClick={() => {
+                const textToUse = (editedText || ocrText || S.flow.ocr || '').trim()
+                startExplain(textToUse)
+              }}
+            >
+              🔄 Thử lại
+            </button>
+            <button
+              className="btn ghost"
+              style={{ width: '100%', padding: '12px', background: '#fff' }}
+              onClick={useSampleProblem}
+            >
+              📖 Xem bài mẫu để làm quen
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -703,6 +719,24 @@ export function Explain() {
   return (
     <>
       <Header title="Trước khi giảng cho con…" back="home" />
+      {problem?.isSample && (
+        <div
+          className="sample-banner"
+          style={{
+            background: '#FEF3C7',
+            color: '#92400E',
+            border: '1.5px solid #FCD34D',
+            padding: '8px 12px',
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: 700,
+            textAlign: 'center',
+            marginBottom: 10,
+          }}
+        >
+          ⚠️ Đây là bài mẫu, không phải bài của con
+        </div>
+      )}
       <div className="photo">{problem.ocr}</div>
 
       <div className="card plum">
@@ -719,7 +753,7 @@ export function Explain() {
       <div className="card">
         <span className="lbl plum">Cách lớp {child.grade} đang học</span>
         <span style={{ fontSize: 14 }}>{problem.method}</span>
-        {problem.diagram && (
+        {problem.diagram && (problem.isSample || problem.id === 'mock') && (
           <>
             <DotDiagram {...problem.diagram} />
             <span className="sub">Chấm xám = phần đã cho đi</span>
@@ -823,6 +857,24 @@ export function Scaffold() {
   return (
     <>
       <Header title="Hỏi con từng bước" back="explain" />
+      {problem?.isSample && (
+        <div
+          className="sample-banner"
+          style={{
+            background: '#FEF3C7',
+            color: '#92400E',
+            border: '1.5px solid #FCD34D',
+            padding: '8px 12px',
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: 700,
+            textAlign: 'center',
+            marginBottom: 10,
+          }}
+        >
+          ⚠️ Đây là bài mẫu, không phải bài của con
+        </div>
+      )}
       <p className="sub">
         Đọc to câu in đậm cho {child.name} nghe · bậc {Math.min(step + 1, steps.length)}/{steps.length}
       </p>
@@ -1090,6 +1142,24 @@ export function Done() {
   return (
     <>
       <Header title="Xong bài rồi! 🎉" back="home" />
+      {problem?.isSample && (
+        <div
+          className="sample-banner"
+          style={{
+            background: '#FEF3C7',
+            color: '#92400E',
+            border: '1.5px solid #FCD34D',
+            padding: '8px 12px',
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: 700,
+            textAlign: 'center',
+            marginBottom: 10,
+          }}
+        >
+          ⚠️ Đây là bài mẫu, không phải bài của con
+        </div>
+      )}
       <div className="card mint">
         <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
         <b style={{ fontSize: 16 }}>{problem.answer}</b>
