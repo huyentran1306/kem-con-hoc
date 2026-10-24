@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState, Component } from 'react'
 import { AppCtx } from './ctx'
 import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
@@ -138,6 +138,50 @@ const TAB_OF = {
   toy: 'toy', game: 'toy',
   report: 'report',
   profile: 'profile',
+}
+
+class ScreenErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('Screen crash caught by ScreenErrorBoundary:', error, info)
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.screen !== this.props.screen && this.state.hasError) {
+      this.setState({ hasError: false, error: null })
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="card" style={{ textAlign: 'center', padding: '36px 20px', margin: '20px 0' }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>🐻 🍯</div>
+          <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px', color: 'var(--c-text)' }}>
+            Có chút trục trặc nhỏ khi nạp trang này
+          </h3>
+          <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 16px' }}>
+            Bạn đừng lo nhé! Bấm nút bên dưới để quay lại màn hình chính nhé.
+          </p>
+          <button
+            className="btn solid"
+            onClick={() => {
+              this.setState({ hasError: false, error: null })
+              this.props.onReset && this.props.onReset()
+            }}
+            style={{ margin: '0 auto', maxWidth: 220 }}
+          >
+            Quay lại trang chính
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 export default function App() {
@@ -449,6 +493,7 @@ export default function App() {
       problem: S.problem || PROBLEM,
       logout,
       wipe,
+      session,
       familyName: session ? session.name : '',
       famId: famId || null,
       openAdmin: () => setShowAdmin(true),
@@ -562,7 +607,9 @@ export default function App() {
               </button>
             )}
             <div key={screen} className="fadeIn" style={{ display: 'contents' }}>
-              <ScreenComp />
+              <ScreenErrorBoundary screen={screen} onReset={() => setScreen('home')}>
+                <ScreenComp />
+              </ScreenErrorBoundary>
             </div>
           </div>
 

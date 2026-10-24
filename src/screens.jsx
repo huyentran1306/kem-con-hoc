@@ -4103,10 +4103,10 @@ function BowlGame() {
    11. BÁO CÁO TUẦN
    ============================================================ */
 export function Report() {
-  const { S, stats, toast, boom, tracker } = useContext(AppCtx)
-  const child = S.children.find((c) => c.id === S.activeId)
-  const momSessions = stats.sessionsMom || 0
-  const dadSessions = stats.sessionsDad || 0
+  const { S, stats, toast, boom, tracker, patch, session } = useContext(AppCtx)
+  const child = S?.children?.find((c) => c.id === S?.activeId) || S?.children?.[0] || { name: 'Con', id: 'c1' }
+  const momSessions = stats?.sessionsMom || 0
+  const dadSessions = stats?.sessionsDad || 0
   const totalSessions = momSessions + dadSessions
   const momPct = totalSessions ? Math.round((momSessions / totalSessions) * 100) : 0
   const dadPct = totalSessions ? 100 - momPct : 0
@@ -4431,8 +4431,8 @@ export function Report() {
 
       {/* 4. Dạng bài con hay vướng */}
       <p className="lbl mut">Con hay vướng (Cần tháo gỡ)</p>
-      {stats.weak.length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng 🎉</span>}
-      {stats.weak.map((w) => (
+      {(stats?.weak || []).length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng 🎉</span>}
+      {(stats?.weak || []).map((w) => (
         <div className="card" key={w.n}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
             <b style={{ fontSize: 14 }}>{w.n}</b>
@@ -4444,7 +4444,7 @@ export function Report() {
 
       {/* 5. Dạng bài con đã vững */}
       <p className="lbl mut">Con đã vững</p>
-      {stats.strong.map((w) => (
+      {(stats?.strong || []).map((w) => (
         <div className="card" key={w.n}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
             <b style={{ fontSize: 14 }}>{w.n}</b>
@@ -4456,21 +4456,22 @@ export function Report() {
 
       {/* 6. Ghi nhận riêng cho bố mẹ (Prompt 08 Mục 7) */}
       {(() => {
-        if (session?.role === 'viewer') return null
-        const childStats = stats[S.activeId] || {}
-        const calmHistory = childStats.calmHistory || []
+        if (session && session.role === 'viewer') return null
+        const calmHistory = stats?.calmHistory || S?.stats?.[S?.activeId]?.calmHistory || []
         const thisWeekCalm = calmHistory.filter((item) => {
-          const ts = typeof item === 'number' ? item : item.ts
-          return getWeekLabel(ts) === 'Tuần này'
+          const ts = typeof item === 'number' ? item : item?.ts
+          return ts && getWeekLabel(ts) === 'Tuần này'
         })
         const count = thisWeekCalm.length
         if (count === 0) return null
 
         const daysSet = new Set()
         thisWeekCalm.forEach((item) => {
-          const ts = typeof item === 'number' ? item : item.ts
-          daysSet.add(new Date(ts).toLocaleDateString('vi-VN', { weekday: 'short' }))
+          const ts = typeof item === 'number' ? item : item?.ts
+          if (ts) daysSet.add(new Date(ts).toLocaleDateString('vi-VN', { weekday: 'short' }))
         })
+
+        const parentName = S?.parent ? S.parent.toLowerCase() : 'bố mẹ'
 
         return (
           <div
@@ -4493,10 +4494,10 @@ export function Report() {
             </div>
 
             <h4 style={{ fontSize: 16, fontWeight: 800, color: '#581C87', margin: '0 0 6px' }}>
-              Tuần này {S.parent.toLowerCase()} đã dừng lại {count} lần trước khi nổi nóng 💚
+              Tuần này {parentName} đã dừng lại {count} lần trước khi nổi nóng 💚
             </h4>
             <p style={{ fontSize: 13, color: '#6B21A8', margin: '0 0 10px', lineHeight: 1.45 }}>
-              {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {S.parent.toLowerCase()}!
+              {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {parentName}!
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #D8B4FE', paddingTop: 8 }}>
@@ -4504,8 +4505,8 @@ export function Report() {
               <input
                 type="checkbox"
                 style={{ width: 18, height: 18, accentColor: '#7E22CE' }}
-                checked={Boolean(S.shareCalmWithZalo)}
-                onChange={(e) => patch({ shareCalmWithZalo: e.target.checked })}
+                checked={Boolean(S?.shareCalmWithZalo)}
+                onChange={(e) => patch && patch({ shareCalmWithZalo: e.target.checked })}
               />
             </div>
           </div>
