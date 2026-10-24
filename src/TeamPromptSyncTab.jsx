@@ -988,7 +988,7 @@ export default function TeamPromptSyncTab() {
                   )}
 
                   {/* PHẦN SCRIPT DATABASE & LỆNH DI CHUYỂN D1 */}
-                  {item.migrationScript && (
+                  {item.migrationScript && item.migrationScript.trim() !== '' && (
                     <div
                       style={{
                         background: '#0F172A',

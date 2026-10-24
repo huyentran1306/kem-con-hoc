@@ -45,12 +45,7 @@ async function run() {
       runBy: '',
       runAt: '',
       aiResult: '',
-      migrationScript: `-- ============================================================
--- PROMPT 06: KHÔNG CẦN TẠO BẢNG MỚI
--- Cơ chế Idempotent: Tự động đánh dấu sample: true cho các nhãn mẫu h1..h15 khi nạp state.
--- Lệnh kiểm tra số gia đình hiện tại trên D1:
-SELECT count(*) as total_families FROM families;
--- ============================================================`,
+      migrationScript: '',
       promptDetail: prompt06Md,
       createdAt: '2026-10-24 17:21',
       updatedAt: '2026-10-24 18:00'
@@ -65,12 +60,7 @@ SELECT count(*) as total_families FROM families;
       runBy: '',
       runAt: '',
       aiResult: '',
-      migrationScript: `-- ============================================================
--- PROMPT 01: HỆ THỐNG 8 BỘ GIAO DIỆN & TIÊU CHUẨN WCAG AA
--- Cấu trúc lưu trong state JSON: { theme: 'candy'|'bear'|'bento'|'sticker'|'notebook'|'garden'|'aurora'|'chalk', motion: 'full'|'reduced' }
--- Lệnh kiểm thử tương phản tự động trên môi trường mới:
-node scripts/test-theme-contrast.mjs
--- ============================================================`,
+      migrationScript: '',
       promptDetail: prompt01Md,
       createdAt: '2026-10-24 16:53',
       updatedAt: '2026-10-24 18:15'
