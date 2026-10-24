@@ -877,10 +877,6 @@ export function Scaffold() {
     }
   }
 
-  const onLockedPress = () => {
-    openSheet('answerBlock')
-  }
-
   const onOpen = () => {
     patch({ flow: { ...S.flow, unlocked: true } })
     boom()
@@ -1039,7 +1035,7 @@ export function Scaffold() {
         <span style={{ fontSize: 14 }}>"Con nghĩ lâu vậy là đang cố đó. Mình thử vẽ ra nhé."</span>
       </div>
 
-      <HoldReveal locked={false} onLockedPress={onLockedPress} onOpen={onOpen} />
+      <HoldReveal locked={false} onOpen={onOpen} />
 
       {unlocked && (
         <>

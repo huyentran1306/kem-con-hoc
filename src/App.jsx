@@ -462,25 +462,6 @@ function SheetView({ type }) {
     )
   }
 
-if (type === 'answerBlock') {
-    const p = S.problem || PROBLEM
-    const n = (p.steps || []).length || 4
-    return (
-      <Sheet>
-        <p className="title">Khoan đã {S.parent.toLowerCase()} ơi 🙂</p>
-        <p className="sub">
-          Con mới qua <b>{S.flow.step}/{n}</b> bậc. Nếu xem đáp án bây giờ, con sẽ chỉ chép mà không hiểu.
-
-        </p>
-        <div className="card plum">
-          <span className="lbl plum">Thử câu này trước</span>
-          <span style={{ fontSize: 14 }}>{(p.steps || [])[Math.min(S.flow.step, n - 1)].hint}</span>
-        </div>
-        <button className="btn solid" onClick={closeSheet}>Quay lại hỏi con</button>
-      </Sheet>
-    )
-  }
-
   if (type === 'practice') return <PracticeSheet />
   if (type === 'addChild') return <AddChildSheet />
   if (type === 'invite') return <InviteSheet />
@@ -488,7 +469,6 @@ if (type === 'answerBlock') {
   if (type === 'wipe') return <WipeSheet />
   if (type === 'typeProblem') return <TypeProblemSheet />
   if (type === 'stickerBook') return <StickerBookSheet />
-  if (type === 'editOcr') return <EditOcrSheet />
   if (type === 'pwa') return <PwaSheet />
   if (type === 'redeem') return <RedeemRewardSheet />
   return null
@@ -1218,44 +1198,6 @@ function RedeemRewardSheet() {
       >
         🎁 {S.parent} xác nhận đổi quà & Đặt lại sổ mới ➔
       </button>
-    </Sheet>
-  )
-}
-
-/* ---------- SỬA ĐỀ BÀI OCR ---------- */
-function EditOcrSheet() {
-  const { S, patch, closeSheet, toast } = useContext(AppCtx)
-  const [val, setVal] = useState(S.flow.ocr || '')
-
-  const save = () => {
-    const text = val.trim()
-    if (!text) {
-      toast('Đề bài không được để trống nhé 📝')
-      return
-    }
-    patch({ flow: { ...S.flow, ocr: text } })
-    closeSheet()
-    toast('Đã cập nhật đề bài — AI đang soạn câu hỏi mới ⚡')
-  }
-
-  return (
-    <Sheet>
-      <p className="title">Chỉnh sửa đề bài ✏️</p>
-      <p className="sub">{S.parent} kiểm tra và sửa lại số liệu nếu camera chụp bị mờ hoặc sai số:</p>
-      <textarea
-        className="field"
-        rows={5}
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        placeholder="Nhập hoặc sửa đề bài tại đây..."
-        style={{ fontSize: 14.5, lineHeight: 1.5 }}
-      />
-      <div className="btns">
-        <button className="btn ghost" onClick={closeSheet}>Hủy</button>
-        <button className="btn solid" onClick={save}>
-          ✅ Lưu đề bài & Tiếp tục
-        </button>
-      </div>
     </Sheet>
   )
 }
