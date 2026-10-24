@@ -111,19 +111,18 @@ export function AdminToolsTab({ token, adminProfile }) {
             </div>
 
             {/* Quick Queries */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, alignSelf: 'center', color: 'var(--admin-text-sub)' }}>
-                Truy vấn nhanh:
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--adm-sub)' }}>
+                Truy vấn mẫu:
               </span>
               {QUICK_QUERIES.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  className="stitch-badge"
-                  style={{ cursor: 'pointer', background: 'var(--admin-bg)', border: '1px solid var(--admin-border)' }}
+                  className="stitch-quick-query-btn"
                   onClick={() => setSqlQuery(item.sql)}
                 >
-                  {item.name}
+                  ⚡ {item.name}
                 </button>
               ))}
             </div>
@@ -131,20 +130,25 @@ export function AdminToolsTab({ token, adminProfile }) {
             {/* SQL Input Area */}
             <div className="stitch-form-group">
               <textarea
-                rows="4"
+                rows="5"
                 className="stitch-input"
                 style={{
-                  fontFamily: 'monospace',
-                  fontSize: '13px',
-                  background: 'var(--admin-bg)',
-                  lineHeight: 1.5,
-                  padding: '12px',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  fontSize: '13.5px',
+                  background: '#0F172A',
+                  color: '#38BDF8',
+                  lineHeight: 1.6,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #334155',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
                 }}
                 value={sqlQuery}
                 onChange={(e) => setSqlQuery(e.target.value)}
                 placeholder="Nhập câu lệnh SELECT..."
               />
             </div>
+
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
               <div style={{ fontSize: '12px', color: 'var(--admin-text-sub)' }}>

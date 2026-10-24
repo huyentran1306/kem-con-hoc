@@ -261,17 +261,17 @@ export function AdminConfigTab({ token, adminProfile }) {
                   min="0.1"
                   max="1.0"
                   step="0.05"
+                  className="stitch-range-slider"
                   value={modelConfig.temperature}
                   onChange={(e) => {
                     setModelConfig({ ...modelConfig, temperature: parseFloat(e.target.value) })
                     setDirty(true)
                   }}
-                  style={{ width: '100%', accentColor: 'var(--admin-primary)' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--admin-text-sub)' }}>
-                  <span>0.1 (Rất chính xác, nhất quán)</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--adm-sub)' }}>
+                  <span>0.1 (Rất chính xác)</span>
                   <span>0.35 (Chuẩn sư phạm)</span>
-                  <span>1.0 (Rất tự do, dễ lệch)</span>
+                  <span>1.0 (Tự do)</span>
                 </div>
               </div>
 
@@ -293,13 +293,12 @@ export function AdminConfigTab({ token, adminProfile }) {
 
               <div className="stitch-form-group">
                 <label className="stitch-label">Thời gian chờ tối đa (Worker Gateway Timeout)</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="stitch-segmented-group">
                   {[15, 30, 45].map((sec) => (
                     <button
                       key={sec}
                       type="button"
-                      className={`stitch-btn-secondary ${modelConfig.timeoutSeconds === sec ? 'active' : ''}`}
-                      style={{ flex: 1, borderColor: modelConfig.timeoutSeconds === sec ? 'var(--admin-primary)' : 'var(--admin-border)' }}
+                      className={`stitch-segmented-btn ${modelConfig.timeoutSeconds === sec ? 'active' : ''}`}
                       onClick={() => {
                         setModelConfig({ ...modelConfig, timeoutSeconds: sec })
                         setDirty(true)
@@ -313,13 +312,12 @@ export function AdminConfigTab({ token, adminProfile }) {
 
               <div className="stitch-form-group">
                 <label className="stitch-label">Độ dài nhận xét tuần cho phụ huynh (Prompt p7)</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="stitch-segmented-group">
                   {[100, 150, 250].map((w) => (
                     <button
                       key={w}
                       type="button"
-                      className={`stitch-btn-secondary ${modelConfig.parentCommentLength === w ? 'active' : ''}`}
-                      style={{ flex: 1, borderColor: modelConfig.parentCommentLength === w ? 'var(--admin-primary)' : 'var(--admin-border)' }}
+                      className={`stitch-segmented-btn ${modelConfig.parentCommentLength === w ? 'active' : ''}`}
                       onClick={() => {
                         setModelConfig({ ...modelConfig, parentCommentLength: w })
                         setDirty(true)
@@ -331,6 +329,7 @@ export function AdminConfigTab({ token, adminProfile }) {
                 </div>
               </div>
             </div>
+
 
             {/* Core Locked Rule */}
             <div>
