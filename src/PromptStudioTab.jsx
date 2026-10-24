@@ -693,108 +693,71 @@ export default function PromptStudioTab() {
 
   return (
     <div className="prompt-studio-root" style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
-      {/* HEADER BANNER */}
-      <div className="prompt-studio-banner" style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)', padding: '16px 20px', borderRadius: 16, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      {/* HEADER BANNER - CHUẨN STITCH BEAR DESIGN SYSTEM */}
+      <div
+        className="stitch-card"
+        style={{
+          background: 'linear-gradient(135deg, #FFFDF8 0%, #FFF6E5 100%)',
+          border: '1.5px solid var(--adm-border, #F0DDC2)',
+          borderRadius: 'var(--adm-card-radius, 16px)',
+          padding: '18px 22px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 14,
+          width: '100%',
+          boxShadow: '0 2px 8px rgba(75, 54, 33, 0.04)',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div style={{ minWidth: 260, flex: '1 1 320px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 24 }}>📝</span>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Prompt Studio — Quản trị câu chữ AI</h3>
-            <span style={{ background: '#4338CA', fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>ZERO CODE DEPLOY</span>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--adm-text, #4B3621)' }}>
+              Prompt Studio — Quản trị câu chữ AI
+            </h3>
+            <span style={{ background: '#FFF1D6', color: '#9A5B00', border: '1px solid #F6C56A', fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 800 }}>
+              ZERO CODE DEPLOY
+            </span>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#C7D2FE', lineHeight: 1.4 }}>
-            Sửa câu chữ app dùng để dặn AI mà không cần lập trình viên build lại app. Bấm Lưu để áp dụng toàn hệ thống.
+          <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--adm-sub, #8A6A4A)', lineHeight: 1.45 }}>
+            Sửa câu chữ app dùng để dặn AI mà không cần lập trình viên build lại app. Bấm <b>Lưu cấu hình prompt</b> để áp dụng toàn hệ thống.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
-          {/* TAB CHUYỂN ĐỔI CHẾ ĐỘ VIEW */}
-          <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.12)', padding: 3, borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)' }}>
-            <button
-              type="button"
-              className="admin-btn sm"
-              style={{
-                background: activeView === 'prompts' ? '#FFFFFF' : 'transparent',
-                color: activeView === 'prompts' ? '#1E1B4B' : '#E0E7FF',
-                border: 'none',
-                fontWeight: 800,
-                boxShadow: activeView === 'prompts' ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
-                cursor: 'pointer',
-              }}
-              onClick={() => setActiveView('prompts')}
-            >
-              📝 8 Prompts App
-            </button>
-            <button
-              type="button"
-              className="admin-btn sm"
-              style={{
-                background: activeView === 'ai_config' ? '#FFFFFF' : 'transparent',
-                color: activeView === 'ai_config' ? '#1E1B4B' : '#E0E7FF',
-                border: 'none',
-                fontWeight: 800,
-                boxShadow: activeView === 'ai_config' ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
-                cursor: 'pointer',
-              }}
-              onClick={() => setActiveView('ai_config')}
-            >
-              ⚙️ Tham số AI & Router Sư phạm
-            </button>
-            <button
-              type="button"
-              className="admin-btn sm"
-              style={{
-                background: activeView === 'themes' ? '#FFFFFF' : 'transparent',
-                color: activeView === 'themes' ? '#1E1B4B' : '#E0E7FF',
-                border: 'none',
-                fontWeight: 800,
-                boxShadow: activeView === 'themes' ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
-                cursor: 'pointer',
-              }}
-              onClick={() => setActiveView('themes')}
-            >
-              🎨 Giao diện app (8 Themes)
-            </button>
-            <button
-              type="button"
-              className="admin-btn sm"
-              style={{
-                background: activeView === 'scope_rules' ? '#FFFFFF' : 'transparent',
-                color: activeView === 'scope_rules' ? '#1E1B4B' : '#E0E7FF',
-                border: 'none',
-                fontWeight: 800,
-                boxShadow: activeView === 'scope_rules' ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
-                cursor: 'pointer',
-              }}
-              onClick={() => setActiveView('scope_rules')}
-            >
-              🛡️ Luật phạm vi ảnh & đề
-            </button>
-          </div>
-
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
           <button
-            className="admin-btn sm"
-            style={{ background: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}
+            type="button"
+            className="stitch-btn-secondary"
+            style={{ fontSize: 13, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6 }}
             onClick={() => setShowHistoryModal(true)}
           >
-            🕘 Lịch sử phiên bản ({history.length})
+            <span>🕘</span> Lịch sử phiên bản ({history.length})
           </button>
           <button
-            className="admin-btn sm"
-            style={{ background: '#10B981', borderColor: '#059669', color: '#fff', fontWeight: 800 }}
+            type="button"
+            className="stitch-btn-primary"
+            style={{ fontSize: 13, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}
             onClick={() => setShowKeyInput(true)}
           >
-            💾 Lưu cấu hình prompt
+            <span>💾</span> Lưu cấu hình prompt
           </button>
         </div>
       </div>
 
       {/* WORKSPACE DUAL-PANE */}
-      <div className="prompt-studio-dual-pane" style={{ display: 'grid', gridTemplateColumns: '260px minmax(0, 1fr)', gap: 16, minHeight: 650, width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+      <div className="prompt-studio-dual-pane" style={{ display: 'grid', gridTemplateColumns: '270px minmax(0, 1fr)', gap: 16, minHeight: 650, width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
         {/* LEFT COLUMN: DANH SÁCH 8 PROMPTS */}
-        <div className="prompt-studio-sidebar" style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', padding: 12, display: 'flex', flexDirection: 'column', gap: 6, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', minWidth: 0, boxSizing: 'border-box' }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: '#64748B', padding: '4px 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Danh sách 8 Prompts
-          </span>
+        <div className="prompt-studio-sidebar" style={{ background: 'var(--adm-card, #FFFFFF)', borderRadius: 'var(--adm-card-radius, 16px)', border: '1.5px solid var(--adm-border, #F0DDC2)', padding: 14, display: 'flex', flexDirection: 'column', gap: 8, boxShadow: '0 2px 8px rgba(75, 54, 33, 0.04)', minWidth: 0, boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 6px' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--adm-sub, #8A6A4A)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Danh sách 8 Prompts
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--adm-primary-border, #C47F0E)', background: 'var(--adm-bg-sub, #FFF1D6)', padding: '2px 8px', borderRadius: 999 }}>
+              8 Sẵn sàng
+            </span>
+          </div>
 
           {Object.keys(DEFAULT_PROMPTS).map((k) => {
             const item = DEFAULT_PROMPTS[k]
@@ -809,8 +772,8 @@ export default function PromptStudioTab() {
                   textAlign: 'left',
                   padding: '10px 12px',
                   borderRadius: 12,
-                  border: isSelected ? '2px solid var(--plum)' : '1px solid #F1F5F9',
-                  background: isSelected ? 'var(--plum-tint)' : '#F8FAFC',
+                  border: isSelected ? '2px solid var(--adm-primary, #F6A623)' : '1px solid var(--adm-border, #F0DDC2)',
+                  background: isSelected ? 'var(--adm-bg-sub, #FFF1D6)' : '#FFFFFF',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
@@ -821,113 +784,17 @@ export default function PromptStudioTab() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                  <b style={{ fontSize: 13, color: isSelected ? 'var(--plum-deep)' : '#1E293B', lineHeight: 1.3 }}>{item.name}</b>
+                  <b style={{ fontSize: 13, color: isSelected ? 'var(--adm-text, #4B3621)' : '#1E293B', lineHeight: 1.3 }}>{item.name}</b>
                   {status && (
                     <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 999, background: status.color, color: '#fff', flexShrink: 0 }}>
                       {status.label}
                     </span>
                   )}
                 </div>
-                <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>{item.desc}</span>
+                <span style={{ fontSize: 11.5, color: 'var(--adm-sub, #8A6A4A)', lineHeight: 1.3 }}>{item.desc}</span>
               </button>
             )
           })}
-
-          {/* NÚT TRUY CẬP NHANH CẤU HÌNH AI */}
-          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E2E8F0' }}>
-            <button
-              type="button"
-              onClick={() => setActiveView('ai_config')}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '10px 12px',
-                borderRadius: 12,
-                border: activeView === 'ai_config' ? '2px solid #6366F1' : '1px solid #E2E8F0',
-                background: activeView === 'ai_config' ? '#EEF2FF' : '#F8FAFC',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 3,
-                transition: 'all .15s',
-                boxSizing: 'border-box',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                <b style={{ fontSize: 13, color: activeView === 'ai_config' ? '#4338CA' : '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>⚙️</span> Cấu hình Nâng cao
-                </b>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 999, background: '#6366F1', color: '#fff' }}>
-                  AI PARAMS
-                </span>
-              </div>
-              <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
-                Model, Temperature & Router Sư phạm
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveView('themes')}
-              style={{
-                width: '100%',
-                marginTop: 6,
-                textAlign: 'left',
-                padding: '10px 12px',
-                borderRadius: 12,
-                border: activeView === 'themes' ? '2px solid #8B5CF6' : '1px solid #E2E8F0',
-                background: activeView === 'themes' ? '#F5F3FF' : '#F8FAFC',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 3,
-                transition: 'all .15s',
-                boxSizing: 'border-box',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                <b style={{ fontSize: 13, color: activeView === 'themes' ? '#6D28D9' : '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>🎨</span> Giao diện app
-                </b>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 999, background: '#8B5CF6', color: '#fff' }}>
-                  8 THEMES
-                </span>
-              </div>
-              <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
-                Bật/tắt & Bộ mặc định
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveView('scope_rules')}
-              style={{
-                width: '100%',
-                marginTop: 6,
-                textAlign: 'left',
-                padding: '10px 12px',
-                borderRadius: 12,
-                border: activeView === 'scope_rules' ? '2px solid #0284C7' : '1px solid #E2E8F0',
-                background: activeView === 'scope_rules' ? '#F0F9FF' : '#F8FAFC',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 3,
-                transition: 'all .15s',
-                boxSizing: 'border-box',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                <b style={{ fontSize: 13, color: activeView === 'scope_rules' ? '#0369A1' : '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>🛡️</span> Luật phạm vi
-                </b>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 999, background: '#0284C7', color: '#fff' }}>
-                  SCOPE RULES
-                </span>
-              </div>
-              <span style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.3 }}>
-                Ảnh nhạy cảm, đồ chơi, lệch lớp
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* RIGHT COLUMN: SWITCH BETWEEN PROMPTS & AI CONFIG */}
