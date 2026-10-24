@@ -404,7 +404,7 @@ export default function App() {
           )}
 
           {S.onboarded && (
-            <button className="fab" onClick={() => openSheet('calm')}>
+            <button className="calm-fab" onClick={() => openSheet('calm')}>
               😮‍💨 {calmLabel}
             </button>
           )}
