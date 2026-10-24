@@ -592,7 +592,8 @@ export async function loadPublicConfig(force = false) {
     return publicConfigCache
   }
   try {
-    const res = await fetch(GATEWAY + '/api/v1/config/public')
+    const url = force ? `${GATEWAY}/api/v1/config/public?t=${now}` : `${GATEWAY}/api/v1/config/public`
+    const res = await fetch(url)
     if (res.ok) {
       const data = await res.json()
       publicConfigCache = data

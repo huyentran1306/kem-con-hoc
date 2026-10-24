@@ -378,6 +378,24 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 }
 
 /* ÁP DỤNG BIẾN LÊN CÁC COMPONENT CỐT LÕI */
+.stage {
+  background: var(--c-bg) !important;
+}
+
+[data-theme="candy"] .stage {
+  background:
+    radial-gradient(1200px 500px at 80% -10%, #FDEEF4 0%, transparent 60%),
+    radial-gradient(900px 460px at -10% 110%, #FDEFF0 0%, transparent 55%),
+    #FFF4F8 !important;
+}
+
+[data-theme="bear"] .stage {
+  background:
+    radial-gradient(1200px 500px at 80% -10%, #FFEBD1 0%, transparent 60%),
+    radial-gradient(900px 460px at -10% 110%, #FFF1D6 0%, transparent 55%),
+    #FFF8EC !important;
+}
+
 .card, .big-card, .mini, .sheet .pn {
   background: var(--c-surface);
   color: var(--c-text);
@@ -391,6 +409,34 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   color: var(--c-btn-text) !important;
   border-radius: var(--radius-btn);
   box-shadow: var(--shadow-btn);
+}
+
+.opt.on {
+  border-color: var(--c-accent) !important;
+  background: var(--c-surface-2) !important;
+  color: var(--c-text) !important;
+}
+
+.lbl.plum, .plum {
+  color: var(--c-text-2) !important;
+}
+
+[data-theme="bear"] .lbl.plum,
+[data-theme="bear"] .plum {
+  color: #9C7B5A !important;
+}
+
+[data-theme="bear"] .title {
+  color: #4B3621 !important;
+}
+
+.field {
+  border-color: var(--c-line) !important;
+  color: var(--c-text) !important;
+}
+
+.field:focus {
+  border-color: var(--c-accent) !important;
 }
 
 .btn.ghost {

@@ -3,7 +3,7 @@
    Tự chọn theo sở thích, áp dụng toàn bộ màn hình phụ huynh
    ============================================================ */
 
-export const DEFAULT_THEME = 'candy' // Mặc định Kẹo Bông (hồng pastel dịu dàng)
+export const DEFAULT_THEME = 'bear' // Mặc định Bạn Gấu (ấm áp, dịu dàng)
 
 export const THEMES = [
   {

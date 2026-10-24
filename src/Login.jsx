@@ -1,9 +1,13 @@
 import { useState, useContext } from 'react'
 import { AppCtx } from './ctx'
 import { familyLogin, familyRegister } from './api'
+import { getTheme } from './themes'
 
 export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null }) {
-  const { openAdmin } = useContext(AppCtx) || {}
+  const { openAdmin, S } = useContext(AppCtx) || {}
+  const activeThemeId = S?.theme || (typeof document !== 'undefined' ? document.documentElement.dataset.theme : null) || 'bear'
+  const activeTheme = getTheme(activeThemeId)
+
   const [mode, setMode] = useState('login')
   const [name, setName] = useState(reauthSession?.name || '')
   const [pass, setPass] = useState('')
@@ -44,8 +48,8 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
       <div className="app login-app">
         <div className="scroll" style={{ justifyContent: 'center', paddingBottom: 40 }}>
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 56, lineHeight: 1.2 }}>🌸</div>
-            <p className="eyebrow" style={{ marginTop: 8 }}>Bạn đồng hành dịu dàng</p>
+            <div style={{ fontSize: 56, lineHeight: 1.2 }}>{activeTheme.icon}</div>
+            <p className="eyebrow" style={{ marginTop: 8 }}>{activeTheme.name} · Bạn đồng hành dịu dàng</p>
             <p className="title" style={{ fontSize: 30 }}>Kèm Con Học</p>
             <p className="sub" style={{ maxWidth: 300, margin: '8px auto 0' }}>
               AI không giải bài cho con — chỉ cho bố mẹ cách giảng.

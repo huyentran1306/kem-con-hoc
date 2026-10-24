@@ -22,7 +22,8 @@
     <script>
       (function() {
         try {
-          var t = localStorage.getItem('kem-con-hoc:theme') || 'candy';
+          var userCustom = localStorage.getItem('kem-con-hoc:user-custom-theme');
+          var t = userCustom ? (localStorage.getItem('kem-con-hoc:theme') || 'bear') : 'bear';
           var m = localStorage.getItem('kem-con-hoc:motion') || 'full';
           document.documentElement.dataset.theme = t;
           document.documentElement.dataset.motion = m;

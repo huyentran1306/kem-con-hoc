@@ -28,6 +28,9 @@ export function ThemePickerSheet({ onClose }) {
 
   // Xác nhận lưu cho cả nhà
   const handleSave = () => {
+    try {
+      localStorage.setItem('kem-con-hoc:user-custom-theme', 'true')
+    } catch (e) {}
     patch({
       theme: selectedTheme,
       motion: selectedMotion,
@@ -46,7 +49,7 @@ export function ThemePickerSheet({ onClose }) {
   // Khôi phục nếu user bấm ngoài sheet đóng lại
   useEffect(() => {
     return () => {
-      applyTheme(S.theme || 'candy', S.motion || 'full')
+      applyTheme(S.theme || 'bear', S.motion || 'full')
     }
   }, [S.theme, S.motion])
 

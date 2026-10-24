@@ -111,7 +111,7 @@ const initialState = () => ({
   schedule: SCHEDULE_DEFAULT,
   flow: { step: 0, stuck: 0, unlocked: false, result: null, ocr: PROBLEM.ocr },
   problem: PROBLEM,
-  theme: 'candy',
+  theme: 'bear',
   motion: 'full',
   cloudSync: true,
   _ts: 0,
@@ -187,7 +187,9 @@ export default function App() {
 
   /* ---------- áp dụng theme và hiệu ứng chuyển động ---------- */
   useEffect(() => {
-    applyTheme(S.theme || 'candy', S.motion || 'full')
+    const userCustom = typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:user-custom-theme') : null
+    const themeToApply = userCustom ? (S.theme || 'bear') : (S.theme || 'bear')
+    applyTheme(themeToApply, S.motion || 'full')
   }, [S.theme, S.motion])
 
   /* ---------- đồng bộ screen theo trạng thái onboarded ---------- */
@@ -198,15 +200,15 @@ export default function App() {
 
   /* ---------- tải cấu hình công khai (Prompt, Scope rules, Theme mặc định) ---------- */
   useEffect(() => {
-    loadPublicConfig()
+    loadPublicConfig(true)
       .then((cfg) => {
-        if (cfg?.themesConfig?.default) {
-          setS((prev) => {
-            if (!prev.theme || prev.theme === 'candy') {
-              return { ...prev, theme: cfg.themesConfig.default }
-            }
-            return prev
-          })
+        const defaultTheme = cfg?.themesConfig?.default
+        if (defaultTheme) {
+          const userCustomized = localStorage.getItem('kem-con-hoc:user-custom-theme')
+          if (!userCustomized) {
+            applyTheme(defaultTheme, S.motion || 'full')
+            setS((prev) => ({ ...prev, theme: defaultTheme }))
+          }
         }
       })
       .catch(() => { })
@@ -481,6 +483,7 @@ export default function App() {
   if (!session || (session && !hasToken)) {
     return (
       <AppCtx.Provider value={ctx}>
+        <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
         <LoginScreen
           onAuthed={handleAuthed}
           reauthSession={session && !hasToken ? session : null}
@@ -493,7 +496,7 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <ThemeDecor themeId={S.theme || 'candy'} motion={S.motion || 'full'} />
+        <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
         <div className="app">
           <div className="scroll" ref={scrollRef}>
             {study && study.running && (
