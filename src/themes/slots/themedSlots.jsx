@@ -575,3 +575,662 @@ export function AuroraStudyTracker({ tracker, onOpenReport }) {
     </div>
   )
 }
+
+export function AuroraStartAction({ onStart }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Vòng tròn xoay màu cực quang (Orb) từ 8-bo-giao-dien-rieng.html */}
+      <div style={{ display: 'grid', placeItems: 'center', padding: '10px 0' }}>
+        <button
+          data-testid="start-photo"
+          onClick={() => onStart?.('snap')}
+          style={{
+            width: 196,
+            height: 196,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            position: 'relative',
+            background: 'conic-gradient(from 200deg, #22D3EE, #A78BFA, #F472B6, #34D399, #22D3EE)',
+            cursor: 'pointer',
+            border: 'none',
+            boxShadow: '0 0 40px rgba(34, 211, 238, 0.55)',
+            animation: 'spinOrb 12s linear infinite',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 6,
+              borderRadius: '50%',
+              background: '#0B1026',
+              display: 'grid',
+              placeItems: 'center',
+            }}
+          >
+            <b
+              style={{
+                fontFamily: "'Unbounded', sans-serif",
+                fontSize: 20,
+                textAlign: 'center',
+                lineHeight: 1.2,
+                color: '#F3F4FF',
+                animation: 'unspinOrb 12s linear infinite',
+              }}
+            >
+              Bắt đầu<br />
+              <small style={{ display: 'block', fontSize: 10, letterSpacing: 2, color: '#22D3EE', marginTop: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                BÀI TỐI NAY
+              </small>
+            </b>
+          </div>
+        </button>
+      </div>
+
+      {/* 3 Phương thức vào bài chuẩn Glassmorphism */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <button
+          className="mode-btn"
+          style={{
+            textAlign: 'center',
+            padding: '12px 6px',
+            borderRadius: 18,
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            color: '#F3F4FF',
+            cursor: 'pointer',
+            backdropFilter: 'blur(12px)',
+          }}
+          onClick={() => onStart?.('snap')}
+        >
+          <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>📷</span>
+          <b style={{ fontSize: 12.5, display: 'block' }}>Chụp vở</b>
+        </button>
+        <button
+          className="mode-btn"
+          style={{
+            textAlign: 'center',
+            padding: '12px 6px',
+            borderRadius: 18,
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            color: '#F3F4FF',
+            cursor: 'pointer',
+            backdropFilter: 'blur(12px)',
+          }}
+          onClick={() => onStart?.('prep')}
+        >
+          <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>⌨️</span>
+          <b style={{ fontSize: 12.5, display: 'block' }}>Gõ đề</b>
+        </button>
+        <button
+          className="mode-btn"
+          style={{
+            textAlign: 'center',
+            padding: '12px 6px',
+            borderRadius: 18,
+            background: 'rgba(34, 211, 238, 0.14)',
+            border: '1.5px solid #22D3EE',
+            color: '#22D3EE',
+            cursor: 'pointer',
+            boxShadow: '0 0 16px -4px #22D3EE',
+            backdropFilter: 'blur(12px)',
+          }}
+          onClick={() => onStart?.('voice')}
+        >
+          <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>🎙️</span>
+          <b style={{ fontSize: 12.5, display: 'block' }}>Đọc đề</b>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   7. STICKER STUDIO (STICKER)
+   ============================================================ */
+export function StickerStudyTracker({ tracker, onOpenReport }) {
+  if (!tracker) return null
+  const { week, weekCount, weekGoal, streak, encouragement } = tracker
+
+  return (
+    <div
+      className="card sticker-tracker"
+      style={{
+        padding: '16px',
+        background: '#FFFFFF',
+        border: '3px solid #1B1B2F',
+        borderRadius: 20,
+        boxShadow: '5px 5px 0 #1B1B2F',
+        cursor: onOpenReport ? 'pointer' : 'default',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        color: '#1B1B2F',
+      }}
+      onClick={onOpenReport}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 18 }}>🎟️</span>
+          <b style={{ fontSize: 14, fontFamily: "'Paytone One', sans-serif" }}>Phiếu bấm lỗ 7 tối</b>
+          {streak >= 2 && (
+            <span style={{ fontSize: 11, fontWeight: 900, color: '#1B1B2F', background: '#FFC928', border: '2px solid #1B1B2F', padding: '1px 8px', borderRadius: 999, transform: 'rotate(-3deg)' }}>
+              🔥 {streak} tối
+            </span>
+          )}
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 900, color: '#FF4F8B' }}>
+          {weekCount}/{weekGoal} lỗ
+        </span>
+      </div>
+
+      {/* 7 Ô bấm lỗ phong cách Comic Sticker */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, textAlign: 'center' }}>
+        {week.map((d) => {
+          const isDone = d.status === 'done' || d.status === 'todayDone'
+          const isToday = d.isToday
+          return (
+            <div key={d.dateKey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: isDone ? '#FFC928' : isToday ? '#FFE599' : '#FFFFFF',
+                  border: isDone ? '2.5px solid #1B1B2F' : isToday ? '2.5px solid #FF4F8B' : '2.5px dashed #1B1B2F',
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontSize: 15,
+                  fontWeight: 900,
+                  boxShadow: isDone ? '2px 2px 0 #1B1B2F' : 'none',
+                  transform: isDone ? 'rotate(-6deg)' : 'none',
+                }}
+              >
+                {isDone ? '★' : d.dayNum}
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#1B1B2F' }}>{d.label}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#5C5A70', textAlign: 'center', borderTop: '2px dashed #1B1B2F', paddingTop: 8 }}>
+        ⚡ Lời khen dán sticker: {encouragement}
+      </div>
+    </div>
+  )
+}
+
+export function StickerStartAction({ onStart }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <button
+        data-testid="start-photo"
+        onClick={() => onStart?.('snap')}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          fontFamily: "'Paytone One', sans-serif",
+          fontSize: 22,
+          color: '#FFFFFF',
+          background: '#FF4F8B',
+          border: '3px solid #1B1B2F',
+          borderRadius: 22,
+          padding: '18px',
+          boxShadow: '0 6px 0 #1B1B2F',
+          cursor: 'pointer',
+        }}
+      >
+        <span>📷 BẮT ĐẦU CHỤP BÀI</span>
+      </button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <button
+          style={{
+            background: '#FFFFFF',
+            border: '3px solid #1B1B2F',
+            borderRadius: 18,
+            textAlign: 'center',
+            padding: '12px 6px',
+            fontWeight: 900,
+            fontSize: 13,
+            boxShadow: '4px 4px 0 #1B1B2F',
+            cursor: 'pointer',
+          }}
+          onClick={() => onStart?.('snap')}
+        >
+          <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>📸</span>
+          Chụp vở
+        </button>
+        <button
+          style={{
+            background: '#FFFFFF',
+            border: '3px solid #1B1B2F',
+            borderRadius: 18,
+            textAlign: 'center',
+            padding: '12px 6px',
+            fontWeight: 900,
+            fontSize: 13,
+            boxShadow: '4px 4px 0 #1B1B2F',
+            cursor: 'pointer',
+          }}
+          onClick={() => onStart?.('prep')}
+        >
+          <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>⌨️</span>
+          Gõ đề
+        </button>
+        <button
+          style={{
+            background: '#39C6A5',
+            color: '#1B1B2F',
+            border: '3px solid #1B1B2F',
+            borderRadius: 18,
+            textAlign: 'center',
+            padding: '12px 6px',
+            fontWeight: 900,
+            fontSize: 13,
+            boxShadow: '4px 4px 0 #1B1B2F',
+            cursor: 'pointer',
+          }}
+          onClick={() => onStart?.('voice')}
+        >
+          <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>🎙️</span>
+          Đọc đề
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   8. SỔ TAY BUỔI TỐI (NOTEBOOK)
+   ============================================================ */
+export function NotebookStudyTracker({ tracker, onOpenReport }) {
+  if (!tracker) return null
+  const { week, weekCount, weekGoal, streak, encouragement } = tracker
+
+  return (
+    <div
+      className="card notebook-tracker"
+      style={{
+        padding: '16px',
+        background: '#FFFFFF',
+        border: '1px solid #D9D0BE',
+        borderRadius: 3,
+        boxShadow: '0 14px 30px -22px rgba(42, 38, 34, 0.5)',
+        cursor: onOpenReport ? 'pointer' : 'default',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        color: '#2A2622',
+        position: 'relative',
+      }}
+      onClick={onOpenReport}
+    >
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', borderBottom: '1.5px solid #2A2622', paddingBottom: 6 }}>
+        <b style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: '#2A2622' }}>
+          Nhật ký tuần này
+        </b>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 800, color: '#AE532F', letterSpacing: 1 }}>
+          {weekCount}/{weekGoal} TỐI {streak >= 2 ? `· 🔥 ${streak} TỐI` : ''}
+        </span>
+      </div>
+
+      {/* Dòng kẻ sổ tay 7 ngày */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: '1px solid #2A2622', borderBottom: '1px solid #2A2622' }}>
+        {week.map((d) => {
+          const isDone = d.status === 'done' || d.status === 'todayDone'
+          const isToday = d.isToday
+          return (
+            <div
+              key={d.dateKey}
+              style={{
+                textAlign: 'center',
+                padding: '6px 0',
+                borderRight: '1px dashed #D9D0BE',
+                fontSize: 11,
+                fontWeight: 800,
+                color: isToday ? '#AE532F' : '#6B6354',
+              }}
+            >
+              <span style={{ display: 'block', fontSize: 10 }}>{d.label}</span>
+              <span style={{ fontFamily: "'Mali', cursive", fontSize: 17, color: '#AE532F', display: 'block', height: 24, lineHeight: '24px' }}>
+                {isDone ? '✓' : isToday ? '○' : '·'}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      <div style={{ fontFamily: "'Mali', cursive", fontSize: 13, color: '#5C554B', textAlign: 'center', paddingTop: 4 }}>
+        ✍️ Lời ghi nhớ: {encouragement}
+      </div>
+    </div>
+  )
+}
+
+export function NotebookStartAction({ onStart }) {
+  return (
+    <div
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid #D9D0BE',
+        borderRadius: 3,
+        padding: '18px 16px',
+        position: 'relative',
+        boxShadow: '0 14px 30px -22px rgba(42, 38, 34, 0.5)',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <h4 style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 20, margin: 0 }}>
+          Học tối nay
+        </h4>
+        <span style={{ fontFamily: "'Mali', cursive", fontSize: 13, color: '#AE532F' }}>
+          Đã sẵn sàng
+        </span>
+      </div>
+
+      <button
+        data-testid="start-photo"
+        onClick={() => onStart?.('snap')}
+        style={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 8,
+          padding: '14px',
+          background: '#2A2622',
+          color: '#F6F1E7',
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontWeight: 800,
+          fontSize: 15,
+          borderRadius: 4,
+          border: 'none',
+          cursor: 'pointer',
+          marginBottom: 10,
+        }}
+      >
+        📷 Mở máy chụp trang vở
+      </button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <button
+          style={{
+            padding: '10px',
+            background: 'transparent',
+            color: '#2A2622',
+            border: '1.5px solid #2A2622',
+            borderRadius: 4,
+            fontWeight: 800,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+          onClick={() => onStart?.('prep')}
+        >
+          ⌨️ Gõ tay đề bài
+        </button>
+        <button
+          style={{
+            padding: '10px',
+            background: 'transparent',
+            color: '#AE532F',
+            border: '1.5px solid #AE532F',
+            borderRadius: 4,
+            fontWeight: 800,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+          onClick={() => onStart?.('voice')}
+        >
+          🎙️ Đọc to đề bài
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   BENTO, CHALK, CANDY START ACTIONS
+   ============================================================ */
+export function BentoStartAction({ onStart }) {
+  return (
+    <div
+      style={{
+        borderRadius: 24,
+        background: 'linear-gradient(135deg, #FF6B57, #FF8A7A 45%, #8A7CFF)',
+        color: '#FFFFFF',
+        padding: '18px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.85 }}>
+          BẮT ĐẦU BUỔI HỌC
+        </span>
+        <h4 style={{ fontFamily: "'Lexend', sans-serif", fontSize: 22, margin: '4px 0 8px 0' }}>
+          Tối nay con học gì?
+        </h4>
+        <p style={{ fontSize: 13, opacity: 0.95, margin: '0 0 14px 0' }}>
+          Chụp đề hoặc đọc to, AI hỗ trợ bố mẹ hỏi gợi mở từng bước.
+        </p>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            data-testid="start-photo"
+            onClick={() => onStart?.('snap')}
+            style={{
+              flex: 1,
+              padding: '10px 6px',
+              borderRadius: 16,
+              background: '#FFFFFF',
+              color: '#1E1B3A',
+              fontWeight: 800,
+              fontSize: 12.5,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            📷 Chụp vở
+          </button>
+          <button
+            onClick={() => onStart?.('prep')}
+            style={{
+              flex: 1,
+              padding: '10px 6px',
+              borderRadius: 16,
+              background: 'rgba(255, 255, 255, 0.28)',
+              border: '1px solid rgba(255, 255, 255, 0.5)',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              fontSize: 12.5,
+              cursor: 'pointer',
+            }}
+          >
+            ⌨️ Gõ đề
+          </button>
+          <button
+            onClick={() => onStart?.('voice')}
+            style={{
+              flex: 1,
+              padding: '10px 6px',
+              borderRadius: 16,
+              background: 'rgba(255, 255, 255, 0.28)',
+              border: '1px solid rgba(255, 255, 255, 0.5)',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              fontSize: 12.5,
+              cursor: 'pointer',
+            }}
+          >
+            🎙️ Đọc đề
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function ChalkStartAction({ onStart }) {
+  return (
+    <div
+      style={{
+        border: '2px solid rgba(246, 241, 230, 0.75)',
+        borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
+        padding: '16px',
+        background: 'rgba(246, 241, 230, 0.07)',
+        textAlign: 'center',
+      }}
+    >
+      <b style={{ fontFamily: "'Coiny', cursive", fontSize: 20, color: '#F9E07F', display: 'block', marginBottom: 10 }}>
+        BẢNG HỌC TỐI NAY
+      </b>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <button
+          data-testid="start-photo"
+          onClick={() => onStart?.('snap')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            border: '2.5px solid #F9E07F',
+            borderRadius: '15px 225px 15px 255px / 255px 15px 225px 15px',
+            background: 'transparent',
+            color: '#F9E07F',
+            fontFamily: "'Coiny', cursive",
+            fontSize: 14,
+            cursor: 'pointer',
+          }}
+        >
+          📷 Chụp đề
+        </button>
+        <button
+          onClick={() => onStart?.('prep')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            border: '2px solid rgba(246, 241, 230, 0.7)',
+            borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
+            background: 'transparent',
+            color: '#F6F1E6',
+            fontFamily: "'Coiny', cursive",
+            fontSize: 14,
+            cursor: 'pointer',
+          }}
+        >
+          ⌨️ Gõ đề
+        </button>
+        <button
+          onClick={() => onStart?.('voice')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            border: '2px solid #B5E8A8',
+            borderRadius: '15px 225px 15px 255px / 255px 15px 225px 15px',
+            background: 'transparent',
+            color: '#B5E8A8',
+            fontFamily: "'Coiny', cursive",
+            fontSize: 14,
+            cursor: 'pointer',
+          }}
+        >
+          🎙️ Đọc đề
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function CandyStartAction({ onStart }) {
+  return (
+    <div
+      style={{
+        background: 'linear-gradient(#FFA3C6, #FF7FAE)',
+        color: '#FFFFFF',
+        borderRadius: 30,
+        padding: '16px 18px',
+        boxShadow: '0 7px 0 #E0598E',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: "'Baloo 2', cursive",
+          fontSize: 22,
+          background: '#FFFFFF',
+          color: '#4A3B5C',
+          borderRadius: '50%',
+          width: 52,
+          height: 52,
+          display: 'grid',
+          placeItems: 'center',
+          flexShrink: 0,
+        }}
+      >
+        (◕‿◕)
+      </div>
+      <div style={{ flex: 1 }}>
+        <h4 style={{ fontFamily: "'Baloo 2', cursive", fontSize: 20, margin: 0, lineHeight: 1.1 }}>
+          Kẹo học tối nay!
+        </h4>
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <button
+            data-testid="start-photo"
+            onClick={() => onStart?.('snap')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 999,
+              background: '#FFFFFF',
+              color: '#4A2B45',
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 12.5,
+              fontWeight: 800,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            📷 Chụp vở
+          </button>
+          <button
+            onClick={() => onStart?.('prep')}
+            style={{
+              padding: '6px 10px',
+              borderRadius: 999,
+              background: 'rgba(255, 255, 255, 0.4)',
+              color: '#FFFFFF',
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 12.5,
+              fontWeight: 800,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            ⌨️ Gõ đề
+          </button>
+          <button
+            onClick={() => onStart?.('voice')}
+            style={{
+              padding: '6px 10px',
+              borderRadius: 999,
+              background: 'rgba(255, 255, 255, 0.4)',
+              color: '#FFFFFF',
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 12.5,
+              fontWeight: 800,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            🎙️ Đọc đề
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+

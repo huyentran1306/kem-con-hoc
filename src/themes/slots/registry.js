@@ -21,11 +21,19 @@ import {
   BearStudyTracker,
   BearStartAction,
   CandyStudyTracker,
+  CandyStartAction,
   GardenStudyTracker,
   GardenStartAction,
   ChalkStudyTracker,
+  ChalkStartAction,
   BentoStudyTracker,
+  BentoStartAction,
   AuroraStudyTracker,
+  AuroraStartAction,
+  StickerStudyTracker,
+  StickerStartAction,
+  NotebookStudyTracker,
+  NotebookStartAction,
 } from './themedSlots'
 
 const THEME_SLOT_OVERRIDES = {
@@ -35,6 +43,7 @@ const THEME_SLOT_OVERRIDES = {
   },
   candy: {
     StudyTracker: CandyStudyTracker,
+    StartAction: CandyStartAction,
   },
   garden: {
     StudyTracker: GardenStudyTracker,
@@ -42,12 +51,23 @@ const THEME_SLOT_OVERRIDES = {
   },
   chalk: {
     StudyTracker: ChalkStudyTracker,
+    StartAction: ChalkStartAction,
   },
   bento: {
     StudyTracker: BentoStudyTracker,
+    StartAction: BentoStartAction,
   },
   aurora: {
     StudyTracker: AuroraStudyTracker,
+    StartAction: AuroraStartAction,
+  },
+  sticker: {
+    StudyTracker: StickerStudyTracker,
+    StartAction: StickerStartAction,
+  },
+  notebook: {
+    StudyTracker: NotebookStudyTracker,
+    StartAction: NotebookStartAction,
   },
 }
 

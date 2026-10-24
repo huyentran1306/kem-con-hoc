@@ -517,12 +517,16 @@ export default function App() {
   if (!session || (session && !hasToken)) {
     return (
       <AppCtx.Provider value={ctx}>
-        <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
-        <LoginScreen
-          onAuthed={handleAuthed}
-          reauthSession={session && !hasToken ? session : null}
-          onOpenJoin={() => setJoinCode('ENTER_CODE')}
-        />
+        <div className="stage">
+          <div className="app">
+            <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
+            <LoginScreen
+              onAuthed={handleAuthed}
+              reauthSession={session && !hasToken ? session : null}
+              onOpenJoin={() => setJoinCode('ENTER_CODE')}
+            />
+          </div>
+        </div>
       </AppCtx.Provider>
     )
   }
@@ -530,8 +534,8 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
         <div className="app">
+          <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
           <div className="scroll" ref={scrollRef}>
             {study && study.running && (
               <button className="timer-chip" onClick={() => openSheet('timer')}>

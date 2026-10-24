@@ -457,18 +457,12 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   background: var(--c-bg) !important;
 }
 
-[data-theme="candy"] .stage {
-  background:
-    radial-gradient(1200px 500px at 80% -10%, #FDEEF4 0%, transparent 60%),
-    radial-gradient(900px 460px at -10% 110%, #FDEFF0 0%, transparent 55%),
-    #FFF4F8 !important;
-}
-
-[data-theme="bear"] .stage {
-  background:
-    radial-gradient(1200px 500px at 80% -10%, #FFEBD1 0%, transparent 60%),
-    radial-gradient(900px 460px at -10% 110%, #FFF1D6 0%, transparent 55%),
-    #FFF8EC !important;
+.app {
+  background: var(--c-bg) !important;
+  color: var(--c-text) !important;
+  font-family: var(--font-body);
+  position: relative;
+  overflow: hidden;
 }
 
 .card, .big-card, .mini, .sheet .pn {
@@ -496,15 +490,6 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   color: var(--c-text-2) !important;
 }
 
-[data-theme="bear"] .lbl.plum,
-[data-theme="bear"] .plum {
-  color: #9C7B5A !important;
-}
-
-[data-theme="bear"] .title {
-  color: #4B3621 !important;
-}
-
 .field {
   border-color: var(--c-line) !important;
   color: var(--c-text) !important;
@@ -524,6 +509,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 .bnav {
   background: var(--c-nav) !important;
   border-top: var(--border-w) solid var(--c-line) !important;
+  position: relative;
+  z-index: 10;
 }
 
 .bnav button {
@@ -532,6 +519,431 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 .bnav button.active {
   color: var(--c-accent);
+}
+
+/* ============================================================
+   ĐỒNG BỘ CHI TIẾT TỪNG BỘ GIAO DIỆN (8-BO-GIAO-DIEN-RIENG.HTML)
+   ============================================================ */
+
+/* 1. AURORA (CỰC QUANG) · DARK & GLASSMORPHISM */
+[data-theme="aurora"] .stage,
+[data-theme="aurora"] .app {
+  background: #0B1026 !important;
+  color: #F3F4FF !important;
+}
+
+[data-theme="aurora"] .card,
+[data-theme="aurora"] .big-card,
+[data-theme="aurora"] .card.plum,
+[data-theme="aurora"] .card.sun,
+[data-theme="aurora"] .card.mint,
+[data-theme="aurora"] .card.sky,
+[data-theme="aurora"] .card.coral,
+[data-theme="aurora"] .card.sunset,
+[data-theme="aurora"] .sheet .pn,
+[data-theme="aurora"] .mini,
+[data-theme="aurora"] .opt.on {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 24px !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 20px 50px -30px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  color: #F3F4FF !important;
+}
+
+[data-theme="aurora"] .title em,
+[data-theme="aurora"] .h-title em,
+[data-theme="aurora"] h1 em,
+[data-theme="aurora"] h2 em {
+  font-style: normal;
+  background: linear-gradient(90deg, #22D3EE, #A78BFA, #F472B6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+[data-theme="aurora"] .btn.solid {
+  background: linear-gradient(90deg, #22D3EE, #34D399) !important;
+  color: #0B1026 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 14px 30px -10px rgba(34, 211, 238, 0.8) !important;
+  border: 0 !important;
+  font-weight: 800;
+}
+
+[data-theme="aurora"] .btn.ghost {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #F3F4FF !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 999px !important;
+}
+
+[data-theme="aurora"] .bnav {
+  background: rgba(11, 16, 38, 0.88) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+[data-theme="aurora"] .sub,
+[data-theme="aurora"] .lbl.mut {
+  color: rgba(243, 244, 255, 0.72) !important;
+}
+
+@keyframes spinOrb {
+  to { transform: rotate(360deg); }
+}
+@keyframes unspinOrb {
+  to { transform: rotate(-360deg); }
+}
+
+/* 2. STICKER STUDIO (STICKER) · BOLD 3PX COMICS */
+[data-theme="sticker"] .stage,
+[data-theme="sticker"] .app {
+  background-color: #FFF7E6 !important;
+  background-image: radial-gradient(rgba(27, 27, 47, 0.14) 1.5px, transparent 1.6px) !important;
+  background-size: 18px 18px !important;
+  color: #1B1B2F !important;
+}
+
+[data-theme="sticker"] .card,
+[data-theme="sticker"] .big-card,
+[data-theme="sticker"] .sheet .pn,
+[data-theme="sticker"] .mini,
+[data-theme="sticker"] .field {
+  background: #FFFFFF !important;
+  border: 3px solid #1B1B2F !important;
+  border-radius: 20px !important;
+  box-shadow: 5px 5px 0 #1B1B2F !important;
+  color: #1B1B2F !important;
+}
+
+[data-theme="sticker"] .card.plum,
+[data-theme="sticker"] .big-card.plum {
+  background: #FF4F8B !important;
+  color: #FFFFFF !important;
+  border: 3px solid #1B1B2F !important;
+  box-shadow: 5px 5px 0 #1B1B2F !important;
+}
+
+[data-theme="sticker"] .card.sun,
+[data-theme="sticker"] .big-card.sun {
+  background: #FFC928 !important;
+  color: #1B1B2F !important;
+  border: 3px solid #1B1B2F !important;
+  box-shadow: 5px 5px 0 #1B1B2F !important;
+}
+
+[data-theme="sticker"] .card.mint,
+[data-theme="sticker"] .big-card.mint {
+  background: #39C6A5 !important;
+  color: #1B1B2F !important;
+  border: 3px solid #1B1B2F !important;
+  box-shadow: 5px 5px 0 #1B1B2F !important;
+}
+
+[data-theme="sticker"] .card.sky,
+[data-theme="sticker"] .big-card.sky {
+  background: #5B6CFF !important;
+  color: #FFFFFF !important;
+  border: 3px solid #1B1B2F !important;
+  box-shadow: 5px 5px 0 #1B1B2F !important;
+}
+
+[data-theme="sticker"] .btn.solid {
+  background: #FF4F8B !important;
+  color: #FFFFFF !important;
+  border: 3px solid #1B1B2F !important;
+  border-radius: 22px !important;
+  box-shadow: 0 6px 0 #1B1B2F !important;
+  font-family: 'Paytone One', sans-serif !important;
+}
+
+[data-theme="sticker"] .btn.ghost {
+  background: #FFFFFF !important;
+  color: #1B1B2F !important;
+  border: 3px solid #1B1B2F !important;
+  border-radius: 18px !important;
+  box-shadow: 4px 4px 0 #1B1B2F !important;
+}
+
+[data-theme="sticker"] .chip,
+[data-theme="sticker"] .pill {
+  border: 2.5px solid #1B1B2F !important;
+  border-radius: 14px !important;
+  box-shadow: 3px 3px 0 #1B1B2F !important;
+  font-weight: 900;
+  color: #1B1B2F;
+}
+
+[data-theme="sticker"] .bnav {
+  background: #FFFFFF !important;
+  border-top: 3px solid #1B1B2F !important;
+  box-shadow: 0 -4px 0 #1B1B2F !important;
+}
+
+/* 3. SỔ TAY BUỔI TỐI (NOTEBOOK) · LINED PAPER & WASHI TAPE */
+[data-theme="notebook"] .stage,
+[data-theme="notebook"] .app {
+  background-color: #F6F1E7 !important;
+  background-image: linear-gradient(rgba(42, 38, 34, 0.07) 1px, transparent 1px) !important;
+  background-size: 100% 28px !important;
+  color: #2A2622 !important;
+}
+
+[data-theme="notebook"] .card,
+[data-theme="notebook"] .big-card,
+[data-theme="notebook"] .card.plum,
+[data-theme="notebook"] .card.sun,
+[data-theme="notebook"] .card.mint,
+[data-theme="notebook"] .card.sky,
+[data-theme="notebook"] .card.coral,
+[data-theme="notebook"] .sheet .pn,
+[data-theme="notebook"] .mini {
+  background: #FFFFFF !important;
+  border: 1px solid #D9D0BE !important;
+  border-radius: 3px !important;
+  box-shadow: 0 14px 30px -22px rgba(42, 38, 34, 0.5) !important;
+  color: #2A2622 !important;
+  position: relative;
+}
+
+[data-theme="notebook"] .card::before,
+[data-theme="notebook"] .big-card::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -11px;
+  width: 84px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(216, 163, 52, 0.55);
+  mix-blend-mode: multiply;
+  border-radius: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+[data-theme="notebook"] .btn.solid {
+  background: #2A2622 !important;
+  color: #F6F1E7 !important;
+  border: 1.5px solid #2A2622 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 800;
+}
+
+[data-theme="notebook"] .btn.ghost {
+  background: transparent !important;
+  color: #2A2622 !important;
+  border: 1.5px solid #2A2622 !important;
+  border-radius: 4px !important;
+}
+
+[data-theme="notebook"] .bnav {
+  background: #F6F1E7 !important;
+  border-top: 1.5px solid #2A2622 !important;
+}
+
+/* 4. BENTO MỀM (BENTO) · PILL TILES & MODERN CLEAN */
+[data-theme="bento"] .stage,
+[data-theme="bento"] .app {
+  background: #F7F7FA !important;
+  color: #1E1B3A !important;
+}
+
+[data-theme="bento"] .card,
+[data-theme="bento"] .big-card,
+[data-theme="bento"] .sheet .pn,
+[data-theme="bento"] .mini {
+  background: #FFFFFF !important;
+  border: 1px solid #E9EAF1 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 10px 24px -20px rgba(21, 22, 30, 0.4) !important;
+  color: #1E1B3A !important;
+}
+
+[data-theme="bento"] .btn.solid {
+  background: linear-gradient(135deg, #FF7A66, #9B8CFF) !important;
+  color: #1F1A45 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 10px 22px -14px rgba(110, 90, 220, 0.7) !important;
+  border: 0 !important;
+  font-weight: 700;
+}
+
+[data-theme="bento"] .bnav {
+  margin: 0 16px 14px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid #E9EAF1 !important;
+  box-shadow: 0 12px 30px -18px rgba(21, 22, 30, 0.5) !important;
+}
+
+/* 5. KHU VƯỜN ĐÊM (GARDEN) · DEEP FOREST & LEAF RADIUS */
+[data-theme="garden"] .stage,
+[data-theme="garden"] .app {
+  background: radial-gradient(260px 200px at 100% 0%, #1B4A3B, transparent 70%), #0F2A24 !important;
+  color: #F2F7EE !important;
+}
+
+[data-theme="garden"] .card,
+[data-theme="garden"] .big-card,
+[data-theme="garden"] .card.plum,
+[data-theme="garden"] .card.sun,
+[data-theme="garden"] .card.mint,
+[data-theme="garden"] .card.sky,
+[data-theme="garden"] .card.coral,
+[data-theme="garden"] .card.sunset,
+[data-theme="garden"] .sheet .pn,
+[data-theme="garden"] .mini {
+  background: #163B33 !important;
+  border: 1.5px solid #2A5248 !important;
+  border-radius: 26px 6px 26px 6px !important;
+  box-shadow: 0 14px 30px -22px rgba(0, 0, 0, 0.8) !important;
+  color: #F2F7EE !important;
+}
+
+[data-theme="garden"] .btn.solid {
+  background: #FFD166 !important;
+  color: #0F2A24 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 30px -8px rgba(255, 209, 102, 0.8) !important;
+  border: 0 !important;
+  font-weight: 800;
+}
+
+[data-theme="garden"] .btn.ghost {
+  background: transparent !important;
+  color: #F2F7EE !important;
+  border: 1.5px solid #2A5248 !important;
+  border-radius: 999px !important;
+}
+
+[data-theme="garden"] .bnav {
+  background: #0C221D !important;
+  border-top: 1.5px solid #2A5248 !important;
+}
+
+/* 6. BẢNG PHẤN (CHALK) · ORGANIC WOBBLY CHALK FRAME */
+[data-theme="chalk"] .stage,
+[data-theme="chalk"] .app {
+  background: radial-gradient(260px 120px at 20% 30%, rgba(246, 241, 230, 0.07), transparent 70%),
+              radial-gradient(220px 160px at 80% 75%, rgba(246, 241, 230, 0.05), transparent 70%),
+              #2F4A41 !important;
+  color: #F6F1E6 !important;
+}
+
+[data-theme="chalk"] .app {
+  box-shadow: inset 0 0 0 8px #7A5233, inset 0 0 0 11px #5C3B22 !important;
+}
+
+[data-theme="chalk"] .card,
+[data-theme="chalk"] .big-card,
+[data-theme="chalk"] .card.plum,
+[data-theme="chalk"] .card.sun,
+[data-theme="chalk"] .card.mint,
+[data-theme="chalk"] .card.sky,
+[data-theme="chalk"] .card.coral,
+[data-theme="chalk"] .card.sunset,
+[data-theme="chalk"] .sheet .pn,
+[data-theme="chalk"] .mini {
+  border: 2px solid rgba(246, 241, 230, 0.75) !important;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px !important;
+  background: rgba(246, 241, 230, 0.07) !important;
+  color: #F6F1E6 !important;
+  box-shadow: none !important;
+}
+
+[data-theme="chalk"] .btn.solid {
+  background: transparent !important;
+  border: 2.5px solid #F9E07F !important;
+  color: #F9E07F !important;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px !important;
+  font-family: 'Coiny', cursive !important;
+  box-shadow: none !important;
+}
+
+[data-theme="chalk"] .btn.ghost {
+  background: transparent !important;
+  color: #F6F1E6 !important;
+  border: 2px solid rgba(246, 241, 230, 0.8) !important;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px !important;
+}
+
+[data-theme="chalk"] .bnav {
+  background: linear-gradient(#6E482B, #573821) !important;
+  border-top: 3px solid #8C6142 !important;
+  color: #EADFC8 !important;
+  font-family: 'Itim', cursive !important;
+}
+
+/* 7. KẸO BÔNG (CANDY) · MARSHMALLOW PILLOW */
+[data-theme="candy"] .stage,
+[data-theme="candy"] .app {
+  background: #FFF4F8 !important;
+  color: #4A3B5C !important;
+}
+
+[data-theme="candy"] .card,
+[data-theme="candy"] .big-card,
+[data-theme="candy"] .sheet .pn,
+[data-theme="candy"] .mini {
+  background: #FFFFFF !important;
+  border: 2px solid #F3D9E6 !important;
+  border-radius: 26px !important;
+  box-shadow: 0 6px 0 #F3D9E6 !important;
+  color: #4A3B5C !important;
+}
+
+[data-theme="candy"] .btn.solid {
+  background: linear-gradient(#FFA3C6, #FF7FAE) !important;
+  color: #4A2B45 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 6px 0 #E0598E !important;
+  font-family: 'Baloo 2', cursive !important;
+  border: 0 !important;
+}
+
+[data-theme="candy"] .bnav {
+  background: #FFFFFF !important;
+  border-top: 2px solid #F3D9E6 !important;
+}
+
+/* 8. BẠN GẤU (BEAR) · HONEY AMBER */
+[data-theme="bear"] .stage,
+[data-theme="bear"] .app {
+  background: #FFF8EC !important;
+  color: #4B3621 !important;
+}
+
+[data-theme="bear"] .card,
+[data-theme="bear"] .big-card,
+[data-theme="bear"] .sheet .pn,
+[data-theme="bear"] .mini {
+  background: #FFFFFF !important;
+  border: 2px solid #F0DDC2 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 5px 0 #F0DDC2 !important;
+  color: #4B3621 !important;
+}
+
+[data-theme="bear"] .btn.solid {
+  background: #F6A623 !important;
+  color: #4B3621 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 6px 0 #C47F0E !important;
+  font-family: 'Mitr', sans-serif !important;
+  border: 0 !important;
+}
+
+[data-theme="bear"] .bnav {
+  background: #FFFFFF !important;
+  border-top: 2px solid #F0DDC2 !important;
 }
 
 /* WCAG AA CONTRAST COMPONENT ENFORCEMENT */
@@ -580,7 +992,7 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   color: var(--c-on-accent) !important;
 }
 
-/* Bento Theme adjustments (bỏ khối đen) */
+/* Bento Theme adjustments */
 [data-theme="bento"] .chat .u {
   background: #EEEBFF !important;
   color: #2E2A5E !important;
@@ -601,10 +1013,10 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 }
 
 /* ============================================================
-   LỚP TRANG TRÍ NỀN THEME DECOR
+   LỚP TRANG TRÍ NỀN THEME DECOR (BÊN TRONG APP)
    ============================================================ */
 .theme-decor-root {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
@@ -651,19 +1063,46 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 .paw-3 { top: 220px; right: 30px; transform: rotate(10deg); }
 
 /* Aurora Decor */
-.decor-aurora-layer .aurora-blob {
+.decor-aurora-layer {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(55px);
-  opacity: 0.45;
-  animation: auroraFloat 18s ease-in-out infinite alternate;
+  inset: 0;
+  overflow: hidden;
 }
-.blob-1 { width: 260px; height: 260px; top: -50px; left: -40px; background: #22D3EE; }
-.blob-2 { width: 300px; height: 300px; top: 100px; right: -60px; background: #A78BFA; animation-delay: -5s; }
-.blob-3 { width: 240px; height: 240px; top: 320px; left: 10%; background: #34D399; animation-delay: -10s; }
-@keyframes auroraFloat {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(30px, 40px) scale(1.15) rotate(15deg); }
+.decor-aurora-layer .aur {
+  position: absolute;
+  inset: -40%;
+  filter: blur(46px);
+  opacity: 0.75;
+}
+.decor-aurora-layer .aur i {
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  animation: aurFloat 14s ease-in-out infinite alternate;
+}
+.decor-aurora-layer .aur i:nth-child(1) { background: #A78BFA; left: -10%; top: 0; }
+.decor-aurora-layer .aur i:nth-child(2) { background: #22D3EE; right: -5%; top: 20%; animation-delay: -5s; animation-duration: 17s; }
+.decor-aurora-layer .aur i:nth-child(3) { background: #34D399; left: 20%; bottom: -10%; animation-delay: -9s; animation-duration: 20s; }
+.decor-aurora-layer .aur i:nth-child(4) { background: #F472B6; right: 10%; bottom: 10%; width: 40%; height: 40%; animation-delay: -2s; }
+@keyframes aurFloat {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(14%, 10%) scale(1.25); }
+}
+
+.decor-aurora-layer .dust i {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  opacity: 0;
+  animation: twkStars 4s ease-in-out infinite;
+  z-index: 1;
+}
+@keyframes twkStars {
+  0%, 100% { opacity: 0; transform: translateY(0); }
+  50% { opacity: 0.9; transform: translateY(-10px); }
 }
 
 /* Garden Decor */
@@ -675,11 +1114,6 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   box-shadow: 0 0 10px 3px rgba(255, 209, 102, 0.7);
   animation: flyGarden 7s ease-in-out infinite alternate;
 }
-.ff-1 { top: 80px; left: 40px; animation-delay: 0s; }
-.ff-2 { top: 140px; right: 50px; animation-delay: 1.5s; }
-.ff-3 { top: 220px; left: 30%; animation-delay: 3s; }
-.ff-4 { top: 350px; right: 30px; animation-delay: 4.5s; }
-.ff-5 { top: 480px; left: 60px; animation-delay: 2s; }
 @keyframes flyGarden {
   0% { opacity: 0.2; transform: translate(0, 0); }
   50% { opacity: 0.95; transform: translate(16px, -24px); }

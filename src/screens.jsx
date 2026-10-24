@@ -301,6 +301,7 @@ export function Home() {
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const theme = S.theme || 'bear'
   const StudyTrackerSlot = getSlot(theme, 'StudyTracker')
+  const StartActionSlot = getSlot(theme, 'StartAction')
   const now = new Date()
   const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })
   const hour = now.getHours()
@@ -469,26 +470,41 @@ export function Home() {
         </div>
       )}
 
-      <button className="big-card plum" onClick={() => go('snap')}>
-        <span className="ic">📷</span>
-        <span className="lbl plum">Có bài tập</span>
-        <b>Chụp bài con đang làm</b>
-        <span className="sub">AI chỉ {S.parent.toLowerCase()} cách giảng, không đưa đáp án cho con</span>
-      </button>
+      {/* 3. Hành động bắt đầu bài học theo Theme riêng (Prompt 07 & 8-bo-giao-dien-rieng.html) */}
+      {StartActionSlot ? (
+        <div style={{ marginBottom: 12 }}>
+          <StartActionSlot
+            onStart={(mode) => {
+              if (mode === 'snap') go('snap')
+              else if (mode === 'prep') go('prep')
+              else if (mode === 'voice') openSheet('voice')
+              else go('snap')
+            }}
+          />
+        </div>
+      ) : (
+        <button className="big-card plum" onClick={() => go('snap')}>
+          <span className="ic">📷</span>
+          <span className="lbl plum">Có bài tập</span>
+          <b>Chụp bài con đang làm</b>
+          <span className="sub">AI chỉ {S.parent.toLowerCase()} cách giảng, không đưa đáp án cho con</span>
+        </button>
+      )}
 
-      <button className="big-card sun" onClick={() => go('toy')}>
-        <span className="ic">🧸</span>
-        <span className="lbl sun">Không có bài?</span>
-        <b>Chụp đồ chơi trong nhà</b>
-        <span className="sub">Ra trò chơi 10 phút ôn đúng chỗ con hay vướng</span>
-      </button>
+      {/* Lựa chọn phụ: Ôn đồ chơi & Hẹn giờ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 4 }}>
+        <button className="big-card sun" style={{ margin: 0, padding: '12px 14px' }} onClick={() => go('toy')}>
+          <span className="ic" style={{ fontSize: 22, display: 'block', marginBottom: 2 }}>🧸</span>
+          <b style={{ fontSize: 13.5, display: 'block' }}>Chụp đồ chơi</b>
+          <span className="sub" style={{ fontSize: 11.5 }}>Ôn vui 10 phút</span>
+        </button>
 
-      <button className="big-card sky" onClick={() => openSheet('timer')}>
-        <span className="ic">⏱</span>
-        <span className="lbl sky">Học vừa đủ</span>
-        <b>Hẹn giờ 15 phút</b>
-        <span className="sub">Học 15 phút, nghỉ 5 phút · tối đa 3 vòng</span>
-      </button>
+        <button className="big-card sky" style={{ margin: 0, padding: '12px 14px' }} onClick={() => openSheet('timer')}>
+          <span className="ic" style={{ fontSize: 22, display: 'block', marginBottom: 2 }}>⏱</span>
+          <b style={{ fontSize: 13.5, display: 'block' }}>Hẹn giờ học</b>
+          <span className="sub" style={{ fontSize: 11.5 }}>15 phút vừa đủ</span>
+        </button>
+      </div>
 
       <div>
         <p className="lbl mut" style={{ marginBottom: 8 }}>Tuần này {child.name} hay vướng</p>

@@ -45,13 +45,24 @@ function BearDecor() {
   )
 }
 
-/* 3. CỰC QUANG: 3 vệt màu blur trôi mờ ảo */
+/* 3. CỰC QUANG: 4 vệt màu blur trôi mờ ảo + bụi sao lấp lánh */
 function AuroraDecor() {
   return (
     <div className="decor-aurora-layer">
-      <div className="aurora-blob blob-1" />
-      <div className="aurora-blob blob-2" />
-      <div className="aurora-blob blob-3" />
+      <div className="aur">
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+      <div className="dust">
+        <i style={{ left: '10%', top: '15%' }} />
+        <i style={{ left: '82%', top: '11%', animationDelay: '1s' }} />
+        <i style={{ left: '52%', top: '34%', animationDelay: '2s' }} />
+        <i style={{ left: '22%', top: '62%', animationDelay: '0.5s' }} />
+        <i style={{ left: '85%', top: '72%', animationDelay: '2.6s' }} />
+        <i style={{ left: '16%', top: '86%', animationDelay: '1.7s' }} />
+      </div>
     </div>
   )
 }
@@ -59,12 +70,12 @@ function AuroraDecor() {
 /* 4. KHU VƯỜN ĐÊM: Đom đóm bay chập chờn */
 function GardenDecor() {
   return (
-    <div className="decor-garden-layer">
-      <i className="firefly ff-1" />
-      <i className="firefly ff-2" />
-      <i className="firefly ff-3" />
-      <i className="firefly ff-4" />
-      <i className="firefly ff-5" />
+    <div className="decor-garden-layer ff">
+      <i className="firefly ff-1" style={{ left: '12%', top: '18%', animationDelay: '0s' }} />
+      <i className="firefly ff-2" style={{ right: '15%', top: '24%', animationDelay: '1.5s' }} />
+      <i className="firefly ff-3" style={{ left: '32%', top: '48%', animationDelay: '3s' }} />
+      <i className="firefly ff-4" style={{ right: '20%', top: '68%', animationDelay: '4.5s' }} />
+      <i className="firefly ff-5" style={{ left: '18%', top: '82%', animationDelay: '2s' }} />
     </div>
   )
 }
