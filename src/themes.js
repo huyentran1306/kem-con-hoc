@@ -23,22 +23,32 @@ export const THEMES = [
       '--c-surface-2': '#EDE4FF',
       '--c-line': '#F3D9E6',
       '--c-text': '#4A3B5C',
-      '--c-text-2': '#9A8AA8',
+      '--c-text-2': '#786C83',
       '--c-accent': '#FF8FB8',
-      '--c-accent-text': '#FFFFFF',
+      '--c-accent-ink': '#A35C76',
+      '--c-accent-text': '#4A3B5C',
       '--c-accent-2': '#B9A3FF',
+      '--c-on-accent': '#4A3B5C',
+      '--c-on-accent-2': '#4A3B5C',
       '--c-good': '#7FD8C4',
       '--c-good-bg': '#E3F8F2',
+      '--c-good-fg': '#287B6A',
+      '--c-on-good': '#4A3B5C',
       '--c-warn': '#FFD36E',
       '--c-warn-bg': '#FFF8D6',
       '--c-warn-line': '#FFE58A',
-      '--c-danger': '#E0598E',
+      '--c-warn-fg': '#916B08',
+      '--c-danger': '#C14D7A',
+      '--c-danger-ink': '#BA4A76',
+      '--c-on-danger': '#FFFFFF',
+      '--c-toast-bg': '#1E1B2E',
+      '--c-toast-text': '#FFFFFF',
       '--c-read-bg': '#FFFFFF',
       '--c-read-text': '#4A3B5C',
       '--c-hint1-bg': '#FFF8D6',
       '--c-hint1-line': '#FFE58A',
-      '--c-btn': 'linear-gradient(135deg, #E0598E, #D9467E)',
-      '--c-btn-text': '#FFFFFF',
+      '--c-btn': 'linear-gradient(#FFC9DD, #FFA9CA)',
+      '--c-btn-text': '#4A2B45',
       '--c-nav': '#FFFFFF',
       '--radius-lg': '28px',
       '--radius-md': '20px',
@@ -65,16 +75,26 @@ export const THEMES = [
       '--c-surface-2': '#FFEBD1',
       '--c-line': '#F0DDC2',
       '--c-text': '#4B3621',
-      '--c-text-2': '#9C7B5A',
+      '--c-text-2': '#8B6D50',
       '--c-accent': '#F6A623',
+      '--c-accent-ink': '#9B6916',
       '--c-accent-text': '#4B3621',
       '--c-accent-2': '#7FB7F5',
+      '--c-on-accent': '#4B3621',
+      '--c-on-accent-2': '#4B3621',
       '--c-good': '#8CC98B',
       '--c-good-bg': '#E8F6E6',
+      '--c-good-fg': '#3F7A3E',
+      '--c-on-good': '#4B3621',
       '--c-warn': '#F6C56A',
       '--c-warn-bg': '#FFF1D6',
       '--c-warn-line': '#F6C56A',
-      '--c-danger': '#C47F0E',
+      '--c-warn-fg': '#976500',
+      '--c-danger': '#A3690C',
+      '--c-danger-ink': '#9F670B',
+      '--c-on-danger': '#FFFFFF',
+      '--c-toast-bg': '#1E1B2E',
+      '--c-toast-text': '#FFFFFF',
       '--c-read-bg': '#FFFFFF',
       '--c-read-text': '#4B3621',
       '--c-hint1-bg': '#FFF1D6',
@@ -100,29 +120,39 @@ export const THEMES = [
     fontBody: "'Inter', sans-serif",
     fontHand: "'Lexend', sans-serif",
     googleFont: 'Lexend:wght@500;700;800&family=Inter:wght@400;500;600;700',
-    swatches: ['#FF6B57', '#8A7CFF', '#22B07D', '#15161E', '#F7F7FA'],
+    swatches: ['#FF7A66', '#8A7CFF', '#22B07D', '#1E1B3A', '#F7F7FA'],
     vars: {
       '--c-bg': '#F7F7FA',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#F1EEFF',
       '--c-line': '#E9EAF1',
-      '--c-text': '#15161E',
+      '--c-text': '#1E1B3A',
       '--c-text-2': '#6B6E80',
-      '--c-accent': '#FF6B57',
-      '--c-accent-text': '#FFFFFF',
+      '--c-accent': '#FF7A66',
+      '--c-accent-ink': '#BD4F40',
+      '--c-accent-text': '#15161E',
       '--c-accent-2': '#8A7CFF',
+      '--c-on-accent': '#15161E',
+      '--c-on-accent-2': '#15161E',
       '--c-good': '#22B07D',
       '--c-good-bg': '#E6F7EF',
+      '--c-good-fg': '#157E4D',
+      '--c-on-good': '#15161E',
       '--c-warn': '#FFC94A',
       '--c-warn-bg': '#FFF6E5',
       '--c-warn-line': '#FFE2B0',
+      '--c-warn-fg': '#9A6700',
       '--c-danger': '#B42318',
-      '--c-read-bg': 'linear-gradient(135deg, #15161E, #2A2B3A)',
-      '--c-read-text': '#FFFFFF',
+      '--c-danger-ink': '#B42318',
+      '--c-on-danger': '#FFFFFF',
+      '--c-toast-bg': '#1E1B2E',
+      '--c-toast-text': '#FFFFFF',
+      '--c-read-bg': '#EEEBFF',
+      '--c-read-text': '#2E2A5E',
       '--c-hint1-bg': '#FFF6E5',
       '--c-hint1-line': '#FFE2B0',
-      '--c-btn': '#15161E',
-      '--c-btn-text': '#FFFFFF',
+      '--c-btn': 'linear-gradient(135deg, #FF7A66, #9B8CFF)',
+      '--c-btn-text': '#1F1A45',
       '--c-nav': '#FFFFFF',
       '--radius-lg': '24px',
       '--radius-md': '18px',
@@ -142,7 +172,7 @@ export const THEMES = [
     fontBody: "'Nunito', sans-serif",
     fontHand: "'Paytone One', sans-serif",
     googleFont: 'Paytone+One&family=Nunito:wght@600;700;800;900',
-    swatches: ['#FF4F8B', '#FFC928', '#39C6A5', '#5B6CFF', '#1B1B2F'],
+    swatches: ['#FF4F8B', '#FFC928', '#39C6A5', '#5667F2', '#1B1B2F'],
     vars: {
       '--c-bg': '#FFF7E6',
       '--c-surface': '#FFFFFF',
@@ -151,20 +181,30 @@ export const THEMES = [
       '--c-text': '#1B1B2F',
       '--c-text-2': '#5C5A70',
       '--c-accent': '#FF4F8B',
-      '--c-accent-text': '#FFFFFF',
-      '--c-accent-2': '#5B6CFF',
+      '--c-accent-ink': '#C73E6C',
+      '--c-accent-text': '#1B1B2F',
+      '--c-accent-2': '#5667F2',
+      '--c-on-accent': '#1B1B2F',
+      '--c-on-accent-2': '#FFFFFF',
       '--c-good': '#39C6A5',
       '--c-good-bg': '#D7F5EC',
+      '--c-good-fg': '#1B1B2F',
+      '--c-on-good': '#1B1B2F',
       '--c-warn': '#FFC928',
       '--c-warn-bg': '#FFF1C9',
       '--c-warn-line': '#1B1B2F',
+      '--c-warn-fg': '#1B1B2F',
       '--c-danger': '#FF4F8B',
+      '--c-danger-ink': '#C73E6C',
+      '--c-on-danger': '#1B1B2F',
+      '--c-toast-bg': '#1E1B2E',
+      '--c-toast-text': '#FFFFFF',
       '--c-read-bg': '#FFFFFF',
       '--c-read-text': '#1B1B2F',
       '--c-hint1-bg': '#FFC928',
       '--c-hint1-line': '#1B1B2F',
       '--c-btn': '#FF4F8B',
-      '--c-btn-text': '#FFFFFF',
+      '--c-btn-text': '#1B1B2F',
       '--c-nav': '#FFFFFF',
       '--radius-lg': '20px',
       '--radius-md': '16px',
@@ -184,23 +224,33 @@ export const THEMES = [
     fontBody: "'Lora', serif",
     fontHand: "'Mali', cursive",
     googleFont: 'Playfair+Display:ital,wght@0,700;0,900;1,600&family=Lora:ital,wght@0,400;0,600;1,400&family=Mali:wght@500;700',
-    swatches: ['#C4613A', '#7D9A6B', '#D8A334', '#2A2622', '#F6F1E7'],
+    swatches: ['#B85B37', '#7D9A6B', '#D8A334', '#2A2622', '#F6F1E7'],
     vars: {
       '--c-bg': '#F6F1E7',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#EFE8DA',
       '--c-line': '#D9D0BE',
       '--c-text': '#2A2622',
-      '--c-text-2': '#7A7262',
-      '--c-accent': '#C4613A',
+      '--c-text-2': '#756D5E',
+      '--c-accent': '#B85B37',
+      '--c-accent-ink': '#AC5533',
       '--c-accent-text': '#FFFFFF',
       '--c-accent-2': '#5A4B7A',
+      '--c-on-accent': '#FFFFFF',
+      '--c-on-accent-2': '#FFFFFF',
       '--c-good': '#7D9A6B',
       '--c-good-bg': '#E6EDE0',
+      '--c-good-fg': '#4F6B3F',
+      '--c-on-good': '#2A2622',
       '--c-warn': '#D8A334',
       '--c-warn-bg': '#FBF3DC',
       '--c-warn-line': '#D8A334',
+      '--c-warn-fg': '#956400',
       '--c-danger': '#A32A1A',
+      '--c-danger-ink': '#A32A1A',
+      '--c-on-danger': '#FFFFFF',
+      '--c-toast-bg': '#1E1B2E',
+      '--c-toast-text': '#FFFFFF',
       '--c-read-bg': '#FFFFFF',
       '--c-read-text': '#2A2622',
       '--c-hint1-bg': '#FBF3DC',
@@ -235,14 +285,24 @@ export const THEMES = [
       '--c-text': '#F2F7EE',
       '--c-text-2': '#A9C4B5',
       '--c-accent': '#FFD166',
+      '--c-accent-ink': '#FFD166',
       '--c-accent-text': '#0F2A24',
       '--c-accent-2': '#6EE7B7',
+      '--c-on-accent': '#0F2A24',
+      '--c-on-accent-2': '#0F2A24',
       '--c-good': '#6EE7B7',
       '--c-good-bg': '#1B4A3B',
+      '--c-good-fg': '#6EE7B7',
+      '--c-on-good': '#0F2A24',
       '--c-warn': '#FFD166',
       '--c-warn-bg': '#3A3A1F',
       '--c-warn-line': '#7C7A34',
+      '--c-warn-fg': '#FFD166',
       '--c-danger': '#FF6B6B',
+      '--c-danger-ink': '#FF6E6E',
+      '--c-on-danger': '#0F2A24',
+      '--c-toast-bg': '#F6F1E6',
+      '--c-toast-text': '#0F2A24',
       '--c-read-bg': '#163B33',
       '--c-read-text': '#F2F7EE',
       '--c-hint1-bg': '#3A3A1F',
@@ -275,16 +335,26 @@ export const THEMES = [
       '--c-surface-2': 'rgba(167, 139, 250, .2)',
       '--c-line': 'rgba(255, 255, 255, .16)',
       '--c-text': '#F3F4FF',
-      '--c-text-2': 'rgba(243, 244, 255, .72)',
+      '--c-text-2': '#B2B5C3',
       '--c-accent': '#22D3EE',
+      '--c-accent-ink': '#22D3EE',
       '--c-accent-text': '#0B1026',
       '--c-accent-2': '#A78BFA',
+      '--c-on-accent': '#0B1026',
+      '--c-on-accent-2': '#0B1026',
       '--c-good': '#34D399',
       '--c-good-bg': 'rgba(52, 211, 153, .16)',
+      '--c-good-fg': '#34D399',
+      '--c-on-good': '#0B1026',
       '--c-warn': '#F472B6',
       '--c-warn-bg': 'rgba(244, 114, 182, .14)',
       '--c-warn-line': '#F472B6',
+      '--c-warn-fg': '#F9A8D4',
       '--c-danger': '#F43F5E',
+      '--c-danger-ink': '#F54C69',
+      '--c-on-danger': '#0B1026',
+      '--c-toast-bg': '#F6F1E6',
+      '--c-toast-text': '#0B1026',
       '--c-read-bg': 'rgba(255, 255, 255, .08)',
       '--c-read-text': '#F3F4FF',
       '--c-hint1-bg': 'rgba(34, 211, 238, .12)',
@@ -319,14 +389,24 @@ export const THEMES = [
       '--c-text': '#F6F1E6',
       '--c-text-2': '#CFC8B8',
       '--c-accent': '#F9E07F',
+      '--c-accent-ink': '#F9E07F',
       '--c-accent-text': '#2F4A41',
       '--c-accent-2': '#9AD0F5',
+      '--c-on-accent': '#2F4A41',
+      '--c-on-accent-2': '#2F4A41',
       '--c-good': '#B5E8A8',
       '--c-good-bg': 'rgba(181, 232, 168, .16)',
+      '--c-good-fg': '#B5E8A8',
+      '--c-on-good': '#2F4A41',
       '--c-warn': '#F7A1C4',
       '--c-warn-bg': 'rgba(247, 161, 196, .14)',
       '--c-warn-line': '#F7A1C4',
-      '--c-danger': '#F87171',
+      '--c-warn-fg': '#F7A1C4',
+      '--c-danger': '#BC5656',
+      '--c-danger-ink': '#FBAFAF',
+      '--c-on-danger': '#FFFFFF',
+      '--c-toast-bg': '#F6F1E6',
+      '--c-toast-text': '#2F4A41',
       '--c-read-bg': 'rgba(246, 241, 230, .07)',
       '--c-read-text': '#F6F1E6',
       '--c-hint1-bg': 'rgba(249, 224, 127, .14)',
@@ -344,16 +424,59 @@ export const THEMES = [
   },
 ]
 
+import { deriveCustomThemeVars } from './themes/customPalette.js'
+
 export function getTheme(id) {
+  if (id === 'custom') {
+    return {
+      id: 'custom',
+      name: 'Tự thiết kế ✨',
+      desc: 'Bộ giao diện độc bản do gia đình tự ghép',
+      icon: '✨',
+      isDark: false,
+      vars: deriveCustomThemeVars(),
+    }
+  }
   return THEMES.find((t) => t.id === id) || THEMES[0]
 }
 
 /* Áp dụng theme vào document element */
-export function applyTheme(id, motion = 'full') {
-  const theme = getTheme(id)
-  if (typeof document === 'undefined') return theme
+export function applyTheme(id, motion = 'full', customConfig = null) {
+  if (typeof document === 'undefined') return getTheme(id)
   const root = document.documentElement
 
+  if (id === 'custom') {
+    let cfg = customConfig
+    if (!cfg && typeof localStorage !== 'undefined') {
+      try {
+        cfg = JSON.parse(localStorage.getItem('kem-con-hoc:custom-theme') || '{}')
+      } catch (e) {}
+    }
+    const customVars = deriveCustomThemeVars(cfg || {})
+    Object.entries(customVars).forEach(([k, v]) => {
+      root.style.setProperty(k, v)
+    })
+    root.dataset.theme = 'custom'
+    root.dataset.motion = motion
+    root.style.colorScheme = cfg?.mode === 'dark' ? 'dark' : 'light'
+    const metaTheme = document.querySelector('meta[name="theme-color"]')
+    if (metaTheme) {
+      metaTheme.setAttribute('content', customVars['--c-bg'] || (cfg?.mode === 'dark' ? '#0F172A' : '#FFF7ED'))
+    }
+    try {
+      localStorage.setItem('kem-con-hoc:theme', 'custom')
+      localStorage.setItem('kem-con-hoc:motion', motion)
+      if (cfg) localStorage.setItem('kem-con-hoc:custom-theme', JSON.stringify(cfg))
+    } catch (e) {}
+    return { id: 'custom', name: 'Tự thiết kế ✨', isDark: cfg?.mode === 'dark', vars: customVars }
+  }
+
+  // Khôi phục nếu vừa đổi từ custom
+  if (root.dataset.theme === 'custom') {
+    root.removeAttribute('style')
+  }
+
+  const theme = getTheme(id)
   root.dataset.theme = theme.id
   root.dataset.motion = motion
 

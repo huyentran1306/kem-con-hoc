@@ -12,11 +12,14 @@ import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
 import { applyTheme } from './themes'
 import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
+import { ThemedTabIcon } from './themes/themeIcons'
+import { useStudyTracker } from './useStudyTracker'
 import { FamilyMembersSheet } from './FamilyMembersSheet'
 import { JoinFamilyView } from './JoinFamilyView'
 import { PublicReportView } from './PublicReportView'
 import TeacherPortal from './TeacherPortal'
 import { FamilyClassSheet } from './FamilyClassSheet'
+import { CalmCornerModal } from './CalmCornerModal'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -92,18 +95,12 @@ const initialState = () => ({
       ],
       stickerHistory: markSampleStickers(SAMPLE_STICKER_HISTORY),
       aiLongitudinalInsight: null,
-      weak: [
-        { n: 'Toán có lời văn 2 bước', v: 3, t: 4 },
-        { n: 'Giờ hơn / giờ kém (Eng)', v: 2, t: 5 },
-      ],
-      strong: [{ n: 'Bảng nhân 4', v: 5, t: 5 }],
-      history: [
-        { txt: 'Bảng nhân 4 · làm được', when: 'T2' },
-        { txt: 'Đọc giờ (Eng) · còn vướng', when: 'T3' },
-      ],
-      calmWeek: 3,
-      calmLast: 6,
-      calmHistory: [Date.now() - 86400000 * 3, Date.now() - 86400000 * 2, Date.now() - 86400000 * 1],
+      weak: [],
+      strong: [],
+      history: [],
+      calmWeek: 0,
+      calmLast: 0,
+      calmHistory: [],
       sessionsMom: 0,
       sessionsDad: 0,
     },
@@ -425,9 +422,12 @@ export default function App() {
     location.reload()
   }
 
+  const tracker = useStudyTracker(S.activeId, S, setS)
+
   const ctx = useMemo(
     () => ({
       S, patch, go, toast, openSheet, closeSheet, speak, boom, stats, setStats, study, setStudy,
+      tracker,
       problem: S.problem || PROBLEM,
       logout,
       wipe,
@@ -437,7 +437,7 @@ export default function App() {
       soundOn,
       toggleSound: handleToggleSound,
     }),
-    [S, stats, study, session, soundOn]
+    [S, stats, study, session, soundOn, tracker]
   )
 
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
@@ -556,7 +556,7 @@ export default function App() {
                 return (
                   <button key={k} className={isOn ? 'on' : ''} onClick={() => go(k)}>
                     <span className="ic" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <IconComp size={21} strokeWidth={isOn ? 2.4 : 1.8} />
+                      <ThemedTabIcon themeId={S.theme || 'bear'} tab={k} active={isOn} size={23} fallbackIcon={IconComp} />
                     </span>
                     <span>{l}</span>
                   </button>
@@ -590,10 +590,96 @@ const TAB_CAP = {
    CÁC POPUP (BOTTOM SHEET)
    ============================================================ */
 function SheetView({ type, session }) {
-  const { S, patch, go, closeSheet, toast, stats, setStats, boom } = useContext(AppCtx)
+  const { S, patch, go, closeSheet, toast, stats, setStats, boom, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
 
-  if (type === 'calm') return <CalmSheet />
+  if (type === 'calm') {
+    return (
+      <CalmCornerModal
+        isOpen={true}
+        onClose={closeSheet}
+        currentProblem={S.problem}
+        currentStepIndex={S.flow?.step || 0}
+        child={child}
+        parentName={S.parent || 'Mẹ'}
+        themeId={S.theme || 'bear'}
+        onLowerDifficulty={async () => {
+          closeSheet()
+          patch({ flow: { ...S.flow, stuck: 0, lowering: true } })
+          toast('AI đang hạ độ khó với số nhỏ hơn 🪜⚡')
+          try {
+            const textToUse = S.problem?.ocr || S.flow?.ocr || PROBLEM.ocr
+            const lowerRes = await aiExplain(textToUse, child, S.tone, '', true)
+            if (lowerRes && lowerRes.steps && lowerRes.steps.length > 0) {
+              patch({
+                problem: { ...lowerRes, isSample: false },
+                flow: { ...S.flow, step: 0, stuck: 0, lowering: false },
+              })
+              toast('✅ Đã hạ độ khó! Con thử làm với số dễ hơn nhé')
+            } else {
+              patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
+              toast('Mạng chậm — thử lại sau nhé')
+            }
+          } catch (err) {
+            patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
+            toast('Mạng chậm — thử lại sau nhé')
+          }
+        }}
+        onOpenHint={() => {
+          closeSheet()
+          patch({ flow: { ...S.flow, unlocked: true } })
+          toast('Đã mở gợi ý đồ vật thật cho con 💡')
+        }}
+        onSaveAndStop={() => {
+          closeSheet()
+          patch({
+            pendingProblemResume: {
+              problem: S.problem,
+              step: S.flow?.step || 0,
+              unlocked: S.flow?.unlocked || false,
+              savedAt: Date.now(),
+            },
+            flow: { ...S.flow, step: 0, stuck: 0 },
+          })
+          if ((S.flow?.step || 0) >= 1 && tracker?.recordSession) {
+            tracker.recordSession({
+              problemType: S.problem?.dang_bai || 'Toán',
+              totalSteps: (S.problem?.steps || []).length || 4,
+              selfSteps: S.flow?.step || 0,
+              teachBack: 'partial',
+              partial: true,
+            })
+          }
+          toast('Đã lưu bài! Dừng ở đây cũng là một tối học rất tốt 🌙')
+          go('home')
+        }}
+        onRecordCalmEvent={(evt) => {
+          const now = Date.now()
+          const newEvent = {
+            ts: now,
+            trigger: evt.trigger || 'manual',
+            reason: evt.reason,
+            action: evt.action,
+            resumed: true,
+            stepsAfter: 0,
+          }
+          const cStats = { ...(stats[S.activeId] || {}) }
+          const oldHistory = cStats.calmHistory || []
+          const updatedHistory = [newEvent, ...oldHistory]
+          const calmWeek = (cStats.calmWeek || 0) + 1
+          setStats({
+            ...stats,
+            [S.activeId]: {
+              ...cStats,
+              calmHistory: updatedHistory,
+              calmWeek,
+              calmLast: now,
+            },
+          })
+        }}
+      />
+    )
+  }
   if (type === 'timer') return <TimerSheet />
   if (type === 'breakHint') {
     const handleLowerDifficulty = async () => {

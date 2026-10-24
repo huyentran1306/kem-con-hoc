@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin thiết kế bộ giao diện</title>
+<meta name="description" content="Bản vẽ giao diện đã chốt và thao tác từng màn cho 5 tính năng nâng cấp Kèm Con Học: giao diện theo sở thích, kiểm tra ảnh ngoài phạm vi, nhóm gia đình và Zalo, cổng giáo viên, admin bản Gấu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&family=Mitr:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F4F1; --paper: #FFFFFF; --ink: #1D1B26; --ink-2: #4A4758; --muted: #7C7889; --line: #E6E1DA;
+    --accent: #D6336C; --accent-soft: #FDE7EF; --green: #0F8A5F; --green-soft: #E2F5EC; --amber: #A55F00; --amber-soft: #FFF2D9;
+    --blue: #2563EB; --blue-soft: #E8F0FE; --violet: #6D4AE0; --violet-soft: #EEE9FF; --red: #B42318; --red-soft: #FDECEA;
+    --fc-edge: #8A7F99; --fc-box: #FFFFFF; --fc-box-line: #CFC6DA; --fc-text: #2E2840; --fc-start: #FFE1EC; --fc-start-line: #E0598E;
+    --fc-end: #D9F5EC; --fc-end-line: #18A58A; --fc-dec: #FFF6DB; --fc-dec-line: #E0A81F; --fc-note: #F3F0FF; --fc-note-line: #A78BFA; --fc-lbl: #6B5E80;
+    --sh: 0 1px 2px rgba(29, 27, 38, .05), 0 10px 30px -18px rgba(29, 27, 38, .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+      --accent: #FF6E9C; --accent-soft: #3A1E2B; --green: #4CD39A; --green-soft: #173327; --amber: #F5B451; --amber-soft: #3A2C14;
+      --blue: #7AA5FF; --blue-soft: #1D2A44; --violet: #A993FF; --violet-soft: #2A2342; --red: #FF8A7F; --red-soft: #3D1D1A;
+      --fc-edge: #9C93AE; --fc-box: #262431; --fc-box-line: #46415A; --fc-text: #EDEAF5; --fc-start: #3A1E2B; --fc-start-line: #FF6E9C;
+      --fc-end: #173327; --fc-end-line: #4CD39A; --fc-dec: #3A2C14; --fc-dec-line: #F5B451; --fc-note: #2A2342; --fc-note-line: #A993FF; --fc-lbl: #C9C5D6;
+      --sh: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+    --accent: #FF6E9C; --accent-soft: #3A1E2B; --green: #4CD39A; --green-soft: #173327; --amber: #F5B451; --amber-soft: #3A2C14;
+    --blue: #7AA5FF; --blue-soft: #1D2A44; --violet: #A993FF; --violet-soft: #2A2342; --red: #FF8A7F; --red-soft: #3D1D1A;
+    --fc-edge: #9C93AE; --fc-box: #262431; --fc-box-line: #46415A; --fc-text: #EDEAF5; --fc-start: #3A1E2B; --fc-start-line: #FF6E9C;
+    --fc-end: #173327; --fc-end-line: #4CD39A; --fc-dec: #3A2C14; --fc-dec-line: #F5B451; --fc-note: #2A2342; --fc-note-line: #A993FF; --fc-lbl: #C9C5D6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Be Vietnam Pro", system-ui, sans-serif; background: var(--bg); color: var(--ink-2); line-height: 1.6; font-size: 15.5px; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; }
+  b, strong { color: var(--ink); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .86em; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; color: var(--ink); }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 16px; }
+  header.hero { padding: 44px 0 22px; }
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .hero h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.6px; margin-top: 8px; }
+  .hero p { font-size: 17px; margin-top: 10px; max-width: 860px; }
+  nav.toc { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; text-decoration: none; font-size: 13.5px; font-weight: 700; color: var(--ink-2); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); }
+  section.feat { padding: 38px 0 8px; }
+  .sec-h .n { font-size: 12.5px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .sec-h h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 800; letter-spacing: -.4px; margin-top: 2px; }
+  .sec-h p { margin-top: 6px; max-width: 900px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; box-shadow: var(--sh); min-width: 0; }
+  .sub { font-size: 18px; font-weight: 800; color: var(--ink); margin: 26px 0 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 11.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .t-pink { background: var(--accent-soft); color: var(--accent); } .t-green { background: var(--green-soft); color: var(--green); } .t-amber { background: var(--amber-soft); color: var(--amber); }
+  .t-blue { background: var(--blue-soft); color: var(--blue); } .t-violet { background: var(--violet-soft); color: var(--violet); }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 22px 18px; align-items: start; }
+  .shot { display: grid; gap: 10px; min-width: 0; }
+  .shot .cap { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .shot h4 { font-size: 16.5px; margin-top: -4px; }
+  ol.ops { list-style: none; display: grid; gap: 7px; font-size: 14.2px; }
+  ol.ops li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+  ol.ops li .k { width: 20px; height: 20px; border-radius: 50%; background: #E11D48; color: #fff; display: grid; place-items: center; font: 800 11px "Nunito", sans-serif; margin-top: 2px; }
+  ol.ops li .k.s { background: var(--muted); }
+  .note { font-size: 13.5px; background: var(--amber-soft); color: var(--ink); border-radius: 12px; padding: 9px 12px; }
+  .note b { color: var(--amber); }
+  .state { font-size: 13.5px; background: var(--blue-soft); color: var(--ink); border-radius: 12px; padding: 9px 12px; }
+  .state b { color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+  tr:last-child td { border-bottom: 0; }
+  .tbl { overflow-x: auto; }
+  .flowbox { overflow-x: auto; }
+  .flowsvg { width: 100%; min-width: 760px; max-width: 1000px; display: block; margin: 0 auto; font-family: "Be Vietnam Pro", sans-serif; }
+  .fc-edge { fill: none; stroke: var(--fc-edge); stroke-width: 1.8; } .fc-edge.dash { stroke-dasharray: 6 5; }
+  .fc-head { fill: var(--fc-edge); }
+  .fc-proc { fill: var(--fc-box); stroke: var(--fc-box-line); stroke-width: 1.5; }
+  .fc-start { fill: var(--fc-start); stroke: var(--fc-start-line); stroke-width: 1.5; } .fc-end { fill: var(--fc-end); stroke: var(--fc-end-line); stroke-width: 1.5; }
+  .fc-dec { fill: var(--fc-dec); stroke: var(--fc-dec-line); stroke-width: 1.5; } .fc-note { fill: var(--fc-note); stroke: var(--fc-note-line); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .fc-t { font-size: 13.5px; fill: var(--fc-text); font-weight: 600; } .fc-t-dec { font-size: 13px; font-weight: 800; }
+  .fc-lblbg { fill: var(--paper); stroke: var(--line); } .fc-lbl { font-size: 11.5px; font-weight: 800; fill: var(--fc-lbl); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12.5px; margin-top: 10px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; border: 1.5px solid; }
+
+  /* ===== khung điện thoại chung ===== */
+  .ph { width: 300px; border-radius: 40px; background: #1C1A24; padding: 9px; box-shadow: 0 30px 50px -28px rgba(20, 15, 30, .6); position: relative; flex-shrink: 0; justify-self: center; }
+  .ph .scr { height: 610px; border-radius: 32px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .ph .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 96px; height: 26px; background: #1C1A24; border-radius: 999px; z-index: 9; }
+  .ph .sb { display: flex; justify-content: space-between; padding: 12px 22px 0; font: 800 12px "Nunito", sans-serif; }
+  .mk { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: #E11D48; color: #fff !important; font: 800 11px "Nunito", sans-serif; box-shadow: 0 0 0 2.5px #fff; flex-shrink: 0; vertical-align: middle; position: relative; z-index: 3; }
+  .mk.abs { position: absolute; }
+
+  /* ===== App phụ huynh: Kẹo Bông ===== */
+  .app { --bg: #FFF4F8; --card: #fff; --line: #F3D9E6; --ink: #4A3B5C; --ink2: #8A7B9A; --pink: #FF8FB8; --pinkd: #E0598E; --pinkt: #B83A70; --lav: #B9A3FF; --lavs: #EFE9FF; --lavt: #6A4FD0;
+    --mint: #7FD8C4; --mints: #E3F8F2; --mintt: #23735F; --yel: #FFD36E; --yels: #FFF6D6; --yelt: #8A5E00; --red: #C93A3A;
+    font-family: "Nunito", sans-serif; font-weight: 700; color: var(--ink); font-size: 12.5px; line-height: 1.45; }
+  .app .scr { background: var(--bg); }
+  .app h5 { font-family: "Baloo 2", cursive; font-size: 19px; line-height: 1.15; color: var(--ink); font-weight: 800; }
+  .app .top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+  .app .top .ib { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid var(--line); display: grid; place-items: center; font-weight: 900; font-size: 13px; }
+  .app .top h6 { font-family: "Baloo 2", cursive; font-size: 16px; flex: 1; font-weight: 800; }
+  .app .bd { flex: 1; padding: 6px 13px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .app .c { background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 10px 12px; box-shadow: 0 5px 0 var(--line); position: relative; }
+  .app .lb { font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 900; color: #B07A98; }
+  .app .bt { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 12px; font-weight: 900; font-size: 12.5px; color: #fff; background: linear-gradient(#FFA3C6, #FF7FAE); box-shadow: 0 4px 0 var(--pinkd); position: relative; }
+  .app .bt.g { background: #fff; color: var(--ink); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); }
+  .app .bt.l { background: linear-gradient(#C9B8FF, #B9A3FF); box-shadow: 0 4px 0 #8C72E8; }
+  .app .row { display: flex; gap: 8px; } .app .row > * { flex: 1; }
+  .app .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: #fff; border: 2px solid var(--line); font-size: 11px; font-weight: 800; }
+  .app .chip.on { background: var(--yels); border-color: var(--yel); }
+  .app .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .app .nav { display: flex; justify-content: space-around; padding: 7px 6px 16px; background: #fff; border-top: 2px solid var(--line); }
+  .app .nav div { text-align: center; font-size: 9.5px; color: var(--ink2); font-weight: 800; }
+  .app .nav div i { display: block; font-style: normal; font-size: 16px; }
+  .app .nav div.on { color: var(--pinkt); }
+  .app .li { display: flex; align-items: center; gap: 9px; padding: 8px 2px; border-bottom: 1.5px dashed var(--line); font-weight: 800; }
+  .app .li:last-child { border-bottom: 0; }
+  .app .li .e { width: 28px; height: 28px; border-radius: 10px; background: var(--yels); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+  .app .li .t { flex: 1; } .app .li small { display: block; font-weight: 700; color: var(--ink2); font-size: 10.5px; }
+  .app .face { font-family: "Baloo 2", cursive; font-weight: 800; letter-spacing: 2px; font-size: 15px; }
+  .app .dim { position: absolute; inset: 0; background: rgba(74, 59, 92, .35); z-index: 4; }
+  .app .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 14px 18px; z-index: 5; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -10px 30px -10px rgba(74, 59, 92, .35); }
+  .app .sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); align-self: center; }
+  .app .ip { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 7px 10px; font-weight: 700; color: var(--ink2); }
+  .app .ip.on { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 143, 184, .25); color: var(--ink); }
+  .app .dots { display: flex; gap: 8px; justify-content: center; }
+  .app .dots i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--pink); }
+  .app .dots i.f { background: var(--pink); }
+  .app .warnc { background: var(--yels); border-color: var(--yel); box-shadow: 0 5px 0 #F1D48A; }
+  .app .blockc { background: #FFF0F3; border-color: #FFC7D6; box-shadow: 0 5px 0 #FFD9E3; }
+  .app .okc { background: var(--mints); border-color: #BDEBDD; box-shadow: 0 5px 0 #CFF1E6; }
+  .app .lavc { background: var(--lavs); border-color: #D9CCFF; box-shadow: 0 5px 0 #E2D8FF; }
+  .app .thumb { height: 70px; border-radius: 14px; background: linear-gradient(135deg, #f3d3b5, #e7b38e); display: grid; place-items: center; font-size: 28px; }
+  .app .qr { width: 96px; height: 96px; border-radius: 12px; background:
+      conic-gradient(from 90deg at 30% 30%, #4A3B5C 0 25%, transparent 0 50%, #4A3B5C 0 75%, transparent 0) 0 0 / 16px 16px, #fff; border: 6px solid #fff; outline: 2px solid var(--line); margin: 0 auto; }
+  .app .bigcode { font-family: "Baloo 2", cursive; font-weight: 800; font-size: 30px; letter-spacing: 6px; text-align: center; color: var(--pinkt); }
+  .app .seg { display: flex; background: #fff; border: 2px solid var(--line); border-radius: 999px; padding: 3px; gap: 3px; }
+  .app .seg span { flex: 1; text-align: center; padding: 5px 4px; border-radius: 999px; font-weight: 900; font-size: 11px; color: var(--ink2); }
+  .app .seg span.on { background: var(--pink); color: #fff; }
+  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .tmini { border-radius: 14px; overflow: hidden; border: 2px solid var(--line); background: #fff; position: relative; }
+  .tmini .pv { height: 52px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .tmini .pv i { display: block; height: 10px; border-radius: 5px; }
+  .tmini .pv i.w { width: 60%; height: 7px; }
+  .tmini .nm { font-size: 10.5px; font-weight: 900; padding: 4px 7px 5px; }
+  .tmini.sel { border-color: var(--pinkd); box-shadow: 0 0 0 3px rgba(224, 89, 142, .25); }
+  .tmini .use { position: absolute; top: 4px; right: 4px; font-size: 8.5px; font-weight: 900; background: var(--pinkd); color: #fff; border-radius: 999px; padding: 1px 6px; }
+  .bear { --bg: #FFF8EC; --line: #F0DDC2; --ink: #4B3621; --ink2: #9C7B5A; --pink: #F6A623; --pinkd: #C47F0E; --pinkt: #9A5B00; --yels: #FFF1D6; --yel: #F6C56A; }
+  .bear .scr { background: var(--bg); }
+  .bear .bt { background: #F6A623; color: #4B3621; box-shadow: 0 4px 0 #C47F0E; }
+  .bear h5 { font-family: "Mitr", sans-serif; font-weight: 700; }
+  .bear .nav div.on { color: #9A5B00; }
+
+  /* ===== Cổng giáo viên: Bento Mềm ===== */
+  .tch { --bg: #F7F7FA; --card: #fff; --line: #E9EAF1; --ink: #15161E; --ink2: #6B6E80; --acc: #FF6B57; --acct: #C2412D; --acc2: #8A7CFF; --good: #22B07D; --goodt: #157A55; --warn: #F59E0B; --warnt: #9A5B00;
+    font-family: "Be Vietnam Pro", sans-serif; color: var(--ink); font-size: 12px; line-height: 1.45; font-weight: 500; }
+  .tch .scr { background: var(--bg); }
+  .tch .top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+  .tch .top h6 { font-size: 15px; font-weight: 800; flex: 1; }
+  .tch .top .ib { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-weight: 800; }
+  .tch .bd { flex: 1; padding: 6px 13px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .tch .c { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 10px 12px; box-shadow: 0 8px 20px -16px rgba(21, 22, 30, .35); position: relative; }
+  .tch .lb { font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 800; color: var(--ink2); }
+  .tch .bt { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 12px; font-weight: 800; font-size: 12px; color: #fff; background: #15161E; position: relative; }
+  .tch .bt.o { background: var(--acc); } .tch .bt.g { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .tch .row { display: flex; gap: 7px; } .tch .row > * { flex: 1; }
+  .tch .ip { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; color: var(--ink2); }
+  .tch .ip.hl { border-color: var(--acc2); background: #F4F2FF; color: var(--ink); }
+  .tch .tabs { display: flex; gap: 4px; background: #EEEFF5; border-radius: 999px; padding: 3px; }
+  .tch .tabs span { flex: 1; text-align: center; padding: 5px; border-radius: 999px; font-weight: 700; color: var(--ink2); font-size: 11px; }
+  .tch .tabs span.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+  .tch .st { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .tch .st:last-child { border: 0; }
+  .tch .av { width: 26px; height: 26px; border-radius: 50%; background: #FFE7E2; color: var(--acct); display: grid; place-items: center; font-weight: 800; font-size: 11px; flex-shrink: 0; }
+  .tch .bdg { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  .b-ok { background: #E6F7EF; color: #157A55; } .b-warn { background: #FFF6E5; color: #9A5B00; } .b-no { background: #F1F2F6; color: #6B6E80; } .b-red { background: #FDECEA; color: #B42318; }
+  .tch .bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; gap: 2px; }
+  .tch .bar i { display: block; height: 100%; }
+  .tch .code { font-size: 18px; font-weight: 800; letter-spacing: 2px; white-space: nowrap; }
+  .tch .row.tight .bt { padding: 8px 4px; font-size: 11px; white-space: nowrap; }
+
+  /* ===== Admin: bản Gấu ===== */
+  .dk { width: 100%; min-width: 980px; border-radius: 16px; overflow: hidden; border: 1px solid #E9D9BF; background: #FFF8EC; box-shadow: 0 30px 50px -30px rgba(75, 54, 33, .45);
+    font-family: "Nunito", sans-serif; font-weight: 600; color: #4B3621; font-size: 12px; line-height: 1.45; }
+  .dk .bar0 { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #F3E6D0; }
+  .dk .bar0 i { width: 10px; height: 10px; border-radius: 50%; background: #E5C9A0; }
+  .dk .bar0 span { margin-left: 10px; font-size: 11px; color: #8A6A4A; background: #FFF8EC; border-radius: 6px; padding: 2px 10px; }
+  .dk .shell { display: grid; grid-template-columns: 196px 1fr; min-height: 560px; }
+  .dk .side { background: #FFFFFF; border-right: 1px solid #F0DDC2; padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .dk .brand { display: flex; align-items: center; gap: 8px; padding: 0 6px 12px; }
+  .dk .brand b { font-family: "Mitr", sans-serif; font-size: 15px; color: #4B3621; display: block; line-height: 1.1; }
+  .dk .brand small { font-size: 10px; color: #8A6A4A; }
+  .dk .nv { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 12px; color: #6E5236; font-weight: 700; position: relative; }
+  .dk .nv.on { background: #FFF1D6; color: #4B3621; font-weight: 800; box-shadow: inset 4px 0 0 #F6A623; }
+  .dk .nv .cnt { margin-left: auto; font-size: 9.5px; background: #FB7185; color: #fff; border-radius: 999px; padding: 0 6px; font-weight: 800; }
+  .dk .tip { margin-top: auto; background: #FFF1D6; border-radius: 16px; padding: 10px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; font-size: 11px; }
+  .dk .me { display: flex; align-items: center; gap: 8px; padding: 10px 6px 0; border-top: 1px solid #F0DDC2; margin-top: 8px; font-size: 11px; }
+  .dk .avt { width: 28px; height: 28px; border-radius: 50%; background: #FFE2B3; color: #9A5B00; display: grid; place-items: center; font-weight: 900; font-size: 11px; flex-shrink: 0; }
+  .dk .main { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; position: relative; }
+  .dk .hd { display: flex; align-items: center; gap: 10px; height: 54px; border-bottom: 1px solid #F0DDC2; margin: 0 -18px; padding: 0 18px; background: rgba(255, 255, 255, .6); }
+  .dk .srch { flex: 1; max-width: 360px; background: #fff; border: 2px solid #F0DDC2; border-radius: 999px; padding: 6px 12px; color: #9C7B5A; }
+  .dk .clk { font-size: 11px; color: #8A6A4A; margin-left: auto; }
+  .dk .bell { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid #F0DDC2; display: grid; place-items: center; position: relative; }
+  .dk .bell em { position: absolute; top: -4px; right: -4px; font-style: normal; font-size: 9px; background: #FB7185; color: #fff; border-radius: 999px; padding: 0 5px; font-weight: 800; }
+  .dk h3 { font-family: "Mitr", sans-serif; font-size: 22px; font-weight: 700; color: #4B3621; }
+  .dk .sub2 { color: #8A6A4A; font-size: 12px; }
+  .dk .c { background: #fff; border: 1px solid #F0DDC2; border-radius: 22px; padding: 12px 14px; box-shadow: 0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, .18); min-width: 0; position: relative; }
+  .dk .lb { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 900; color: #8A6A4A; }
+  .dk .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .dk .kpi b { font-family: "Mitr", sans-serif; font-size: 24px; display: block; font-variant-numeric: tabular-nums; color: #4B3621; line-height: 1.2; margin-top: 2px; }
+  .dk .up { color: #047857; font-weight: 800; font-size: 11px; } .dk .dn { color: #BE123C; font-weight: 800; font-size: 11px; }
+  .dk .bt { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 13px; font-weight: 900; font-size: 11.5px; background: #F6A623; color: #4B3621; box-shadow: 0 3px 0 #C47F0E; position: relative; }
+  .dk .bt.g { background: #FFF1D6; color: #9A5B00; box-shadow: none; }
+  .dk .bt.r { background: #FFF1F2; color: #BE123C; box-shadow: none; }
+  .dk .segm { display: inline-flex; background: #fff; border: 2px solid #F0DDC2; border-radius: 999px; padding: 2px; }
+  .dk .segm span { padding: 3px 11px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #8A6A4A; }
+  .dk .segm span.on { background: #F6A623; color: #4B3621; }
+  .dk table { font-size: 11.5px; } .dk th { font-size: 9.5px; color: #8A6A4A; background: #FFF8EC; padding: 7px 9px; letter-spacing: 1px; }
+  .dk td { padding: 7px 9px; color: #5A4330; border-bottom: 1px solid #F6EBD9; }
+  .dk tr.bad td { background: #FFF1F2; }
+  .dk .pill { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+  .p-learn { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; } .p-done { background: #ECFDF5; color: #047857; border-color: #A7F3D0; }
+  .p-att { background: #FFF1D6; color: #9A5B00; border-color: #F6C56A; } .p-bad { background: #FFF1F2; color: #BE123C; border-color: #FECDD3; }
+  .dk .bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; border-bottom: 1px solid #F0DDC2; }
+  .dk .bars i { flex: 1; background: #FFD98A; border-radius: 5px 5px 0 0; display: block; }
+  .dk .bars i.pk { background: #F6A623; }
+  .dk .hx { display: flex; gap: 6px; font-size: 9px; color: #8A6A4A; } .dk .hx span { flex: 1; text-align: center; }
+  .dk .stack { display: flex; height: 14px; border-radius: 8px; overflow: hidden; gap: 2px; }
+  .dk .stack i { display: block; }
+  .dk .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: #fff; border-left: 1px solid #F0DDC2; box-shadow: -20px 0 40px -20px rgba(75, 54, 33, .35); padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; z-index: 4; overflow: hidden; }
+  .dk .ipt { background: #fff; border: 2px solid #F0DDC2; border-radius: 14px; padding: 7px 11px; color: #9C7B5A; }
+  .dk .ipt.on { border-color: #F6A623; box-shadow: 0 0 0 4px rgba(246, 166, 35, .2); color: #4B3621; }
+  .dk .tabs2 { display: flex; gap: 4px; flex-wrap: wrap; }
+  .dk .tabs2 span { padding: 5px 11px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #8A6A4A; background: #fff; border: 1px solid #F0DDC2; }
+  .dk .tabs2 span.on { background: #4B3621; color: #FFF8EC; border-color: #4B3621; }
+  .dk .tg { width: 30px; height: 17px; border-radius: 999px; background: #10B981; position: relative; display: inline-block; vertical-align: middle; }
+  .dk .tg::after { content: ""; position: absolute; right: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; }
+  .dk .tg.off { background: #E5D6C1; } .dk .tg.off::after { right: auto; left: 2px; }
+  .dk .savebar { position: absolute; left: 14px; right: 14px; bottom: 12px; background: #4B3621; color: #FFF8EC; border-radius: 16px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; font-size: 11.5px; }
+  .dk .savebar .bt { margin-left: auto; }
+  .dk .heat { display: grid; grid-template-columns: 30px repeat(8, 1fr); gap: 3px; font-size: 9px; color: #8A6A4A; }
+  .dk .heat i { display: block; height: 15px; border-radius: 4px; background: #F6A623; }
+  .dk .keypad { display: grid; grid-template-columns: repeat(3, 52px); gap: 9px; justify-content: center; }
+  .dk .keypad span { height: 44px; border-radius: 999px; background: #fff; border: 2px solid #F0DDC2; box-shadow: 0 3px 0 #F0DDC2; display: grid; place-items: center; font-family: "Mitr", sans-serif; font-size: 17px; color: #4B3621; }
+  .dk .pdots { display: flex; gap: 12px; justify-content: center; } .dk .pdots i { width: 15px; height: 15px; border-radius: 50%; border: 2.5px solid #F6A623; } .dk .pdots i.f { background: #F6A623; }
+  .dkwrap { overflow-x: auto; padding-bottom: 6px; min-width: 0; max-width: 100%; }
+  .grid2 > *, .grid3 > *, .shots > *, .flowbox { min-width: 0; }
+  .theme-btn { position: fixed; right: 16px; bottom: 16px; z-index: 30; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 700 13px "Be Vietnam Pro", sans-serif; box-shadow: var(--sh); cursor: pointer; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0 60px; }
+  @media (max-width: 860px) { .grid3, .grid2 { grid-template-columns: 1fr; } }
+  @media print { nav.toc, .theme-btn { display: none; } .card, .shot { break-inside: avoid; } }
+
+  /* ===== thêm cho trình thiết kế ===== */
+  .dk .shell.tall { min-height: 640px; }
+  .dk .tl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .dk .tcard { background: #fff; border: 1px solid #F0DDC2; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 0 #F0DDC2; }
+  .dk .tcard .pv { height: 86px; position: relative; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .dk .tcard .pv b { font-size: 11px; } .dk .tcard .pv i { display: block; height: 16px; border-radius: 8px; }
+  .dk .tcard .pv .bb { margin-top: auto; height: 14px; border-radius: 999px; }
+  .dk .tcard .nm { padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 11.5px; }
+  .dk .tcard .nm small { display: block; font-weight: 600; color: #8A6A4A; font-size: 10px; }
+  .dk .tcard.new { border: 2px dashed #E5C9A0; box-shadow: none; display: grid; place-items: center; text-align: center; color: #9A5B00; font-weight: 800; padding: 16px; }
+  .dk .ed { display: grid; grid-template-columns: 320px 1fr; gap: 14px; min-height: 520px; }
+  .dk .panel { background: #fff; border: 1px solid #F0DDC2; border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .dk .acc { border: 1px solid #F0DDC2; border-radius: 14px; overflow: hidden; }
+  .dk .acc .ah { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-weight: 800; background: #FFF8EC; }
+  .dk .acc .ah em { margin-left: auto; font-style: normal; color: #8A6A4A; font-weight: 700; }
+  .dk .acc .ab { padding: 8px 10px; display: grid; gap: 7px; }
+  .dk .fld { display: grid; grid-template-columns: 96px 1fr auto; gap: 8px; align-items: center; font-size: 11px; }
+  .dk .fld .sw { width: 22px; height: 22px; border-radius: 7px; border: 1px solid rgba(0, 0, 0, .12); }
+  .dk .fld .hex { background: #FFF8EC; border: 1px solid #F0DDC2; border-radius: 8px; padding: 3px 8px; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: #4B3621; }
+  .dk .fld .ok { font-size: 9.5px; font-weight: 900; padding: 2px 6px; border-radius: 999px; background: #ECFDF5; color: #047857; }
+  .dk .fld .ok.w { background: #FFF1D6; color: #9A5B00; } .dk .fld .ok.b { background: #FFF1F2; color: #BE123C; }
+  .dk .segs { display: flex; gap: 4px; flex-wrap: wrap; } .dk .segs span { padding: 3px 9px; border-radius: 999px; border: 1px solid #F0DDC2; font-size: 10.5px; font-weight: 800; color: #8A6A4A; background: #fff; }
+  .dk .segs span.on { background: #4B3621; color: #FFF8EC; border-color: #4B3621; }
+  .dk .pvwrap { background: #F3E6D0; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .dk .pvbar { display: flex; align-items: center; gap: 8px; }
+  .dk .phones { display: flex; gap: 12px; overflow: hidden; }
+  .dk .ph { flex: 0 0 150px; height: 300px; border-radius: 22px; border: 6px solid #0D0B1A; overflow: hidden; position: relative; font-size: 8px; padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; background: var(--m-bg); color: var(--m-text); font-family: var(--m-font), sans-serif; }
+  .dk .ph .h { font-weight: 800; font-size: 13px; line-height: 1.1; }
+  .dk .ph .c { border-radius: var(--m-r); background: var(--m-card); border: 1.5px solid var(--m-line); padding: 7px; flex-shrink: 0; font-family: "Nunito", sans-serif; }
+  .dk .ph .c b { display: block; font-size: 8.5px; } .dk .ph .c span { opacity: .75; }
+  .dk .ph .b { border-radius: var(--m-r); background: var(--m-btn); color: var(--m-btn-t); text-align: center; padding: 7px; font-weight: 900; font-size: 9px; margin-top: auto; font-family: "Nunito", sans-serif; }
+  .dk .ph .wk { display: flex; gap: 3px; } .dk .ph .wk i { flex: 1; height: 14px; border-radius: 50%; background: var(--m-line); } .dk .ph .wk i.on { background: var(--m-acc); }
+  .dk .ph .mas { position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; }
+  .dk .ph .nv2 { display: flex; justify-content: space-around; margin: 0 -9px -10px; padding: 6px 0 8px; background: var(--m-card); border-top: 1px solid var(--m-line); font-size: 11px; }
+  .dk .ph .tag { position: absolute; left: 8px; bottom: 36px; font-size: 7.5px; background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3; border-radius: 6px; padding: 1px 5px; font-weight: 800; font-family: "Nunito", sans-serif; }
+  .dk .chk { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 10px; font-size: 11px; align-items: center; }
+  .dk .chk .hd2 { font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: #8A6A4A; font-weight: 900; }
+  .dk .chk .v { font-family: ui-monospace, Consolas, monospace; font-weight: 800; }
+  .dk .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .dk .step { background: #fff; border: 1px solid #F0DDC2; border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .dk .step .no { width: 26px; height: 26px; border-radius: 50%; background: #F6A623; color: #4B3621; display: grid; place-items: center; font-weight: 900; }
+  .dk .step.done .no { background: #10B981; color: #fff; } .dk .step.cur { border: 2px solid #F6A623; }
+  .dk .hist { display: grid; gap: 6px; } .dk .hist div { display: grid; grid-template-columns: 70px 1fr auto; gap: 8px; font-size: 11px; align-items: center; padding: 6px 8px; background: #FFF8EC; border-radius: 10px; }
+  .dk .dropz { border: 2px dashed #E5C9A0; border-radius: 14px; padding: 10px; text-align: center; color: #9A5B00; font-size: 11px; background: #FFFBF2; }
+  .dk .bearico { width: 34px; height: 34px; }
+  main > section { min-width: 0; }
+  .dk .pvwrap { align-self: start; position: sticky; top: 70px; }
+  .dk .ed { align-items: start; }
+  .flowcard2 { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="bear" viewBox="0 0 64 64"><circle cx="15" cy="15" r="9" fill="#C98A4B"/><circle cx="49" cy="15" r="9" fill="#C98A4B"/><circle cx="15" cy="15" r="4.5" fill="#F3C9A0"/><circle cx="49" cy="15" r="4.5" fill="#F3C9A0"/><circle cx="32" cy="35" r="23" fill="#D99A5B"/><ellipse cx="32" cy="43" rx="10.5" ry="8" fill="#F6DDBF"/><circle cx="23.5" cy="31" r="2.7" fill="#3B2A1A"/><circle cx="40.5" cy="31" r="2.7" fill="#3B2A1A"/><ellipse cx="32" cy="39.5" rx="3.3" ry="2.5" fill="#3B2A1A"/><path d="M28 45 q4 3.2 8 0" stroke="#3B2A1A" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="18" cy="39" r="3.2" fill="#F4A7A0" opacity=".65"/><circle cx="46" cy="39" r="3.2" fill="#F4A7A0" opacity=".65"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="#F6A623" stroke="#9A5B00" stroke-width="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#9A5B00" stroke-width="1.8"/></symbol>
+</defs></svg>
+<header class="hero"><div class="wrap">
+  <div class="sec-h"><div class="n">Kèm Con Học · Admin bản Gấu · bản vẽ cho prompt 10</div><h2>Thiết kế bộ giao diện ngay trong admin, không cần code</h2>
+  <p>Một bộ giao diện là một gói biến (màu, chữ, hình dạng, nhân vật, trang trí) cộng với bố cục và icon mượn từ một bộ gốc. Admin chỉnh gói biến, xem trước 12 màn, chạy kiểm tra tự động, rồi phát hành vào KV. Gia đình tải bộ mới khi mở app. Dưới là 4 màn và lưu đồ.</p></div>
+</div></header>
+<nav class="toc"><div class="wrap"><a href="#m1">1 Danh sách bộ</a><a href="#m2">2 Trình thiết kế</a><a href="#m3">3 Kiểm tra</a><a href="#m4">4 Phát hành</a><a href="#luong">Lưu đồ</a><a href="#khac">Khác gì prompt 09</a></div></nav>
+<main class="wrap" style="display:grid;gap:28px;padding-top:22px">
+  <section id="m1"><div class="sec-h"><div class="n">Màn 1</div><h2>Danh sách bộ giao diện</h2><p>8 bộ gốc (chỉ bật tắt, đặt mặc định), bộ do admin tạo (sửa, phiên bản), nháp, và 5 tổ hợp gia đình tự ghép phổ biến nhất (prompt 09) có nút "Biến thành bộ gốc".</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/admin/giao-dien</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg class="bearico" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị · bản Gấu</small></div></div>
+    <div class="nv">🏠 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình</div><div class="nv">📒 Buổi học</div><div class="nv">🧪 Prompt Studio</div><div class="nv on">🎨 Giao diện app</div><div class="nv">🛡️ Luật phạm vi</div><div class="nv">👩‍🏫 Giáo viên</div><div class="nv">🏗️ Hạ tầng</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: bộ mới chỉ tới tay gia đình khi bấm <b>Phát hành</b>.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Huyền</b><br><span style="color:#8A6A4A">superadmin</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm bộ, gia đình…</span><span class="clk">T7 25/10 · 09:12</span><span class="bell">🔔<em>2</em></span></div>
+
+    <div style="display:flex;align-items:end;gap:12px"><div><h3>Giao diện app</h3><div class="sub2">8 bộ gốc, 2 bộ do admin tạo, 1 nháp. Mặc định: Kẹo Bông.</div></div><span class="bt" style="margin-left:auto">＋ Tạo bộ mới</span><span class="bt g">⇪ Nhập từ mã</span></div>
+    <div class="tabs2"><span class="on">Tất cả · 11</span><span>Gốc · 8</span><span>Admin tạo · 2</span><span>Nháp · 1</span><span>Gia đình tự ghép · 37 nhà</span></div>
+    <div class="tl">
+      <div class="tcard"><div class="pv" style="background:#FFF4F8;color:#4A3B5C"><b>Tối nay, Mít học gì?</b><i style="background:#fff;border:1px solid #F3D9E6"></i><i style="background:#fff;border:1px solid #F3D9E6;width:70%"></i><span class="bb" style="background:linear-gradient(#FFC9DD,#FFA9CA)"></span></div><div class="nm"><span>Kẹo Bông<small>gốc · mặc định · 2.410 nhà</small></span><span class="pill p-done">Đang bật</span></div></div>
+      <div class="tcard"><div class="pv" style="background:#FFF8EC;color:#4B3621"><b>Tối nay, Mít học gì?</b><i style="background:#fff;border:1px solid #F0DDC2"></i><i style="background:#fff;border:1px solid #F0DDC2;width:70%"></i><span class="bb" style="background:#F6A623"></span></div><div class="nm"><span>Bạn Gấu<small>gốc · 1.120 nhà</small></span><span class="pill p-done">Đang bật</span></div></div>
+      <div class="tcard"><div class="pv" style="background:#0F2A24;color:#F2F7EE"><b>Tối nay, Mít học gì?</b><i style="background:#163B33;border:1px solid #2A5248"></i><i style="background:#163B33;border:1px solid #2A5248;width:70%"></i><span class="bb" style="background:#FFD166"></span></div><div class="nm"><span>Khu Vườn Đêm<small>gốc · 640 nhà</small></span><span class="pill p-done">Đang bật</span></div></div>
+      <div class="tcard"><div class="pv" style="background:#2F4A41;color:#F6F1E6"><b>Tối nay, Mít học gì?</b><i style="background:rgba(246,241,230,.1);border:1px solid rgba(246,241,230,.6)"></i><i style="background:rgba(246,241,230,.1);border:1px solid rgba(246,241,230,.6);width:70%"></i><span class="bb" style="background:transparent"></span></div><div class="nm"><span>Bảng Phấn<small>gốc · 95 nhà</small></span><span class="pill p-att">Đã tắt</span></div></div>
+      <div class="tcard"><div class="pv" style="background:#EAF6FF;color:#0F3A5C"><b>Tối nay, Mít học gì?</b><i style="background:#fff;border:1px solid #CFE6F7"></i><i style="background:#fff;border:1px solid #CFE6F7;width:70%"></i><span class="bb" style="background:#1B8FD6"></span></div><div class="nm"><span>Biển Xanh<small>admin · v2 · 310 nhà</small></span><span class="pill p-done">Đang bật</span></div></div>
+      <div class="tcard"><div class="pv" style="background:#F1F8EC;color:#2B4A1E"><b>Tối nay, Mít học gì?</b><i style="background:#fff;border:1px solid #D6E8C8"></i><i style="background:#fff;border:1px solid #D6E8C8;width:70%"></i><span class="bb" style="background:#5FA33A"></span></div><div class="nm"><span>Rừng Tre<small>admin · v1 · 48 nhà</small></span><span class="pill p-done">Đang bật</span></div></div>
+      <div class="tcard"><div class="pv" style="background:#FFF3E6;color:#7A1E12"><b>Tối nay, Mít học gì?</b><i style="background:#fff;border:1px solid #F7D6B5"></i><i style="background:#fff;border:1px solid #F7D6B5;width:70%"></i><span class="bb" style="background:#D7262B"></span></div><div class="nm"><span>Tết Sum Vầy<small>nháp · chưa phát hành</small></span><span class="pill p-learn">Nháp</span></div></div>
+      <div class="tcard new">＋<br>Tạo bộ mới<br><small style="font-weight:600">bắt đầu từ bộ gốc hoặc từ trống</small></div>
+    </div>
+    <div class="c"><span class="lb">Gia đình tự ghép (prompt 09) · 5 tổ hợp phổ biến</span>
+      <div class="hist" style="margin-top:6px"><div><b>12 nhà</b><span>Mật ong · sáng · tròn mập · mềm · kỳ lân</span><span class="bt g">Biến thành bộ gốc</span></div><div><b>9 nhà</b><span>Tím · tối · gọn · kính · rồng con</span><span class="bt g">Biến thành bộ gốc</span></div><div><b>6 nhà</b><span>Bạc hà · sáng · viết tay · giấy · mèo</span><span class="bt g">Biến thành bộ gốc</span></div></div></div>
+
+  </section>
+</div></div></div></section>
+  <section id="m2"><div class="sec-h"><div class="n">Màn 2</div><h2>Trình thiết kế</h2><p>Trái: 5 nhóm biến, mỗi màu có tỉ lệ tương phản tại chỗ và chữ trên nền màu được tính tự động. Phải: 12 màn xem trước vẽ bằng component thật, chấm đỏ ở chỗ chữ dưới chuẩn. Bố cục 3 màn chính và 4 icon mượn từ một bộ gốc.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/admin/giao-dien/tet-sum-vay</span></div>
+<div class="shell tall">
+  <aside class="side">
+    <div class="brand"><svg class="bearico" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị · bản Gấu</small></div></div>
+    <div class="nv">🏠 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình</div><div class="nv">📒 Buổi học</div><div class="nv">🧪 Prompt Studio</div><div class="nv on">🎨 Giao diện app</div><div class="nv">🛡️ Luật phạm vi</div><div class="nv">👩‍🏫 Giáo viên</div><div class="nv">🏗️ Hạ tầng</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: bộ mới chỉ tới tay gia đình khi bấm <b>Phát hành</b>.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Huyền</b><br><span style="color:#8A6A4A">superadmin</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm bộ, gia đình…</span><span class="clk">T7 25/10 · 09:12</span><span class="bell">🔔<em>2</em></span></div>
+
+    <div style="display:flex;align-items:center;gap:10px"><span class="bt g">‹ Giao diện app</span><div><h3 style="font-size:18px">Tết Sum Vầy <span class="pill p-learn" style="vertical-align:middle">Nháp · v1</span></h3><div class="sub2">Tạo từ bộ Bạn Gấu · sửa lần cuối 09:10 · tự lưu</div></div><div style="margin-left:auto;display:flex;gap:8px"><span class="bt g">↶ Hoàn tác</span><span class="bt g">Xem toàn màn</span><span class="bt">Kiểm tra &amp; phát hành ›</span></div></div>
+    <div class="ed">
+      <div class="panel">
+        <div class="acc"><div class="ah">🎨 Màu <em>12 biến · 1 cảnh báo</em></div><div class="ab">
+          <div class="fld"><span>Nền trang</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#FFF3E6"></i><span class="hex">#FFF3E6</span></span><span class="ok ">✓ 4,5+</span></div><div class="fld"><span>Nền thẻ</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#FFFFFF"></i><span class="hex">#FFFFFF</span></span><span class="ok ">✓</span></div><div class="fld"><span>Chữ chính</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#7A1E12"></i><span class="hex">#7A1E12</span></span><span class="ok ">✓ 9,8</span></div><div class="fld"><span>Chữ phụ</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#A8584A"></i><span class="hex">#A8584A</span></span><span class="ok w">3,9</span></div><div class="fld"><span>Màu nhấn</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#D7262B"></i><span class="hex">#D7262B</span></span><span class="ok ">✓ nút 5,2</span></div><div class="fld"><span>Nhấn phụ</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#F2B705"></i><span class="hex">#F2B705</span></span><span class="ok ">✓</span></div><div class="fld"><span>Đúng</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#2E7D32"></i><span class="hex">#2E7D32</span></span><span class="ok ">✓</span></div><div class="fld"><span>Cảnh báo</span><span style="display:flex;gap:6px;align-items:center"><i class="sw" style="background:#B7791F"></i><span class="hex">#B7791F</span></span><span class="ok ">✓</span></div>
+          <div class="sub2" style="font-size:10.5px">Chữ trên nền màu được tính tự động: nhập màu nền, app tự chọn chữ sáng hoặc tối đạt 4,5:1. Có thể ghi đè.</div></div></div>
+        <div class="acc"><div class="ah">🔤 Chữ <em>Baloo 2 + Nunito</em></div><div class="ab"><div class="segs"><span class="on">Baloo 2</span><span>Mitr</span><span>Lexend</span><span>Playfair</span><span>Coiny</span><span>Comfortaa</span><span>Paytone</span><span>Unbounded</span></div><div class="sub2" style="font-size:10.5px">Chỉ font đã tự host, có đủ dấu tiếng Việt.</div></div></div>
+        <div class="acc"><div class="ah">⬜ Hình dạng <em>Mềm</em></div><div class="ab"><div class="segs"><span class="on">Mềm, có đáy</span><span>Sticker viền đậm</span><span>Giấy</span><span>Kính mờ</span><span>Góc lá</span><span>Phấn vẽ tay</span></div><div class="fld"><span>Bo góc thẻ</span><span class="hex">22px</span><span></span></div><div class="fld"><span>Bo góc nút</span><span class="hex">999px</span><span></span></div></div></div>
+        <div class="acc"><div class="ah">🐻 Nhân vật và trang trí <em>Gấu đội mũ Tết</em></div><div class="ab"><div class="segs"><span class="on">Gấu</span><span>Mây</span><span>Kỳ lân</span><span>Rồng con</span><span>Mèo</span><span>Không</span></div><div class="dropz">⇪ Thả 3 file SVG: chào · nhắc · vui (mỗi file dưới 6 KB, không script, không ảnh nhúng)</div><div class="segs"><span class="on">Hoa mai rơi</span><span>Đèn lồng</span><span>Pháo giấy</span><span>Không trang trí</span></div></div></div>
+        <div class="acc"><div class="ah">🧭 Bố cục 3 màn chính và icon <em>Theo bộ Gấu</em></div><div class="ab"><div class="segs"><span class="on">Khe của Gấu</span><span>Kẹo Bông</span><span>Bento</span><span>Vườn Đêm</span><span>Sticker</span><span>Sổ Tay</span><span>Phấn</span><span>Cực Quang</span></div><div class="sub2" style="font-size:10.5px">Bộ mới dùng lại bố cục và 4 icon của một bộ gốc; không viết code mới.</div></div></div>
+      </div>
+      <div class="pvwrap">
+        <div class="pvbar"><span class="lb">Xem trước · 12 màn · dữ liệu mẫu</span><span class="segm" style="margin-left:auto"><span class="on">Điện thoại</span><span>Chữ to</span><span>Tối giản hiệu ứng</span></span></div>
+        <div class="phones" style="--m-bg:#FFF3E6;--m-text:#7A1E12;--m-card:#fff;--m-line:#F7D6B5;--m-btn:#D7262B;--m-btn-t:#fff;--m-r:18px;--m-acc:#F2B705;--m-font:'Baloo 2'">
+        <div class="ph"><svg class="mas" viewBox="0 0 64 64"><use href="#bear"/></svg><div class="h">Tết này,<br>Mít học gì?</div><div class="c"><b>Tuần này · 3 tối liền</b><div class="wk"><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div></div><div class="c"><b>Trò chơi 5 phút</b><span>Ôn bằng đồ trong nhà</span></div><div class="b">Bắt đầu học</div><div class="nv2"><span>🏮</span><span>🧧</span><span>📈</span><span>🐻</span></div></div>
+        <div class="ph"><div class="h">Hỏi con từng bước</div><div class="c" style="background:#D7262B;color:#fff;border-color:#D7262B"><b>Mẹ đọc to cho Mít</b>"Có 24 cây bút rồi, cho bạn 5 cây thì bớt đi hay nhiều lên?"</div><div class="c"><b>Gợi ý 1 · đồ vật thật</b><span>Cất 5 que tính vào túi…</span></div><div class="b">✓ Trả lời được</div></div>
+        <div class="ph"><div class="h">Mít xong bài 3!</div><div class="c"><b>9 phút · tự làm 3/4 bậc</b></div><div class="c"><b>Con dạy lại mẹ</b><span>😄 Tự làm · 🙂 Gợi ý · 😅 Mẹ dẫn</span></div><span class="tag">⚠ chữ phụ 3,9:1</span><div class="b">Xong tối nay</div></div>
+        <div class="ph"><div class="h">Tuần này của Mít</div><div class="c"><b>3 tối · 11 bậc · 6 sticker</b></div><div class="c"><b>Tháng 10</b><div class="wk"><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i></i></div></div><div class="b">Gửi báo cáo</div></div>
+        <div class="ph"><div class="h" style="text-align:center;margin-top:30px">Kèm Con Học</div><div class="c" style="margin-top:20px"><b>Tên gia đình</b><span>Nhà Mít</span></div><div class="c"><b>Mật khẩu</b><span>••••••</span></div><div class="b">Vào nhà mình</div></div>
+      </div>
+        <div class="sub2" style="font-size:10.5px">Kéo ngang để xem 7 màn còn lại. Chấm đỏ là chỗ chữ dưới chuẩn, bấm vào để nhảy tới biến tương ứng.</div>
+      </div>
+    </div>
+
+  </section>
+</div></div></div></section>
+  <section id="m3"><div class="sec-h"><div class="n">Màn 3</div><h2>Kiểm tra trước khi phát hành</h2><p>6 bước, 5 bước tự động chạy trong trình duyệt admin. Bước 6 là người xem lại 12 ảnh chụp.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/admin/giao-dien/tet-sum-vay/kiem-tra</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg class="bearico" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị · bản Gấu</small></div></div>
+    <div class="nv">🏠 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình</div><div class="nv">📒 Buổi học</div><div class="nv">🧪 Prompt Studio</div><div class="nv on">🎨 Giao diện app</div><div class="nv">🛡️ Luật phạm vi</div><div class="nv">👩‍🏫 Giáo viên</div><div class="nv">🏗️ Hạ tầng</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: bộ mới chỉ tới tay gia đình khi bấm <b>Phát hành</b>.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Huyền</b><br><span style="color:#8A6A4A">superadmin</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm bộ, gia đình…</span><span class="clk">T7 25/10 · 09:12</span><span class="bell">🔔<em>2</em></span></div>
+
+    <div style="display:flex;align-items:center;gap:10px"><span class="bt g">‹ Sửa tiếp</span><div><h3 style="font-size:18px">Kiểm tra trước khi phát hành · Tết Sum Vầy v1</h3><div class="sub2">Chạy tự động trên 12 màn, 2 cỡ chữ. Mất khoảng 10 giây, chạy ngay trong trình duyệt của admin.</div></div></div>
+    <div class="steps3">
+      <div class="step done"><span class="no">✓</span><b>Tương phản chữ</b><span class="sub2">47/48 cặp đạt. 1 cảnh báo: chữ phụ trên nền trang 3,9:1 (cần 4,5).</span><span class="bt g" style="align-self:start">Tự sửa: đậm chữ phụ thành #8E4536</span></div>
+      <div class="step done"><span class="no">✓</span><b>Font và dấu tiếng Việt</b><span class="sub2">Baloo 2, Nunito đã tự host; câu thử "Mỗi hộp có 8 cây bút chì" hiện đủ dấu.</span></div>
+      <div class="step done"><span class="no">✓</span><b>SVG nhân vật</b><span class="sub2">3 file, 4,1 KB, 3,8 KB, 5,2 KB. Không script, không link ngoài, đã làm sạch.</span></div>
+      <div class="step done"><span class="no">✓</span><b>Bố cục 360px</b><span class="sub2">12 màn không tràn ngang; nút nhỏ nhất 44px.</span></div>
+      <div class="step done"><span class="no">✓</span><b>Kích thước</b><span class="sub2">Gói bộ mới: 9,6 KB gzip (biến + 3 SVG + trang trí). Giới hạn 30 KB.</span></div>
+      <div class="step cur"><span class="no">6</span><b>Xem lại bằng mắt</b><span class="sub2">Superadmin xem 12 ảnh chụp tự động rồi tick "Đã xem".</span><span class="bt" style="align-self:start">Mở 12 ảnh</span></div>
+    </div>
+    <div class="c"><span class="lb">Bảng tương phản</span>
+      <div class="chk" style="margin-top:8px"><span class="hd2">Cặp</span><span class="hd2">Tỉ lệ</span><span class="hd2">Kết quả</span>
+        <span>Chữ chính / nền trang</span><span class="v">9,8</span><span class="pill p-done">Đạt</span>
+        <span>Chữ chính / nền thẻ</span><span class="v">11,2</span><span class="pill p-done">Đạt</span>
+        <span>Chữ phụ / nền trang</span><span class="v">3,9</span><span class="pill p-att">Cảnh báo</span>
+        <span>Chữ trên nút chính</span><span class="v">5,2</span><span class="pill p-done">Đạt</span>
+        <span>Chữ trên thẻ đọc to</span><span class="v">6,0</span><span class="pill p-done">Đạt</span>
+        <span>Chữ thông báo nhỏ</span><span class="v">12,4</span><span class="pill p-done">Đạt</span></div></div>
+
+  </section>
+</div></div></div></section>
+  <section id="m4"><div class="sec-h"><div class="n">Màn 4</div><h2>Phát hành</h2><p>Phạm vi theo 3 mức, có thời hạn cho bộ theo mùa, mã chia sẻ, lịch sử phiên bản và khôi phục. Còn cảnh báo thì chỉ được thử nội bộ.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/admin/giao-dien/tet-sum-vay/phat-hanh</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg class="bearico" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Quản trị · bản Gấu</small></div></div>
+    <div class="nv">🏠 Tổng quan</div><div class="nv">👨‍👩‍👧 Gia đình</div><div class="nv">📒 Buổi học</div><div class="nv">🧪 Prompt Studio</div><div class="nv on">🎨 Giao diện app</div><div class="nv">🛡️ Luật phạm vi</div><div class="nv">👩‍🏫 Giáo viên</div><div class="nv">🏗️ Hạ tầng</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: bộ mới chỉ tới tay gia đình khi bấm <b>Phát hành</b>.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Huyền</b><br><span style="color:#8A6A4A">superadmin</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm bộ, gia đình…</span><span class="clk">T7 25/10 · 09:12</span><span class="bell">🔔<em>2</em></span></div>
+
+    <div style="display:flex;align-items:center;gap:10px"><span class="bt g">‹ Kiểm tra</span><div><h3 style="font-size:18px">Phát hành · Tết Sum Vầy v1</h3><div class="sub2">Bộ được lưu trong KV <code>app_config:themes</code>, gia đình tải khi mở app. Không cần deploy code.</div></div></div>
+    <div class="grid2" style="gap:12px">
+      <div class="c" style="display:grid;gap:9px">
+        <span class="lb">Phạm vi</span>
+        <div class="segs"><span class="on">Thử nội bộ · 3 nhà test</span><span>10% gia đình</span><span>Tất cả</span></div>
+        <div class="fld" style="grid-template-columns:1fr auto"><span>Hiện trong "Giao diện cả nhà"</span><span class="tg"></span></div>
+        <div class="fld" style="grid-template-columns:1fr auto"><span>Đặt làm mặc định cho nhà mới</span><span class="tg off"></span></div>
+        <div class="fld" style="grid-template-columns:1fr auto"><span>Có thời hạn: 20/01 đến 20/02/2027, hết hạn tự ẩn (nhà đang dùng vẫn giữ)</span><span class="tg"></span></div>
+        <div class="fld" style="grid-template-columns:1fr auto"><span>Mã chia sẻ cho gia đình: <b>TET-26A</b></span><span class="bt g">Sao chép</span></div>
+      </div>
+      <div class="c" style="display:grid;gap:9px">
+        <span class="lb">Lịch sử phiên bản</span>
+        <div class="hist"><div><b>v1 nháp</b><span>Huyền · hôm nay 09:10 · tạo từ Bạn Gấu</span><span class="pill p-learn">Hiện tại</span></div><div><b>Biển Xanh v2</b><span>Huyền · 20/10 · đổi màu nhấn, thêm sóng</span><span class="bt g">Khôi phục</span></div><div><b>Biển Xanh v1</b><span>Minh · 12/10 · phát hành lần đầu</span><span class="bt g">Khôi phục</span></div></div>
+        <div class="sub2" style="font-size:10.5px">Mọi lần phát hành, tắt, khôi phục đều ghi <code>audit_log</code>. Khôi phục không xoá bản nào.</div>
+      </div>
+    </div>
+    <div class="savebar" style="position:static"><svg viewBox="0 0 64 64" style="width:26px;height:26px"><use href="#bear"/></svg><span>Còn 1 cảnh báo tương phản chưa xử lý. Có thể phát hành thử nội bộ, nhưng phải đạt hết mới mở cho tất cả.</span><span class="bt">Phát hành thử nội bộ</span></div>
+
+  </section>
+</div></div></div></section>
+  <section id="luong" class="flowcard2"><div class="sec-h"><div class="n">Lưu đồ</div><h2>Tạo, kiểm tra, phát hành</h2></div><div class="flowbox"><svg class="flowsvg" viewBox="0 0 1000 980" role="img" aria-label="Luồng tạo và phát hành bộ giao diện trong admin"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fc-head"/></marker></defs><path class="fc-edge" d="M500.0 58.0 L500.0 98.0" marker-end="url(#ah)"/><path class="fc-edge" d="M405.0 140.0 L250.0 140.0 L250.0 220.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="301.9" y="130.0" width="51.2" height="20" rx="10"/><text class="fc-lbl" x="327.5" y="140.5" text-anchor="middle" dominant-baseline="middle">Bộ gốc</text><path class="fc-edge" d="M595.0 140.0 L750.0 140.0 L750.0 220.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="650.5" y="130.0" width="44.0" height="20" rx="10"/><text class="fc-lbl" x="672.5" y="140.5" text-anchor="middle" dominant-baseline="middle">Trống</text><path class="fc-edge" d="M250.0 280.0 L250.0 360.0 L320.0 360.0" marker-end="url(#ah)"/><path class="fc-edge" d="M750.0 280.0 L750.0 360.0 L680.0 360.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 392.0 L500.0 438.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 502.0 L500.0 548.0" marker-end="url(#ah)"/><path class="fc-edge" d="M410.0 590.0 L295.0 590.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="334.1" y="580.0" width="36.8" height="20" rx="10"/><text class="fc-lbl" x="352.5" y="590.5" text-anchor="middle" dominant-baseline="middle">Chưa</text><path class="fc-edge dash" d="M180.0 562.0 L180.0 360.0 L320.0 360.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 632.0 L500.0 672.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="485.2" y="642.0" width="29.6" height="20" rx="10"/><text class="fc-lbl" x="500.0" y="652.5" text-anchor="middle" dominant-baseline="middle">Đạt</text><path class="fc-edge" d="M500.0 728.0 L500.0 768.0" marker-end="url(#ah)"/><path class="fc-edge" d="M500.0 832.0 L500.0 898.0" marker-end="url(#ah)"/><path class="fc-edge dash" d="M590.0 590.0 L820.0 590.0 L820.0 772.0" marker-end="url(#ah)"/><rect class="fc-lblbg" x="621.8" y="580.0" width="166.4" height="20" rx="10"/><text class="fc-lbl" x="705.0" y="590.5" text-anchor="middle" dominant-baseline="middle">Chưa, nhưng thử nội bộ</text><rect class="fc-start" x="380.0" y="14.0" width="240" height="44" rx="22.0"/><text class="fc-t fc-t-start" x="500" y="36.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Admin bấm Tạo bộ mới</tspan></text><polygon class="fc-dec" points="500,98.0 595.0,140 500,182.0 405.0,140"/><text class="fc-t fc-t-dec" x="500" y="140.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Bắt đầu từ?</tspan></text><rect class="fc-proc" x="130.0" y="220.0" width="240" height="60" rx="12"/><text class="fc-t" x="250" y="242.2" text-anchor="middle" dominant-baseline="middle"><tspan x="250" dy="0">Sao chép biến, bố cục, icon</tspan><tspan x="250" dy="15.5">của một bộ gốc</tspan></text><rect class="fc-proc" x="635.0" y="220.0" width="230" height="60" rx="12"/><text class="fc-t" x="750" y="242.2" text-anchor="middle" dominant-baseline="middle"><tspan x="750" dy="0">Bộ trống: biến mặc định,</tspan><tspan x="750" dy="15.5">bố cục Bento</tspan></text><rect class="fc-proc" x="320.0" y="328.0" width="360" height="64" rx="12"/><text class="fc-t" x="500" y="352.2" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Chỉnh màu, chữ, hình dạng, nhân vật</tspan><tspan x="500" dy="15.5">Xem trước 12 màn đổi ngay · tự lưu nháp</tspan></text><rect class="fc-proc" x="340.0" y="438.0" width="320" height="64" rx="12"/><text class="fc-t" x="500" y="462.2" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Kiểm tra tự động: tương phản, font,</tspan><tspan x="500" dy="15.5">SVG sạch, 360px, kích thước</tspan></text><polygon class="fc-dec" points="500,548.0 590.0,590 500,632.0 410.0,590"/><text class="fc-t fc-t-dec" x="500" y="590.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Đạt hết?</tspan></text><rect class="fc-note" x="65.0" y="562.0" width="230" height="56" rx="12"/><text class="fc-t fc-t-note" x="180" y="582.2" text-anchor="middle" dominant-baseline="middle"><tspan x="180" dy="0">Gợi ý tự sửa màu;</tspan><tspan x="180" dy="15.5">chấm đỏ trên bản xem trước</tspan></text><rect class="fc-proc" x="350.0" y="672.0" width="300" height="56" rx="12"/><text class="fc-t" x="500" y="700.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Superadmin xem 12 ảnh, tick Đã xem</tspan></text><rect class="fc-proc" x="320.0" y="768.0" width="360" height="64" rx="12"/><text class="fc-t" x="500" y="792.2" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Phát hành: thử nội bộ → 10% → tất cả</tspan><tspan x="500" dy="15.5">Ghi KV app_config:themes + audit_log</tspan></text><rect class="fc-end" x="320.0" y="898.0" width="360" height="44" rx="22.0"/><text class="fc-t fc-t-end" x="500" y="920.0" text-anchor="middle" dominant-baseline="middle"><tspan x="500" dy="0">Gia đình thấy bộ mới trong Giao diện cả nhà</tspan></text><rect class="fc-end" x="710.0" y="772.0" width="220" height="56" rx="28.0"/><text class="fc-t fc-t-end" x="820" y="792.2" text-anchor="middle" dominant-baseline="middle"><tspan x="820" dy="0">Phát hành thử nội bộ</tspan><tspan x="820" dy="15.5">(cho phép còn cảnh báo)</tspan></text></svg></div><div class="legend"><span><i style="background:var(--fc-start);border-color:var(--fc-start-line)"></i>Bắt đầu</span><span><i style="background:var(--fc-end);border-color:var(--fc-end-line)"></i>Kết thúc</span><span><i style="background:var(--fc-dec);border-color:var(--fc-dec-line);transform:rotate(45deg) scale(.8)"></i>Rẽ nhánh</span><span><i style="background:var(--fc-box);border-color:var(--fc-box-line)"></i>Bước xử lý</span><span><i style="background:var(--fc-note);border-color:var(--fc-note-line);border-style:dashed"></i>Ghi chú</span><span>Nét đứt: quay lại</span></div></section>
+  <section id="khac" class="card"><div class="sec-h"><div class="n">So sánh</div><h2>Khác gì "Tự thiết kế" của gia đình (prompt 09)</h2></div>
+    <table style="margin-top:10px"><thead><tr><th></th><th>Gia đình (prompt 09)</th><th>Admin (prompt 10)</th></tr></thead><tbody>
+      <tr><td>Màu</td><td>Chọn 1 trong 8 màu đã tính sẵn</td><td>Nhập mã màu tự do, có tỉ lệ tương phản tại chỗ, chữ trên nền tự tính</td></tr>
+      <tr><td>Nhân vật</td><td>7 nhân vật có sẵn</td><td>Tải SVG riêng (3 trạng thái), có làm sạch</td></tr>
+      <tr><td>Trang trí nền</td><td>Theo nhân vật</td><td>Chọn hoặc tải: hoa mai, đèn lồng, tuyết…</td></tr>
+      <tr><td>Bố cục và icon</td><td>Theo nhân vật</td><td>Chọn bộ gốc để mượn</td></tr>
+      <tr><td>Xem trước</td><td>3 màn nhỏ, 5 màn thật ở cuối</td><td>12 màn thật, 2 cỡ chữ, chấm đỏ chỗ lỗi</td></tr>
+      <tr><td>Kiểm tra</td><td>Luôn đạt vì bảng đã tính</td><td>6 bước, bắt buộc đạt mới mở cho tất cả</td></tr>
+      <tr><td>Phát hành</td><td>Cho nhà mình, mã chia sẻ</td><td>Thử nội bộ, 10%, tất cả; có thời hạn; phiên bản; audit</td></tr>
+      <tr><td>Lưu ở đâu</td><td>State gia đình</td><td>KV <code>app_config:themes</code>, gia đình tải khi mở app</td></tr>
+    </tbody></table>
+    <p style="margin-top:10px;font-size:14px;color:var(--muted)">Cả hai dùng chung một "động cơ" giao diện của prompt 07: biến CSS, khe bố cục, bộ linh kiện, icon theo biến. Vì vậy prompt 10 chủ yếu là màn admin, phần kiểm tra và cách lưu, không phải code giao diện mới.</p>
+  </section>
+</main>
+<footer>Bản vẽ ngày 25/10/2026 · Kèm Con Học</footer>
+</body>
+</html>

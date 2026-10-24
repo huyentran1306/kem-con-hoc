@@ -6,14 +6,19 @@ import React, { useState, useContext, useEffect } from 'react'
 import { AppCtx } from './ctx'
 import { THEMES, getTheme, applyTheme } from './themes'
 import { Check, Sparkles, Sliders } from 'lucide-react'
+import { CustomThemeDesigner } from './CustomThemeDesigner'
+import { decodeThemeCode } from './themes/customThemeCode'
 
 export function ThemePickerSheet({ onClose }) {
   const { S, patch, toast } = useContext(AppCtx)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const initialTheme = S.theme || 'candy'
   const initialMotion = S.motion || 'full'
 
   const [selectedTheme, setSelectedTheme] = useState(initialTheme)
   const [selectedMotion, setSelectedMotion] = useState(initialMotion)
+  const [showDesigner, setShowDesigner] = useState(false)
+  const [inputCode, setInputCode] = useState('')
 
   // Áp dụng thử ngay khi bấm chọn thẻ
   const handlePreview = (themeId) => {
@@ -215,6 +220,107 @@ export function ThemePickerSheet({ onClose }) {
             </div>
           )
         })}
+
+        {/* Thẻ thứ 9: ✨ Tự thiết kế (Prompt 09) */}
+        <div
+          onClick={() => {
+            if (S.customTheme) {
+              handlePreview('custom')
+            } else {
+              setShowDesigner(true)
+            }
+          }}
+          style={{
+            border: selectedTheme === 'custom' ? '2.5px solid var(--c-accent)' : '1.5px dashed var(--c-accent)',
+            borderRadius: 16,
+            padding: 10,
+            background: selectedTheme === 'custom' ? 'var(--c-surface-2)' : 'var(--c-surface)',
+            cursor: 'pointer',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            boxShadow: selectedTheme === 'custom' ? '0 4px 16px rgba(0,0,0,0.1)' : 'none',
+          }}
+        >
+          <div
+            style={{
+              height: 64,
+              borderRadius: 10,
+              background: 'linear-gradient(135deg, #FFF8EC, #EDE9FE)',
+              border: '1px dashed var(--c-accent)',
+              padding: 6,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ fontSize: 24 }}>✨</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--c-accent-ink)' }}>Tự ghép độc bản</span>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <b style={{ fontSize: 13.5, color: 'var(--c-text)' }}>Tự thiết kế</b>
+              {selectedTheme === 'custom' && <Check size={16} color="var(--c-accent)" strokeWidth={3} />}
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 2, lineHeight: 1.35 }}>
+              Tự chọn màu, chữ, kiểu nút và bạn đồng hành
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 4, marginTop: 'auto' }}>
+            <button
+              className="btn ghost"
+              style={{ width: '100%', padding: '4px 6px', fontSize: 11, fontWeight: 700 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDesigner(true)
+              }}
+            >
+              {S.customTheme ? '✎ Sửa thiết kế' : '+ Tạo bộ mới'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Ô nhập mã chia sẻ XXX-XXX */}
+      <div style={{ marginTop: 14, background: 'var(--c-surface)', borderRadius: 14, padding: '12px 14px', border: '1px solid var(--c-line)' }}>
+        <b style={{ fontSize: 13, color: 'var(--c-text)', display: 'block', marginBottom: 4 }}>
+          🎁 Nhập mã bộ giao diện của nhà khác
+        </b>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Ví dụ: KX7-M4P"
+            value={inputCode}
+            maxLength={7}
+            onChange={(e) => {
+              const val = e.target.value.toUpperCase()
+              setInputCode(val)
+              const decoded = decodeThemeCode(val)
+              if (decoded) {
+                patch({ customTheme: decoded })
+                setSelectedTheme('custom')
+                applyTheme('custom', selectedMotion, decoded)
+                toast('Đã tìm thấy bộ giao diện ' + decoded.buddy + '! Bấm Lưu để dùng ✨')
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--c-line)',
+              fontSize: 14,
+              fontWeight: 800,
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
+              background: 'var(--c-bg)',
+              color: 'var(--c-text)',
+            }}
+          />
+        </div>
       </div>
 
       {/* Nút hành động */}
@@ -226,6 +332,23 @@ export function ThemePickerSheet({ onClose }) {
           ✨ Dùng giao diện này cho cả nhà
         </button>
       </div>
+
+      {/* Modal Tự thiết kế */}
+      {showDesigner && (
+        <CustomThemeDesigner
+          childName={child?.name || 'con'}
+          currentCustomTheme={S.customTheme}
+          onSave={(cfg) => {
+            patch({ theme: 'custom', customTheme: cfg })
+            applyTheme('custom', selectedMotion, cfg)
+            setSelectedTheme('custom')
+            setShowDesigner(false)
+            toast('Đã áp dụng bộ giao diện của nhà mình! ✨')
+            onClose?.()
+          }}
+          onCancel={() => setShowDesigner(false)}
+        />
+      )}
     </div>
   )
 }

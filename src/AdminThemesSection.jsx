@@ -7,11 +7,13 @@ import React, { useState, useEffect } from 'react'
 import { THEMES, DEFAULT_THEME, getTheme, applyTheme } from './themes'
 import { dbKvGet, dbKvSet } from './api'
 import { toast } from './utils'
-import { Check, ShieldAlert, Sparkles, RefreshCw, Star } from 'lucide-react'
+import { Check, ShieldAlert, Sparkles, RefreshCw, Star, Palette } from 'lucide-react'
+import AdminThemeDesignerTab from './AdminThemeDesignerTab'
 
 const THEMES_CONFIG_KEY = 'app_config:themes'
 
-export function AdminThemesSection() {
+export function AdminThemesSection({ token, adminProfile }) {
+  const [mode, setMode] = useState('designer') // 'designer' (Prompt 10) | 'quick'
   const [config, setConfig] = useState({
     default: DEFAULT_THEME,
     enabled: THEMES.map((t) => t.id),
@@ -173,12 +175,63 @@ export function AdminThemesSection() {
   }
 
   return (
-    <div className="admin-card" style={{ padding: 24, marginTop: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <h3 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            🎨 Quản lý 8 Bộ Giao Diện Ứng Dụng
-          </h3>
+    <div style={{ marginTop: 16 }}>
+      {/* Switcher giữa Trình thiết kế chuyên sâu (Prompt 10) và Quản lý nhanh */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        <button
+          type="button"
+          onClick={() => setMode('designer')}
+          style={{
+            padding: '9px 18px',
+            borderRadius: 10,
+            fontSize: 13.5,
+            fontWeight: 800,
+            cursor: 'pointer',
+            border: mode === 'designer' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
+            background: mode === 'designer' ? '#EEF2FF' : '#FFFFFF',
+            color: mode === 'designer' ? '#4338CA' : '#475569',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            boxShadow: mode === 'designer' ? '0 2px 6px rgba(79,70,229,0.15)' : 'none',
+          }}
+        >
+          <Palette size={16} />
+          <span>🎨 Trình thiết kế bộ giao diện (Prompt 10)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMode('quick')}
+          style={{
+            padding: '9px 18px',
+            borderRadius: 10,
+            fontSize: 13.5,
+            fontWeight: 800,
+            cursor: 'pointer',
+            border: mode === 'quick' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
+            background: mode === 'quick' ? '#EEF2FF' : '#FFFFFF',
+            color: mode === 'quick' ? '#4338CA' : '#475569',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            boxShadow: mode === 'quick' ? '0 2px 6px rgba(79,70,229,0.15)' : 'none',
+          }}
+        >
+          <Star size={16} />
+          <span>⚡ Bật/tắt 8 bộ gốc & Mặc định toàn app</span>
+        </button>
+      </div>
+
+      {mode === 'designer' ? (
+        <AdminThemeDesignerTab token={token} adminProfile={adminProfile} />
+      ) : (
+        <div className="admin-card" style={{ padding: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                🎨 Quản lý 8 Bộ Giao Diện Ứng Dụng
+              </h3>
           <p style={{ margin: '4px 0 0', color: 'var(--adm-sub)', fontSize: 13.5 }}>
             Bật/tắt các bộ hiển thị cho phụ huynh, chỉ định cờ giao diện mặc định (bấm nút là đổi và tự động lưu đám mây).
           </p>
@@ -437,6 +490,8 @@ export function AdminThemesSection() {
           )
         })}
       </div>
+        </div>
+      )}
     </div>
   )
 }

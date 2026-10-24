@@ -52,7 +52,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
             <p className="eyebrow" style={{ marginTop: 8 }}>{activeTheme.name} · Bạn đồng hành dịu dàng</p>
             <p className="title" style={{ fontSize: 30 }}>Kèm Con Học</p>
             <p className="sub" style={{ maxWidth: 300, margin: '8px auto 0' }}>
-              AI không giải bài cho con — chỉ cho bố mẹ cách giảng.
+              AI không giải bài cho con · chỉ cho bố mẹ cách giảng.
             </p>
           </div>
 
@@ -147,7 +147,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
             </button>
 
             <p className="notice">
-              Mỗi gia đình một tài khoản riêng — dữ liệu tách biệt, đồng bộ qua đám mây ☁️
+              Dữ liệu được đồng bộ để mọi máy trong nhà cùng xem · mỗi gia đình tài khoản riêng ☁️
             </p>
 
             {onOpenJoin && (

@@ -236,6 +236,55 @@ Trả về văn bản tiếng Việt ấm áp, động viên, khoa học, chia r
 💡 2. NGUYÊN NHÂN CỐT LÕI (DẠNG BÀI & MÔI TRƯỜNG HỌC)
 🚀 3. LỘ TRÌNH 3 BƯỚC CHO TUẦN TỚI ĐỂ CÂN BẰNG CHO CON`,
   },
+
+  p8_calm_phrase: {
+    id: 'p8_calm_phrase',
+    name: '8. Câu nói hạ hoả hợp bài cho phụ huynh',
+    desc: 'Tạo câu nói nhẹ nhàng, gắn liền với đúng bậc đang học, không lộ đáp án để mẹ kết nối lại với con',
+    variables: ['{{lop}}', '{{dang_bai}}', '{{cau_hoi_bac}}', '{{ly_do}}', '{{xung_ho}}', '{{ten_con}}'],
+    requiredVars: ['{{cau_hoi_bac}}', '{{ly_do}}'],
+    template: `Bạn là chuyên gia tâm lý sư phạm gia đình. Phụ huynh đang kèm con học và gặp khó khăn.
+Thông tin:
+- Con tên: {{ten_con}}, học {{lop}}
+- Người kèm xưng hô: {{xung_ho}}
+- Dạng bài: {{dang_bai}}
+- Câu hỏi bậc đang học: "{{cau_hoi_bac}}"
+- Lý do đang căng thẳng: "{{ly_do}}"
+
+Nhiệm vụ: Trả về DUY NHẤT một JSON hợp lệ có dạng:
+{
+  "thay_vi_noi": "<câu tiêu cực thường buột miệng nói, tối đa 20 từ>",
+  "thu_noi": "<câu ấm áp, đồng cảm, gợi ý nhẹ nhàng hợp với đúng câu hỏi của bậc này, tối đa 30 từ>",
+  "viec_lam_ngay": "<hành động cụ thể 1 phút cho hai mẹ con, tối đa 20 từ>"
+}
+
+QUY TẮC BẮT BUỘC:
+1. "thu_noi" KHÔNG ĐƯỢC CHỨA ĐÁP ÁN của câu hỏi hay kết quả tính toán.
+2. Giọng văn thật ấm áp, gần gũi, nói "mình", không đổ lỗi hay phán xét.
+3. Không thêm bất kỳ text nào ngoài JSON.`,
+  },
+
+  p9_story_wrap: {
+    id: 'p9_story_wrap',
+    name: '9. Kể chuyện hoá đề bài theo bạn đồng hành',
+    desc: 'Lồng đề toán vào bối cảnh bạn đồng hành (Gấu, Kỳ lân, Rồng con...) giữ nguyên 100% số liệu để con hứng thú',
+    variables: ['{{de_bai}}', '{{ten_con}}', '{{ban_dong_hanh}}', '{{xung_ho}}'],
+    requiredVars: ['{{de_bai}}', '{{ban_dong_hanh}}'],
+    template: `Bạn là nhà văn viết truyện thiếu nhi kiêm giáo viên tiểu học. Hãy viết lại đề bài toán sau thành một câu chuyện ngắn vui nhộn theo bạn đồng hành {{ban_dong_hanh}} để {{xung_ho}} đọc cho bé {{ten_con}} nghe.
+
+Đề bài gốc:
+"""{{de_bai}}"""
+
+QUY TẮC BẮT BUỘC:
+1. GIỮ NGUYÊN 100% TẤT CẢ SỐ LIỆU và phép toán trong đề bài gốc, không thêm bớt hay đổi số.
+2. Dưới 60 từ, ngôn từ sinh động, hấp dẫn, dễ hiểu với lứa tuổi tiểu học.
+3. Trả về DUY NHẤT một JSON hợp lệ:
+{
+  "de_ke_chuyen": "<câu chuyện ngắn lồng đề bài>",
+  "giu_nguyen_so_lieu": true
+}
+Không thêm bất kỳ text nào ngoài JSON.`,
+  },
 }
 
 /* Cache in-memory */

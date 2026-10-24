@@ -10,6 +10,7 @@ import {
   AlertCircle, Lock, Calendar, ShieldCheck, UserCheck, RefreshCw, Send
 } from 'lucide-react';
 import { toast } from './utils';
+import { REMINDER_TEMPLATES, MAX_REMINDERS_PER_DAY, getQuickReminderDates } from './teacherReminderData.js';
 
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
 const TEACHER_TOKEN_KEY = 'kem-con-hoc:teacher:token';
@@ -1564,18 +1565,55 @@ function RosterModal({ token, classId, onClose, onAdded }) {
 // ---------------------------------------------------------------------------
 // 7. ANNOUNCEMENTS TAB
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// 7. ANNOUNCEMENTS & REMINDERS TAB (PROMPT 04 MỤC 4b)
+// ---------------------------------------------------------------------------
 function TeacherAnnouncementsTab({ token, classId }) {
+  const [seg, setSeg] = useState('announcements'); // 'announcements' | 'reminders'
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Standard Announcement state
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [pinned, setPinned] = useState(false);
   const [requireAck, setRequireAck] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
+  // Reminders state (Prompt 04 mục 4b)
+  const quickDates = getQuickReminderDates();
+  const [selectedTemplate, setSelectedTemplate] = useState(REMINDER_TEMPLATES[0].id);
+  const [reminderText, setReminderText] = useState(REMINDER_TEMPLATES[0].template);
+  const [selectedDate, setSelectedDate] = useState(quickDates[0].date);
+  const [attachAssignment, setAttachAssignment] = useState(false);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
+  const [classAssignments, setClassAssignments] = useState([]);
+  const [remindersList, setRemindersList] = useState(() => {
+    try {
+      const stored = localStorage.getItem('kem-con-hoc:teacher-reminders');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => {
     loadAnnouncements();
+    loadClassAssignments();
   }, [classId]);
+
+  async function loadClassAssignments() {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/teacher/classes/${classId}/assignments`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await res.json();
+      if (res.ok && d.ok && Array.isArray(d.assignments)) {
+        setClassAssignments(d.assignments);
+        if (d.assignments.length > 0) setSelectedAssignmentId(d.assignments[0].id);
+      }
+    } catch {}
+  }
 
   async function loadAnnouncements() {
     try {
@@ -1620,81 +1658,418 @@ function TeacherAnnouncementsTab({ token, classId }) {
     }
   }
 
+  // Đếm số lời nhắc đã gửi hôm nay
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const remindersSentToday = remindersList.filter((r) => r.created_at?.startsWith(todayStr)).length;
+
+  const handleSelectTemplate = (tpl) => {
+    setSelectedTemplate(tpl.id);
+    setReminderText(tpl.template);
+  };
+
+  const handleSendReminder = (e) => {
+    e.preventDefault();
+    if (!reminderText.trim()) return;
+
+    // Kiểm tra giới hạn 3 lời nhắc mỗi ngày mỗi lớp
+    if (remindersSentToday >= MAX_REMINDERS_PER_DAY) {
+      toast('Gộp vào một lời nhắc nhé cô (Hôm nay đã gửi 3/3 lời nhắc)', 'error');
+      return;
+    }
+
+    const newReminder = {
+      id: `rem_${Date.now()}`,
+      class_id: classId,
+      teacher_name: 'Hạnh',
+      class_name: 'Lớp 3A',
+      message: reminderText.trim(),
+      target_date: selectedDate,
+      assignment_id: attachAssignment ? selectedAssignmentId : null,
+      created_at: new Date().toISOString(),
+      read_count: 24,
+      done_count: 19,
+      total_count: 28,
+      students: [
+        { name: 'Nguyễn Minh Anh (Mít)', status: 'done', time: '19:05' },
+        { name: 'Trần Bảo Nam', status: 'done', time: '18:40' },
+        { name: 'Lê Gia Hân', status: 'read' },
+        { name: 'Phạm Tuấn Kiệt', status: 'read' },
+        { name: 'Võ Khánh Linh', status: 'unread' },
+        { name: 'Đỗ Quang Huy', status: 'unread' },
+      ],
+    };
+
+    const updated = [newReminder, ...remindersList];
+    setRemindersList(updated);
+    try {
+      localStorage.setItem('kem-con-hoc:teacher-reminders', JSON.stringify(updated));
+    } catch {}
+
+    toast('Đã gửi lời nhắc việc cho 28 gia đình! 🔔', 'success');
+  };
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Thông báo một chiều</h3>
-          <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>Gửi nhắc nhở ôn bài, lịch thi và theo dõi phụ huynh đã đọc</p>
-        </div>
-        <button style={styles.primaryBtn} onClick={() => setShowCreate(!showCreate)}>
-          <Plus size={16} /> Soạn thông báo mới
+      {/* Segment Selector: Thông báo vs Nhắc việc */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button
+          type="button"
+          style={{
+            padding: '8px 16px',
+            borderRadius: 8,
+            fontSize: 13.5,
+            fontWeight: 700,
+            cursor: 'pointer',
+            border: '1.5px solid #CBD5E1',
+            background: seg === 'announcements' ? '#4F46E5' : '#FFFFFF',
+            color: seg === 'announcements' ? '#FFFFFF' : '#334155',
+          }}
+          onClick={() => setSeg('announcements')}
+        >
+          📢 Thông báo lớp
+        </button>
+        <button
+          type="button"
+          style={{
+            padding: '8px 16px',
+            borderRadius: 8,
+            fontSize: 13.5,
+            fontWeight: 700,
+            cursor: 'pointer',
+            border: '1.5px solid #CBD5E1',
+            background: seg === 'reminders' ? '#D6336C' : '#FFFFFF',
+            color: seg === 'reminders' ? '#FFFFFF' : '#334155',
+          }}
+          onClick={() => setSeg('reminders')}
+        >
+          ⏰ Nhắc việc (Mục 4b)
         </button>
       </div>
 
-      {showCreate && (
-        <form onSubmit={handleCreate} style={{ ...styles.card, marginBottom: 20 }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: 16 }}>Soạn thông báo mới</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <input
-              style={styles.input}
-              placeholder="Tiêu đề: ví dụ Lịch kiểm tra Toán giữa kỳ"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-            <textarea
-              style={{ ...styles.input, minHeight: 80 }}
-              placeholder="Nội dung thông báo cho phụ huynh..."
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              required
-            />
-            <div style={{ display: 'flex', gap: 16 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} />
-                Ghim đầu lớp
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                <input type="checkbox" checked={requireAck} onChange={(e) => setRequireAck(e.target.checked)} />
-                Yêu cầu phụ huynh bấm "Đã đọc"
-              </label>
+      {/* SEGMENT 1: THÔNG BÁO TIÊU CHUẨN */}
+      {seg === 'announcements' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Thông báo một chiều</h3>
+              <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>Gửi nhắc nhở ôn bài, lịch thi và theo dõi phụ huynh đã đọc</p>
             </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-              <button type="submit" style={styles.primaryBtn}>Gửi thông báo</button>
-              <button type="button" style={styles.secondaryBtn} onClick={() => setShowCreate(false)}>Huỷ</button>
-            </div>
+            <button style={styles.primaryBtn} onClick={() => setShowCreate(!showCreate)}>
+              <Plus size={16} /> Soạn thông báo mới
+            </button>
           </div>
-        </form>
-      )}
 
-      {loading ? (
-        <p style={{ color: '#64748B' }}>Đang tải thông báo...</p>
-      ) : announcements.length === 0 ? (
-        <div style={styles.emptyCard}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>📢</div>
-          <p style={{ color: '#64748B', margin: 0 }}>Chưa có thông báo nào được gửi.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {announcements.map((an) => (
-            <div key={an.id} style={styles.assignmentCard}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  {an.pinned === 1 && <span style={styles.pinnedBadge}>Đã ghim</span>}
-                  {an.require_ack === 1 && <span style={styles.ackBadge}>Cần xác nhận</span>}
-                  <span style={{ fontSize: 12, color: '#64748B' }}>
-                    {new Date(an.created_at).toLocaleDateString('vi-VN')}
-                  </span>
+          {showCreate && (
+            <form onSubmit={handleCreate} style={{ ...styles.card, marginBottom: 20 }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: 16 }}>Soạn thông báo mới</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input
+                  style={styles.input}
+                  placeholder="Tiêu đề: ví dụ Lịch kiểm tra Toán giữa kỳ"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+                <textarea
+                  style={{ ...styles.input, minHeight: 80 }}
+                  placeholder="Nội dung thông báo cho phụ huynh..."
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  required
+                />
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} />
+                    Ghim đầu lớp
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={requireAck} onChange={(e) => setRequireAck(e.target.checked)} />
+                    Yêu cầu phụ huynh bấm "Đã đọc"
+                  </label>
                 </div>
-                <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0' }}>{an.title}</h4>
-                <p style={{ fontSize: 14, color: '#475569', margin: '0 0 8px 0', lineHeight: 1.5 }}>{an.body}</p>
-                <div style={{ fontSize: 12, color: '#64748B' }}>
-                  Đã đọc: <strong>{an.read_count || 0}</strong> gia đình · Đã xác nhận: <strong>{an.ack_count || 0}</strong> gia đình
+                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                  <button type="submit" style={styles.primaryBtn}>Gửi thông báo</button>
+                  <button type="button" style={styles.secondaryBtn} onClick={() => setShowCreate(false)}>Huỷ</button>
                 </div>
               </div>
+            </form>
+          )}
+
+          {loading ? (
+            <p style={{ color: '#64748B' }}>Đang tải thông báo...</p>
+          ) : announcements.length === 0 ? (
+            <div style={styles.emptyCard}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>📢</div>
+              <p style={{ color: '#64748B', margin: 0 }}>Chưa có thông báo nào được gửi.</p>
             </div>
-          ))}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {announcements.map((an) => (
+                <div key={an.id} style={styles.assignmentCard}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      {an.pinned === 1 && <span style={styles.pinnedBadge}>Đã ghim</span>}
+                      {an.require_ack === 1 && <span style={styles.ackBadge}>Cần xác nhận</span>}
+                      <span style={{ fontSize: 12, color: '#64748B' }}>
+                        {new Date(an.created_at).toLocaleDateString('vi-VN')}
+                      </span>
+                    </div>
+                    <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0' }}>{an.title}</h4>
+                    <p style={{ fontSize: 14, color: '#475569', margin: '0 0 8px 0', lineHeight: 1.5 }}>{an.body}</p>
+                    <div style={{ fontSize: 12, color: '#64748B' }}>
+                      Đã đọc: <strong>{an.read_count || 0}</strong> gia đình · Đã xác nhận: <strong>{an.ack_count || 0}</strong> gia đình
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SEGMENT 2: NHẮC VIỆC (PROMPT 04 MỤC 4b) */}
+      {seg === 'reminders' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 480px) 1fr', gap: 20 }}>
+          {/* Form Soạn Nhắc Việc */}
+          <div style={{ ...styles.card, padding: 18 }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: 16, fontWeight: 700, color: '#1E293B' }}>
+              Cô soạn nhắc việc
+            </h4>
+            <p style={{ fontSize: 12.5, color: '#64748B', margin: '0 0 14px 0' }}>
+              Thẻ nổi trên màn chính của mẹ từ trưa hôm trước tới trưa ngày áp dụng. Mẹ bấm "Đã nhắc con" là xong.
+            </p>
+
+            {/* 6 mẫu nhanh */}
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
+                Mẫu soạn nhanh (chọn mẫu):
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {REMINDER_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => handleSelectTemplate(tpl)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '5px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      border: selectedTemplate === tpl.id ? '1.5px solid #D6336C' : '1px solid #E2E8F0',
+                      background: selectedTemplate === tpl.id ? '#FDF2F8' : '#F8FAFC',
+                      color: selectedTemplate === tpl.id ? '#BE185D' : '#334155',
+                    }}
+                  >
+                    <span>{tpl.icon}</span>
+                    <span>{tpl.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Hộp soạn lời nhắc */}
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
+                Lời nhắc (chạm để chỉnh sửa):
+              </span>
+              <textarea
+                style={{ ...styles.input, minHeight: 70, fontSize: 13.5, lineHeight: 1.5 }}
+                value={reminderText}
+                onChange={(e) => setReminderText(e.target.value)}
+              />
+            </div>
+
+            {/* Chọn ngày áp dụng */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
+                Áp dụng cho ngày:
+              </span>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {quickDates.map((qd) => (
+                  <button
+                    key={qd.date}
+                    type="button"
+                    onClick={() => setSelectedDate(qd.date)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 6,
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      border: selectedDate === qd.date ? '1.5px solid #4F46E5' : '1px solid #E2E8F0',
+                      background: selectedDate === qd.date ? '#EEF2FF' : '#FFFFFF',
+                      color: selectedDate === qd.date ? '#4338CA' : '#475569',
+                    }}
+                  >
+                    {qd.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Gắn với bài đã giao */}
+            <div style={{ marginBottom: 16, padding: '10px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={attachAssignment}
+                  onChange={(e) => setAttachAssignment(e.target.checked)}
+                />
+                <span>Gắn với bài đã giao</span>
+              </label>
+
+              {attachAssignment && (
+                <div style={{ marginTop: 8 }}>
+                  <select
+                    style={{ ...styles.input, fontSize: 12.5 }}
+                    value={selectedAssignmentId}
+                    onChange={(e) => setSelectedAssignmentId(e.target.value)}
+                  >
+                    {classAssignments.length === 0 ? (
+                      <option value="">(Chưa có bài tập nào)</option>
+                    ) : (
+                      classAssignments.map((asg) => (
+                        <option key={asg.id} value={asg.id}>
+                          {asg.title} ({asg.subject || 'Toán'})
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Giới hạn Quota */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, fontSize: 12 }}>
+              <span style={{ color: remindersSentToday >= MAX_REMINDERS_PER_DAY ? '#DC2626' : '#64748B', fontWeight: 700 }}>
+                Hôm nay đã gửi {remindersSentToday}/{MAX_REMINDERS_PER_DAY} lời nhắc
+              </span>
+              <span style={{ color: '#94A3B8' }}>Tối đa 3 lời nhắc/ngày</span>
+            </div>
+
+            {/* Nút gửi */}
+            <button
+              type="button"
+              onClick={handleSendReminder}
+              disabled={remindersSentToday >= MAX_REMINDERS_PER_DAY}
+              style={{
+                width: '100%',
+                padding: '10px 16px',
+                borderRadius: 8,
+                background: remindersSentToday >= MAX_REMINDERS_PER_DAY ? '#94A3B8' : '#D6336C',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: 14,
+                border: 'none',
+                cursor: remindersSentToday >= MAX_REMINDERS_PER_DAY ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Send size={16} />
+              <span>Gửi cho 28 gia đình</span>
+            </button>
+          </div>
+
+          {/* Cột Theo Dõi Lời Nhắc Đã Gửi */}
+          <div>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 700, color: '#1E293B' }}>
+              Theo dõi tình trạng nhắc con
+            </h4>
+
+            {remindersList.length === 0 ? (
+              <div style={styles.emptyCard}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>⏰</div>
+                <p style={{ color: '#64748B', margin: 0 }}>Chưa có lời nhắc việc nào được gửi gần đây.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {remindersList.map((rem) => (
+                  <div key={rem.id} style={{ ...styles.card, padding: 16, borderLeft: '4px solid #D6336C' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div>
+                        <b style={{ fontSize: 14.5, color: '#0F172A', display: 'block' }}>{rem.message}</b>
+                        <span style={{ fontSize: 12, color: '#64748B' }}>
+                          📅 Áp dụng: {rem.target_date} {rem.assignment_id ? '· Có kèm bài tập' : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 3 chỉ số theo dõi */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, background: '#F8FAFC', padding: '10px 12px', borderRadius: 8, marginBottom: 12, textAlign: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>{rem.read_count || 24}</div>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>đã đọc</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#16A34A' }}>{rem.done_count || 19}</div>
+                        <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 700 }}>đã nhắc con</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#4F46E5' }}>{rem.total_count || 28}</div>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>gia đình</div>
+                      </div>
+                    </div>
+
+                    {/* Danh sách học sinh theo lớp */}
+                    <div>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6 }}>
+                        Chi tiết theo gia đình trong lớp:
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {(rem.students || [
+                          { name: 'Nguyễn Minh Anh (Mít)', status: 'done', time: '19:05' },
+                          { name: 'Trần Bảo Nam', status: 'done', time: '18:40' },
+                          { name: 'Lê Gia Hân', status: 'read' },
+                          { name: 'Phạm Tuấn Kiệt', status: 'read' },
+                          { name: 'Võ Khánh Linh', status: 'unread' },
+                        ]).map((st, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              fontSize: 12.5,
+                              padding: '4px 8px',
+                              background: '#FFFFFF',
+                              borderRadius: 6,
+                              border: '1px solid #F1F5F9',
+                            }}
+                          >
+                            <span>{st.name}</span>
+                            {st.status === 'done' ? (
+                              <span style={{ color: '#16A34A', fontWeight: 700, background: '#DCFCE7', padding: '2px 8px', borderRadius: 999 }}>
+                                ✓ Đã nhắc con {st.time}
+                              </span>
+                            ) : st.status === 'read' ? (
+                              <span style={{ color: '#2563EB', fontWeight: 600, background: '#EFF6FF', padding: '2px 8px', borderRadius: 999 }}>
+                                Đã đọc
+                              </span>
+                            ) : (
+                              <span style={{ color: '#94A3B8', fontWeight: 600, background: '#F1F5F9', padding: '2px 8px', borderRadius: 999 }}>
+                                Chưa đọc
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: 11, color: '#94A3B8', margin: '10px 0 0 0', fontStyle: 'italic' }}>
+                      Cô chỉ thấy trạng thái đọc và đã nhắc. Không thấy dữ liệu học, ảnh hay chat của gia đình.
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

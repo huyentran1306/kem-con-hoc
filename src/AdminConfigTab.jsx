@@ -466,7 +466,7 @@ export function AdminConfigTab({ token, adminProfile }) {
       {/* Subtab 5: Themes */}
       {activeSubTab === 'themes' && (
         <div className="stitch-subtab-content">
-          <AdminThemesSection />
+          <AdminThemesSection token={token} adminProfile={adminProfile} />
         </div>
       )}
 

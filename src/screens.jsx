@@ -14,6 +14,9 @@ import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
 import { ZaloReportModal } from './ZaloReportModal'
 import { NpsSurveyCard } from './NpsSurveySheet'
+import { getSlot } from './themes/slots/registry'
+import { CalmNudgeCard } from './CalmNudgeCard'
+import TeacherReminderBanner from './TeacherReminderBanner.jsx'
 
 
 /* ============================================================
@@ -294,8 +297,10 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
 }
 
 export function Home() {
-  const { S, patch, stats, go, openSheet, toast, soundOn, toggleSound } = useContext(AppCtx)
+  const { S, patch, stats, go, openSheet, toast, soundOn, toggleSound, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+  const theme = S.theme || 'bear'
+  const StudyTrackerSlot = getSlot(theme, 'StudyTracker')
   const now = new Date()
   const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })
   const hour = now.getHours()
@@ -406,8 +411,63 @@ export function Home() {
         </div>
       )}
 
+      {/* Thẻ Cô nhắc việc (Prompt 04 Mục 4b) */}
+      <TeacherReminderBanner child={child} S={S} patch={patch} go={go} openSheet={openSheet} toast={toast} />
+
       {/* Thẻ bài tập cô giáo giao (Prompt 04) */}
       <TeacherAssignmentBanner child={child} S={S} patch={patch} go={go} />
+
+      {/* Thẻ Làm tiếp bài hôm qua (Prompt 08 Mục 6) */}
+      {S.pendingProblemResume && (
+        <div
+          className="card sun pop"
+          style={{
+            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+            border: '2px solid #F59E0B',
+            padding: '14px 16px',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <div>
+            <b style={{ color: '#78350F', fontSize: 15, display: 'block' }}>
+              📖 Làm tiếp bài hôm qua
+            </b>
+            <span style={{ color: '#92400E', fontSize: 12.5 }}>
+              Đang ở Bậc {(S.pendingProblemResume.step || 0) + 1} · {S.pendingProblemResume.problem?.dang_bai || S.pendingProblemResume.problem?.type || 'Bài tập'}
+            </span>
+          </div>
+          <button
+            className="btn solid"
+            style={{ padding: '8px 14px', fontSize: 13, fontWeight: 800, background: '#D97706' }}
+            onClick={() => {
+              patch({
+                problem: S.pendingProblemResume.problem,
+                flow: {
+                  ...S.flow,
+                  step: S.pendingProblemResume.step || 0,
+                  unlocked: S.pendingProblemResume.unlocked || false,
+                  stuck: 0,
+                },
+                pendingProblemResume: null,
+              })
+              go('scaffold')
+            }}
+          >
+            Làm tiếp ➔
+          </button>
+        </div>
+      )}
+
+      {/* 2. Theo dõi học đều mỗi ngày (Prompt 07 Phần B) */}
+      {StudyTrackerSlot && (
+        <div style={{ marginBottom: 12 }}>
+          <StudyTrackerSlot tracker={tracker} onOpenReport={() => go('report')} />
+        </div>
+      )}
 
       <button className="big-card plum" onClick={() => go('snap')}>
         <span className="ic">📷</span>
@@ -1389,8 +1449,44 @@ export function Scaffold() {
   const steps = problem.steps || PROBLEM.steps
   const [showAns, setShowAns] = useState(false)
   const [parentNote, setParentNote] = useState('')
+  const [stepSeconds, setStepSeconds] = useState(0)
+  const [nudgeProblemCount, setNudgeProblemCount] = useState(0)
+  const [snoozeUntil, setSnoozeUntil] = useState(0)
+  const [showNudge, setShowNudge] = useState(false)
+  const [nudgeReason, setNudgeReason] = useState('')
 
-  useEffect(() => setShowAns(false), [step])
+  useEffect(() => {
+    setShowAns(false)
+    setStepSeconds(0)
+  }, [step])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        setStepSeconds((s) => s + 1)
+      }
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (S.calmNudgeEnabled === false) return
+    if (Date.now() < snoozeUntil) return
+    if (nudgeProblemCount >= 1) return
+
+    let reason = ''
+    if (stuck >= 2) {
+      reason = `${child?.name || 'Con'} bí 2 lần ở bậc này rồi`
+    } else if (stepSeconds >= 240) {
+      reason = 'Bậc này đã 4 phút rồi'
+    }
+
+    if (reason && !showNudge) {
+      setNudgeReason(reason)
+      setShowNudge(true)
+      setNudgeProblemCount((c) => c + 1)
+    }
+  }, [stuck, stepSeconds, S.calmNudgeEnabled, snoozeUntil, nudgeProblemCount, showNudge])
 
   const stepOk = () => {
     const ns = step + 1
@@ -1405,7 +1501,8 @@ export function Scaffold() {
     const ns = stuck + 1
     patch({ flow: { ...S.flow, stuck: ns } })
     if (ns >= 2) {
-      openSheet('breakHint')
+      // Mở nhẹ nhàng qua Góc hạ hoả thay vì hộp thoại ép buộc
+      openSheet('calm')
     }
   }
 
@@ -1579,6 +1676,21 @@ export function Scaffold() {
           <button className="btn mint" onClick={() => go('done')}>Hoàn thành bài ›</button>
         </>
       )}
+
+      {showNudge && (
+        <CalmNudgeCard
+          childName={child?.name || 'con'}
+          reasonText={nudgeReason}
+          onAccept={() => {
+            setShowNudge(false)
+            openSheet('calm')
+          }}
+          onSnooze={() => {
+            setShowNudge(false)
+            setSnoozeUntil(Date.now() + 10 * 60 * 1000)
+          }}
+        />
+      )}
     </>
   )
 }
@@ -1587,7 +1699,7 @@ export function Scaffold() {
    7. KẾT THÚC
    ============================================================ */
 export function Done() {
-  const { S, problem, stats, patch, setStats, go, openSheet, toast, boom } = useContext(AppCtx)
+  const { S, problem, stats, patch, setStats, go, openSheet, toast, boom, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
   const result = S.flow.result
   const [stkIdx, setStkIdx] = useState(0)
@@ -1677,6 +1789,14 @@ export function Done() {
 
     const sessionsMom = (stats.sessionsMom || 0) + (S.parent === 'Mẹ' ? 1 : 0)
     const sessionsDad = (stats.sessionsDad || 0) + (S.parent === 'Bố' ? 1 : 0)
+
+    if (tracker?.recordSession) {
+      tracker.recordSession({
+        problemType: topicName,
+        totalSteps: problem?.steps?.length || 4,
+        teachBack: S.flow?.teachBack || 'self',
+      })
+    }
 
     setStats({ history: hist, weak, strong, sessionsMom, sessionsDad })
     patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false, result: null, teachBack: null } })
@@ -3967,7 +4087,7 @@ function BowlGame() {
    11. BÁO CÁO TUẦN
    ============================================================ */
 export function Report() {
-  const { S, stats, toast, boom } = useContext(AppCtx)
+  const { S, stats, toast, boom, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
   const momSessions = stats.sessionsMom || 0
   const dadSessions = stats.sessionsDad || 0
@@ -4147,6 +4267,58 @@ export function Report() {
         </button>
       </div>
 
+      {/* Lưới học 30 ngày trong tháng (Prompt 07 Phần B) */}
+      <div className="card" style={{ padding: '14px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 16 }}>🗓️</span>
+            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Lịch học đều tháng {new Date().getMonth() + 1}</b>
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
+            Chuỗi: <b style={{ color: 'var(--c-accent-ink, var(--c-accent))' }}>{tracker?.streak || 0} tối</b>
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, textAlign: 'center' }}>
+          {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((h) => (
+            <span key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 2 }}>{h}</span>
+          ))}
+          {(() => {
+            const now = new Date()
+            const firstDayIndex = (new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7
+            const emptyPads = Array.from({ length: firstDayIndex })
+            return (
+              <>
+                {emptyPads.map((_, i) => <div key={'pad_' + i} />)}
+                {(tracker?.month || []).map((m) => (
+                  <div
+                    key={m.dateKey}
+                    title={`${m.day}/${now.getMonth() + 1}: ${m.isStudied ? 'Đã học' : 'Chưa học'}`}
+                    style={{
+                      height: 32,
+                      borderRadius: 8,
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontSize: 12,
+                      fontWeight: m.isToday ? 800 : 600,
+                      background: m.isStudied ? 'var(--c-good)' : 'var(--c-bg)',
+                      color: m.isStudied ? 'var(--c-on-good)' : m.isToday ? 'var(--c-accent-ink, var(--c-text))' : 'var(--c-text-2)',
+                      border: m.isToday ? '2px dashed var(--c-accent)' : '1px solid var(--c-line)',
+                    }}
+                  >
+                    {m.isStudied ? '✓' : m.day}
+                  </div>
+                ))}
+              </>
+            )
+          })()}
+        </div>
+
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--c-line)', fontSize: 12.5, textAlign: 'center', color: 'var(--c-text-2)' }}>
+          Tháng này: <b style={{ color: 'var(--c-text)' }}>{(tracker?.month || []).filter((m) => m.isStudied).length} tối</b> · chuỗi dài nhất <b style={{ color: 'var(--c-text)' }}>{tracker?.bestStreak || 0} tối</b>
+        </div>
+      </div>
+
       {/* 2. So sánh Biến động Phẩm chất Tuần này vs Tuần trước (FontAwesome tone-sur-tone) */}
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -4266,14 +4438,63 @@ export function Report() {
         </div>
       ))}
 
-      {/* 6. Chỉ số giữ bình tĩnh */}
-      <div className="card mint">
-        <span className="lbl mint">💚 Buổi tối nhẹ hơn</span>
-        <span style={{ fontSize: 14 }}>
-          {S.parent.toLowerCase()} bấm "bình tĩnh" <b>{stats.calmWeek} lần</b> (tuần trước {stats.calmLast}).
-          {stats.calmWeek < stats.calmLast ? ' Giảm hẳn — mình làm tốt lắm!' : ' Tuần này mệt hơn, cuối tuần nghỉ ngơi nhé.'}
-        </span>
-      </div>
+      {/* 6. Ghi nhận riêng cho bố mẹ (Prompt 08 Mục 7) */}
+      {(() => {
+        if (session?.role === 'viewer') return null
+        const childStats = stats[S.activeId] || {}
+        const calmHistory = childStats.calmHistory || []
+        const thisWeekCalm = calmHistory.filter((item) => {
+          const ts = typeof item === 'number' ? item : item.ts
+          return getWeekLabel(ts) === 'Tuần này'
+        })
+        const count = thisWeekCalm.length
+        if (count === 0) return null
+
+        const daysSet = new Set()
+        thisWeekCalm.forEach((item) => {
+          const ts = typeof item === 'number' ? item : item.ts
+          daysSet.add(new Date(ts).toLocaleDateString('vi-VN', { weekday: 'short' }))
+        })
+
+        return (
+          <div
+            className="card"
+            style={{
+              background: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
+              border: '1.5px solid #D8B4FE',
+              padding: '16px 18px',
+              borderRadius: 20,
+              marginTop: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: '#7E22CE', letterSpacing: 0.5 }}>
+                🔒 RIÊNG CHO NGƯỜI LỚN TRONG NHÀ
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#6B21A8' }}>
+                {Array.from(daysSet).join(', ')}
+              </span>
+            </div>
+
+            <h4 style={{ fontSize: 16, fontWeight: 800, color: '#581C87', margin: '0 0 6px' }}>
+              Tuần này {S.parent.toLowerCase()} đã dừng lại {count} lần trước khi nổi nóng 💚
+            </h4>
+            <p style={{ fontSize: 13, color: '#6B21A8', margin: '0 0 10px', lineHeight: 1.45 }}>
+              {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {S.parent.toLowerCase()}!
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #D8B4FE', paddingTop: 8 }}>
+              <span style={{ fontSize: 12, color: '#7E22CE' }}>Gửi kèm báo cáo Zalo</span>
+              <input
+                type="checkbox"
+                style={{ width: 18, height: 18, accentColor: '#7E22CE' }}
+                checked={Boolean(S.shareCalmWithZalo)}
+                onChange={(e) => patch({ shareCalmWithZalo: e.target.checked })}
+              />
+            </div>
+          </div>
+        )
+      })()}
 
       <div className="card plum">
         <span className="lbl plum">Một việc cho cuối tuần</span>
@@ -4390,6 +4611,31 @@ export function Profile() {
           Đang dùng: <b>{getTheme(S.theme || 'candy').name}</b> · 8 bộ phong cách đổi 1 chạm
         </span>
       </button>
+
+      {/* Công tắc Nhắc nghỉ khi căng thẳng (Prompt 08 Mục 1) */}
+      <div
+        className="card"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 14px',
+          background: 'var(--c-surface)',
+          borderRadius: 14,
+          border: '1px solid var(--c-line)',
+        }}
+      >
+        <div>
+          <b style={{ fontSize: 14, color: 'var(--c-text)', display: 'block' }}>Nhắc nghỉ khi căng thẳng</b>
+          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Tự động nhắc mẹ con nghỉ 1 phút khi bí hoặc làm lâu</span>
+        </div>
+        <input
+          type="checkbox"
+          style={{ width: 22, height: 22, accentColor: 'var(--c-accent)' }}
+          checked={S.calmNudgeEnabled !== false}
+          onChange={(e) => patch({ calmNudgeEnabled: e.target.checked })}
+        />
+      </div>
 
       <div className="card sky">
         <span className="lbl sky">Lịch chia ca T2–T6</span>

@@ -9,6 +9,7 @@ import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_K
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const CLOUD_KEY = 'kem-con-hoc:state'
+export const famCloudKey = (id) => (id ? `fam:${id}:state` : 'kem-con-hoc:state')
 export const AUTH_STORAGE_KEY = 'kem-con-hoc:auth'
 
 /* ---------- Quản lý Auth Token ---------- */

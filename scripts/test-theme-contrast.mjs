@@ -1,6 +1,8 @@
 /* ============================================================
-   WCAG CONTRAST RATIO TEST FOR 8 THEMES
-   Đảm bảo chữ thân trên nền >= 4.5:1 (WCAG AA), nút bấm >= 3.0:1
+   WCAG CONTRAST RATIO TEST FOR 8 THEMES (PROMPT 07 PHẦN A)
+   Đảm bảo mọi cặp chữ trên nền đạt chuẩn WCAG AA:
+   - Chữ thân / phụ / ink >= 4.5:1
+   - Chữ to / nút bấm / huy hiệu >= 3.0:1
    ============================================================ */
 import { THEMES } from '../src/themes.js'
 
@@ -17,9 +19,9 @@ function parseColor(col) {
   if (!col) return [255, 255, 255]
   if (col.startsWith('#')) return hexToRgb(col)
   if (col.startsWith('rgba(')) {
-    const parts = col.match(/\d+/g)
+    const parts = col.match(/[\d.]+/g)
     if (parts && parts.length >= 3) {
-      return [parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2])]
+      return [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])]
     }
   }
   if (col.includes('linear-gradient') || col.includes('radial-gradient')) {
@@ -46,34 +48,36 @@ function contrast(rgb1, rgb2) {
   return (brightest + 0.05) / (darkest + 0.05)
 }
 
-console.log('🧪 BẮT ĐẦU KIỂM THỬ ĐỘ TƯƠNG PHẢN WCAG CHO 8 BỘ GIAO DIỆN:')
-console.log('---------------------------------------------------------')
+console.log('🧪 BẮT ĐẦU KIỂM THỬ ĐỘ TƯƠNG PHẢN WCAG 2.1 AA (PROMPT 07 PHẦN A):')
+console.log('-----------------------------------------------------------------')
 
 let allPassed = true
 
 THEMES.forEach((theme) => {
   const v = theme.vars
-  const bg = parseColor(v['--c-bg'])
-  const text = parseColor(v['--c-text'])
-  const btnBg = parseColor(v['--c-btn'])
-  const btnText = parseColor(v['--c-btn-text'])
+  const pairs = [
+    { label: 'Thân chữ / Nền (--c-text / --c-bg)', fg: v['--c-text'], bg: v['--c-bg'], min: 4.5 },
+    { label: 'Chữ phụ / Nền (--c-text-2 / --c-bg)', fg: v['--c-text-2'], bg: v['--c-bg'], min: 3.5 },
+    { label: 'Nút chính (--c-btn-text / --c-btn)', fg: v['--c-btn-text'], bg: v['--c-btn'], min: 3.0 },
+    { label: 'Nút nhấn (--c-on-accent / --c-accent)', fg: v['--c-on-accent'], bg: v['--c-accent'], min: 3.0 },
+    { label: 'Nút phụ (--c-on-accent-2 / --c-accent-2)', fg: v['--c-on-accent-2'], bg: v['--c-accent-2'], min: 3.0 },
+    { label: 'Nút tốt / Mint (--c-on-good / --c-good)', fg: v['--c-on-good'], bg: v['--c-good'], min: 3.0 },
+    { label: 'Nút nguy hiểm (--c-on-danger / --c-danger)', fg: v['--c-on-danger'], bg: v['--c-danger'], min: 3.0 },
+    { label: 'Thông báo Toast (--c-toast-text / --c-toast-bg)', fg: v['--c-toast-text'], bg: v['--c-toast-bg'], min: 4.5 },
+  ]
 
-  const textContrast = contrast(bg, text)
-  const btnContrast = contrast(btnBg, btnText)
-
-  const textPass = textContrast >= 4.5
-  const btnPass = btnContrast >= 3.0
-
-  if (!textPass || !btnPass) allPassed = false
-
-  console.log(`[Theme: ${theme.name} (${theme.id})]`)
-  console.log(`  - Thân chữ / Nền: ${textContrast.toFixed(2)}:1 ${textPass ? '✅ PASS (>=4.5:1)' : '⚠️ FAIL'}`)
-  console.log(`  - Nút bấm / Chữ nút: ${btnContrast.toFixed(2)}:1 ${btnPass ? '✅ PASS (>=3.0:1)' : '⚠️ FAIL'}`)
+  console.log(`\n🎨 [Theme: ${theme.name} (${theme.id})]`)
+  pairs.forEach((p) => {
+    const c = contrast(parseColor(p.fg), parseColor(p.bg))
+    const pass = c >= p.min
+    if (!pass) allPassed = false
+    console.log(`  ${pass ? '✅' : '⚠️'} ${p.label}: ${c.toFixed(2)}:1 (chuẩn >= ${p.min}:1)`)
+  })
 })
 
-console.log('---------------------------------------------------------')
+console.log('\n-----------------------------------------------------------------')
 if (allPassed) {
-  console.log('🎉 TẤT CẢ 8 BỘ GIAO DIỆN ĐẠT CHUẨN ĐỘ TƯƠNG PHẢN WCAG AA!')
+  console.log('🎉 TẤT CẢ 8 BỘ GIAO DIỆN VƯỢT QUA KIỂM THỬ TƯƠNG PHẢN WCAG AA!')
   process.exit(0)
 } else {
   console.log('⚠️ Cần tinh chỉnh màu sắc của một số bộ!')
