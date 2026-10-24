@@ -982,6 +982,10 @@ export function Done() {
   const stkOwned = (stats.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
 
   const pickSticker = (e) => {
+    if (problem?.isSample) {
+      toast('Bài mẫu không tính sticker nhé ⭐')
+      return
+    }
     soundPop(600)
     const found = AVAILABLE_STICKERS.find((s) => s.id === e || s.e === e) || {
       id: 's' + Date.now(),
@@ -1007,7 +1011,7 @@ export function Done() {
       fa: found.fa || 'fa-solid fa-award',
       color: found.color || '#F59E0B',
       subject: problem?.mon || 'Toán',
-      problemType: problem?.dang_bai || 'Bài tập rèn luyện',
+      problemType: problem?.dang_bai || problem?.type || 'Bài tập rèn luyện',
       week: 'Tuần này',
       timestamp: Date.now(),
       dateStr: new Date().toLocaleDateString('vi-VN'),
@@ -1028,13 +1032,40 @@ export function Done() {
   }
 
   const saveResult = () => {
-    const txt = `Toán lời văn 2 bước · ${result === 'weak' ? 'còn vướng' : 'làm được'}`
-    const hist = [...stats.history, { txt, when: 'Hôm nay' }]
-    let weak = stats.weak
-    if (result === 'weak') {
-      weak = stats.weak.map((w, i) => (i === 0 ? { ...w, v: w.v + 1, t: w.t + 1 } : w))
+    if (problem?.isSample) {
+      toast('Bài mẫu minh họa — không ghi vào lịch sử 📖')
+      patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false, result: null, teachBack: null } })
+      go('home')
+      return
     }
-    setStats({ history: hist, weak })
+
+    const topicName = problem?.dang_bai || problem?.type || (problem?.ocr ? problem.ocr.slice(0, 40) : 'Bài tập rèn luyện')
+    const txt = `${topicName} · ${result === 'weak' ? 'còn vướng' : 'làm được'}`
+    const hist = [...(stats.history || []), { txt, when: 'Hôm nay', timestamp: Date.now() }]
+
+    let weak = Array.isArray(stats.weak) ? [...stats.weak] : []
+    let strong = Array.isArray(stats.strong) ? [...stats.strong] : []
+
+    if (result === 'weak') {
+      const idx = weak.findIndex((w) => w.n === topicName)
+      if (idx >= 0) {
+        weak[idx] = { ...weak[idx], v: (weak[idx].v || 0) + 1, t: (weak[idx].t || 0) + 1 }
+      } else {
+        weak.unshift({ n: topicName, v: 1, t: 1 })
+      }
+    } else {
+      const idx = strong.findIndex((s) => s.n === topicName)
+      if (idx >= 0) {
+        strong[idx] = { ...strong[idx], v: (strong[idx].v || 0) + 1, t: (strong[idx].t || 0) + 1 }
+      } else {
+        strong.unshift({ n: topicName, v: 1, t: 1 })
+      }
+    }
+
+    const sessionsMom = (stats.sessionsMom || 0) + (S.parent === 'Mẹ' ? 1 : 0)
+    const sessionsDad = (stats.sessionsDad || 0) + (S.parent === 'Bố' ? 1 : 0)
+
+    setStats({ history: hist, weak, strong, sessionsMom, sessionsDad })
     patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false, result: null, teachBack: null } })
     toast(`Đã lưu vào sổ của ${child.name} 💾`)
     go('home')
