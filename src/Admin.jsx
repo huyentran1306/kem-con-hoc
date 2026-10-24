@@ -499,8 +499,9 @@ export default function AdminPortal({ onExit }) {
           )}
 
           {activeTab === 'teachers' && (
-            <AdminTeachersTab />
+            <AdminTeachersTab token={token} />
           )}
+
 
           {activeTab === 'config' && !isSupport && (
             <AdminConfigTab

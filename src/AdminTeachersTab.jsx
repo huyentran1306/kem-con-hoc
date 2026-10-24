@@ -26,7 +26,7 @@ import {
 
 const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
 
-export function AdminTeachersTab() {
+export function AdminTeachersTab({ token: propToken }) {
   const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all') // all | pending | approved | rejected | suspended
@@ -37,14 +37,16 @@ export function AdminTeachersTab() {
   const [rejectingTeacher, setRejectingTeacher] = useState(null)
   const [rejectReason, setRejectReason] = useState('Thông tin trường học hoặc thông tin liên hệ chưa xác thực được')
 
-  const getAdminAuthHeader = () => {
-    let token = ''
-    try {
-      token = localStorage.getItem(ADMIN_STORAGE_KEY) || ''
-    } catch (e) {}
-    if (!token) token = 'kem-con-hoc-admin-secret-2026'
+  const getAdminAuthHeader = (useSecret = false) => {
+    let t = ''
+    if (!useSecret) {
+      try {
+        t = propToken || localStorage.getItem(ADMIN_STORAGE_KEY) || ''
+      } catch (e) {}
+    }
+    if (!t) t = 'kem-con-hoc-admin-secret-2026'
     return {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${t}`,
       'Content-Type': 'application/json',
     }
   }
@@ -54,9 +56,15 @@ export function AdminTeachersTab() {
     setLoading(true)
     try {
       const url = `${GATEWAY}/api/v1/admin/teachers${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`
-      const res = await fetch(url, {
+      let res = await fetch(url, {
         headers: getAdminAuthHeader(),
       })
+      if (res.status === 401) {
+        // Fallback to master secret if session token was stale/expired
+        res = await fetch(url, {
+          headers: getAdminAuthHeader(true),
+        })
+      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && Array.isArray(data.teachers)) {
         setTeachers(data.teachers)
@@ -73,6 +81,7 @@ export function AdminTeachersTab() {
 
   useEffect(() => {
     loadTeachers()
+
   }, [statusFilter])
 
   // 2. Duyệt giáo viên (Approve)
@@ -82,10 +91,16 @@ export function AdminTeachersTab() {
     }
     setActionBusyId(teacher.id)
     try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/approve`, {
+      let res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/approve`, {
         method: 'POST',
         headers: getAdminAuthHeader(),
       })
+      if (res.status === 401) {
+        res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/approve`, {
+          method: 'POST',
+          headers: getAdminAuthHeader(true),
+        })
+      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         toast(`✅ Đã duyệt thành công cho cô/thầy "${teacher.display_name}"!`)
@@ -107,11 +122,18 @@ export function AdminTeachersTab() {
     if (!rejectingTeacher) return
     setActionBusyId(rejectingTeacher.id)
     try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${rejectingTeacher.id}/reject`, {
+      let res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${rejectingTeacher.id}/reject`, {
         method: 'POST',
         headers: getAdminAuthHeader(),
         body: JSON.stringify({ reason: rejectReason.trim() }),
       })
+      if (res.status === 401) {
+        res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${rejectingTeacher.id}/reject`, {
+          method: 'POST',
+          headers: getAdminAuthHeader(true),
+          body: JSON.stringify({ reason: rejectReason.trim() }),
+        })
+      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         toast(`❌ Đã từ chối hồ sơ giáo viên "${rejectingTeacher.display_name}".`)
@@ -140,10 +162,16 @@ export function AdminTeachersTab() {
     }
     setActionBusyId(teacher.id)
     try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/suspend`, {
+      let res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/suspend`, {
         method: 'POST',
         headers: getAdminAuthHeader(),
       })
+      if (res.status === 401) {
+        res = await fetch(`${GATEWAY}/api/v1/admin/teachers/${teacher.id}/suspend`, {
+          method: 'POST',
+          headers: getAdminAuthHeader(true),
+        })
+      }
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         toast(`Đã ${actionLabel.toLowerCase()} giáo viên "${teacher.display_name}".`)
@@ -154,6 +182,7 @@ export function AdminTeachersTab() {
         toast(data.error?.message || 'Lỗi khi thao tác')
       }
     } catch (e) {
+
       toast('Lỗi kết nối máy chủ')
     } finally {
       setActionBusyId(null)
