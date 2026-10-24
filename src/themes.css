@@ -1,0 +1,550 @@
+/* ============================================================
+   🎨 8 BỘ GIAO DIỆN KÈM CON HỌC — CSS THEME SYSTEM
+   Chuẩn hoá biến ngữ nghĩa + tương thích ngược biến cũ
+   ============================================================ */
+
+/* 1. MẶC ĐỊNH (:root) — Kẹo Bông (Candy) */
+:root {
+  --c-bg: #FFF4F8;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #EDE4FF;
+  --c-line: #F3D9E6;
+  --c-text: #4A3B5C;
+  --c-text-2: #9A8AA8;
+  --c-accent: #FF8FB8;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #B9A3FF;
+  --c-good: #7FD8C4;
+  --c-good-bg: #E3F8F2;
+  --c-good-fg: #2E8C78;
+  --c-warn: #FFD36E;
+  --c-warn-bg: #FFF8D6;
+  --c-warn-line: #FFE58A;
+  --c-warn-fg: #B5860A;
+  --c-danger: #E0598E;
+  --c-read-bg: #FFFFFF;
+  --c-read-text: #4A3B5C;
+  --c-hint1-bg: #FFF8D6;
+  --c-hint1-line: #FFE58A;
+  --c-btn: linear-gradient(135deg, #E0598E, #D9467E);
+  --c-btn-text: #FFFFFF;
+  --c-nav: #FFFFFF;
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-btn: 999px;
+  --border-w: 2px;
+  --shadow-card: 0 7px 0 #F3D9E6;
+  --shadow-btn: 0 6px 0 #E0598E;
+  --font-head: 'Baloo 2', cursive, sans-serif;
+  --font-body: 'Nunito', system-ui, -apple-system, sans-serif;
+  --font-hand: 'Baloo 2', cursive, sans-serif;
+
+  /* ÁNH XẠ TƯƠNG THÍCH NGƯỢC BIẾN CŨ */
+  --bg: var(--c-bg);
+  --paper: var(--c-surface);
+  --line: var(--c-line);
+  --soft: var(--c-surface-2);
+  --ink: var(--c-text);
+  --muted: var(--c-text-2);
+  --plum: var(--c-accent);
+  --plum-deep: var(--c-danger);
+  --plum-tint: var(--c-surface-2);
+  --coral: var(--c-accent);
+  --coral-deep: var(--c-danger);
+  --coral-tint: var(--c-surface-2);
+  --mint: var(--c-good);
+  --mint-deep: var(--c-good-fg);
+  --mint-tint: var(--c-good-bg);
+  --sun: var(--c-warn);
+  --sun-tint: var(--c-warn-bg);
+  --sun-line: var(--c-warn-line);
+  --sky: var(--c-accent-2);
+  --sky-tint: var(--c-surface-2);
+  --red: var(--c-danger);
+  --radius: var(--radius-lg);
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-card);
+  --shadow-lg: var(--shadow-card);
+  --modal-title: var(--c-text);
+  --modal-sub: var(--c-text-2);
+}
+
+/* ÁP DỤNG FONT CHO TOÀN BỘ APP PHỤ HUYNH */
+body {
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
+  font-family: var(--font-head);
+}
+
+/* 2. THEME CANDY · KẸO BÔNG */
+[data-theme="candy"] {
+  --c-bg: #FFF4F8;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #EDE4FF;
+  --c-line: #F3D9E6;
+  --c-text: #4A3B5C;
+  --c-text-2: #9A8AA8;
+  --c-accent: #FF8FB8;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #B9A3FF;
+  --c-good: #7FD8C4;
+  --c-good-bg: #E3F8F2;
+  --c-good-fg: #2E8C78;
+  --c-warn: #FFD36E;
+  --c-warn-bg: #FFF8D6;
+  --c-warn-line: #FFE58A;
+  --c-warn-fg: #B5860A;
+  --c-danger: #E0598E;
+  --c-read-bg: #FFFFFF;
+  --c-read-text: #4A3B5C;
+  --c-hint1-bg: #FFF8D6;
+  --c-hint1-line: #FFE58A;
+  --c-btn: linear-gradient(135deg, #E0598E, #D9467E);
+  --c-btn-text: #FFFFFF;
+  --c-nav: #FFFFFF;
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-btn: 999px;
+  --border-w: 2px;
+  --shadow-card: 0 7px 0 #F3D9E6;
+  --shadow-btn: 0 6px 0 #E0598E;
+  --font-head: 'Baloo 2', cursive, sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Baloo 2', cursive, sans-serif;
+}
+
+/* 3. THEME BEAR · BẠN GẤU */
+[data-theme="bear"] {
+  --c-bg: #FFF8EC;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #FFEBD1;
+  --c-line: #F0DDC2;
+  --c-text: #4B3621;
+  --c-text-2: #9C7B5A;
+  --c-accent: #F6A623;
+  --c-accent-text: #4B3621;
+  --c-accent-2: #7FB7F5;
+  --c-good: #8CC98B;
+  --c-good-bg: #E8F6E6;
+  --c-good-fg: #3F7A3E;
+  --c-warn: #F6C56A;
+  --c-warn-bg: #FFF1D6;
+  --c-warn-line: #F6C56A;
+  --c-warn-fg: #9A6700;
+  --c-danger: #C47F0E;
+  --c-read-bg: #FFFFFF;
+  --c-read-text: #4B3621;
+  --c-hint1-bg: #FFF1D6;
+  --c-hint1-line: #F6C56A;
+  --c-btn: #F6A623;
+  --c-btn-text: #4B3621;
+  --c-nav: #FFFFFF;
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-btn: 999px;
+  --border-w: 2px;
+  --shadow-card: 0 6px 0 #F0DDC2;
+  --shadow-btn: 0 6px 0 #C47F0E;
+  --font-head: 'Mitr', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Mitr', sans-serif;
+}
+
+/* 4. THEME BENTO · BENTO MỀM */
+[data-theme="bento"] {
+  --c-bg: #F7F7FA;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #F1EEFF;
+  --c-line: #E9EAF1;
+  --c-text: #15161E;
+  --c-text-2: #6B6E80;
+  --c-accent: #FF6B57;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #8A7CFF;
+  --c-good: #22B07D;
+  --c-good-bg: #E6F7EF;
+  --c-good-fg: #15814F;
+  --c-warn: #FFC94A;
+  --c-warn-bg: #FFF6E5;
+  --c-warn-line: #FFE2B0;
+  --c-warn-fg: #9A6700;
+  --c-danger: #B42318;
+  --c-read-bg: linear-gradient(135deg, #15161E, #2A2B3A);
+  --c-read-text: #FFFFFF;
+  --c-hint1-bg: #FFF6E5;
+  --c-hint1-line: #FFE2B0;
+  --c-btn: #15161E;
+  --c-btn-text: #FFFFFF;
+  --c-nav: #FFFFFF;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-btn: 999px;
+  --border-w: 1px;
+  --shadow-card: 0 10px 26px -20px rgba(21, 22, 30, .35);
+  --shadow-btn: 0 12px 24px -14px rgba(21, 22, 30, .5);
+  --font-head: 'Lexend', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-hand: 'Lexend', sans-serif;
+}
+
+/* 5. THEME STICKER · STICKER STUDIO */
+[data-theme="sticker"] {
+  --c-bg: #FFF7E6;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #FFF1C9;
+  --c-line: #1B1B2F;
+  --c-text: #1B1B2F;
+  --c-text-2: #5C5A70;
+  --c-accent: #FF4F8B;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #5B6CFF;
+  --c-good: #39C6A5;
+  --c-good-bg: #D7F5EC;
+  --c-good-fg: #1B1B2F;
+  --c-warn: #FFC928;
+  --c-warn-bg: #FFF1C9;
+  --c-warn-line: #1B1B2F;
+  --c-warn-fg: #1B1B2F;
+  --c-danger: #FF4F8B;
+  --c-read-bg: #FFFFFF;
+  --c-read-text: #1B1B2F;
+  --c-hint1-bg: #FFC928;
+  --c-hint1-line: #1B1B2F;
+  --c-btn: #FF4F8B;
+  --c-btn-text: #FFFFFF;
+  --c-nav: #FFFFFF;
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-btn: 18px;
+  --border-w: 3px;
+  --shadow-card: 5px 5px 0 #1B1B2F;
+  --shadow-btn: 4px 4px 0 #1B1B2F;
+  --font-head: 'Paytone One', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Paytone One', sans-serif;
+}
+
+/* 6. THEME NOTEBOOK · SỔ TAY BUỔI TỐI */
+[data-theme="notebook"] {
+  --c-bg: #F6F1E7;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #EFE8DA;
+  --c-line: #D9D0BE;
+  --c-text: #2A2622;
+  --c-text-2: #7A7262;
+  --c-accent: #C4613A;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #5A4B7A;
+  --c-good: #7D9A6B;
+  --c-good-bg: #E6EDE0;
+  --c-good-fg: #4F6B3F;
+  --c-warn: #D8A334;
+  --c-warn-bg: #FBF3DC;
+  --c-warn-line: #D8A334;
+  --c-warn-fg: #9A6700;
+  --c-danger: #A32A1A;
+  --c-read-bg: #FFFFFF;
+  --c-read-text: #2A2622;
+  --c-hint1-bg: #FBF3DC;
+  --c-hint1-line: #D8A334;
+  --c-btn: #2A2622;
+  --c-btn-text: #F6F1E7;
+  --c-nav: #F6F1E7;
+  --radius-lg: 4px;
+  --radius-md: 4px;
+  --radius-btn: 4px;
+  --border-w: 1px;
+  --shadow-card: 0 12px 26px -20px rgba(42, 38, 34, .5);
+  --shadow-btn: none;
+  --font-head: 'Playfair Display', serif;
+  --font-body: 'Lora', serif;
+  --font-hand: 'Mali', cursive;
+}
+
+/* 7. THEME GARDEN · KHU VƯỜN ĐÊM (DARK) */
+[data-theme="garden"] {
+  --c-bg: #0F2A24;
+  --c-surface: #163B33;
+  --c-surface-2: #1C4A3F;
+  --c-line: #2A5248;
+  --c-text: #F2F7EE;
+  --c-text-2: #A9C4B5;
+  --c-accent: #FFD166;
+  --c-accent-text: #0F2A24;
+  --c-accent-2: #6EE7B7;
+  --c-good: #6EE7B7;
+  --c-good-bg: #1B4A3B;
+  --c-good-fg: #6EE7B7;
+  --c-warn: #FFD166;
+  --c-warn-bg: #3A3A1F;
+  --c-warn-line: #7C7A34;
+  --c-warn-fg: #FFD166;
+  --c-danger: #FF6B6B;
+  --c-read-bg: #163B33;
+  --c-read-text: #F2F7EE;
+  --c-hint1-bg: #3A3A1F;
+  --c-hint1-line: #FFD166;
+  --c-btn: #FFD166;
+  --c-btn-text: #0F2A24;
+  --c-nav: #0C221D;
+  --radius-lg: 28px 28px 28px 10px;
+  --radius-md: 20px 20px 20px 8px;
+  --radius-btn: 999px;
+  --border-w: 1.5px;
+  --shadow-card: 0 14px 30px -22px rgba(0, 0, 0, .8);
+  --shadow-btn: 0 0 34px -8px rgba(255, 209, 102, .8);
+  --font-head: 'Comfortaa', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Comfortaa', sans-serif;
+}
+
+/* 8. THEME AURORA · CỰC QUANG (DARK & GLASS) */
+[data-theme="aurora"] {
+  --c-bg: #0B1026;
+  --c-surface: rgba(255, 255, 255, .08);
+  --c-surface-2: rgba(167, 139, 250, .2);
+  --c-line: rgba(255, 255, 255, .16);
+  --c-text: #F3F4FF;
+  --c-text-2: rgba(243, 244, 255, .72);
+  --c-accent: #22D3EE;
+  --c-accent-text: #0B1026;
+  --c-accent-2: #A78BFA;
+  --c-good: #34D399;
+  --c-good-bg: rgba(52, 211, 153, .16);
+  --c-good-fg: #34D399;
+  --c-warn: #F472B6;
+  --c-warn-bg: rgba(244, 114, 182, .14);
+  --c-warn-line: #F472B6;
+  --c-warn-fg: #F9A8D4;
+  --c-danger: #F43F5E;
+  --c-read-bg: rgba(255, 255, 255, .08);
+  --c-read-text: #F3F4FF;
+  --c-hint1-bg: rgba(34, 211, 238, .12);
+  --c-hint1-line: #22D3EE;
+  --c-btn: linear-gradient(90deg, #22D3EE, #34D399);
+  --c-btn-text: #0B1026;
+  --c-nav: rgba(11, 16, 38, .85);
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-btn: 999px;
+  --border-w: 1px;
+  --shadow-card: 0 20px 50px -30px rgba(0, 0, 0, .8);
+  --shadow-btn: 0 14px 30px -10px rgba(34, 211, 238, .8);
+  --font-head: 'Unbounded', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-hand: 'Unbounded', sans-serif;
+}
+
+/* 9. THEME CHALK · BẢNG PHẤN (DARK) */
+[data-theme="chalk"] {
+  --c-bg: #2F4A41;
+  --c-surface: rgba(246, 241, 230, .07);
+  --c-surface-2: rgba(154, 208, 245, .14);
+  --c-line: rgba(246, 241, 230, .75);
+  --c-text: #F6F1E6;
+  --c-text-2: #CFC8B8;
+  --c-accent: #F9E07F;
+  --c-accent-text: #2F4A41;
+  --c-accent-2: #9AD0F5;
+  --c-good: #B5E8A8;
+  --c-good-bg: rgba(181, 232, 168, .16);
+  --c-good-fg: #B5E8A8;
+  --c-warn: #F7A1C4;
+  --c-warn-bg: rgba(247, 161, 196, .14);
+  --c-warn-line: #F7A1C4;
+  --c-warn-fg: #F7A1C4;
+  --c-danger: #F87171;
+  --c-read-bg: rgba(246, 241, 230, .07);
+  --c-read-text: #F6F1E6;
+  --c-hint1-bg: rgba(249, 224, 127, .14);
+  --c-hint1-line: #F9E07F;
+  --c-btn: #F9E07F;
+  --c-btn-text: #2F4A41;
+  --c-nav: #27403A;
+  --radius-lg: 18px 6px 16px 8px;
+  --radius-md: 12px 5px 14px 6px;
+  --radius-btn: 14px 6px 12px 8px;
+  --border-w: 2px;
+  --shadow-card: none;
+  --shadow-btn: 3px 3px 0 rgba(246, 241, 230, .5);
+  --font-head: 'Coiny', cursive;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Itim', cursive;
+}
+
+/* ÁP DỤNG BIẾN LÊN CÁC COMPONENT CỐT LÕI */
+.card, .big-card, .mini, .sheet .pn {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: var(--border-w) solid var(--c-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.btn.solid {
+  background: var(--c-btn) !important;
+  color: var(--c-btn-text) !important;
+  border-radius: var(--radius-btn);
+  box-shadow: var(--shadow-btn);
+}
+
+.btn.ghost {
+  background: transparent !important;
+  color: var(--c-text) !important;
+  border: var(--border-w) solid var(--c-line) !important;
+  border-radius: var(--radius-btn);
+}
+
+.bnav {
+  background: var(--c-nav) !important;
+  border-top: var(--border-w) solid var(--c-line) !important;
+}
+
+.bnav button {
+  color: var(--c-text-2);
+}
+
+.bnav button.active {
+  color: var(--c-accent);
+}
+
+/* HIỆU ỨNG TẮT HOẶC NHẸ KHI MOTION = 'off' */
+[data-motion="off"] *,
+[data-motion="off"] *::before,
+[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ============================================================
+   LỚP TRANG TRÍ NỀN THEME DECOR
+   ============================================================ */
+.theme-decor-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Candy Decor */
+.decor-candy-layer .candy-cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+}
+.candy-cloud.cloud-1 {
+  width: 140px; height: 70px; top: -20px; left: -30px;
+  box-shadow: 60px 10px 0 -10px rgba(255, 255, 255, 0.7);
+}
+.candy-cloud.cloud-2 {
+  width: 100px; height: 50px; top: 10px; right: -20px;
+  box-shadow: -40px 10px 0 -5px rgba(255, 255, 255, 0.7);
+}
+.candy-star {
+  position: absolute;
+  color: #FFD36E;
+  font-size: 16px;
+  animation: candyTwinkle 3s ease-in-out infinite alternate;
+}
+.star-1 { top: 70px; right: 40px; animation-delay: 0.2s; }
+.star-2 { top: 120px; left: 30px; animation-delay: 1.1s; }
+.star-3 { top: 180px; right: 80px; animation-delay: 2.2s; }
+@keyframes candyTwinkle {
+  0% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1.15) rotate(20deg); }
+}
+
+/* Bear Decor */
+.bear-paw {
+  position: absolute;
+  font-size: 20px;
+  opacity: 0.12;
+  user-select: none;
+}
+.paw-1 { top: 90px; right: 24px; transform: rotate(15deg); }
+.paw-2 { top: 150px; right: 50px; transform: rotate(25deg); }
+.paw-3 { top: 220px; right: 30px; transform: rotate(10deg); }
+
+/* Aurora Decor */
+.decor-aurora-layer .aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(55px);
+  opacity: 0.45;
+  animation: auroraFloat 18s ease-in-out infinite alternate;
+}
+.blob-1 { width: 260px; height: 260px; top: -50px; left: -40px; background: #22D3EE; }
+.blob-2 { width: 300px; height: 300px; top: 100px; right: -60px; background: #A78BFA; animation-delay: -5s; }
+.blob-3 { width: 240px; height: 240px; top: 320px; left: 10%; background: #34D399; animation-delay: -10s; }
+@keyframes auroraFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, 40px) scale(1.15) rotate(15deg); }
+}
+
+/* Garden Decor */
+.firefly {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #FFD166;
+  box-shadow: 0 0 10px 3px rgba(255, 209, 102, 0.7);
+  animation: flyGarden 7s ease-in-out infinite alternate;
+}
+.ff-1 { top: 80px; left: 40px; animation-delay: 0s; }
+.ff-2 { top: 140px; right: 50px; animation-delay: 1.5s; }
+.ff-3 { top: 220px; left: 30%; animation-delay: 3s; }
+.ff-4 { top: 350px; right: 30px; animation-delay: 4.5s; }
+.ff-5 { top: 480px; left: 60px; animation-delay: 2s; }
+@keyframes flyGarden {
+  0% { opacity: 0.2; transform: translate(0, 0); }
+  50% { opacity: 0.95; transform: translate(16px, -24px); }
+  100% { opacity: 0.3; transform: translate(-10px, -45px); }
+}
+
+/* Chalk Decor */
+.chalk-star {
+  position: absolute;
+  color: #F9E07F;
+  font-family: 'Coiny', cursive;
+  opacity: 0.6;
+  animation: chalkPulse 2.5s ease-in-out infinite alternate;
+}
+.chalk-star.star-1 { top: 90px; right: 28px; font-size: 24px; }
+.chalk-star.star-2 { top: 160px; left: 24px; font-size: 18px; animation-delay: 1.2s; }
+@keyframes chalkPulse {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  100% { opacity: 0.85; transform: scale(1.1) rotate(10deg); }
+}
+
+/* Notebook Decor */
+.decor-notebook-layer {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(42, 38, 34, 0.05) 1px, transparent 1px);
+  background-size: 100% 28px;
+}
+.tape-strip {
+  position: absolute;
+  width: 90px;
+  height: 24px;
+  top: 14px;
+  right: 20px;
+  background: rgba(216, 163, 52, 0.35);
+  transform: rotate(-3deg);
+  mix-blend-mode: multiply;
+}
+
+/* Sticker Decor */
+.decor-sticker-layer {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(27, 27, 47, 0.08) 1.5px, transparent 1.6px);
+  background-size: 18px 18px;
+}
+
