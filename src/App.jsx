@@ -196,33 +196,44 @@ export default function App() {
     else if (S.onboarded && screen === 'onb') setScreen('home')
   }, [S.onboarded])
 
-  /* ---------- tải cấu hình công khai (Prompt, Scope rules) ---------- */
+  /* ---------- tải cấu hình công khai (Prompt, Scope rules, Theme mặc định) ---------- */
   useEffect(() => {
-    loadPublicConfig().catch(() => {})
+    loadPublicConfig()
+      .then((cfg) => {
+        if (cfg?.themesConfig?.default) {
+          setS((prev) => {
+            if (!prev.theme || prev.theme === 'candy') {
+              return { ...prev, theme: cfg.themesConfig.default }
+            }
+            return prev
+          })
+        }
+      })
+      .catch(() => { })
   }, [])
 
   /* ---------- hydrate từ đám mây (D1) khi mở app ---------- */
   useEffect(() => {
     if (!famId) return
     let cancelled = false
-    ;(async () => {
-      const cloud = await cloudLoadState(famId)
-      if (cancelled) return
-      let localRaw = null
-      let localTs = 0
-      try {
-        localRaw = localStorage.getItem(LS_KEY)
-        if (localRaw) localTs = JSON.parse(localRaw)._ts || 0
-      } catch (e) {}
+      ; (async () => {
+        const cloud = await cloudLoadState(famId)
+        if (cancelled) return
+        let localRaw = null
+        let localTs = 0
+        try {
+          localRaw = localStorage.getItem(LS_KEY)
+          if (localRaw) localTs = JSON.parse(localRaw)._ts || 0
+        } catch (e) { }
 
-      // Đồng bộ khi máy này chưa có dữ liệu HOẶC dữ liệu trên cloud mới hơn máy này
-      if (cloud && cloud.state && cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) {
-        setS({ ...initialState(), ...cloud.state, _ts: cloud.ts })
-        toast('Đã đồng bộ dữ liệu mới nhất từ đám mây ☁️')
-      }
-      hydratedRef.current = true
-      setHydrated(true)
-    })()
+        // Đồng bộ khi máy này chưa có dữ liệu HOẶC dữ liệu trên cloud mới hơn máy này
+        if (cloud && cloud.state && cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) {
+          setS({ ...initialState(), ...cloud.state, _ts: cloud.ts })
+          toast('Đã đồng bộ dữ liệu mới nhất từ đám mây ☁️')
+        }
+        hydratedRef.current = true
+        setHydrated(true)
+      })()
     return () => {
       cancelled = true
     }
@@ -236,7 +247,7 @@ export default function App() {
     if (!hydratedRef.current) return
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(payload))
-    } catch (e) {}
+    } catch (e) { }
     if (!S.cloudSync) return
     clearTimeout(cloudTimer.current)
     cloudTimer.current = setTimeout(async () => {
@@ -346,7 +357,7 @@ export default function App() {
   const handleAuthed = (s) => {
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(s))
-    } catch (e) {}
+    } catch (e) { }
     const loaded = loadState(famLsKey(s.id))
     setSession(s)
     setS(loaded)
@@ -360,7 +371,7 @@ export default function App() {
     try {
       localStorage.removeItem(SESSION_KEY)
       removeAuthToken()
-    } catch (e) {}
+    } catch (e) { }
     setSession(null)
     setStudy(null)
     setSheet(null)
@@ -381,7 +392,7 @@ export default function App() {
       localStorage.removeItem(LS_KEY)
       localStorage.removeItem(SESSION_KEY)
       removeAuthToken()
-    } catch (e) {}
+    } catch (e) { }
     location.reload()
   }
 
@@ -743,10 +754,10 @@ function PracticeSheet() {
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      const p = await aiPractice(problem, child)
-      if (!cancelled) setItem(p || { text: 'Bố mua 4 túi kẹo, mỗi túi 6 viên. Bố cho Na 7 viên. Hỏi bố còn bao nhiêu viên kẹo?', answer: '4 × 6 = 24 · 24 − 7 = 17 viên kẹo' })
-    })()
+      ; (async () => {
+        const p = await aiPractice(problem, child)
+        if (!cancelled) setItem(p || { text: 'Bố mua 4 túi kẹo, mỗi túi 6 viên. Bố cho Na 7 viên. Hỏi bố còn bao nhiêu viên kẹo?', answer: '4 × 6 = 24 · 24 − 7 = 17 viên kẹo' })
+      })()
     return () => {
       cancelled = true
     }
@@ -861,7 +872,7 @@ function ReportIssueSheet({ problem }) {
         const arr = JSON.parse(localStorage.getItem('kem-con-hoc:feedback') || '[]')
         arr.push({ at: Date.now(), reason, comment: comment.trim(), problem: (problem.ocr || '').slice(0, 160) })
         localStorage.setItem('kem-con-hoc:feedback', JSON.stringify(arr.slice(-50)))
-      } catch (e) {}
+      } catch (e) { }
     }
     setSaving(false)
     closeSheet()
@@ -1016,7 +1027,7 @@ function TypeProblemSheet() {
         <p className="title" style={{ margin: 0 }}>Gõ hoặc Đọc đề bài</p>
       </div>
       <p className="sub" style={{ margin: '4px 0 10px' }}>Ba mẹ có thể gõ hoặc bấm nút mic để đọc đề trực tiếp.</p>
-      
+
       <div style={{ marginBottom: 12 }}>
         <VoiceInputBtn onResult={handleVoiceInput} placeholder="Bấm mic & Đọc đề bài" />
       </div>
@@ -1155,8 +1166,8 @@ function StickerBookSheet() {
                 border: isCurrent
                   ? `2px solid ${stk.color || 'var(--accent)'}`
                   : unlocked
-                  ? `1.5px solid ${stk.border || '#FCD34D'}`
-                  : '1.5px dashed #CBD5E1',
+                    ? `1.5px solid ${stk.border || '#FCD34D'}`
+                    : '1.5px dashed #CBD5E1',
                 background: unlocked
                   ? stk.bg || '#FFFBEB'
                   : '#F8FAFC',
