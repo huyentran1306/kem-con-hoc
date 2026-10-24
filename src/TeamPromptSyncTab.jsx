@@ -35,32 +35,18 @@ export const COMPANY_AI_MODELS = [
 // Dữ liệu mẫu ban đầu dạng vỏ bọc (nội dung chi tiết tải động từ Cloud D1)
 const INITIAL_TEAM_PROMPTS = [
   {
-    id: 'tp_longitudinal_1',
-    title: 'Prompt Hệ Thống Nhãn Khen Long-Term & AI Adaptive Roadmap',
-    category: 'math',
+    id: 'tp_prompt_00_auth',
+    title: 'Prompt 00: Nền Tảng Tài Khoản, Bảo Mật Máy Chủ & Tối Ưu Cloudflare Free Tier',
+    category: 'general',
     targetAi: 'VideFlow',
-    author: 'Tech Lead',
-    isRunCompanyAi: true,
-    runBy: 'Huyền',
-    runAt: '2026-10-23 16:30',
-    aiResult: 'Thành công tích hợp',
+    author: 'Huyền (Tech Lead)',
+    isRunCompanyAi: false,
+    runBy: '',
+    runAt: '',
+    aiResult: '',
     promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-23 16:30',
-    updatedAt: '2026-10-23 16:30'
-  },
-  {
-    id: 'tp_pedagogy_ai_config_2',
-    title: 'Prompt Cấu Hình AI Toàn Cục & Sư Phạm Phản Hồi',
-    category: 'math',
-    targetAi: 'VideFlow',
-    author: 'Tech Lead',
-    isRunCompanyAi: true,
-    runBy: 'Huyền',
-    runAt: '2026-10-24 13:00',
-    aiResult: 'Thành công tích hợp',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-24 13:00',
-    updatedAt: '2026-10-24 13:00'
+    createdAt: '2026-10-24 17:21',
+    updatedAt: '2026-10-24 19:10'
   },
   {
     id: 'tp_prompt_06_enhancement',
@@ -68,10 +54,10 @@ const INITIAL_TEAM_PROMPTS = [
     category: 'general',
     targetAi: 'Cursor / VideFlow',
     author: 'Kỹ sư Kèm Con Học',
-    isRunCompanyAi: true,
-    runBy: 'Huyền',
-    runAt: '2026-10-24 18:00',
-    aiResult: 'Hoàn thành triển khai',
+    isRunCompanyAi: false,
+    runBy: '',
+    runAt: '',
+    aiResult: '',
     promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
     createdAt: '2026-10-24 18:00',
     updatedAt: '2026-10-24 18:00'
@@ -82,10 +68,10 @@ const INITIAL_TEAM_PROMPTS = [
     category: 'general',
     targetAi: 'Cursor / VideFlow',
     author: 'Kỹ sư Kèm Con Học',
-    isRunCompanyAi: true,
-    runBy: 'Huyền',
-    runAt: '2026-10-24 18:15',
-    aiResult: 'Hoàn thành triển khai',
+    isRunCompanyAi: false,
+    runBy: '',
+    runAt: '',
+    aiResult: '',
     promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
     createdAt: '2026-10-24 18:15',
     updatedAt: '2026-10-24 18:15'
@@ -96,13 +82,41 @@ const INITIAL_TEAM_PROMPTS = [
     category: 'math',
     targetAi: 'Cursor / VideFlow',
     author: 'Kỹ sư Kèm Con Học',
-    isRunCompanyAi: true,
-    runBy: 'Huyền',
-    runAt: '2026-10-24 18:30',
-    aiResult: 'Hoàn thành triển khai',
+    isRunCompanyAi: false,
+    runBy: '',
+    runAt: '',
+    aiResult: '',
     promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
     createdAt: '2026-10-24 18:30',
     updatedAt: '2026-10-24 18:30'
+  },
+  {
+    id: 'tp_longitudinal_1',
+    title: 'Prompt Hệ Thống Nhãn Khen Long-Term & AI Adaptive Roadmap',
+    category: 'math',
+    targetAi: 'VideFlow',
+    author: 'Tech Lead',
+    isRunCompanyAi: false,
+    runBy: '',
+    runAt: '',
+    aiResult: '',
+    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
+    createdAt: '2026-10-23 16:30',
+    updatedAt: '2026-10-23 16:30'
+  },
+  {
+    id: 'tp_pedagogy_ai_config_2',
+    title: 'Prompt Cấu Hình AI Toàn Cục & Sư Phạm Phản Hồi',
+    category: 'math',
+    targetAi: 'VideFlow',
+    author: 'Tech Lead',
+    isRunCompanyAi: false,
+    runBy: '',
+    runAt: '',
+    aiResult: '',
+    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
+    createdAt: '2026-10-24 13:00',
+    updatedAt: '2026-10-24 13:00'
   }
 ];
 
@@ -968,7 +982,7 @@ export default function TeamPromptSyncTab() {
                         color: '#065F46',
                       }}
                     >
-                      <b style={{ display: 'block', marginBottom: 2 }}>📝 Phản hồi & Kết quả chạy ở VideFlow:</b>
+                      <b style={{ display: 'block', marginBottom: 2 }}>📝 Phản hồi & Kết quả chạy ({item.targetAi || 'VideFlow'}):</b>
                       <span style={{ whiteSpace: 'pre-wrap' }}>{item.aiResult}</span>
                     </div>
                   )}

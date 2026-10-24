@@ -22,15 +22,15 @@ async function run() {
       category: 'general',
       targetAi: 'VideFlow',
       author: 'Huyền (Tech Lead)',
-      isRunCompanyAi: true,
-      runBy: 'Huyền',
-      runAt: '2026-10-24 19:10',
-      aiResult: 'Đã hoàn thành 100%: API /api/v1 (auth, token 60d, state 409 conflict, cascade delete, cron cleanup), D1 schema 9 bảng tối ưu, test 72/72 PASS',
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
       migrationScript: `-- ============================================================
 -- PROMPT 00: SCHEMA DATABASE CHO MÔ HÌNH BẢO MẬT MỚI
 -- Lệnh chạy: npx wrangler d1 execute <tên-db> --remote --file=scripts/schema-prompt-00.sql
 -- ============================================================
-${schema00Sql}`,
+\${schema00Sql}`,
       promptDetail: prompt00Md,
       createdAt: '2026-10-24 17:21',
       updatedAt: '2026-10-24 19:10'
@@ -41,10 +41,10 @@ ${schema00Sql}`,
       category: 'general',
       targetAi: 'Cursor / VideFlow',
       author: 'Huyền (Tech Lead)',
-      isRunCompanyAi: true,
-      runBy: 'Huyền',
-      runAt: '2026-10-24 18:00',
-      aiResult: 'Đã hoàn thành: Đánh dấu sample: true cho h1..h15, Thứ Hai tuần theo VN UTC+7, bộ đếm đúng, sửa font tab',
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
       migrationScript: `-- ============================================================
 -- PROMPT 06: KHÔNG CẦN TẠO BẢNG MỚI
 -- Cơ chế Idempotent: Tự động đánh dấu sample: true cho các nhãn mẫu h1..h15 khi nạp state.
@@ -61,10 +61,10 @@ SELECT count(*) as total_families FROM families;
       category: 'general',
       targetAi: 'Cursor / VideFlow',
       author: 'Huyền (Tech Lead)',
-      isRunCompanyAi: true,
-      runBy: 'Huyền',
-      runAt: '2026-10-24 18:15',
-      aiResult: 'Đã hoàn thành: 8 bộ giao diện chuẩn WCAG AA, ThemePickerSheet, CSS variables đồng bộ, kiểm thử tương phản 100% pass',
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
       migrationScript: `-- ============================================================
 -- PROMPT 01: HỆ THỐNG 8 BỘ GIAO DIỆN & TIÊU CHUẨN WCAG AA
 -- Cấu trúc lưu trong state JSON: { theme: 'candy'|'bear'|'bento'|'sticker'|'notebook'|'garden'|'aurora'|'chalk', motion: 'full'|'reduced' }
@@ -81,10 +81,10 @@ node scripts/test-theme-contrast.mjs
       category: 'vision_ocr',
       targetAi: 'VideFlow',
       author: 'Huyền (Tech Lead)',
-      isRunCompanyAi: true,
-      runBy: 'Huyền',
-      runAt: '2026-10-24 18:30',
-      aiResult: 'Đã hoàn thành: scopeRules.js 9 loại phạm vi, Test Bench 6 mẫu vector, p1_ocr_v2 Vision AI, Audit log D1, UI Scope Banner',
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
       migrationScript: `-- ============================================================
 -- PROMPT 02: BẢNG SCOPE EVENTS & CẤU HÌNH LUẬT TRÊN D1
 -- Lệnh tạo bảng nhật ký phạm vi (D1 Audit Log):
