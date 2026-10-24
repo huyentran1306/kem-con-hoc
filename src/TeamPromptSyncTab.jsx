@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
 import { toast } from './utils'
+import { BearMascot } from './AdminMascot'
 
 const TEAM_PROMPTS_KV_KEY = 'team_prompts_sync:v1'
 const LOCAL_STORAGE_KEY = 'kem-con-hoc:team-prompts-cache'
@@ -444,43 +445,47 @@ export default function TeamPromptSyncTab() {
 
   return (
     <div className="prompt-studio-root" style={{ width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
-      {/* 🚀 HEADER BANNER & KPI STATS */}
+      {/* 🐻 HEADER BANNER & KPI STATS (BẢN GẤU MẬT ONG STITCH) */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)',
+          background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF3DB 55%, #FFE8BF 100%)',
           borderRadius: 18,
           padding: '22px 26px',
-          color: '#FFFFFF',
-          boxShadow: '0 10px 30px -5px rgba(67, 56, 202, 0.3)',
+          color: '#4B3621',
+          border: '1.5px solid #F0DDC2',
+          boxShadow: '0 4px 20px rgba(75, 54, 33, 0.06)',
           display: 'flex',
           flexDirection: 'column',
           gap: 18,
+          marginBottom: 16,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 28 }}>🚀</span>
-              <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-                Bảng Đồng Bộ Prompt Team — VideFlow
-              </h2>
-              <span
-                style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(10px)',
-                  padding: '3px 10px',
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                }}
-              >
-                Syncup Hub
-              </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <BearMascot mood="happy" size={56} />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: '#4B3621', letterSpacing: '-0.02em' }}>
+                  Bảng Đồng Bộ Prompt Team — VideFlow
+                </h2>
+                <span
+                  style={{
+                    background: '#FFF1D6',
+                    color: '#9A5B00',
+                    padding: '4px 12px',
+                    borderRadius: 20,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    border: '1px solid #F6C56A',
+                  }}
+                >
+                  🐻 Stitch Prompt Hub
+                </span>
+              </div>
+              <p style={{ margin: '6px 0 0', fontSize: 13.5, color: '#8A6A4A', maxWidth: 680, lineHeight: 1.5 }}>
+                Không gian gửi, lưu trữ và theo dõi các Prompt chạy trên hệ thống VideFlow (hoặc Claude, ChatGPT) để team phối hợp nhịp nhàng.
+              </p>
             </div>
-            <p style={{ margin: '6px 0 0', fontSize: 13.5, color: '#E0E7FF', maxWidth: 680, lineHeight: 1.5 }}>
-              Không gian gửi, lưu trữ và theo dõi các Prompt chạy trên hệ thống VideFlow (hoặc Claude, ChatGPT) để team phối hợp nhịp nhàng.
-            </p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -491,14 +496,15 @@ export default function TeamPromptSyncTab() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '8px 14px',
+                padding: '9px 15px',
                 borderRadius: 10,
-                background: 'rgba(255, 255, 255, 0.12)',
-                color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
+                background: '#FFFFFF',
+                color: '#4B3621',
+                border: '1.5px solid #F0DDC2',
                 fontWeight: 700,
                 fontSize: 12.5,
                 cursor: 'pointer',
+                boxShadow: '0 2px 0 #E2CDAF',
                 transition: 'all 0.15s ease',
               }}
               title="Kéo dữ liệu mới nhất từ Cloud D1"
@@ -513,14 +519,15 @@ export default function TeamPromptSyncTab() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '8px 14px',
+                padding: '9px 15px',
                 borderRadius: 10,
-                background: 'rgba(255, 255, 255, 0.12)',
-                color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
+                background: '#FFFFFF',
+                color: '#4B3621',
+                border: '1.5px solid #F0DDC2',
                 fontWeight: 700,
                 fontSize: 12.5,
                 cursor: 'pointer',
+                boxShadow: '0 2px 0 #E2CDAF',
               }}
               title="Copy tóm tắt Markdown để gửi Zalo/Slack"
             >
@@ -536,13 +543,13 @@ export default function TeamPromptSyncTab() {
                 gap: 7,
                 padding: '9px 18px',
                 borderRadius: 10,
-                background: '#10B981',
-                color: '#FFFFFF',
-                border: 'none',
+                background: '#F6A623',
+                color: '#4B3621',
+                border: '1.5px solid #C47F0E',
                 fontWeight: 800,
                 fontSize: 13.5,
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                boxShadow: '0 3px 0 #C47F0E',
                 transition: 'transform 0.15s ease, background 0.15s ease',
               }}
             >
@@ -552,56 +559,57 @@ export default function TeamPromptSyncTab() {
           </div>
         </div>
 
-        {/* BENTO KPI MINI BAR */}
+        {/* BENTO KPI MINI BAR (BẢN GẤU) */}
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: 12,
             paddingTop: 8,
-            borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+            borderTop: '1px solid #F0DDC2',
           }}
         >
-          <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 12, padding: '10px 14px' }}>
-            <div style={{ fontSize: 11.5, color: '#C7D2FE', fontWeight: 600 }}>TỔNG SỐ PROMPTS</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginTop: 2 }}>{metrics.total}</div>
+          <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 16px', border: '1.5px solid #F0DDC2', boxShadow: '0 1px 3px rgba(75,54,33,0.03)' }}>
+            <div style={{ fontSize: 11.5, color: '#8A6A4A', fontWeight: 700 }}>🐻 TỔNG SỐ PROMPTS</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#4B3621', marginTop: 3 }}>{metrics.total}</div>
           </div>
-          <div style={{ background: 'rgba(16, 185, 129, 0.15)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-            <div style={{ fontSize: 11.5, color: '#A7F3D0', fontWeight: 700 }}>✅ ĐÃ CHẠY Ở VIDEFLOW</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#34D399', marginTop: 2 }}>{metrics.ranCount}</div>
+          <div style={{ background: '#ECFDF5', borderRadius: 12, padding: '12px 16px', border: '1.5px solid #A7F3D0' }}>
+            <div style={{ fontSize: 11.5, color: '#047857', fontWeight: 700 }}>✅ ĐÃ CHẠY Ở VIDEFLOW</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#059669', marginTop: 3 }}>{metrics.ranCount}</div>
           </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.15)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-            <div style={{ fontSize: 11.5, color: '#FDE68A', fontWeight: 700 }}>⏳ CHỜ CHẠY TEST</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#FBBF24', marginTop: 2 }}>{metrics.pendingCount}</div>
+          <div style={{ background: '#FFFBEB', borderRadius: 12, padding: '12px 16px', border: '1.5px solid #FDE68A' }}>
+            <div style={{ fontSize: 11.5, color: '#B45309', fontWeight: 700 }}>⏳ CHỜ CHẠY TEST</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#D97706', marginTop: 3 }}>{metrics.pendingCount}</div>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 12, padding: '10px 14px' }}>
-            <div style={{ fontSize: 11.5, color: '#C7D2FE', fontWeight: 600 }}>TIẾN ĐỘ THỰC HIỆN</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginTop: 2 }}>{metrics.percent}%</div>
+          <div style={{ background: '#EFF6FF', borderRadius: 12, padding: '12px 16px', border: '1.5px solid #BFDBFE' }}>
+            <div style={{ fontSize: 11.5, color: '#1D4ED8', fontWeight: 700 }}>🎯 TIẾN ĐỘ THỰC HIỆN</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#2563EB', marginTop: 3 }}>{metrics.percent}%</div>
           </div>
         </div>
 
         {lastSyncTime && (
-          <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.65)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 12, color: '#8A6A4A', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>☁️</span>
             <span>Đồng bộ Cloud lần cuối: <b>{lastSyncTime}</b></span>
-            {syncing && <span style={{ color: '#FCD34D' }}>• Đang lưu dữ liệu…</span>}
+            {syncing && <span style={{ color: '#D97706', fontWeight: 700 }}>• Đang lưu dữ liệu…</span>}
           </div>
         )}
       </div>
 
-      {/* 🔍 FILTER & SEARCH BAR */}
+      {/* 🔍 FILTER & SEARCH BAR (TONE GẤU) */}
       <div
         style={{
           background: '#FFFFFF',
           borderRadius: 14,
-          border: '1px solid #E2E8F0',
+          border: '1.5px solid #F0DDC2',
           padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 12,
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+          boxShadow: '0 2px 8px rgba(75, 54, 33, 0.04)',
+          marginBottom: 16,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 260 }}>
@@ -616,14 +624,14 @@ export default function TeamPromptSyncTab() {
               border: 'none',
               outline: 'none',
               fontSize: 13.5,
-              color: '#0F172A',
+              color: '#4B3621',
               background: 'transparent',
             }}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 14 }}
+              style={{ background: 'none', border: 'none', color: '#8A6A4A', cursor: 'pointer', fontSize: 14 }}
             >
               ✕
             </button>
@@ -632,20 +640,20 @@ export default function TeamPromptSyncTab() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {/* Lọc trạng thái check cty */}
-          <div style={{ display: 'flex', alignItems: 'center', background: '#F1F5F9', padding: 3, borderRadius: 9 }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#FFF1D6', padding: 3, borderRadius: 9, border: '1px solid #F0DDC2' }}>
             <button
               type="button"
               onClick={() => setFilterRunStatus('all')}
               style={{
                 border: 'none',
-                padding: '5px 11px',
+                padding: '5px 12px',
                 borderRadius: 7,
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: 'pointer',
-                background: filterRunStatus === 'all' ? '#FFFFFF' : 'transparent',
-                color: filterRunStatus === 'all' ? '#0F172A' : '#64748B',
-                boxShadow: filterRunStatus === 'all' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                background: filterRunStatus === 'all' ? '#F6A623' : 'transparent',
+                color: filterRunStatus === 'all' ? '#4B3621' : '#8A6A4A',
+                boxShadow: filterRunStatus === 'all' ? '0 1px 3px rgba(75,54,33,0.15)' : 'none',
               }}
             >
               Tất cả ({metrics.total})
@@ -655,14 +663,14 @@ export default function TeamPromptSyncTab() {
               onClick={() => setFilterRunStatus('ran')}
               style={{
                 border: 'none',
-                padding: '5px 11px',
+                padding: '5px 12px',
                 borderRadius: 7,
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: 'pointer',
                 background: filterRunStatus === 'ran' ? '#10B981' : 'transparent',
-                color: filterRunStatus === 'ran' ? '#FFFFFF' : '#059669',
-                boxShadow: filterRunStatus === 'ran' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                color: filterRunStatus === 'ran' ? '#FFFFFF' : '#047857',
+                boxShadow: filterRunStatus === 'ran' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}
             >
               ✅ Đã chạy ({metrics.ranCount})
@@ -672,14 +680,14 @@ export default function TeamPromptSyncTab() {
               onClick={() => setFilterRunStatus('pending')}
               style={{
                 border: 'none',
-                padding: '5px 11px',
+                padding: '5px 12px',
                 borderRadius: 7,
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: 'pointer',
-                background: filterRunStatus === 'pending' ? '#F59E0B' : 'transparent',
-                color: filterRunStatus === 'pending' ? '#FFFFFF' : '#D97706',
-                boxShadow: filterRunStatus === 'pending' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                background: filterRunStatus === 'pending' ? '#D97706' : 'transparent',
+                color: filterRunStatus === 'pending' ? '#FFFFFF' : '#9A5B00',
+                boxShadow: filterRunStatus === 'pending' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}
             >
               ⏳ Chưa chạy ({metrics.pendingCount})
@@ -691,13 +699,13 @@ export default function TeamPromptSyncTab() {
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             style={{
-              padding: '6px 10px',
+              padding: '6px 12px',
               borderRadius: 8,
-              border: '1px solid #CBD5E1',
+              border: '1.5px solid #F0DDC2',
               fontSize: 12.5,
-              fontWeight: 600,
-              color: '#334155',
-              background: '#fff',
+              fontWeight: 700,
+              color: '#4B3621',
+              background: '#FFF8EC',
               outline: 'none',
               cursor: 'pointer',
             }}
@@ -718,30 +726,33 @@ export default function TeamPromptSyncTab() {
             style={{
               background: '#FFFFFF',
               borderRadius: 16,
-              border: '1px dashed #CBD5E1',
+              border: '1.5px dashed #F0DDC2',
               padding: '48px 24px',
               textAlign: 'center',
-              color: '#64748B',
+              color: '#8A6A4A',
             }}
           >
-            <div style={{ fontSize: 44, marginBottom: 12 }}>📭</div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#334155', margin: '0 0 6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <BearMascot mood="search" size={68} />
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#4B3621', margin: '0 0 6px' }}>
               Chưa có prompt nào phù hợp với bộ lọc
             </h3>
-            <p style={{ fontSize: 13, margin: '0 0 16px', color: '#94A3B8' }}>
+            <p style={{ fontSize: 13, margin: '0 0 16px', color: '#8A6A4A' }}>
               Bấm nút bên dưới để gửi prompt mới lên cho team sync cùng nhé!
             </p>
             <button
               onClick={handleOpenAdd}
               style={{
-                padding: '8px 18px',
-                borderRadius: 9,
-                background: '#4F46E5',
-                color: '#fff',
-                border: 'none',
-                fontWeight: 700,
+                padding: '9px 20px',
+                borderRadius: 10,
+                background: '#F6A623',
+                color: '#4B3621',
+                border: '1.5px solid #C47F0E',
+                fontWeight: 800,
                 fontSize: 13,
                 cursor: 'pointer',
+                boxShadow: '0 2px 0 #C47F0E',
               }}
             >
               ➕ Thêm Prompt Mới Ngay
@@ -759,8 +770,8 @@ export default function TeamPromptSyncTab() {
                 style={{
                   background: '#FFFFFF',
                   borderRadius: 16,
-                  border: item.isRunCompanyAi ? '1.5px solid #A7F3D0' : '1.5px solid #FDE68A',
-                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
+                  border: item.isRunCompanyAi ? '1.5px solid #A7F3D0' : '1.5px solid #F0DDC2',
+                  boxShadow: '0 2px 10px rgba(75, 54, 33, 0.04)',
                   overflow: 'hidden',
                   transition: 'all 0.15s ease',
                 }}
@@ -771,8 +782,8 @@ export default function TeamPromptSyncTab() {
                     padding: '14px 18px',
                     background: item.isRunCompanyAi
                       ? 'linear-gradient(90deg, #F0FDF4 0%, #FFFFFF 100%)'
-                      : 'linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 100%)',
-                    borderBottom: '1px solid #F1F5F9',
+                      : 'linear-gradient(90deg, #FFFDF8 0%, #FFF8EC 100%)',
+                    borderBottom: '1px solid #F4E7D3',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -781,7 +792,7 @@ export default function TeamPromptSyncTab() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#64748B' }}>#{idx + 1}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#8A6A4A' }}>#{idx + 1}</span>
 
                     {/* Tag danh mục */}
                     <span
@@ -789,11 +800,11 @@ export default function TeamPromptSyncTab() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 4,
-                        padding: '3px 9px',
-                        borderRadius: 6,
-                        background: '#EEF2FF',
-                        border: '1px solid #C7D2FE',
-                        color: '#4338CA',
+                        padding: '4px 10px',
+                        borderRadius: 8,
+                        background: '#FFF1D6',
+                        border: '1px solid #F6C56A',
+                        color: '#9A5B00',
                         fontSize: 12,
                         fontWeight: 700,
                       }}
@@ -805,13 +816,13 @@ export default function TeamPromptSyncTab() {
                     {/* Model AI công ty mục tiêu */}
                     <span
                       style={{
-                        padding: '3px 9px',
-                        borderRadius: 6,
-                        background: '#F1F5F9',
-                        color: '#334155',
+                        padding: '4px 10px',
+                        borderRadius: 8,
+                        background: '#EFF6FF',
+                        color: '#1D4ED8',
                         fontSize: 11.5,
-                        fontWeight: 600,
-                        border: '1px solid #E2E8F0',
+                        fontWeight: 700,
+                        border: '1px solid #BFDBFE',
                       }}
                     >
                       🤖 {item.targetAi || 'AI Công ty'}
@@ -827,9 +838,9 @@ export default function TeamPromptSyncTab() {
                         gap: 6,
                         padding: '4px 12px',
                         borderRadius: 20,
-                        border: item.isRunCompanyAi ? '1.5px solid #10B981' : '1.5px dashed #F59E0B',
-                        background: item.isRunCompanyAi ? '#ECFDF5' : '#FFFBEB',
-                        color: item.isRunCompanyAi ? '#065F46' : '#B45309',
+                        border: item.isRunCompanyAi ? '1.5px solid #10B981' : '1.5px dashed #F6A623',
+                        background: item.isRunCompanyAi ? '#ECFDF5' : '#FFF8EC',
+                        color: item.isRunCompanyAi ? '#065F46' : '#9A5B00',
                         fontWeight: 800,
                         fontSize: 12,
                         cursor: 'pointer',
@@ -847,14 +858,15 @@ export default function TeamPromptSyncTab() {
                     <button
                       onClick={() => handleCopyPrompt(item.promptDetail, item.title)}
                       style={{
-                        padding: '5px 10px',
-                        borderRadius: 7,
-                        background: '#F8FAFC',
-                        border: '1px solid #CBD5E1',
-                        color: '#334155',
+                        padding: '6px 12px',
+                        borderRadius: 8,
+                        background: '#FFF8EC',
+                        border: '1.5px solid #F0DDC2',
+                        color: '#4B3621',
                         fontSize: 12,
                         fontWeight: 700,
                         cursor: 'pointer',
+                        boxShadow: '0 1px 2px rgba(75, 54, 33, 0.05)',
                       }}
                       title="Copy toàn bộ nội dung prompt"
                     >
@@ -864,14 +876,15 @@ export default function TeamPromptSyncTab() {
                     <button
                       onClick={() => handleOpenEdit(item)}
                       style={{
-                        padding: '5px 10px',
-                        borderRadius: 7,
-                        background: '#F8FAFC',
-                        border: '1px solid #CBD5E1',
-                        color: '#2563EB',
+                        padding: '6px 12px',
+                        borderRadius: 8,
+                        background: '#FFF8EC',
+                        border: '1.5px solid #F0DDC2',
+                        color: '#9A5B00',
                         fontSize: 12,
                         fontWeight: 700,
                         cursor: 'pointer',
+                        boxShadow: '0 1px 2px rgba(75, 54, 33, 0.05)',
                       }}
                       title="Chỉnh sửa thông tin"
                     >
@@ -881,10 +894,10 @@ export default function TeamPromptSyncTab() {
                     <button
                       onClick={() => handleDelete(item)}
                       style={{
-                        padding: '5px 10px',
-                        borderRadius: 7,
-                        background: '#FEF2F2',
-                        border: '1px solid #FECACA',
+                        padding: '6px 10px',
+                        borderRadius: 8,
+                        background: '#FFF1F2',
+                        border: '1.5px solid #FECDD3',
                         color: '#DC2626',
                         fontSize: 12,
                         fontWeight: 700,
@@ -900,15 +913,15 @@ export default function TeamPromptSyncTab() {
                 {/* CARD BODY */}
                 <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div>
-                    <h3 style={{ fontSize: 16.5, fontWeight: 800, color: '#0F172A', margin: '0 0 6px', lineHeight: 1.35 }}>
+                    <h3 style={{ fontSize: 16.5, fontWeight: 800, color: '#4B3621', margin: '0 0 6px', lineHeight: 1.35 }}>
                       {item.title}
                     </h3>
 
-                    <div style={{ fontSize: 12, color: '#64748B', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 12, color: '#8A6A4A', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                       <span>👤 Người gửi: <b>{item.author || 'Thành viên Team'}</b></span>
                       <span>🕒 Tạo: {item.createdAt || 'Mới đây'}</span>
                       {item.isRunCompanyAi && item.runBy && (
-                        <span style={{ color: '#059669', fontWeight: 600 }}>
+                        <span style={{ color: '#047857', fontWeight: 700 }}>
                           • Check bởi: <b>{item.runBy}</b> ({item.runAt})
                         </span>
                       )}
@@ -919,17 +932,17 @@ export default function TeamPromptSyncTab() {
                   <div
                     style={{
                       position: 'relative',
-                      background: '#F8FAFC',
-                      borderRadius: 10,
-                      border: '1px solid #E2E8F0',
+                      background: '#FFFDF9',
+                      borderRadius: 12,
+                      border: '1.5px solid #F0DDC2',
                       padding: '12px 14px',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 800, color: '#8A6A4A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         📄 Nội dung Prompt Detail:
                       </span>
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>
+                      <span style={{ fontSize: 11, color: '#A89078' }}>
                         {item.promptDetail.length} ký tự
                       </span>
                     </div>
@@ -939,7 +952,7 @@ export default function TeamPromptSyncTab() {
                         margin: 0,
                         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                         fontSize: 12.5,
-                        color: '#1E293B',
+                        color: '#4B3621',
                         lineHeight: 1.5,
                         whiteSpace: 'pre-wrap',
                         wordBreak: 'break-word',
@@ -958,7 +971,7 @@ export default function TeamPromptSyncTab() {
                           marginTop: 6,
                           background: 'none',
                           border: 'none',
-                          color: '#4F46E5',
+                          color: '#D97706',
                           fontSize: 12,
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -991,24 +1004,24 @@ export default function TeamPromptSyncTab() {
                   {item.migrationScript && item.migrationScript.trim() !== '' && (
                     <div
                       style={{
-                        background: '#0F172A',
+                        background: '#2D2319',
                         borderRadius: 12,
                         padding: '12px 16px',
-                        border: '1px solid #1E293B',
+                        border: '1.5px solid #4B3621',
                         boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#FBBF24', display: 'flex', alignItems: 'center', gap: 6 }}>
                           📦 Script Database / D1 Migration Cần Chạy:
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopyPrompt(item.migrationScript, `Script DB ${item.title}`)}
                           style={{
-                            background: '#1E293B',
-                            color: '#F8FAFC',
-                            border: '1px solid #334155',
+                            background: '#4B3621',
+                            color: '#FFF3DB',
+                            border: '1px solid #6E5339',
                             borderRadius: 6,
                             padding: '4px 10px',
                             fontSize: 11.5,
@@ -1024,7 +1037,7 @@ export default function TeamPromptSyncTab() {
                           margin: 0,
                           fontFamily: 'ui-monospace, Menlo, Monaco, Consolas, monospace',
                           fontSize: 12,
-                          color: '#E2E8F0',
+                          color: '#FFF8EC',
                           lineHeight: 1.45,
                           whiteSpace: 'pre-wrap',
                           wordBreak: 'break-word',
@@ -1047,14 +1060,15 @@ export default function TeamPromptSyncTab() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
-                        padding: '6px 12px',
+                        padding: '7px 14px',
                         borderRadius: 8,
-                        background: '#EEF2FF',
-                        border: '1px solid #C7D2FE',
-                        color: '#4338CA',
+                        background: '#FFF1D6',
+                        border: '1.5px solid #F6C56A',
+                        color: '#9A5B00',
                         fontSize: 12,
                         fontWeight: 700,
                         cursor: 'pointer',
+                        boxShadow: '0 1px 2px rgba(75, 54, 33, 0.06)',
                       }}
                       title="Chạy thử mẫu prompt này trực tiếp qua AI Gateway"
                     >
@@ -1062,7 +1076,7 @@ export default function TeamPromptSyncTab() {
                       <span>{isTestingThis && testRunning ? 'Đang chạy thử…' : 'Chạy thử qua AI Gateway'}</span>
                     </button>
 
-                    <span style={{ fontSize: 11.5, color: '#94A3B8' }}>
+                    <span style={{ fontSize: 11.5, color: '#8A6A4A' }}>
                       Cập nhật lần cuối: {item.updatedAt || item.createdAt}
                     </span>
                   </div>
@@ -1072,9 +1086,9 @@ export default function TeamPromptSyncTab() {
                     <div
                       style={{
                         marginTop: 4,
-                        background: testResult.success ? '#F0FDF4' : '#FEF2F2',
+                        background: testResult.success ? '#F0FDF4' : '#FFF1F2',
                         borderRadius: 10,
-                        border: testResult.success ? '1px solid #BBF7D0' : '1px solid #FECACA',
+                        border: testResult.success ? '1.5px solid #A7F3D0' : '1.5px solid #FECDD3',
                         padding: '12px',
                         fontSize: 12.5,
                       }}
@@ -1088,12 +1102,12 @@ export default function TeamPromptSyncTab() {
                             setTestingId(null)
                             setTestResult(null)
                           }}
-                          style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}
+                          style={{ background: 'none', border: 'none', color: '#8A6A4A', cursor: 'pointer' }}
                         >
                           Đóng ✕
                         </button>
                       </div>
-                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#1E293B', fontFamily: 'inherit' }}>
+                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#4B3621', fontFamily: 'inherit' }}>
                         {testResult.text}
                       </pre>
                     </div>
@@ -1111,7 +1125,7 @@ export default function TeamPromptSyncTab() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(15, 23, 42, 0.65)',
+            background: 'rgba(45, 35, 25, 0.6)',
             backdropFilter: 'blur(5px)',
             zIndex: 9999,
             display: 'flex',
@@ -1125,14 +1139,14 @@ export default function TeamPromptSyncTab() {
         >
           <div
             style={{
-              background: '#FFFFFF',
-              borderRadius: 18,
+              background: '#FFFDF9',
+              borderRadius: 20,
               width: '100%',
               maxWidth: 700,
               maxHeight: '92vh',
               overflowY: 'auto',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              border: '1px solid #E2E8F0',
+              boxShadow: '0 20px 40px rgba(75, 54, 33, 0.2)',
+              border: '1.5px solid #F0DDC2',
               padding: '24px 28px',
               display: 'flex',
               flexDirection: 'column',
@@ -1141,26 +1155,30 @@ export default function TeamPromptSyncTab() {
           >
             {/* MODAL HEADER */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
-                  {editingId ? '✏️ Chỉnh Sửa Prompt Sync' : '🚀 Gửi Prompt Mới Lên Cho Team'}
-                </h3>
-                <p style={{ margin: '3px 0 0', fontSize: 12.5, color: '#64748B' }}>
-                  Thông tin sẽ được tự động lưu lên Cloud D1 để toàn bộ team cùng xem và theo dõi.
-                </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <BearMascot mood="greeting" size={42} />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#4B3621' }}>
+                    {editingId ? '✏️ Chỉnh Sửa Prompt Sync' : '🚀 Gửi Prompt Mới Lên Cho Team'}
+                  </h3>
+                  <p style={{ margin: '3px 0 0', fontSize: 12.5, color: '#8A6A4A' }}>
+                    Thông tin sẽ được tự động lưu lên Cloud D1 để toàn bộ team cùng xem và theo dõi.
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 style={{
-                  background: '#F1F5F9',
-                  border: 'none',
+                  background: '#FFF1D6',
+                  border: '1px solid #F0DDC2',
                   borderRadius: '50%',
                   width: 32,
                   height: 32,
                   fontSize: 16,
                   cursor: 'pointer',
-                  color: '#64748B',
+                  color: '#4B3621',
+                  fontWeight: 700,
                 }}
               >
                 ✕
@@ -1171,8 +1189,8 @@ export default function TeamPromptSyncTab() {
             <form onSubmit={handleSaveForm} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Tiêu đề prompt */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 5 }}>
-                  Tiêu đề Prompt <span style={{ color: '#EF4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#4B3621', marginBottom: 5 }}>
+                  Tiêu đề Prompt <span style={{ color: '#DC2626' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -1184,9 +1202,11 @@ export default function TeamPromptSyncTab() {
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: 9,
-                    border: '1.5px solid #CBD5E1',
+                    border: '1.5px solid #F0DDC2',
                     fontSize: 13.5,
                     fontWeight: 600,
+                    color: '#4B3621',
+                    background: '#FFFFFF',
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
@@ -1196,7 +1216,7 @@ export default function TeamPromptSyncTab() {
               {/* Danh mục & Model AI mục tiêu */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#334155', marginBottom: 5 }}>
+                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#4B3621', marginBottom: 5 }}>
                     Danh mục chuyên môn
                   </label>
                   <select
@@ -1206,10 +1226,11 @@ export default function TeamPromptSyncTab() {
                       width: '100%',
                       padding: '9px 11px',
                       borderRadius: 8,
-                      border: '1.5px solid #CBD5E1',
+                      border: '1.5px solid #F0DDC2',
                       fontSize: 13,
                       fontWeight: 600,
-                      background: '#fff',
+                      color: '#4B3621',
+                      background: '#FFFFFF',
                       outline: 'none',
                       boxSizing: 'border-box',
                     }}
@@ -1223,7 +1244,7 @@ export default function TeamPromptSyncTab() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#334155', marginBottom: 5 }}>
+                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#4B3621', marginBottom: 5 }}>
                     AI Model công ty mục tiêu
                   </label>
                   <select
@@ -1233,10 +1254,11 @@ export default function TeamPromptSyncTab() {
                       width: '100%',
                       padding: '9px 11px',
                       borderRadius: 8,
-                      border: '1.5px solid #CBD5E1',
+                      border: '1.5px solid #F0DDC2',
                       fontSize: 13,
                       fontWeight: 600,
-                      background: '#fff',
+                      color: '#4B3621',
+                      background: '#FFFFFF',
                       outline: 'none',
                       boxSizing: 'border-box',
                     }}
@@ -1252,7 +1274,7 @@ export default function TeamPromptSyncTab() {
 
               {/* Người gửi */}
               <div>
-                <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#334155', marginBottom: 5 }}>
+                <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#4B3621', marginBottom: 5 }}>
                   Tên người gửi / Thành viên tạo
                 </label>
                 <input
@@ -1264,8 +1286,10 @@ export default function TeamPromptSyncTab() {
                     width: '100%',
                     padding: '8px 12px',
                     borderRadius: 8,
-                    border: '1.5px solid #CBD5E1',
+                    border: '1.5px solid #F0DDC2',
                     fontSize: 13,
+                    color: '#4B3621',
+                    background: '#FFFFFF',
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
@@ -1275,10 +1299,10 @@ export default function TeamPromptSyncTab() {
               {/* Prompt Detail Textarea */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>
-                    Nội dung chi tiết Prompt <span style={{ color: '#EF4444' }}>*</span>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: '#4B3621' }}>
+                    Nội dung chi tiết Prompt <span style={{ color: '#DC2626' }}>*</span>
                   </label>
-                  <span style={{ fontSize: 11.5, color: '#64748B' }}>
+                  <span style={{ fontSize: 11.5, color: '#8A6A4A' }}>
                     {formDetail.length} ký tự
                   </span>
                 </div>
@@ -1292,10 +1316,12 @@ export default function TeamPromptSyncTab() {
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: 8,
-                    border: '1.5px solid #CBD5E1',
+                    border: '1.5px solid #F0DDC2',
                     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                     fontSize: 12.5,
                     lineHeight: 1.5,
+                    color: '#4B3621',
+                    background: '#FFFFFF',
                     outline: 'none',
                     boxSizing: 'border-box',
                     resize: 'vertical',
@@ -1305,7 +1331,7 @@ export default function TeamPromptSyncTab() {
 
               {/* 📦 SCRIPT DATABASE / D1 MIGRATION */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 5 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#4B3621', marginBottom: 5 }}>
                   📦 Script Database / D1 Migration Cần Chạy (SQL / Lệnh CLI)
                 </label>
                 <textarea
@@ -1317,14 +1343,15 @@ export default function TeamPromptSyncTab() {
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: 8,
-                    border: '1.5px solid #CBD5E1',
+                    border: '1.5px solid #F0DDC2',
                     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                     fontSize: 12.5,
                     lineHeight: 1.5,
                     outline: 'none',
                     boxSizing: 'border-box',
                     resize: 'vertical',
-                    background: '#F8FAFC',
+                    background: '#FFFDF9',
+                    color: '#4B3621',
                   }}
                 />
               </div>
@@ -1332,9 +1359,9 @@ export default function TeamPromptSyncTab() {
               {/* 🎯 CHECKLIST: ĐÃ RUN Ở VIDEFLOW CHƯA */}
               <div
                 style={{
-                  background: formIsRun ? '#ECFDF5' : '#FFFBEB',
-                  borderRadius: 10,
-                  border: formIsRun ? '1.5px solid #10B981' : '1.5px solid #FCD34D',
+                  background: formIsRun ? '#ECFDF5' : '#FFF8EC',
+                  borderRadius: 12,
+                  border: formIsRun ? '1.5px solid #10B981' : '1.5px solid #F6C56A',
                   padding: '12px 14px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -1349,10 +1376,10 @@ export default function TeamPromptSyncTab() {
                     style={{ width: 18, height: 18, accentColor: '#10B981', cursor: 'pointer' }}
                   />
                   <div>
-                    <span style={{ fontSize: 13.5, fontWeight: 800, color: formIsRun ? '#065F46' : '#92400E' }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 800, color: formIsRun ? '#065F46' : '#9A5B00' }}>
                       {formIsRun ? '✅ Đã chạy thử nghiệm ở VideFlow' : '⏳ Chưa chạy thử nghiệm ở VideFlow'}
                     </span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: '#64748B' }}>
+                    <span style={{ display: 'block', fontSize: 11.5, color: '#8A6A4A' }}>
                       (Tích vào đây nếu team đã test prompt này trên VideFlow)
                     </span>
                   </div>
@@ -1412,9 +1439,9 @@ export default function TeamPromptSyncTab() {
                   style={{
                     padding: '9px 16px',
                     borderRadius: 9,
-                    background: '#F1F5F9',
-                    border: '1px solid #CBD5E1',
-                    color: '#475569',
+                    background: '#FFF1D6',
+                    border: '1.5px solid #F0DDC2',
+                    color: '#4B3621',
                     fontWeight: 700,
                     fontSize: 13,
                     cursor: 'pointer',
@@ -1428,13 +1455,13 @@ export default function TeamPromptSyncTab() {
                   style={{
                     padding: '9px 20px',
                     borderRadius: 9,
-                    background: '#4F46E5',
-                    color: '#FFFFFF',
-                    border: 'none',
+                    background: '#F6A623',
+                    color: '#4B3621',
+                    border: '1.5px solid #C47F0E',
                     fontWeight: 800,
                     fontSize: 13,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+                    boxShadow: '0 3px 0 #C47F0E',
                   }}
                 >
                   {syncing ? 'Đang lưu…' : '💾 Lưu & Đồng bộ Cloud'}
