@@ -18,6 +18,18 @@ const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
 const ADMIN_THEME_KEY = 'kem-con-hoc:admin-theme'
 const ADMIN_PROFILE_KEY = 'kem-con-hoc:admin-profile'
 
+export const CONFIG_SUBTABS = [
+  { id: 'model', label: 'Mô hình & Tham số', icon: '⚙️' },
+  { id: 'prompts', label: 'Prompt Studio', icon: '🧪' },
+  { id: 'router', label: 'Router Sư phạm', icon: '🔀' },
+  { id: 'scope', label: 'Phạm vi Đề & Ảnh', icon: '🛡️' },
+  { id: 'themes', label: 'Giao diện App', icon: '🎨' },
+  { id: 'admins', label: 'Quản trị viên & PIN', icon: '👥' },
+  { id: 'audit', label: 'Nhật ký thao tác', icon: '📜' },
+  { id: 'infra', label: 'Hạ tầng Cloudflare', icon: '☁️' },
+  { id: 'zalo', label: 'Thông báo & Zalo', icon: '💬' },
+]
+
 export default function AdminPortal({ onExit }) {
   // Theme state: 'bear' (default) or 'blue'
   const [theme, setTheme] = useState(() => {
@@ -50,6 +62,7 @@ export default function AdminPortal({ onExit }) {
   const [authed, setAuthed] = useState(() => Boolean(token))
   const [isLocked, setIsLocked] = useState(false)
   const [activeTab, setActiveTab] = useState('overview') // overview | families | sessions | reports | teachers | config | tools
+  const [configSubTab, setConfigSubTab] = useState('model') // model | prompts | router | scope | themes | admins | audit | infra | zalo
   const [showMobileNav, setShowMobileNav] = useState(false)
 
   // Login form state
@@ -341,14 +354,45 @@ export default function AdminPortal({ onExit }) {
           </button>
 
           {!isSupport && (
-            <button
-              type="button"
-              className={`stitch-nav-item ${activeTab === 'config' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('config'); setShowMobileNav(false) }}
-            >
-              <span className="stitch-nav-icon">⚙️</span>
-              <span>Cấu hình AI & Hệ thống</span>
-            </button>
+            <div>
+              <button
+                type="button"
+                className={`stitch-nav-item ${activeTab === 'config' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('config')
+                  setShowMobileNav(false)
+                }}
+                style={{ justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span className="stitch-nav-icon">⚙️</span>
+                  <span>Cấu hình AI & Hệ thống</span>
+                </div>
+                <span style={{ fontSize: '11px', opacity: 0.7 }}>
+                  {activeTab === 'config' ? '▾' : '▸'}
+                </span>
+              </button>
+
+              {activeTab === 'config' && (
+                <div className="stitch-nav-subgroup">
+                  {CONFIG_SUBTABS.map((sub) => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      className={`stitch-nav-subitem ${configSubTab === sub.id ? 'active' : ''}`}
+                      onClick={() => {
+                        setActiveTab('config')
+                        setConfigSubTab(sub.id)
+                        setShowMobileNav(false)
+                      }}
+                    >
+                      <span className="sub-icon">{sub.icon}</span>
+                      <span>{sub.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {!isSupport && (
@@ -436,7 +480,7 @@ export default function AdminPortal({ onExit }) {
               {activeTab === 'sessions' && 'Nhật ký kèm học & Đánh giá AI'}
               {activeTab === 'reports' && 'Báo cáo Sư phạm & Chỉ số NPS'}
               {activeTab === 'teachers' && 'Duyệt Giáo viên & Lớp học'}
-              {activeTab === 'config' && 'Cấu hình AI & Hệ thống'}
+              {activeTab === 'config' && `Cấu hình AI & Hệ thống · ${CONFIG_SUBTABS.find((s) => s.id === configSubTab)?.label || ''}`}
               {activeTab === 'tools' && 'Công cụ nội bộ & SQL Studio'}
             </div>
           </div>
@@ -493,7 +537,7 @@ export default function AdminPortal({ onExit }) {
           {activeTab === 'sessions' && (
             <AdminSessionsTab
               token={token}
-              onOpenPromptStudio={() => setActiveTab('config')}
+              onOpenPromptStudio={() => { setActiveTab('config'); setConfigSubTab('prompts') }}
             />
           )}
 
@@ -510,6 +554,8 @@ export default function AdminPortal({ onExit }) {
             <AdminConfigTab
               token={token}
               adminProfile={adminProfile}
+              activeSubTab={configSubTab}
+              onSubTabChange={(sub) => setConfigSubTab(sub)}
             />
           )}
 

@@ -235,6 +235,56 @@
   justify-content: center;
 }
 
+/* Sub-menu bên ngoài sidebar cho Cấu hình */
+.stitch-nav-subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-left: 18px;
+  padding-left: 10px;
+  border-left: 2px solid var(--adm-border, #E6E1DA);
+  margin-top: 4px;
+  margin-bottom: 8px;
+  animation: fadeIn 0.18s ease;
+}
+
+.stitch-nav-subitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: var(--adm-sub, #7C7889);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.15s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.stitch-nav-subitem:hover {
+  background: var(--adm-bg-sub, rgba(0,0,0,0.04));
+  color: var(--adm-text, #1D1B26);
+}
+
+.stitch-nav-subitem.active {
+  background: var(--adm-bg-sub, #FFF2D9);
+  color: var(--adm-primary, #D97706);
+  font-weight: 800;
+  border-color: var(--adm-border, #FCD34D);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.stitch-nav-subitem .sub-icon {
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Thẻ "Gấu nhắc hôm nay" */
 .stitch-bear-notice-card {
   margin: 12px;

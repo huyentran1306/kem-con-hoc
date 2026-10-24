@@ -7,8 +7,10 @@ import { AdminScopeSection } from './AdminScopeSection'
 import { AdminThemesSection } from './AdminThemesSection'
 import { BearMascot, AdminPageLoading } from './AdminMascot'
 
-export function AdminConfigTab({ token, adminProfile }) {
-  const [activeSubTab, setActiveSubTab] = useState('model') // model | prompts | router | scope | themes | admins | audit | infra | zalo
+export function AdminConfigTab({ token, adminProfile, activeSubTab: propSubTab, onSubTabChange }) {
+  const [localSubTab, setLocalSubTab] = useState('model')
+  const activeSubTab = propSubTab || localSubTab
+  const setActiveSubTab = onSubTabChange || setLocalSubTab
 
   // Config State
   const [modelConfig, setModelConfig] = useState({
@@ -159,72 +161,6 @@ export function AdminConfigTab({ token, adminProfile }) {
 
   return (
     <div className="stitch-config-container">
-      {/* Subtabs Navigation */}
-      <div className="stitch-subtabs-nav">
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'model' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('model')}
-        >
-          ⚙️ [1] Mô hình & Tham số
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'prompts' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('prompts')}
-        >
-          📝 [2] Prompt Studio
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'router' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('router')}
-        >
-          🔀 [3] Router Sư phạm
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'scope' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('scope')}
-        >
-          🛡️ [4] Phạm vi Đề & Ảnh
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'themes' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('themes')}
-        >
-          🎨 [5] Giao diện App
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'admins' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('admins')}
-        >
-          👥 [6] Quản trị viên & PIN
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'audit' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('audit')}
-        >
-          📜 [7] Nhật ký thao tác
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'infra' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('infra')}
-        >
-          ☁️ [8] Hạ tầng Cloudflare
-        </button>
-        <button
-          type="button"
-          className={`stitch-subtab-btn ${activeSubTab === 'zalo' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('zalo')}
-        >
-          💬 [9] Thông báo & Zalo
-        </button>
-      </div>
 
       {/* Subtab 1: Model & Params */}
       {activeSubTab === 'model' && (
