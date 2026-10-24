@@ -101,7 +101,7 @@ export function Onboarding() {
       <button className="big-card sky" onClick={() => openSheet('invite')}>
         <span className="lbl sky">Không phải một mình</span>
         <b>{S.partner ? '✓ Đã mời bố cùng kèm con' : '+ Mời bố cùng kèm con'}</b>
-        <span className="sub">Gửi link app cho bố, chia ca kèm, ai trực ca người đó nhận nhắc lúc 19:45</span>
+        <span className="sub">Gửi link app cho bố, chia ca kèm, người trực ca sẽ thấy lời nhắc khi mở app buổi tối</span>
       </button>
 
       <button
@@ -123,7 +123,15 @@ export function Home() {
   const now = new Date()
   const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })
   const hour = now.getHours()
+  const minute = now.getMinutes()
   const greet = hour < 11 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
+
+  // C2: Dải nhắc trực ca buổi tối trên màn chính (19:30 - 21:30)
+  const curMinutes = hour * 60 + minute
+  const isEveningShift = curMinutes >= 19 * 60 + 30 && curMinutes <= 21 * 60 + 30
+  const dayCodeMap = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+  const todayCode = dayCodeMap[now.getDay()]
+  const todayDuty = (S.schedule || []).find((d) => d.day === todayCode)?.owner || S.parent
 
   return (
     <>
@@ -167,6 +175,31 @@ export function Home() {
           </div>
         )}
       </div>
+
+      {isEveningShift && (
+        <div
+          className="card sunset pop"
+          style={{
+            background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
+            border: '1.5px solid #FDBA74',
+            padding: '10px 14px',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 24 }}>🌙</span>
+          <div>
+            <b style={{ color: '#9A3412', fontSize: 14 }}>
+              Tối nay {todayDuty} trực ca kèm {child.name} 🌙
+            </b>
+            <div style={{ fontSize: 12, color: '#C2410C', marginTop: 1 }}>
+              Giữ bình tĩnh, đặt câu hỏi gợi mở và khen ngợi nỗ lực của con nhé!
+            </div>
+          </div>
+        </div>
+      )}
 
       {stats.stickers >= 10 && (
         <div
@@ -397,7 +430,7 @@ export function SnapHomework() {
         style={{ display: 'none' }}
         onChange={onPickFile}
       />
-      <p className="notice">🔒 Ảnh chỉ dùng để đọc đề, xóa sau 24 giờ</p>
+      <p className="notice">🔒 Ảnh chỉ dùng để đọc đề, app không lưu ảnh</p>
     </>
   )
 }
@@ -3797,7 +3830,7 @@ export function Profile() {
             </button>
           </div>
         ))}
-        <span className="sub">Người trực ca nhận nhắc lúc 19:45 · bấm nút để đổi Mẹ/Bố</span>
+        <span className="sub">Người trực ca sẽ thấy lời nhắc khi mở app buổi tối · bấm nút để đổi Mẹ/Bố</span>
       </div>
 
       <div className="card">
@@ -3842,7 +3875,9 @@ export function Profile() {
 
       <div className="card">
         <span className="lbl plum">Quyền riêng tư</span>
-        <span className="sub">Không lưu ảnh mặt con. Ảnh bài tập xóa sau 24 giờ. Dữ liệu chỉ ở trên máy bạn.</span>
+        <span className="sub">
+          Ảnh chỉ dùng để đọc đề, app không lưu ảnh. Hồ sơ, sticker, lịch sử học được lưu trên máy chủ để dùng được trên nhiều máy; {S.parent.toLowerCase()} có thể xoá toàn bộ bất cứ lúc nào.
+        </span>
         <button className="btn ghost" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} onClick={() => openSheet('wipe')}>
           🗑 Xóa toàn bộ dữ liệu
         </button>
