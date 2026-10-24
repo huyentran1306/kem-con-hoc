@@ -1865,9 +1865,8 @@ export function SnapToy() {
       {/* Detected Toy Card */}
       {detectedToy && !analyzing && (
         <div className="card mint pop" style={{ border: '2px solid #10B981', background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08))' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span className="pill g">✨ AI đã nhận diện đồ vật</span>
-            <span className="pill b">Độ tin cậy 98.6%</span>
+          <div style={{ marginBottom: 8, fontSize: 14.5, color: 'var(--text)' }}>
+            AI đoán đây là: <b style={{ color: 'var(--plum-deep)' }}>{detectedToy.n}</b>. Đúng chưa {S.parent.toLowerCase()}?
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '6px 0' }}>
             <div style={{ fontSize: 42, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
@@ -1882,22 +1881,20 @@ export function SnapToy() {
             <div style={{ fontWeight: 700, color: 'var(--plum-deep)', marginBottom: 2 }}>🎯 Gợi ý: {detectedToy.gameTitle}</div>
             <div style={{ color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.4 }}>{detectedToy.gameIdea}</div>
           </div>
-          <button
-            className="btn solid"
-            style={{ width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, marginTop: 4 }}
-            onClick={() => pick(detectedToy.n)}
-          >
-            ▶ Chơi trò {detectedToy.n} ngay ➔
-          </button>
-
-          {/* Sửa đồ vật nếu AI nhận diện chưa đúng */}
-          <div style={{ marginTop: 8, textAlign: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+            <button
+              className="btn solid"
+              style={{ flex: 1, padding: '12px', fontSize: 14.5, fontWeight: 700 }}
+              onClick={() => pick(detectedToy.n)}
+            >
+              ✅ Đúng rồi
+            </button>
             <button
               className="btn ghost"
-              style={{ width: '100%', fontSize: 13, padding: '7px 10px', background: '#fff' }}
+              style={{ flex: 1, padding: '12px', fontSize: 14, background: '#fff' }}
               onClick={() => setShowEditToy(!showEditToy)}
             >
-              ✏️ {showEditToy ? 'Đóng bảng sửa đồ vật' : 'Không phải món này? Bấm để sửa hoặc chọn lại'}
+              Chọn đồ khác
             </button>
           </div>
 
