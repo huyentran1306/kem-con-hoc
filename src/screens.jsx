@@ -1650,7 +1650,14 @@ export function Scaffold() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <SpeakBtn text={s.q || s.question} />
                 <span className="sub">Đọc cho {child.name} nghe</span>
-                <WhyChip reason={s.ly_do_cho_me} />
+                <WhyChip
+                  reason={s.ly_do_cho_me}
+                  onReport={() => openSheet('aiFeedback', {
+                    promptId: 'p3_explain',
+                    step: i + 1,
+                    questionText: s.q || s.question,
+                  })}
+                />
               </div>
               {stuck > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0' }}>
@@ -5118,6 +5125,13 @@ export function Profile() {
         <span className="lbl mint">Tiện ích cài đặt</span>
         <b>Cài app vào Màn hình chính (PWA)</b>
         <span className="sub">Mở app toàn màn hình mượt mà như app tải từ App Store</span>
+      </button>
+
+      <button className="big-card" style={{ border: '1.5px solid #A7F3D0', background: '#F0FDF4' }} onClick={() => openSheet('safetyPortal')}>
+        <span className="ic">🛡️</span>
+        <span className="lbl mint">Minh bạch & An toàn</span>
+        <b>AI an toàn thế nào?</b>
+        <span className="sub">Cam kết 4 lớp: không giải hộ, không lộ đáp án, mẹ luôn làm chủ</span>
       </button>
 
       <button className="big-card" onClick={() => openSheet('addChild')}>

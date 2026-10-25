@@ -33,6 +33,7 @@ import {
   BearSubSqlIcon,
   BearSubSyncIcon,
 } from './AdminBearIcons'
+import { AdminSafetyTab } from './AdminSafetyTab.jsx'
 
 const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
 const ADMIN_THEME_KEY = 'kem-con-hoc:admin-theme'
@@ -376,6 +377,15 @@ export default function AdminPortal({ onExit }) {
             <span>Giáo viên & Lớp</span>
           </button>
 
+          <button
+            type="button"
+            className={`stitch-nav-item ${activeTab === 'safety' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('safety'); setShowMobileNav(false) }}
+          >
+            <span className="stitch-nav-icon" style={{ fontSize: 20 }}>🛡️</span>
+            <span>An toàn AI & Feedback</span>
+          </button>
+
           {!isSupport && (
             <div>
               <button
@@ -534,6 +544,7 @@ export default function AdminPortal({ onExit }) {
               {activeTab === 'sessions' && 'Nhật ký kèm học & Đánh giá AI'}
               {activeTab === 'reports' && 'Báo cáo Sư phạm & Chỉ số NPS'}
               {activeTab === 'teachers' && 'Duyệt Giáo viên & Lớp học'}
+              {activeTab === 'safety' && 'An toàn AI & Phản hồi Phụ huynh (Đợt 14)'}
               {activeTab === 'config' && `Cấu hình AI & Hệ thống · ${CONFIG_SUBTABS.find((s) => s.id === configSubTab)?.label || ''}`}
               {activeTab === 'tools' && `Công cụ nội bộ · ${TOOLS_SUBTABS.find((s) => s.id === toolsSubTab)?.label || 'D1 SQL Studio'}`}
             </div>
@@ -601,6 +612,10 @@ export default function AdminPortal({ onExit }) {
 
           {activeTab === 'teachers' && (
             <AdminTeachersTab token={token} />
+          )}
+
+          {activeTab === 'safety' && (
+            <AdminSafetyTab token={token} />
           )}
 
 

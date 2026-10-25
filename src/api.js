@@ -1484,3 +1484,89 @@ export async function teachBackConfirm({ teachBackId, finalLevel }) {
 
   return res.json()
 }
+
+/* ============================================================
+   🛡️ AN TOÀN AI & PHỤ HUYNH BÁO CÂU CHƯA HỢP (Prompt 14 Phần C)
+   ============================================================ */
+export async function sendAiFeedback({ familyId, sessionId, promptId, step, reason, note, questionText }) {
+  if (isTrialActive()) {
+    return { ok: true, id: 'trial_fb_' + Date.now(), message: 'Phản hồi dùng thử thành công' }
+  }
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai-feedback`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ familyId, sessionId, promptId, step, reason, note, questionText }),
+  })
+  return res.json()
+}
+
+export async function getSafetySummary() {
+  if (isTrialActive()) {
+    return {
+      ok: true,
+      safe_rate_percent: 100.0,
+      total_guard_interventions: 0,
+      guard_events: { total: 0, fallbacks: 0, regenerated: 0, leaked: 0 },
+      feedback: { total: 0, open: 0, byReason: {} },
+      work_checks: { total: 0, self_fixed: 0 },
+      teach_backs: { total: 0, self_level: 0 },
+      four_layer_safety: [
+        { layer: 1, name: 'Prompt Sư phạm Socratic', status: 'active', desc: 'Không giải bài hộ, chia 3 bậc gợi ý' },
+        { layer: 2, name: 'Bộ chặn rò rỉ đáp án (Guard Module)', status: 'active', desc: 'Kiểm tra số chữ/số nguyên, thay thế tự động nếu lộ' },
+        { layer: 3, name: 'Máy tính độc lập & Khử ảo giác', status: 'active', desc: 'Shunting-yard parser & Anti-hallucination quote checker' },
+        { layer: 4, name: 'Quyền chốt của Phụ huynh', status: 'active', desc: 'Mẹ luôn là người duyệt & chốt mức hiểu bài cuối cùng' },
+      ],
+    }
+  }
+  const token = getAuthToken()
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/safety/summary`, { headers })
+  return res.json()
+}
+
+export async function getSafetyLog({ limit = 50, familyId } = {}) {
+  if (isTrialActive()) {
+    return { ok: true, guard_logs: [], feedbacks: [] }
+  }
+  const token = getAuthToken()
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const q = new URLSearchParams()
+  if (limit) q.set('limit', limit)
+  if (familyId) q.set('familyId', familyId)
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/safety/log?${q.toString()}`, { headers })
+  return res.json()
+}
+
+export async function testGuardFilter({ promptId, data, context }) {
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/safety/test-guard`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ promptId, data, context }),
+  })
+  return res.json()
+}
+
+export async function closeAiFeedback(feedbackId) {
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/admin/ai-feedback/${feedbackId}/close`, {
+    method: 'POST',
+    headers,
+  })
+  return res.json()
+}

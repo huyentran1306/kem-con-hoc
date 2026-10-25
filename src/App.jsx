@@ -4,7 +4,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary } from './api'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
@@ -1055,6 +1055,8 @@ function SheetView({ type, data, session }) {
   if (type === 'stickerBook') return <StickerBookSheet />
   if (type === 'pwa') return <PwaSheet />
   if (type === 'redeem') return <RedeemRewardSheet />
+  if (type === 'aiFeedback') return <AiFeedbackSheet data={data} onClose={closeSheet} toast={toast} S={S} />
+  if (type === 'safetyPortal') return <SafetyPortalSheet onClose={closeSheet} S={S} />
   if (type === 'themePicker') return <Sheet><ThemePickerSheet onClose={closeSheet} /></Sheet>
   return null
 }
@@ -1331,6 +1333,222 @@ function ReportIssueSheet({ problem }) {
         <button className="btn solid" disabled={saving} onClick={submit}>
           {saving ? 'Đang gửi…' : 'Gửi góp ý'}
         </button>
+      </div>
+    </Sheet>
+  )
+}
+
+/* ---------- BÁO CÂU HỎI AI CHƯA HỢP (Prompt 14 Phần C) ---------- */
+function AiFeedbackSheet({ data, onClose, toast, S }) {
+  const [reason, setReason] = useState('too_hard')
+  const [note, setNote] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  const REASONS = [
+    { id: 'too_hard', label: 'Quá khó so với tuổi của con', icon: '🧗' },
+    { id: 'leak', label: 'Lộ đáp án / nói trước kết quả', icon: '🚨' },
+    { id: 'teacher_way', label: 'Khác cách cô dạy trên lớp', icon: '👩‍🏫' },
+    { id: 'wrong', label: 'Sai kiến thức hoặc sai đề bài', icon: '❌' },
+  ]
+
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    try {
+      await sendAiFeedback({
+        familyId: S.familyId || 'anonymous',
+        sessionId: S.session?.id || 'sess_' + Date.now(),
+        promptId: data?.promptId || 'p3_explain',
+        step: data?.step || 1,
+        reason,
+        note,
+        questionText: data?.questionText || '',
+      })
+      setSubmitted(true)
+      toast('Đã gửi phản hồi! Cảm ơn mẹ đã giúp AI thông minh và an toàn hơn ❤️')
+      setTimeout(() => {
+        onClose()
+      }, 1500)
+    } catch (e) {
+      toast('Lỗi khi gửi, mẹ thử lại sau nhé!')
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Sheet>
+      <div style={{ padding: '0 4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--c-text)' }}>
+            🚩 Báo câu hỏi AI chưa hợp lý
+          </h3>
+        </div>
+
+        {submitted ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
+            <p style={{ fontWeight: 700, fontSize: 14.5, color: '#047857' }}>
+              Cảm ơn mẹ! Đóng góp của mẹ đã được ghi nhận vào hệ thống An toàn AI.
+            </p>
+          </div>
+        ) : (
+          <div>
+            {data?.questionText && (
+              <div style={{ background: 'var(--c-surface-sunken)', padding: 10, borderRadius: 10, fontSize: 13, fontStyle: 'italic', color: 'var(--c-text-2)', marginBottom: 14 }}>
+                "{data.questionText}"
+              </div>
+            )}
+
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 8 }}>
+              Mẹ thấy câu này chưa phù hợp ở điểm nào?
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              {REASONS.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={`btn ${reason === r.id ? 'solid' : 'soft'}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '9px 12px',
+                    textAlign: 'left',
+                    fontSize: 13,
+                    fontWeight: reason === r.id ? 800 : 600,
+                    border: reason === r.id ? 'none' : '1px solid var(--c-line)',
+                  }}
+                  onClick={() => setReason(r.id)}
+                >
+                  <span style={{ fontSize: 16 }}>{r.icon}</span>
+                  <span>{r.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 4 }}>
+                Ghi chú thêm (không bắt buộc):
+              </label>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Ví dụ: Bé nhà mình lớp 3 chưa học phép nhân 2 chữ số..."
+                rows={2}
+                style={{
+                  width: '100%',
+                  padding: 10,
+                  borderRadius: 10,
+                  border: '1.5px solid var(--c-line)',
+                  fontSize: 13,
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn soft" style={{ flex: 1 }} onClick={onClose} disabled={submitting}>
+                Hủy
+              </button>
+              <button
+                className="btn solid primary"
+                style={{ flex: 2, fontWeight: 800 }}
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? 'Đang gửi...' : 'Gửi phản hồi'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Sheet>
+  )
+}
+
+/* ---------- TRANG MINH BẠCH & AN TOÀN AI ---------- */
+function SafetyPortalSheet({ onClose, S }) {
+  const [loading, setLoading] = useState(true)
+  const [summary, setSummary] = useState(null)
+
+  useEffect(() => {
+    getSafetySummary()
+      .then((res) => {
+        setSummary(res)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
+  return (
+    <Sheet>
+      <div style={{ padding: '0 4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 22 }}>🛡️</span>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--c-text)' }}>
+              AI An toàn & Minh bạch
+            </h3>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 30 }}>⏳ Đang tải số liệu an toàn...</div>
+        ) : (
+          <div>
+            {/* KPI Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
+              <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 12, padding: '12px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#047857', textTransform: 'uppercase' }}>
+                  Tỷ lệ an toàn
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#065F46', marginTop: 2 }}>
+                  {summary?.safe_rate_percent || 100}%
+                </div>
+                <div style={{ fontSize: 11, color: '#047857', marginTop: 2 }}>
+                  Không bao giờ lộ đáp án
+                </div>
+              </div>
+              <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '12px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+                  Tự sửa bài thành công
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#1E40AF', marginTop: 2 }}>
+                  {summary?.work_checks?.self_fixed || 0} bài
+                </div>
+                <div style={{ fontSize: 11, color: '#1D4ED8', marginTop: 2 }}>
+                  Bé tự tìm ra bước sai
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Lớp Bảo Vệ */}
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text)', textTransform: 'uppercase', marginBottom: 8 }}>
+              4 Lớp Cam Kết Sư Phạm & An Toàn:
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+              {(summary?.four_layer_safety || []).map((l) => (
+                <div key={l.layer} style={{ display: 'flex', gap: 10, background: 'var(--c-surface-sunken)', padding: '10px 12px', borderRadius: 10 }}>
+                  <span style={{ fontSize: 16 }}>✅</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)' }}>
+                      Lớp {l.layer}: {l.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 2 }}>
+                      {l.desc}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn solid primary" style={{ width: '100%', fontWeight: 800 }} onClick={onClose}>
+              Đã hiểu & Tiếp tục đồng hành cùng con
+            </button>
+          </div>
+        )}
       </div>
     </Sheet>
   )
