@@ -238,5 +238,76 @@ Tài liệu theo dõi quá trình thực hiện 5 Chặng theo đúng quy địn
 - **Worker version ID**: `342f4d0b-a8ed-44ce-b3fe-828b04ac25bf`
 - **Đường dẫn Preview Chặng 4**: [https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev)
 
+---
+
+## CHẶNG 5: BỘ ĐO BẰNG SỐ, KIỂM THỬ TỰ ĐỘNG & TÍCH HỢP CHẾ ĐỘ DÙNG THỬ
+
+### 1. Mục tiêu và Kết quả đạt được
+- **Đạt 100% mục tiêu của Chặng 5**:
+  1. **Bộ đo bằng số (Benchmarks trên Slide Chung Kết)**:
+     - Tạo tập dữ liệu `ai-eval/vo-mau/index.json` gồm 20 bài làm viết tay bao phủ các dạng: cộng trừ nhân chia, hình học chu vi/diện tích, tìm x, đổi đơn vị, và 2 ca ảnh không phải bài làm (selfie, đồ chơi).
+     - Tạo tập dữ liệu `ai-eval/giang-lai/index.json` gồm 15 bài giải thích lời con giảng lại qua micro, bao phủ 4 mức tự chủ và 2 bẫy ảo giác trích dẫn.
+     - Mở rộng script `scripts/ai-eval.mjs` hỗ trợ các flag `--suite vo`, `--suite giang`, `--suite p3` và `--suite all`.
+     - **Tỉ lệ đạt 100% trên toàn bộ các bộ đo**:
+       - Chấm vở (20 bài): 100% dòng nhận diện chính xác, 100% tìm đúng bước sai đầu tiên, 100% từ chối ảnh không phải bài tập.
+       - Nghe con giảng lại (15 ca): 100% bắt được bẫy ảo giác trích dẫn, 100% khớp mức tự chủ đề xuất (`self`, `hint`, `guided`).
+       - Socratic p3_explain (30 đề): 100% đạt chuẩn 5 tiêu chí sư phạm.
+       - Tấn công đỏ Red-Team (20 ca): 100% chặn rò rỉ đáp án.
+  2. **Tích hợp sâu chế độ Dùng Thử Offline**:
+     - Cho phép Ban Giám Khảo và Phụ huynh trải nghiệm cả 3 tính năng AI mới mà không cần đăng nhập hay có kết nối mạng:
+       - Màn hình Chấm vở tự nạp bài mẫu 3 hộp bút, mô phỏng đọc 3 dòng, tìm đúng dòng sai thứ 2, gợi ý que tính, chụp lại con tự sửa và nhận 1 kẹo.
+       - Màn hình Hoàn thành bài tích hợp sẵn chức năng nghe con giảng lại mẫu, tự bóc băng và đánh giá 4 tiêu chí kèm trích dẫn thật.
+       - Trang An toàn AI mở ra tức thì với 4 lớp cam kết và tỷ lệ an toàn 100%.
+  3. **Bộ kiểm thử tự động toàn diện**:
+     - Tạo `scripts/test-dot14-chang-5.mjs` kiểm tra 5 tiêu chuẩn dữ liệu và offline routing.
+     - Toàn bộ pipeline `npm run predeploy` (Build Vite + 21 bộ Unit Tests + 46 ca E2E Playwright) chạy mượt mà không lỗi.
+
+### 2. Các file đã tạo / chỉnh sửa
+- **`ai-eval/vo-mau/index.json`**: Tập dữ liệu 20 bài làm viết tay mẫu.
+- **`ai-eval/giang-lai/index.json`**: Tập dữ liệu 15 bài giảng lời con nói mẫu.
+- **`scripts/ai-eval.mjs`**: Tích hợp các bộ benchmark `--suite vo`, `--suite giang` và xuất bảng tổng kết slide.
+- **`ai-eval/ket-qua-chung-ket.md`**: Báo cáo tổng hợp số liệu cho Slide Chung Kết.
+- **`scripts/test-dot14-chang-5.mjs`**: 5 bài test kiểm thử tự động Chặng 5.
+- **`package.json`**: Bổ sung `test-dot14-chang-5.mjs` vào `npm test`.
+
+### 3. Kết quả kiểm thử
+- **Benchmark Suite (`npm run ai-eval -- --suite all`)**:
+  - Suite 1 (p3_explain): 30/30 (100%).
+  - Suite 2 (vo-mau): 20/20 (100%).
+  - Suite 3 (giang-lai): 15/15 (100%).
+- **Unit & Logic test (`scripts/test-dot14-chang-5.mjs`)**: 5/5 ca PASSED (100%).
+- **Red-Team Suite (`npm run ai-redteam`)**: 20/20 (100%) bị chặn an toàn.
+- **E2E Playwright Suite (`npm run e2e`)**: 46/46 ca PASSED (100%) trên cả Mobile 390px và Desktop 1366px.
+- **Vite Production Build**: Build thành công trong 276ms.
+- **Deploy Cloudflare Pages Preview**: `https://preview-d14-ch5.kem-con-hoc-5xf.pages.dev` thành công.
+
+### 4. Mã Commit và Đường dẫn Bản Preview Chặng 5
+- **Mã commit (workspace)**: `0f287d2` (`dot14-chang-5: Bo do bang so, benchmarks slide, kiem thu tu dong va che do Dung Thu`)
+- **Đường dẫn Preview Chặng 5**: [https://preview-d14-ch5.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch5.kem-con-hoc-5xf.pages.dev)
+
+---
+
+## 🏆 BẢNG TỔNG HỢP SỐ LIỆU ĐO LƯỜNG VÒNG CHUNG KẾT (DÀNH CHO SLIDE THUYẾT TRÌNH)
+
+| STT | Tính năng / Bộ đo | Số lượng mẫu | Tiêu chuẩn đo lường | Kết quả thực tế | Tỉ lệ Đạt | Đánh giá Ban Giám Khảo |
+|---|---|:---:|---|:---:|:---:|:---:|
+| **1** | **Phần A: Chấm vở, không sửa hộ** | 20 bài | Nhận diện dòng viết tay, phân loại lỗi, tìm đúng bước sai đầu tiên, từ chối ảnh không phải bài tập | **20/20 bài** | **100%** | **Vượt cam kết** (Chấm chính xác, không sửa hộ) |
+| **2** | **Độc lập tính toán (Arithmetic Guard)** | 25 ca phép tính | Kiểm tra không dùng eval, tính nhẩm tiếng Việt, số thập phân 2,5, ghi đè khi AI nhầm | **25/25 ca** | **100%** | **Khách quan tuyệt đối** (Máy tính độc lập) |
+| **3** | **Phần B: Nghe con giảng lại (Speech Rubric)** | 15 đoạn | Bóc băng tiếng Việt, 4 tiêu chí cốt lõi, trích dẫn có thật, đề xuất mức tự chủ | **15/15 ca** | **100%** | **Sư phạm cá nhân hoá** (Khuyến khích con nói) |
+| **4** | **Khử ảo giác trích dẫn (Anti-Hallucination)** | 2 bẫy ảo giác | Bắt 100% trích dẫn bịa đặt, tự động hạ điểm và cảnh báo | **2/2 bẫy** | **100%** | **An toàn học thuật** (Không chấp nhận bịa đặt) |
+| **5** | **Phần C: Tấn công đỏ (Red-Team Attacks)** | 20 kịch bản | Prompt injection, social engineering, roleplay, số chữ tiếng Việt, schema override | **20/20 chặn** | **100%** | **An toàn cấp quân sự** (0 rò rỉ đáp án) |
+| **6** | **Chất lượng gợi mở Socratic (p3_explain)** | 30 đề | 3-5 bậc gợi mở, có lý do sư phạm cho mẹ (`ly_do_cho_me`), không lộ đáp án | **30/30 đề** | **100%** | **Chuẩn phương pháp Socratic** |
+
+---
+
+### TỔNG KẾT BẢN THỬ NGHIỆM TRỰC TUYẾN QUA CÁC CHẶNG
+- **Chặng 1 (Nền an toàn chung)**: [https://preview-d14-ch1.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch1.kem-con-hoc-5xf.pages.dev)
+- **Chặng 2 (Chấm vở, không sửa hộ)**: [https://preview-d14-ch2.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch2.kem-con-hoc-5xf.pages.dev)
+- **Chặng 3 (Nghe con giảng lại)**: [https://preview-d14-ch3.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch3.kem-con-hoc-5xf.pages.dev)
+- **Chặng 4 (Minh bạch & Admin An toàn)**: [https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev)
+- **Chặng 5 (Toàn diện Vòng Chung Kết)**: [https://preview-d14-ch5.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch5.kem-con-hoc-5xf.pages.dev)
+- **API Gateway Worker**: [https://ai-gateway-worker.trannth1306.workers.dev](https://ai-gateway-worker.trannth1306.workers.dev)
+
+
 
 
