@@ -32,94 +32,7 @@ export const COMPANY_AI_MODELS = [
   'Khác (Tùy chọn)',
 ]
 
-// Dữ liệu mẫu khởi tạo ban đầu để team thấy ngay nội dung thực tế
-// Dữ liệu mẫu ban đầu dạng vỏ bọc (nội dung chi tiết tải động từ Cloud D1)
-const INITIAL_TEAM_PROMPTS = [
-  {
-    id: 'tp_prompt_00_auth',
-    title: 'Prompt 00: Nền Tảng Tài Khoản, Bảo Mật Máy Chủ & Tối Ưu Cloudflare Free Tier',
-    category: 'general',
-    targetAi: 'Cloudflare Workers AI',
-    author: 'Huyền (Tech Lead)',
-    isRunCompanyAi: false,
-    runBy: '',
-    runAt: '',
-    aiResult: '',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-24 17:21',
-    updatedAt: '2026-10-24 19:10'
-  },
-  {
-    id: 'tp_prompt_06_enhancement',
-    title: 'Prompt 06: Sửa Lỗi Nhanh, Bỏ Dữ Liệu Giả & UI Polish',
-    category: 'general',
-    targetAi: 'Cursor / Antigravity',
-    author: 'Kỹ sư Kèm Con Học',
-    isRunCompanyAi: false,
-    runBy: '',
-    runAt: '',
-    aiResult: '',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-24 18:00',
-    updatedAt: '2026-10-24 18:00'
-  },
-  {
-    id: 'tp_prompt_01_themes',
-    title: 'Prompt 01: 8 Bộ Giao Diện & Tuỳ Chọn Sở Thích Gia Đình',
-    category: 'general',
-    targetAi: 'Cursor / Antigravity',
-    author: 'Kỹ sư Kèm Con Học',
-    isRunCompanyAi: false,
-    runBy: '',
-    runAt: '',
-    aiResult: '',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-24 18:15',
-    updatedAt: '2026-10-24 18:15'
-  },
-  {
-    id: 'tp_prompt_02_scope',
-    title: 'Prompt 02: Bộ Kiểm Tra & Phân Loại Ảnh/Đề Ngoài Phạm Vi',
-    category: 'math',
-    targetAi: 'Cursor / Antigravity',
-    author: 'Kỹ sư Kèm Con Học',
-    isRunCompanyAi: false,
-    runBy: '',
-    runAt: '',
-    aiResult: '',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-24 18:30',
-    updatedAt: '2026-10-24 18:30'
-  },
-  {
-    id: 'tp_longitudinal_1',
-    title: 'Prompt Hệ Thống Nhãn Khen Long-Term & AI Adaptive Roadmap',
-    category: 'math',
-    targetAi: 'Cloudflare Workers AI',
-    author: 'Tech Lead',
-    isRunCompanyAi: false,
-    runBy: '',
-    runAt: '',
-    aiResult: '',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-23 16:30',
-    updatedAt: '2026-10-23 16:30'
-  },
-  {
-    id: 'tp_pedagogy_ai_config_2',
-    title: 'Prompt Cấu Hình AI Toàn Cục & Sư Phạm Phản Hồi',
-    category: 'math',
-    targetAi: 'Cloudflare Workers AI',
-    author: 'Tech Lead',
-    isRunCompanyAi: false,
-    runBy: '',
-    runAt: '',
-    aiResult: '',
-    promptDetail: 'Nội dung chi tiết được đồng bộ trực tiếp từ Cloudflare D1 KV.',
-    createdAt: '2026-10-24 13:00',
-    updatedAt: '2026-10-24 13:00'
-  }
-];
+import INITIAL_TEAM_PROMPTS from './teamPromptsData.json'
 
 export default function TeamPromptSyncTab() {
   const [prompts, setPrompts] = useState(() => {
@@ -129,11 +42,16 @@ export default function TeamPromptSyncTab() {
         let list = JSON.parse(cached)
         // Lọc bỏ các demo prompt cũ, chỉ giữ prompt chuẩn của dự án
         list = list.filter((p) => !p.id.startsWith('tp_demo_'))
+        // Đảm bảo không bị mất promptDetail nếu cache trước đó bị lưu nhầm chuỗi ngắn
+        list = list.map((item) => {
+          const fallback = INITIAL_TEAM_PROMPTS.find((p) => p.id === item.id)
+          if ((!item.promptDetail || item.promptDetail.length < 100) && fallback?.promptDetail) {
+            return { ...item, promptDetail: fallback.promptDetail, title: fallback.title || item.title }
+          }
+          return item
+        })
         INITIAL_TEAM_PROMPTS.forEach((initPrompt) => {
-          const idx = list.findIndex((p) => p.id === initPrompt.id)
-          if (idx !== -1) {
-            list[idx] = { ...initPrompt, isRunCompanyAi: list[idx].isRunCompanyAi }
-          } else {
+          if (!list.some((p) => p.id === initPrompt.id)) {
             list.push(initPrompt)
           }
         })
@@ -180,8 +98,15 @@ export default function TeamPromptSyncTab() {
     try {
       const cloudData = await dbKvGet(TEAM_PROMPTS_KV_KEY)
       if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
-        setPrompts(cloudData)
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudData))
+        const merged = cloudData.map((item) => {
+          const fallback = INITIAL_TEAM_PROMPTS.find((p) => p.id === item.id)
+          if ((!item.promptDetail || item.promptDetail.length < 100) && fallback?.promptDetail) {
+            return { ...item, promptDetail: fallback.promptDetail, title: fallback.title || item.title }
+          }
+          return item
+        })
+        setPrompts(merged)
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged))
         setLastSyncTime(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
         toast('Đã đồng bộ prompts mới nhất từ Cloud D1 ☁️')
       } else {
