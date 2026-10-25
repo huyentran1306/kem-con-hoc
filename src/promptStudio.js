@@ -102,46 +102,46 @@ QUY TẮC BẮT BUỘC
 10. Tạo 1 câu "con_day_lai_me": mời con đóng vai thầy/cô giảng lại bước quan trọng nhất cho bố mẹ.
 
 VÍ DỤ MẪU HOÀN CHỈNH (FEW-SHOT):
-Đề: "Có 3 hộp bút, mỗi hộp có 8 cây bút. Mẹ lấy ra 5 cây bút. Hỏi còn lại bao nhiêu cây bút?"
+Đề: "Mẹ có 15 chiếc kẹo, chia đều cho 3 bạn nhỏ. Hỏi mỗi bạn được mấy chiếc kẹo?"
 Trả về JSON:
 {
-  "dang_bai": "Toán có lời văn giải bằng hai bước tính",
-  "giai_thich_cho_me": "Con đang học bài toán hai bước tính (nhân rồi trừ). Sách thường dạy con tính tổng số bút trong các hộp trước rồi mới trừ đi phần lấy ra.",
-  "luu_y_khi_giang": "Bố mẹ hay sốt ruột làm phép trừ trước. Hãy để con tự tìm ra tổng số bút trước.",
+  "dang_bai": "Toán chia đều thành các phần bằng nhau",
+  "giai_thich_cho_me": "Con đang học ý nghĩa của phép chia đều. Con cần hiểu chia đều là chia lần lượt cho từng bạn đến khi hết kẹo.",
+  "luu_y_khi_giang": "Để con tự chia thực tế bằng kẹo hoặc nắp chai trước khi viết phép chia 15 : 3.",
   "cac_bac": [
     {
-      "cau_hoi": "Mẹ có 3 hộp bút, mỗi hộp 8 cây. Làm sao biết trong 3 hộp có tất cả bao nhiêu cây bút nhỉ?",
-      "dap_an_cho_me": "3 × 8 = 24 cây bút",
+      "cau_hoi": "Mẹ có tất cả 15 chiếc kẹo trên bàn, con đếm lại xem đúng không nào?",
+      "dap_an_cho_me": "Có đúng 15 chiếc kẹo",
       "goi_y": {
-        "muc_1_do_vat": "Lấy 3 chiếc đĩa, mỗi đĩa đặt 8 que tính (hoặc que tăm).",
-        "muc_2_hinh_ve": "Mẹ vẽ 3 ô chữ nhật, mỗi ô chấm 8 chấm tròn."
+        "muc_1_do_vat": "Bày 15 viên kẹo hoặc nắp chai ra bàn cho con đếm.",
+        "muc_2_hinh_ve": "Mẹ chấm 15 chấm tròn nhỏ thành một hàng."
       }
     },
     {
-      "cau_hoi": "Có tất cả 24 cây bút rồi, mẹ lấy ra 5 cây thì số bút nhiều lên hay bớt đi con nhỉ?",
-      "dap_an_cho_me": "Bớt đi (làm phép trừ 24 - 5)",
+      "cau_hoi": "Có 3 bạn nhỏ, nếu mình chia đều cho từng bạn thì chia thế nào cho công bằng nhỉ?",
+      "dap_an_cho_me": "Chia lần lượt mỗi bạn 1 chiếc cho đến hết (làm phép chia 15 : 3)",
       "goi_y": {
-        "muc_1_do_vat": "Bốc 5 que tính cất vào túi áo mẹ và hỏi con đĩa còn bao nhiêu que.",
-        "muc_2_hinh_ve": "Gạch chéo 5 chấm tròn trên giấy."
+        "muc_1_do_vat": "Đặt 3 chiếc đĩa đại diện cho 3 bạn, chia lần lượt từng viên kẹo vào mỗi đĩa.",
+        "muc_2_hinh_ve": "Vẽ 3 vòng tròn đại diện cho 3 bạn, chia đều các chấm tròn vào."
       }
     },
     {
-      "cau_hoi": "Bây giờ con viết phép tính để tìm số bút còn lại giúp mẹ nào!",
-      "dap_an_cho_me": "24 − 5 = 19 (cây bút)",
+      "cau_hoi": "Mỗi bạn nhận được mấy chiếc kẹo, con giúp mẹ viết phép tính nào!",
+      "dap_an_cho_me": "15 : 3 = 5 (chiếc kẹo)",
       "goi_y": {
-        "muc_1_do_vat": "Chỉ vào số que tính còn lại trên bàn.",
-        "muc_2_hinh_ve": "Mẹ viết sẵn khung mẫu: 24 − … = …"
+        "muc_1_do_vat": "Đếm số kẹo trên một chiếc đĩa.",
+        "muc_2_hinh_ve": "Đếm số chấm tròn trong 1 vòng tròn."
       }
     }
   ],
-  "dap_an_cuoi_cho_me": "19 cây bút",
-  "con_day_lai_me": "Đố mẹ biết bước nào con thấy thích nhất trong bài này, con chỉ cho mẹ với!",
+  "dap_an_cuoi_cho_me": "5 chiếc kẹo",
+  "con_day_lai_me": "Con chỉ cho mẹ cách chia kẹo sao cho bạn nào cũng có phần bằng nhau nhé!",
   "bai_anh_em": {
-    "de": "Có 4 túi kẹo, mỗi túi có 5 cái kẹo. Bé ăn mất 3 cái. Hỏi còn lại mấy cái kẹo?",
-    "dap_an_cho_me": "4 × 5 = 20 cái; 20 − 3 = 17 cái kẹo"
+    "de": "Bố có 18 quả cam, xếp đều vào 2 chiếc rổ. Hỏi mỗi rổ có mấy quả cam?",
+    "dap_an_cho_me": "18 : 2 = 9 quả cam"
   },
-  "tro_choi_5_phut": "Úp 3 cái bát lên bàn, mỗi bát giấu 3 viên sỏi nhỏ, chơi trò đoán tổng số sỏi.",
-  "loi_khen": "Con rất tập trung và tự phát hiện ra phép tính nhân trước đấy!",
+  "tro_choi_5_phut": "Dùng 12 hạt đỗ hoặc viên sỏi, chia đều cho 3 chiếc cốc giấy.",
+  "loi_khen": "Con chia kẹo rất khéo và hiểu ngay ý nghĩa của phép chia đều rồi đấy!",
   "can_hoi_lai": ""
 }
 

@@ -92,7 +92,7 @@ export default function AdminPortal({ onExit }) {
   const [showMobileNav, setShowMobileNav] = useState(false)
 
   // Login form state
-  const [loginEmail, setLoginEmail] = useState('admin@kemconhoc.vn')
+  const [loginEmail, setLoginEmail] = useState('')
   const [loginPass, setLoginPass] = useState('')
   const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState('')
@@ -286,9 +286,6 @@ export default function AdminPortal({ onExit }) {
             >
               {loginBusy ? 'Đang xác thực...' : 'Đăng nhập Quản trị viên'}
             </button>
-            <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '11.5px', color: 'var(--adm-sub)' }}>
-              Tài khoản mặc định: <code>admin@kemconhoc.vn</code> / <code>admin123</code>
-            </div>
           </form>
 
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--adm-border)' }}>

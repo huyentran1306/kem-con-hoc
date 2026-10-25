@@ -20,6 +20,7 @@ import { PublicReportView } from './PublicReportView'
 import TeacherPortal from './TeacherPortal'
 import { FamilyClassSheet } from './FamilyClassSheet'
 import { CalmCornerModal } from './CalmCornerModal'
+import { ErrorBoundary } from './ErrorBoundary'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -141,12 +142,9 @@ const initialState = () => ({
   activeId: 'na',
   stats: {
     na: {
-      stickers: 2,
-      stickersList: [
-        { id: 's1', e: '🦄', n: 'Kỳ lân Kiên trì', desc: 'Không bỏ cuộc trước bài khó', when: 'T2' },
-        { id: 's3', e: '🌟', n: 'Ngôi sao Sáng tạo', desc: 'Nghĩ ra cách giải độc đáo', when: 'T3' },
-      ],
-      stickerHistory: markSampleStickers(SAMPLE_STICKER_HISTORY),
+      stickers: 0,
+      stickersList: [],
+      stickerHistory: [],
       aiLongitudinalInsight: null,
       weak: [],
       strong: [],
@@ -488,7 +486,7 @@ export default function App() {
   }
 
   /* ---------- actions ---------- */
-  const patch = (obj) => setS((prev) => ({ ...prev, ...obj }))
+  const patch = (obj) => setS((prev) => (typeof obj === 'function' ? obj(prev) : { ...prev, ...obj }))
   const go = (id) => {
     setScreen(id)
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
@@ -741,7 +739,11 @@ export default function App() {
 
           <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
 
-          {sheet && <SheetView type={sheet.type} data={sheet.data} session={session} />}
+          {sheet && (
+            <ErrorBoundary onClose={closeSheet} message="Có lỗi nhỏ khi mở cửa sổ này. Mẹ thử lại nhé!">
+              <SheetView type={sheet.type} data={sheet.data} session={session} />
+            </ErrorBoundary>
+          )}
         </div>
       </div>
     </AppCtx.Provider>
@@ -757,7 +759,7 @@ const TAB_CAP = {
 /* ============================================================
    CÁC POPUP (BOTTOM SHEET)
    ============================================================ */
-function SheetView({ type, session }) {
+function SheetView({ type, data, session }) {
   const { S, patch, go, closeSheet, toast, stats, setStats, boom, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
 
@@ -927,7 +929,7 @@ function SheetView({ type, session }) {
   }
   if (type === 'reportIssue') return <ReportIssueSheet problem={S.problem || PROBLEM} />
   if (type === 'wipe') return <WipeSheet />
-  if (type === 'typeProblem') return <TypeProblemSheet />
+  if (type === 'typeProblem') return <TypeProblemSheet initialMode={data?.mode} autoMic={Boolean(data?.autoMic)} />
   if (type === 'stickerBook') return <StickerBookSheet />
   if (type === 'pwa') return <PwaSheet />
   if (type === 'redeem') return <RedeemRewardSheet />
@@ -1303,7 +1305,7 @@ function WipeSheet() {
 }
 
 /* ---------- GÕ ĐỀ HOẶC ĐỌC ĐỀ BẰNG GIỌNG NÓI ---------- */
-function TypeProblemSheet() {
+function TypeProblemSheet({ initialMode, autoMic = false }) {
   const { S, patch, go, closeSheet, toast } = useContext(AppCtx)
   const [text, setText] = useState(PROBLEM.ocr)
   const save = () => {
@@ -1327,7 +1329,7 @@ function TypeProblemSheet() {
       <p className="sub" style={{ margin: '4px 0 10px' }}>Ba mẹ có thể gõ hoặc bấm nút mic để đọc đề trực tiếp.</p>
 
       <div style={{ marginBottom: 12 }}>
-        <VoiceInputBtn onResult={handleVoiceInput} placeholder="Bấm mic & Đọc đề bài" />
+        <VoiceInputBtn onResult={handleVoiceInput} placeholder="Bấm mic & Đọc đề bài" autoStart={autoMic} />
       </div>
 
       <textarea

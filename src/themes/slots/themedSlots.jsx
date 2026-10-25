@@ -583,7 +583,7 @@ export function AuroraStartAction({ onStart }) {
       <div style={{ display: 'grid', placeItems: 'center', padding: '10px 0' }}>
         <button
           data-testid="start-photo"
-          onClick={() => onStart?.('snap')}
+          onClick={() => onStart?.('photo')}
           style={{
             width: 196,
             height: 196,
@@ -630,6 +630,7 @@ export function AuroraStartAction({ onStart }) {
       {/* 3 Phương thức vào bài chuẩn Glassmorphism */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         <button
+          data-testid="start-photo-sub"
           className="mode-btn"
           style={{
             textAlign: 'center',
@@ -641,12 +642,13 @@ export function AuroraStartAction({ onStart }) {
             cursor: 'pointer',
             backdropFilter: 'blur(12px)',
           }}
-          onClick={() => onStart?.('snap')}
+          onClick={() => onStart?.('photo')}
         >
           <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>📷</span>
           <b style={{ fontSize: 12.5, display: 'block' }}>Chụp vở</b>
         </button>
         <button
+          data-testid="start-type"
           className="mode-btn"
           style={{
             textAlign: 'center',
@@ -658,12 +660,13 @@ export function AuroraStartAction({ onStart }) {
             cursor: 'pointer',
             backdropFilter: 'blur(12px)',
           }}
-          onClick={() => onStart?.('prep')}
+          onClick={() => onStart?.('type')}
         >
           <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>⌨️</span>
           <b style={{ fontSize: 12.5, display: 'block' }}>Gõ đề</b>
         </button>
         <button
+          data-testid="start-voice"
           className="mode-btn"
           style={{
             textAlign: 'center',
@@ -767,7 +770,7 @@ export function StickerStartAction({ onStart }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <button
         data-testid="start-photo"
-        onClick={() => onStart?.('snap')}
+        onClick={() => onStart?.('photo')}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -789,6 +792,7 @@ export function StickerStartAction({ onStart }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         <button
+          data-testid="start-photo-sub"
           style={{
             background: '#FFFFFF',
             border: '3px solid #1B1B2F',
@@ -800,12 +804,13 @@ export function StickerStartAction({ onStart }) {
             boxShadow: '4px 4px 0 #1B1B2F',
             cursor: 'pointer',
           }}
-          onClick={() => onStart?.('snap')}
+          onClick={() => onStart?.('photo')}
         >
           <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>📸</span>
           Chụp vở
         </button>
         <button
+          data-testid="start-type"
           style={{
             background: '#FFFFFF',
             border: '3px solid #1B1B2F',
@@ -817,12 +822,13 @@ export function StickerStartAction({ onStart }) {
             boxShadow: '4px 4px 0 #1B1B2F',
             cursor: 'pointer',
           }}
-          onClick={() => onStart?.('prep')}
+          onClick={() => onStart?.('type')}
         >
           <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>⌨️</span>
           Gõ đề
         </button>
         <button
+          data-testid="start-voice"
           style={{
             background: '#39C6A5',
             color: '#1B1B2F',
@@ -935,7 +941,7 @@ export function NotebookStartAction({ onStart }) {
 
       <button
         data-testid="start-photo"
-        onClick={() => onStart?.('snap')}
+        onClick={() => onStart?.('photo')}
         style={{
           width: '100%',
           display: 'flex',
@@ -959,6 +965,7 @@ export function NotebookStartAction({ onStart }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
+          data-testid="start-type"
           style={{
             padding: '10px',
             background: 'transparent',
@@ -969,11 +976,12 @@ export function NotebookStartAction({ onStart }) {
             fontSize: 13,
             cursor: 'pointer',
           }}
-          onClick={() => onStart?.('prep')}
+          onClick={() => onStart?.('type')}
         >
           ⌨️ Gõ tay đề bài
         </button>
         <button
+          data-testid="start-voice"
           style={{
             padding: '10px',
             background: 'transparent',
@@ -1022,7 +1030,7 @@ export function BentoStartAction({ onStart }) {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             data-testid="start-photo"
-            onClick={() => onStart?.('snap')}
+            onClick={() => onStart?.('photo')}
             style={{
               flex: 1,
               padding: '10px 6px',
@@ -1038,7 +1046,8 @@ export function BentoStartAction({ onStart }) {
             📷 Chụp vở
           </button>
           <button
-            onClick={() => onStart?.('prep')}
+            data-testid="start-type"
+            onClick={() => onStart?.('type')}
             style={{
               flex: 1,
               padding: '10px 6px',
@@ -1054,6 +1063,7 @@ export function BentoStartAction({ onStart }) {
             ⌨️ Gõ đề
           </button>
           <button
+            data-testid="start-voice"
             onClick={() => onStart?.('voice')}
             style={{
               flex: 1,
@@ -1092,7 +1102,7 @@ export function ChalkStartAction({ onStart }) {
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
         <button
           data-testid="start-photo"
-          onClick={() => onStart?.('snap')}
+          onClick={() => onStart?.('photo')}
           style={{
             flex: 1,
             padding: '10px',
@@ -1108,7 +1118,8 @@ export function ChalkStartAction({ onStart }) {
           📷 Chụp đề
         </button>
         <button
-          onClick={() => onStart?.('prep')}
+          data-testid="start-type"
+          onClick={() => onStart?.('type')}
           style={{
             flex: 1,
             padding: '10px',
@@ -1124,6 +1135,7 @@ export function ChalkStartAction({ onStart }) {
           ⌨️ Gõ đề
         </button>
         <button
+          data-testid="start-voice"
           onClick={() => onStart?.('voice')}
           style={{
             flex: 1,
@@ -1181,7 +1193,7 @@ export function CandyStartAction({ onStart }) {
         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
           <button
             data-testid="start-photo"
-            onClick={() => onStart?.('snap')}
+            onClick={() => onStart?.('photo')}
             style={{
               padding: '6px 12px',
               borderRadius: 999,
@@ -1197,7 +1209,8 @@ export function CandyStartAction({ onStart }) {
             📷 Chụp vở
           </button>
           <button
-            onClick={() => onStart?.('prep')}
+            data-testid="start-type"
+            onClick={() => onStart?.('type')}
             style={{
               padding: '6px 10px',
               borderRadius: 999,
@@ -1213,6 +1226,7 @@ export function CandyStartAction({ onStart }) {
             ⌨️ Gõ đề
           </button>
           <button
+            data-testid="start-voice"
             onClick={() => onStart?.('voice')}
             style={{
               padding: '6px 10px',

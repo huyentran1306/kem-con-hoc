@@ -17,6 +17,7 @@ import { NpsSurveyCard } from './NpsSurveySheet'
 import { getSlot } from './themes/slots/registry'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
+import { getStudyDateKey } from './useStudyTracker'
 
 
 /* ============================================================
@@ -493,10 +494,15 @@ export function Home() {
         <div style={{ marginBottom: 12 }}>
           <StartActionSlot
             onStart={(mode) => {
-              if (mode === 'snap') go('snap')
-              else if (mode === 'prep') go('prep')
-              else if (mode === 'voice') openSheet('voice')
-              else go('snap')
+              if (mode === 'photo' || mode === 'snap') {
+                go('snap')
+              } else if (mode === 'type') {
+                openSheet('typeProblem')
+              } else if (mode === 'voice') {
+                openSheet('typeProblem', { mode: 'voice', autoMic: true })
+              } else {
+                go('snap')
+              }
             }}
           />
         </div>
@@ -768,11 +774,17 @@ export function Analyze() {
         setAiState('done')
         toast('✅ AI đã soạn bài giảng xong!')
         setTimeout(() => go('explain'), 600)
+      } else if (explainRes && explainRes.error === 'format_error') {
+        setAiState('format_error')
       } else {
         setAiState('network_slow')
       }
     } catch (e) {
-      setAiState('network_slow')
+      if (e?.formatError || e?.message?.includes('format_error')) {
+        setAiState('format_error')
+      } else {
+        setAiState('network_slow')
+      }
     }
   }
 
@@ -1285,6 +1297,25 @@ export function Analyze() {
           <span className="lbl mint">✅ AI đã soạn bài giảng</span>
           <span className="sub">Sẵn sàng hướng dẫn {S.parent.toLowerCase()} đặt 4 câu hỏi gợi mở cho con.</span>
         </div>
+      ) : aiState === 'format_error' ? (
+        <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
+          <span className="lbl sun">⚠️ AI trả lời chưa đúng định dạng, mẹ thử lại nhé</span>
+          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
+            AI đã xử lý nhưng câu trả lời chưa đúng định dạng chuẩn. Mẹ bấm Thử lại để AI soạn lại nhé!
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              className="btn solid"
+              style={{ width: '100%', padding: '12px' }}
+              onClick={() => {
+                const textToUse = (editedText || ocrText || S.flow.ocr || '').trim()
+                startExplain(textToUse)
+              }}
+            >
+              🔄 Thử lại
+            </button>
+          </div>
+        </div>
       ) : (aiState === 'network_slow' || aiState === 'error') ? (
         <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
           <span className="lbl sun">⚠️ Mạng đang chậm, chưa soạn được bài của con</span>
@@ -1791,50 +1822,89 @@ export function Done() {
   }
 
   const saveResult = () => {
-    if (problem?.isSample) {
-      toast('Bài mẫu minh họa — không ghi vào lịch sử 📖')
-      patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false, result: null, teachBack: null } })
-      go('home')
-      return
-    }
-
+    soundPop(600)
     const topicName = problem?.dang_bai || problem?.type || (problem?.ocr ? problem.ocr.slice(0, 40) : 'Bài tập rèn luyện')
-    const txt = `${topicName} · ${result === 'weak' ? 'còn vướng' : 'làm được'}`
-    const hist = [...(stats.history || []), { txt, when: 'Hôm nay', timestamp: Date.now() }]
+    const isSample = Boolean(problem?.isSample)
 
-    let weak = Array.isArray(stats.weak) ? [...stats.weak] : []
-    let strong = Array.isArray(stats.strong) ? [...stats.strong] : []
+    patch((prev) => {
+      const activeId = prev.activeId
+      const prevStats = { ...(prev.stats || {}) }
+      const cStats = { ...(prevStats[activeId] || {}) }
 
-    if (result === 'weak') {
-      const idx = weak.findIndex((w) => w.n === topicName)
-      if (idx >= 0) {
-        weak[idx] = { ...weak[idx], v: (weak[idx].v || 0) + 1, t: (weak[idx].t || 0) + 1 }
+      const oldHist = Array.isArray(cStats.history) ? [...cStats.history] : []
+      const txt = `${topicName} · ${result === 'weak' ? 'còn vướng' : 'làm được'}${isSample ? ' [Bài mẫu]' : ''}`
+      const hist = [{ txt, when: 'Hôm nay', timestamp: Date.now() }, ...oldHist]
+
+      let weak = Array.isArray(cStats.weak) ? [...cStats.weak] : []
+      let strong = Array.isArray(cStats.strong) ? [...cStats.strong] : []
+
+      if (result === 'weak') {
+        const idx = weak.findIndex((w) => w.n === topicName)
+        if (idx >= 0) {
+          weak[idx] = { ...weak[idx], v: (weak[idx].v || 0) + 1, t: (weak[idx].t || 0) + 1 }
+        } else {
+          weak.unshift({ n: topicName, v: 1, t: 1 })
+        }
       } else {
-        weak.unshift({ n: topicName, v: 1, t: 1 })
+        const idx = strong.findIndex((s) => s.n === topicName)
+        if (idx >= 0) {
+          strong[idx] = { ...strong[idx], v: (strong[idx].v || 0) + 1, t: (strong[idx].t || 0) + 1 }
+        } else {
+          strong.unshift({ n: topicName, v: 1, t: 1 })
+        }
       }
+
+      const sessionsMom = (cStats.sessionsMom || 0) + (prev.parent === 'Mẹ' ? 1 : 0)
+      const sessionsDad = (cStats.sessionsDad || 0) + (prev.parent === 'Bố' ? 1 : 0)
+
+      let studyLog = Array.isArray(cStats.studyLog) ? [...cStats.studyLog] : []
+      // Chỉ tính bài thật vào lọ kẹo/dấu chân, bài mẫu không tính
+      if (!isSample) {
+        const now = Date.now()
+        const newEntry = {
+          id: 'sess_' + now + '_' + Math.random().toString(36).slice(2, 6),
+          ts: now,
+          dateKey: getStudyDateKey(now),
+          problemType: topicName,
+          totalSteps: problem?.steps?.length || 4,
+          selfSteps: problem?.steps?.length || 4,
+          teachBack: prev.flow?.teachBack || 'self',
+          minutes: 15,
+          partial: false,
+        }
+        studyLog = [newEntry, ...studyLog]
+      }
+
+      return {
+        ...prev,
+        stats: {
+          ...prevStats,
+          [activeId]: {
+            ...cStats,
+            history: hist,
+            weak,
+            strong,
+            sessionsMom,
+            sessionsDad,
+            studyLog,
+          },
+        },
+        flow: {
+          ...prev.flow,
+          step: 0,
+          stuck: 0,
+          unlocked: false,
+          result: null,
+          teachBack: null,
+        },
+      }
+    })
+
+    if (isSample) {
+      toast(`Đã lưu bài mẫu vào sổ của ${child.name} (bài mẫu không tính vào lọ kẹo) 📖`)
     } else {
-      const idx = strong.findIndex((s) => s.n === topicName)
-      if (idx >= 0) {
-        strong[idx] = { ...strong[idx], v: (strong[idx].v || 0) + 1, t: (strong[idx].t || 0) + 1 }
-      } else {
-        strong.unshift({ n: topicName, v: 1, t: 1 })
-      }
+      toast(`Đã lưu và cộng 1 tối học vào lọ kẹo của ${child.name}! 🎉`)
     }
-
-    const sessionsMom = (stats.sessionsMom || 0) + (S.parent === 'Mẹ' ? 1 : 0)
-    const sessionsDad = (stats.sessionsDad || 0) + (S.parent === 'Bố' ? 1 : 0)
-
-    if (tracker?.recordSession) {
-      tracker.recordSession({
-        problemType: topicName,
-        totalSteps: problem?.steps?.length || 4,
-        teachBack: S.flow?.teachBack || 'self',
-      })
-    }
-
-    setStats({ history: hist, weak, strong, sessionsMom, sessionsDad })
-    patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false, result: null, teachBack: null } })
-    toast(`Đã lưu vào sổ của ${child.name} 💾`)
     go('home')
   }
 
@@ -1847,10 +1917,28 @@ export function Done() {
   const pickTeachBack = (v) => {
     soundPop(500)
     const opt = TEACH_BACK_OPTIONS.find((o) => o.v === v)
-    patch({ flow: { ...S.flow, teachBack: v } })
-    if (!stats.history.some((h) => h.txt && h.txt.startsWith('Con dạy lại mẹ'))) {
-      setStats({ history: [...stats.history, { txt: `Con dạy lại mẹ: ${opt.t.toLowerCase()}`, when: 'Hôm nay' }] })
-    }
+    patch((prev) => {
+      const activeId = prev.activeId
+      const prevStats = { ...(prev.stats || {}) }
+      const cStats = { ...(prevStats[activeId] || {}) }
+      const oldHist = Array.isArray(cStats.history) ? [...cStats.history] : []
+      const hasTeachBack = oldHist.some((h) => h.txt && h.txt.startsWith('Con dạy lại mẹ'))
+      const updatedHist = hasTeachBack
+        ? oldHist
+        : [{ txt: `Con dạy lại mẹ: ${opt.t.toLowerCase()}`, when: 'Hôm nay', timestamp: Date.now() }, ...oldHist]
+
+      return {
+        ...prev,
+        flow: { ...prev.flow, teachBack: v },
+        stats: {
+          ...prevStats,
+          [activeId]: {
+            ...cStats,
+            history: updatedHist,
+          },
+        },
+      }
+    })
     toast(`Đã lưu: ${opt.t} 💾`)
   }
 
@@ -1872,7 +1960,7 @@ export function Done() {
             marginBottom: 10,
           }}
         >
-          ⚠️ Đây là bài mẫu, không phải bài của con
+          ⚠️ Đây là bài mẫu, không phải bài của con (bài mẫu không tính vào lọ kẹo)
         </div>
       )}
       <div className="card mint">

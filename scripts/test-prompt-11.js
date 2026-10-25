@@ -158,9 +158,11 @@ assert(templateIds.includes('quiz') || templateIds.includes('exam'), 'Có mẫu 
 assert(templateIds.includes('off') || templateIds.includes('day_off'), 'Có mẫu Nghỉ học');
 assert(templateIds.includes('time') || templateIds.includes('time_change'), 'Có mẫu Đổi giờ');
 
-// Check reminder window logic
+// Check reminder window logic (khung giờ 12:00 hôm trước -> 12:00 ngày áp dụng)
 const today = new Date().toISOString().slice(0, 10);
-assert(isReminderInDisplayWindow(today), 'Lời nhắc cho ngày hôm nay nằm trong khung giờ hiển thị');
+const morningToday = new Date();
+morningToday.setHours(8, 0, 0, 0);
+assert(isReminderInDisplayWindow(today, morningToday), 'Lời nhắc sáng ngày áp dụng nằm trong khung giờ hiển thị');
 
 // ============================================================
 // 5. KIỂM THỬ PART A: TỶ LỆ TƯƠNG PHẢN WCAG AA BẢN GẤU

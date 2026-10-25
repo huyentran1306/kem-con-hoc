@@ -1,10 +1,10 @@
 /* ============================================================
    CLIENT GATEWAY — API Service & Database Bridge
    ============================================================ */
-import { PROBLEM } from './data'
-import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio'
-import { getWeekLabel } from './utils'
-import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules'
+import { PROBLEM } from './data.js'
+import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
+import { getWeekLabel } from './utils.js'
+import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -67,9 +67,11 @@ async function postAi(path, body, timeoutMs = 25000, extraHeaders = {}) {
 }
 
 /* Lấy JSON từ response (gateway có thể trả object hoặc chuỗi) */
-function extractJson(raw) {
+export function extractJson(raw) {
   if (raw && typeof raw === 'object') return raw
-  const m = String(raw || '').match(/\{[\s\S]*\}/)
+  let text = String(raw || '').trim()
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+  const m = text.match(/\{[\s\S]*\}/)
   if (!m) return null
   try {
     return JSON.parse(m[0])
@@ -247,42 +249,59 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
 
   const aiCfg = getActiveAiConfig()
 
+  const isValidExplain = (d) => {
+    if (!d || typeof d !== 'object') return false
+    if (d.can_hoi_lai && String(d.can_hoi_lai).trim()) return true
+    if (Array.isArray(d.cac_bac) && d.cac_bac.length >= 3 && d.cac_bac[0]?.cau_hoi) return true
+    if (Array.isArray(d.steps) && d.steps.length >= 3 && (d.steps[0]?.question || d.steps[0]?.q)) return true
+    return false
+  }
+
+  const userPrompt = `Soạn bài cho đề sau theo đúng schema. Chỉ trả JSON.\nĐề bài: """${ocr}"""`
+
   try {
     let j = await postAi(
       '/chat',
       {
         messages: [
           { role: 'system', content: sys },
-          { role: 'user', content: 'Phân tích bài này' },
+          { role: 'user', content: userPrompt },
         ],
         max_tokens: aiCfg.max_tokens || 1500,
         temperature: typeof aiCfg.temperature === 'number' ? aiCfg.temperature : 0.3,
         model: aiCfg.model || 'cloudflare-llama-3.3-70b',
       },
-      aiCfg.timeout_ms || 30000
+      aiCfg.timeout_ms || 30000,
+      { 'X-Prompt-Id': 'p3_explain' }
     )
     let data = extractJson(j.response ?? j)
 
-    // Nếu lần đầu lỗi JSON, tự động thử lại 1 lần với thông báo "Chỉ trả JSON hợp lệ"
-    if (!data) {
+    // Nếu lần đầu lỗi JSON hoặc thiếu schema, tự động thử lại 1 lần
+    if (!isValidExplain(data)) {
       const retryResp = await postAi(
         '/chat',
         {
           messages: [
             { role: 'system', content: sys },
-            { role: 'user', content: 'Phân tích bài này' },
+            { role: 'user', content: userPrompt },
             { role: 'assistant', content: String(j?.response || '') },
-            { role: 'user', content: 'Chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ theo đúng schema yêu cầu, không thêm bất kỳ chữ nào khác.' },
+            { role: 'user', content: 'Trả lại đúng JSON theo schema, không thêm chữ.' },
           ],
           max_tokens: 1500,
           temperature: 0.2,
         },
-        20000
+        20000,
+        { 'X-Prompt-Id': 'p3_explain' }
       )
       data = extractJson(retryResp.response ?? retryResp)
     }
 
-    if (!data) return null
+    if (!isValidExplain(data)) {
+      return {
+        error: 'format_error',
+        message: 'AI trả lời chưa đúng định dạng, mẹ thử lại nhé',
+      }
+    }
 
     // Chuẩn hóa bậc câu hỏi (hỗ trợ cả cac_bac schema Socratic mới và steps schema cũ)
     let rawSteps = []
@@ -935,7 +954,7 @@ export async function getScopeStats() {
    ============================================================ */
 
 export async function createFamilyInvite({ role = 'guardian', relationHint = '' }) {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/invites`, {
     method: 'POST',
     headers: {
@@ -948,7 +967,7 @@ export async function createFamilyInvite({ role = 'guardian', relationHint = '' 
 }
 
 export async function getFamilyInvites() {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/invites`, {
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -956,7 +975,7 @@ export async function getFamilyInvites() {
 }
 
 export async function revokeFamilyInvite(code) {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/invites/${code}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
@@ -979,7 +998,7 @@ export async function acceptInvite(code, { displayName, relation, pin }) {
 }
 
 export async function getFamilyMembers() {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/members`, {
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -987,7 +1006,7 @@ export async function getFamilyMembers() {
 }
 
 export async function updateFamilyMember(id, payload) {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/members/${id}`, {
     method: 'PATCH',
     headers: {
@@ -1000,7 +1019,7 @@ export async function updateFamilyMember(id, payload) {
 }
 
 export async function deleteFamilyMember(id) {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/members/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
@@ -1009,7 +1028,7 @@ export async function deleteFamilyMember(id) {
 }
 
 export async function createDeviceCode(memberId = null) {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/auth/device-code`, {
     method: 'POST',
     headers: {
@@ -1031,7 +1050,7 @@ export async function loginWithDeviceCode({ code, pin }) {
 }
 
 export async function shareWeeklyReport({ childId, week, snapshot, expiresDays = 7 }) {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/reports/weekly/share`, {
     method: 'POST',
     headers: {
@@ -1049,7 +1068,7 @@ export async function getPublicReport(token) {
 }
 
 export async function getSharedReportsList() {
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/reports/shared-list`, {
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -1057,7 +1076,7 @@ export async function getSharedReportsList() {
 }
 
 export async function revokeSharedReport(token) {
-  const authToken = localStorage.getItem('auth_token')
+  const authToken = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/reports/shared/${token}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${authToken}` },

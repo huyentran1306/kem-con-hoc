@@ -52,7 +52,7 @@ export function SpeakBtn({ text, lang = 'vi-VN', label, className = '' }) {
 }
 
 /* ---------- 🎙️ Nút Ghi âm / Speech-to-Text (STT) ---------- */
-export function VoiceInputBtn({ onResult, placeholder = 'Bấm để nói bằng giọng nói', className = '' }) {
+export function VoiceInputBtn({ onResult, placeholder = 'Bấm để nói bằng giọng nói', className = '', autoStart = false }) {
   const [listening, setListening] = useState(false)
   const [processing, setProcessing] = useState(false)
   const recognitionRef = useRef(null)
@@ -101,6 +101,15 @@ export function VoiceInputBtn({ onResult, placeholder = 'Bấm để nói bằng
       stopTracks()
     }
   }, [])
+
+  useEffect(() => {
+    if (autoStart) {
+      const tm = setTimeout(() => {
+        startListening()
+      }, 350)
+      return () => clearTimeout(tm)
+    }
+  }, [autoStart])
 
   const startListening = async () => {
     // 1. Thử dùng Web Speech API (nhận diện tiếng Việt real-time, 0 độ trễ)
