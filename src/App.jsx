@@ -4,7 +4,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview } from './api'
 import LoginScreen from './Login'
 import AdminPortal from './Admin'
 import * as Scr from './screens'
@@ -45,6 +45,59 @@ const getJoinCodeFromUrl = () => {
   if (p.startsWith('/join/')) return p.replace('/join/', '').trim().toUpperCase()
   const params = new URLSearchParams(window.location.search)
   return (params.get('join') || params.get('join_code') || '').trim().toUpperCase()
+}
+
+const PENDING_JOIN_KEY = 'kem-con-hoc:pending-join'
+
+const getClassJoinFromUrl = () => {
+  if (typeof window === 'undefined') return null
+  const p = window.location.pathname
+  const h = window.location.hash || ''
+  if (p.startsWith('/vao-lop/m/')) {
+    return { code: p.replace('/vao-lop/m/', '').trim().toUpperCase(), type: 'claim' }
+  }
+  if (p.startsWith('/vao-lop/')) {
+    return { code: p.replace('/vao-lop/', '').trim().toUpperCase(), type: 'class' }
+  }
+  if (h.startsWith('#vao-lop/m/')) {
+    return { code: h.replace('#vao-lop/m/', '').trim().toUpperCase(), type: 'claim' }
+  }
+  if (h.startsWith('#vao-lop/')) {
+    return { code: h.replace('#vao-lop/', '').trim().toUpperCase(), type: 'class' }
+  }
+  const params = new URLSearchParams(window.location.search)
+  const qClass = params.get('class') || params.get('join_class') || params.get('class_code')
+  if (qClass) return { code: qClass.trim().toUpperCase(), type: 'class' }
+  const qClaim = params.get('claim') || params.get('claim_code')
+  if (qClaim) return { code: qClaim.trim().toUpperCase(), type: 'claim' }
+  return null
+}
+
+const getPendingJoin = () => {
+  try {
+    const raw = localStorage.getItem(PENDING_JOIN_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (Date.now() - parsed.ts > 30 * 60 * 1000) {
+      localStorage.removeItem(PENDING_JOIN_KEY)
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+const setPendingJoin = (code, type) => {
+  try {
+    localStorage.setItem(PENDING_JOIN_KEY, JSON.stringify({ code, type, ts: Date.now() }))
+  } catch {}
+}
+
+const clearPendingJoin = () => {
+  try {
+    localStorage.removeItem(PENDING_JOIN_KEY)
+  } catch {}
 }
 
 const getReportTokenFromUrl = () => {
@@ -205,6 +258,7 @@ export default function App() {
   const [S, setS] = useState(() => (famId ? loadState(LS_KEY) : initialState()))
   const [screen, setScreen] = useState(S.onboarded ? 'home' : 'onb')
   const [sheet, setSheet] = useState(null)
+  const [classJoinBanner, setClassJoinBanner] = useState(null)
   const [msg, setMsg] = useState('')
   const [study, setStudy] = useState(null)
   const scrollRef = useRef(null)
@@ -236,6 +290,37 @@ export default function App() {
     })
     return off
   }, [])
+
+  /* ---------- kiểm tra link vào lớp học (/vao-lop/:code) ---------- */
+  useEffect(() => {
+    const classJoin = getClassJoinFromUrl()
+    if (classJoin) {
+      setPendingJoin(classJoin.code, classJoin.type)
+      if (session && getAuthToken()) {
+        openSheet('familyClasses', { code: classJoin.code, joinType: classJoin.type })
+      } else {
+        fetchClassPreview(classJoin.code).then((res) => {
+          if (res?.ok && res.class) {
+            setClassJoinBanner(res.class)
+          }
+        }).catch(() => {})
+      }
+    } else {
+      const pending = getPendingJoin()
+      if (pending) {
+        if (session && getAuthToken()) {
+          clearPendingJoin()
+          openSheet('familyClasses', { code: pending.code, joinType: pending.type })
+        } else {
+          fetchClassPreview(pending.code).then((res) => {
+            if (res?.ok && res.class) {
+              setClassJoinBanner(res.class)
+            }
+          }).catch(() => {})
+        }
+      }
+    }
+  }, [session])
 
   /* ---------- áp dụng theme và hiệu ứng chuyển động ---------- */
   useEffect(() => {
@@ -460,6 +545,12 @@ export default function App() {
     setHydrated(false)
     setStudy(null)
     setScreen(loaded.onboarded ? 'home' : 'onb')
+
+    const pending = getPendingJoin()
+    if (pending) {
+      clearPendingJoin()
+      openSheet('familyClasses', { code: pending.code, joinType: pending.type })
+    }
   }
 
   const logout = () => {
@@ -594,6 +685,7 @@ export default function App() {
               onAuthed={handleAuthed}
               reauthSession={session && !hasToken ? session : null}
               onOpenJoin={() => setJoinCode('ENTER_CODE')}
+              classJoinBanner={classJoinBanner}
             />
           </div>
         </div>
@@ -821,6 +913,13 @@ function SheetView({ type, session }) {
         <FamilyClassSheet
           token={getAuthToken()}
           activeChild={child}
+          children={S.children}
+          onAddChild={(newKid) => {
+            const updated = [...(S.children || []), newKid]
+            patch({ children: updated, activeId: newKid.id })
+          }}
+          initialCode={data?.code || ''}
+          initialType={data?.joinType || 'class'}
           onClose={closeSheet}
         />
       </Sheet>

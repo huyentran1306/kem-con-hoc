@@ -1,10 +1,26 @@
 /* ============================================================
-   👩‍🏫 KÈM CON HỌC — THẺ CÔ NHẮC TRÊN MÀN CHÍNH (PROMPT 04 MỤC 4b)
+   👩‍🏫 KÈM CON HỌC — THẺ CÔ NHẮC TRÊN MÀN CHÍNH (PROMPT 11 - PHẦN B)
    Hiển thị lời nhắc có ngày từ giáo viên với nút "Đã nhắc con"
+   Tuân thủ quy tắc:
+   - Hiện từ 12:00 trưa hôm trước đến 12:00 trưa ngày áp dụng
+   - Đến 20:00 tối hôm trước chưa bấm: viền nhấn nổi bật
+   - Nhà nhiều con: hiển thị lời nhắc của MỌI con kèm chip tên con màu riêng
+   - Kết nối trực tiếp API Backend Worker: GET /family/reminders & POST /family/announcements/{id}/done
+   - Tài khoản "Chỉ xem" (viewer) thấy trạng thái nhưng không có nút
+   - Tối đa 3 thẻ gộp, còn lại ghi "+N trong hộp thông báo"
    ============================================================ */
 
 import { useState, useEffect } from 'react'
 import { isReminderInDisplayWindow, isLateNightUrgent } from './teacherReminderData.js'
+import { getAuthToken, fetchFamilyReminders, markFamilyReminderDone } from './api'
+
+const KID_COLORS = [
+  { bg: '#FFF1D6', color: '#9A5B00', border: '#F6C56A' }, // Amber
+  { bg: '#EFE9FF', color: '#6A4FD0', border: '#D8B4FE' }, // Violet
+  { bg: '#ECFDF5', color: '#047857', border: '#A7F3D0' }, // Mint
+  { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' }, // Blue
+  { bg: '#FDF2F8', color: '#BE185D', border: '#FBCFE8' }, // Pink
+]
 
 export default function TeacherReminderBanner({ child, S, patch, go, openSheet, toast }) {
   const [reminders, setReminders] = useState([])
@@ -17,8 +33,38 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
     }
   })
 
-  // Đọc danh sách nhắc việc từ local storage hoặc API
   useEffect(() => {
+    loadReminders()
+  }, [child?.name, S?.children])
+
+  async function loadReminders() {
+    const token = getAuthToken()
+    if (token) {
+      try {
+        const res = await fetchFamilyReminders({ token, window: 'today' })
+        if (res && res.ok && Array.isArray(res.reminders) && res.reminders.length > 0) {
+          // Normalize server reminders
+          const serverReminders = res.reminders.map((r) => ({
+            id: r.id,
+            teacher_name: r.teacher_name || 'Hạnh',
+            class_name: r.class_name || 'Lớp của con',
+            child_name: r.child_name || child?.name || 'Mít',
+            child_id: r.child_id,
+            message: r.body || r.message,
+            target_date: r.remind_for || r.target_date,
+            assignment_id: r.assignment_id || null,
+            done_at: r.done_at,
+            done_by_name: r.done_by_name,
+          }))
+          setReminders(serverReminders)
+          return
+        }
+      } catch (e) {
+        console.warn('Load reminders error:', e)
+      }
+    }
+
+    // Fallback to local storage or demo reminder
     try {
       const stored = localStorage.getItem('kem-con-hoc:teacher-reminders')
       if (stored) {
@@ -30,7 +76,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
       }
     } catch {}
 
-    // Dữ liệu mẫu ban đầu nếu chưa có bài tập nào
+    // Default demo reminder
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     const tomorrowStr = tomorrow.toISOString().slice(0, 10)
@@ -48,35 +94,56 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
       }
     ]
     setReminders(initialReminders)
-  }, [child?.name])
+  }
 
-  const handleMarkDone = (remId) => {
+  const handleMarkDone = async (remId) => {
     const nowTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     const updated = { ...doneMap, [remId]: nowTime }
     setDoneMap(updated)
     try {
       localStorage.setItem('kem-con-hoc:reminders-done', JSON.stringify(updated))
     } catch {}
+
+    // Call server to persist
+    const token = getAuthToken()
+    if (token) {
+      try {
+        await markFamilyReminderDone({ token, announcementId: remId })
+      } catch {}
+    }
+
     if (toast) toast('Đã ghi nhận: Mẹ đã nhắc con chu đáo! ✨')
   }
 
-  // Lọc các lời nhắc đang trong khung giờ hiển thị
+  // Filter reminders within active display window (12:00 yesterday to 12:00 today)
   const activeReminders = reminders.filter((rem) => isReminderInDisplayWindow(rem.target_date))
 
   if (activeReminders.length === 0) return null
 
   const isViewOnly = S?.userRole === 'viewer' || S?.role === 'viewer'
+  const visibleReminders = activeReminders.slice(0, 3)
+  const hiddenCount = activeReminders.length - visibleReminders.length
+
+  // Build kid color map
+  const kidsList = S?.children || (child ? [child] : [])
+  const kidColorMap = {}
+  kidsList.forEach((k, idx) => {
+    kidColorMap[k.name] = KID_COLORS[idx % KID_COLORS.length]
+    if (k.id) kidColorMap[k.id] = KID_COLORS[idx % KID_COLORS.length]
+  })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
-      {activeReminders.map((rem) => {
-        const isDone = Boolean(doneMap[rem.id])
-        const doneTime = doneMap[rem.id]
+      {visibleReminders.map((rem) => {
+        const isDone = Boolean(doneMap[rem.id] || rem.done_at)
+        const doneTime = doneMap[rem.id] || (rem.done_at ? new Date(rem.done_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '')
         const isUrgent = isLateNightUrgent(rem.target_date, isDone)
         const targetDateObj = rem.target_date ? new Date(rem.target_date) : null
         const targetDateFormatted = targetDateObj
           ? targetDateObj.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })
           : 'Hôm nay'
+
+        const kidColor = (rem.child_name && kidColorMap[rem.child_name]) || KID_COLORS[0]
 
         return (
           <div
@@ -84,15 +151,15 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
             className="card"
             style={{
               borderRadius: 'var(--radius-lg, 22px)',
-              background: 'var(--c-hint1-bg, #FFF1D6)',
+              background: 'var(--c-hint1-bg, #FFF8EC)',
               border: isUrgent
-                ? '2.5px solid var(--c-accent, #D2427D)'
-                : '2px solid var(--c-warn-line, #F6C56A)',
+                ? '2.5px solid var(--c-accent, #BE123C)'
+                : '2px solid var(--c-warn-line, #F0DDC2)',
               padding: '14px 16px',
               position: 'relative',
               boxShadow: isUrgent
-                ? '0 4px 18px rgba(210, 66, 125, 0.25)'
-                : '0 4px 12px rgba(246, 166, 35, 0.1)',
+                ? '0 6px 20px rgba(190, 18, 60, 0.22)'
+                : '0 4px 12px rgba(75, 54, 33, 0.08)',
               transition: 'all 0.2s ease',
             }}
           >
@@ -104,16 +171,16 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    background: 'var(--c-surface, #FFFFFF)',
+                    background: '#FFFFFF',
                     display: 'grid',
                     placeItems: 'center',
                     fontSize: 15,
-                    border: '1.5px solid var(--c-line, #F0DDC2)',
+                    border: '1.5px solid #F0DDC2',
                   }}
                 >
                   👩‍🏫
                 </span>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text-2, #8B6D50)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#84664A', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   Cô {rem.teacher_name} · {rem.class_name} nhắc
                 </div>
               </div>
@@ -122,12 +189,12 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 700,
-                    padding: '2px 8px',
+                    fontWeight: 800,
+                    padding: '2px 9px',
                     borderRadius: 999,
-                    background: 'var(--c-surface, #FFFFFF)',
-                    color: 'var(--c-accent-ink, #9B6916)',
-                    border: '1px solid var(--c-line, #F0DDC2)',
+                    background: kidColor.bg,
+                    color: kidColor.color,
+                    border: `1px solid ${kidColor.border}`,
                   }}
                 >
                   {rem.child_name}
@@ -142,7 +209,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                 fontSize: 15.5,
                 fontWeight: 700,
                 lineHeight: 1.4,
-                color: 'var(--c-text, #4B3621)',
+                color: '#4B3621',
                 margin: '6px 0 8px 0',
               }}
             >
@@ -150,7 +217,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
             </p>
 
             {/* Thời gian áp dụng */}
-            <div style={{ fontSize: 12, color: 'var(--c-text-2, #8B6D50)', marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: '#84664A', marginBottom: 10 }}>
               📅 Áp dụng cho: <b>{targetDateFormatted}</b>
             </div>
 
@@ -164,13 +231,14 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     gap: 6,
                     padding: '6px 14px',
                     borderRadius: 999,
-                    background: 'var(--c-good-bg, #E8F6E6)',
-                    color: 'var(--c-good-fg, #3F7A3E)',
+                    background: '#ECFDF5',
+                    color: '#047857',
                     fontWeight: 800,
                     fontSize: 12.5,
+                    border: '1px solid #A7F3D0',
                   }}
                 >
-                  ✓ Mẹ đã nhắc con lúc {doneTime}
+                  ✓ {rem.done_by_name || 'Mẹ'} đã nhắc con lúc {doneTime}
                 </div>
               ) : isViewOnly ? (
                 <div
@@ -186,7 +254,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     fontSize: 12.5,
                   }}
                 >
-                  Chưa ghi nhận nhắc con
+                  Chưa ghi nhận nhắc con (Chỉ xem)
                 </div>
               ) : (
                 <button
@@ -197,12 +265,12 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     padding: '8px 16px',
                     fontSize: 13,
                     fontWeight: 800,
-                    background: 'var(--c-btn, #F6A623)',
-                    color: 'var(--c-btn-text, #4B3621)',
+                    background: '#F6A623',
+                    color: '#4B3621',
                     border: 'none',
-                    borderRadius: 'var(--radius-btn, 999px)',
+                    borderRadius: 999,
                     cursor: 'pointer',
-                    boxShadow: 'var(--shadow-btn, 0 4px 0 #C47F0E)',
+                    boxShadow: '0 3px 0 #C47F0E',
                   }}
                 >
                   🔔 Đã nhắc con
@@ -220,10 +288,10 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     padding: '7px 14px',
                     fontSize: 12.5,
                     fontWeight: 700,
-                    background: 'var(--c-surface, #FFFFFF)',
-                    border: '1.5px solid var(--c-line, #F0DDC2)',
-                    borderRadius: 'var(--radius-btn, 999px)',
-                    color: 'var(--c-text, #4B3621)',
+                    background: '#FFFFFF',
+                    border: '1.5px solid #F0DDC2',
+                    borderRadius: 999,
+                    color: '#4B3621',
                     cursor: 'pointer',
                   }}
                 >
@@ -234,6 +302,12 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
           </div>
         )
       })}
+
+      {hiddenCount > 0 && (
+        <div style={{ textAlign: 'center', fontSize: 12, color: '#84664A', fontWeight: 700 }}>
+          ＋{hiddenCount} lời nhắc khác trong Hộp thông báo
+        </div>
+      )}
     </div>
   )
 }

@@ -1,0 +1,82 @@
+/* ============================================================
+   🐻 STAFF DESIGN SYSTEM (PROMPT 11 - PHẦN A)
+   Bộ thiết kế dùng chung cho Cổng Giáo Viên và Admin Bản Gấu
+   ============================================================ */
+
+:root {
+  --s-bg: #FFF8EC;
+  --s-surface: #FFFFFF;
+  --s-line: #F0DDC2;
+  --s-text: #4B3621;
+  --s-text-2: #84664A; /* Đạt chuẩn tương phản 4.5:1 WCAG AA */
+  --s-accent: #F6A623;
+  --s-on-accent: #4B3621;
+  --s-accent-deep: #C47F0E;
+  --s-accent-tint: #FFF1D6;
+  --s-accent-ink: #9A5B00;
+
+  /* Status Colors */
+  --s-ok: #047857;
+  --s-ok-bg: #ECFDF5;
+  --s-ok-border: #A7F3D0;
+
+  --s-info: #1D4ED8;
+  --s-info-bg: #EFF6FF;
+  --s-info-border: #BFDBFE;
+
+  --s-warn: #9A5B00;
+  --s-warn-bg: #FFF1D6;
+  --s-warn-border: #F6C56A;
+
+  --s-bad: #BE123C;
+  --s-bad-bg: #FFF1F2;
+  --s-bad-border: #FECDD3;
+
+  /* Typography */
+  --s-font-head: 'Mitr', -apple-system, sans-serif;
+  --s-font-body: 'Nunito', -apple-system, sans-serif;
+
+  /* Shapes & Shadows */
+  --s-radius-card: 22px;
+  --s-radius-btn: 999px;
+  --s-radius-input: 14px;
+  --s-shadow-card: 0 5px 0 var(--s-line), 0 10px 24px -12px rgba(75, 54, 33, 0.16);
+  --s-shadow-btn: 0 3px 0 var(--s-accent-deep);
+}
+
+.staff-root {
+  background-color: var(--s-bg);
+  color: var(--s-text);
+  font-family: var(--s-font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.staff-root * {
+  box-sizing: border-box;
+}
+
+.staff-root h1,
+.staff-root h2,
+.staff-root h3,
+.staff-root h4,
+.staff-root .staff-heading {
+  font-family: var(--s-font-head);
+  color: var(--s-text);
+  font-weight: 700;
+}
+
+/* Scrollbar */
+.staff-root ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.staff-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.staff-root ::-webkit-scrollbar-thumb {
+  background: var(--s-line);
+  border-radius: 999px;
+}

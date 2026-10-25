@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-theme-contrast.mjs && node scripts/test-scope-rules.mjs && node scripts/test-prompt-00-auth.mjs && node scripts/test-prompt-03-family-zalo.mjs && node scripts/test-study-tracker.mjs && node scripts/test-calm-corner.mjs && node scripts/test-custom-theme.mjs && node scripts/test-teacher-reminder.mjs && node scripts/test-admin-themes.mjs",
+    "test": "node scripts/test-theme-contrast.mjs && node scripts/test-scope-rules.mjs && node scripts/test-prompt-00-auth.mjs && node scripts/test-prompt-03-family-zalo.mjs && node scripts/test-study-tracker.mjs && node scripts/test-calm-corner.mjs && node scripts/test-custom-theme.mjs && node scripts/test-teacher-reminder.mjs && node scripts/test-admin-themes.mjs && node scripts/test-prompt-11.js",
     "db:clone": "node scripts/sync-db-clone.js"
   },
   "dependencies": {

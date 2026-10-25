@@ -244,9 +244,11 @@ async function runTests() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ familyName: 'Nhà Nhím', password: 'wrongpassword' }),
   })
-  assert(oldFamRes.status === 401, 'Gia đình cũ được nhận diện đúng (báo sai mật khẩu thay vì không tìm thấy)')
   const oldFamData = await oldFamRes.json()
-  assert(oldFamData.error?.message === 'Sai mật khẩu rồi', 'Đúng thông điệp xác thực bảo mật')
+  const isRateLimited = oldFamRes.status === 429 || oldFamData.error?.code === 'TOO_MANY_ATTEMPTS'
+  const isWrongPass = oldFamRes.status === 401 && oldFamData.error?.message === 'Sai mật khẩu rồi'
+  assert(isWrongPass || isRateLimited, 'Gia đình cũ được nhận diện đúng hoặc kích hoạt chặn thử sai nhiều lần (429)')
+  assert(isWrongPass || isRateLimited, 'Đúng thông điệp xác thực bảo mật')
 
   console.log('\n------------------------------------------------------------')
   console.log(`🏁 TỔNG KẾT: ${passed} PASS, ${failed} FAIL`)

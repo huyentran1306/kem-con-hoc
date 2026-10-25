@@ -1,21 +1,24 @@
 /**
- * CỔNG GIÁO VIÊN: LỚP HỌC, GIAO BÀI & THÔNG BÁO (PROMPT 04)
- * Thiết kế chuẩn Bento Mềm (Clean, Light, Be Vietnam Pro)
+ * CỔNG GIÁO VIÊN BẢN GẤU (PROMPT 11 - PHẦN A, B, C)
+ * Thiết kế bản Gấu ấm áp, Mitr + Nunito, WCAG AA, không còn màu xanh dương viết cứng
  */
 
 import React, { useState, useEffect } from 'react';
 import {
   Users, BookOpen, Bell, Settings, Plus, Check, X,
   Share2, Copy, Sparkles, ChevronRight, LogOut, ArrowLeft,
-  AlertCircle, Lock, Calendar, ShieldCheck, UserCheck, RefreshCw, Send
+  AlertCircle, Lock, Calendar, ShieldCheck, UserCheck, RefreshCw, Send, QrCode
 } from 'lucide-react';
 import { toast } from './utils';
 import { REMINDER_TEMPLATES, MAX_REMINDERS_PER_DAY, getQuickReminderDates } from './teacherReminderData.js';
+import { QrCodeModal } from './qrCode.jsx';
+import { BearMascot, Card, Button, StatusPill, Kpi, Tabs, DataTable, Segmented, Toggle, Field, TextArea, EmptyState, Banner, SaveBar, AssistantCard } from './ui/staff';
+import './ui/staff/tokens.css';
 
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
 const TEACHER_TOKEN_KEY = 'kem-con-hoc:teacher:token';
 
-export default function TeacherPortal() {
+export default function TeacherPortal({ onExit }) {
   const [token, setToken] = useState(() => localStorage.getItem(TEACHER_TOKEN_KEY) || '');
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -361,16 +364,16 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
                     setFormError('');
                   }}
                   style={{
-                    background: '#2563EB',
-                    color: '#ffffff',
+                    background: '#F6A623',
+                    color: '#4B3621',
                     border: 'none',
-                    padding: '6px 12px',
-                    borderRadius: '8px',
+                    padding: '6px 14px',
+                    borderRadius: '999px',
                     fontSize: '12.5px',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 6px rgba(37,99,235,0.25)',
+                    boxShadow: '0 2px 0 #C47F0E',
                   }}
                 >
                   Đăng nhập ngay 👉
@@ -601,18 +604,18 @@ function TeacherClassesList({ token, teacher, onSelectClass }) {
                   <h3 style={styles.className}>Lớp {c.name}</h3>
                 </div>
                 <div style={styles.joinCodeBox} title="Mã lớp chung">
-                  <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>MÃ LỚP</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#2563EB', letterSpacing: '0.05em' }}>{c.join_code}</span>
+                  <span style={{ fontSize: 10, color: '#84664A', fontWeight: 800 }}>MÃ LỚP</span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: '#4B3621', letterSpacing: '0.05em' }}>{c.join_code}</span>
                 </div>
               </div>
 
               <div style={styles.classStatsRow}>
                 <div style={styles.statItem}>
-                  <Users size={16} color="#2563EB" />
+                  <Users size={16} color="#84664A" />
                   <span><strong>{c.active_students_count || 0}</strong> học sinh</span>
                 </div>
                 <div style={styles.statItem}>
-                  <BookOpen size={16} color="#10B981" />
+                  <BookOpen size={16} color="#047857" />
                   <span><strong>{c.published_assignments_count || 0}</strong> bài đang mở</span>
                 </div>
               </div>
@@ -624,8 +627,8 @@ function TeacherClassesList({ token, teacher, onSelectClass }) {
               )}
 
               <div style={styles.cardFooter}>
-                <span style={{ fontSize: 13, color: '#2563EB', fontWeight: 600 }}>Vào xem lớp</span>
-                <ChevronRight size={16} color="#2563EB" />
+                <span style={{ fontSize: 13, color: '#9A5B00', fontWeight: 800 }}>Vào xem lớp</span>
+                <ChevronRight size={16} color="#9A5B00" />
               </div>
             </div>
           ))}
@@ -773,6 +776,7 @@ function TeacherClassDetail({ token, classId, onBack }) {
   const [cls, setCls] = useState(null);
   const [tab, setTab] = useState('assignments'); // 'assignments' | 'students' | 'announcements' | 'settings'
   const [loading, setLoading] = useState(true);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   useEffect(() => {
     loadClassData();
@@ -796,8 +800,10 @@ function TeacherClassDetail({ token, classId, onBack }) {
   }
 
   if (loading || !cls) {
-    return <p style={{ color: '#64748B', padding: 20 }}>Đang mở lớp học...</p>;
+    return <p style={{ color: '#84664A', padding: 20 }}>Đang mở lớp học...</p>;
   }
+
+  const joinLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/vao-lop/${cls.join_code}`;
 
   return (
     <div>
@@ -810,34 +816,52 @@ function TeacherClassDetail({ token, classId, onBack }) {
       {/* Class Banner Card */}
       <div style={styles.classBanner}>
         <div>
-          <span style={styles.gradeBadge}>Khối {cls.grade} · {cls.school_year}</span>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1E293B', margin: '4px 0' }}>
+          <span style={styles.gradeBadge}>Khối {cls.grade} · {cls.school_year || '2026-2027'}</span>
+          <h2 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 24, fontWeight: 700, color: '#4B3621', margin: '4px 0' }}>
             Lớp {cls.name}
           </h2>
-          <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>{cls.school_name}</p>
+          <p style={{ fontSize: 13, color: '#84664A', margin: 0 }}>{cls.school_name}</p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <div style={styles.joinCodeBoxLarge}>
-            <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>MÃ LỚP CHUNG</span>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#2563EB', letterSpacing: '0.08em' }}>{cls.join_code}</span>
+            <span style={{ fontSize: 10, color: '#84664A', fontWeight: 800, letterSpacing: '0.5px' }}>MÃ LỚP CHUNG</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#4B3621', letterSpacing: '0.08em' }}>{cls.join_code}</span>
           </div>
           <button
+            type="button"
+            style={styles.qrBtn}
+            onClick={() => setShowQrModal(true)}
+            title="In hoặc chiếu mã QR trong buổi họp phụ huynh"
+          >
+            <QrCode size={16} /> Mã QR
+          </button>
+          <button
+            type="button"
             style={styles.shareZaloBtn}
             onClick={() => {
-              const text = `Cô giáo mời phụ huynh kết nối vào Lớp ${cls.name} trên ứng dụng Kèm Con Học. Mã lớp: ${cls.join_code}`;
+              const text = `Phụ huynh lớp ${cls.name} bấm link để kết nối con vào lớp trên Kèm Con Học: ${joinLink}`;
               if (navigator.share) {
-                navigator.share({ title: `Lớp ${cls.name}`, text, url: window.location.origin });
+                navigator.share({ title: `Lớp ${cls.name}`, text, url: joinLink });
               } else {
                 navigator.clipboard.writeText(text);
                 toast('Đã copy tin nhắn gửi phụ huynh Zalo', 'success');
               }
             }}
           >
-            <Share2 size={16} /> Gửi qua Zalo
+            <Share2 size={16} /> ↗ Gửi qua Zalo
           </button>
         </div>
       </div>
+
+      {showQrModal && (
+        <QrCodeModal
+          url={joinLink}
+          title={`Mã QR Lớp ${cls.name}`}
+          sub={`Trường ${cls.school_name || ''} · Khối ${cls.grade} · Chiếu hoặc in trong buổi họp`}
+          onClose={() => setShowQrModal(false)}
+        />
+      )}
 
       {/* Class Navigation Tabs */}
       <div style={styles.tabsRow}>
@@ -1115,7 +1139,7 @@ function CreateAssignmentModal({ token, classId, cls, onClose, onCreated }) {
             {items.map((it, idx) => (
               <div key={idx} style={styles.itemBox}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#2563EB' }}>Câu {idx + 1}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#9A5B00' }}>Câu {idx + 1}</span>
                   {items.length > 1 && (
                     <button type="button" style={{ ...styles.iconBtn, color: '#DC2626' }} onClick={() => removeItem(idx)}>
                       <X size={14} />
@@ -1274,7 +1298,7 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
         {data.items?.map((it) => (
           <div key={it.item_id} style={styles.itemResultCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontWeight: 700, color: '#2563EB' }}>Câu {it.position}</span>
+              <span style={{ fontWeight: 800, color: '#9A5B00' }}>Câu {it.position}</span>
               <span style={{ fontSize: 12, color: '#64748B' }}>Đã làm: {it.done_count || 0} em</span>
             </div>
             <p style={{ fontSize: 13, color: '#334155', margin: '0 0 8px 0' }}>{it.problem_text}</p>
@@ -1431,12 +1455,19 @@ function TeacherStudentsTab({ token, classId, cls }) {
               {students.map((s, idx) => (
                 <tr key={s.id}>
                   <td style={styles.td}>{idx + 1}</td>
-                  <td style={styles.td}><strong>{s.rosterName}</strong></td>
+                  <td style={styles.td}>
+                    <strong>{s.rosterName}</strong>
+                    {s.childChangedAt && (
+                      <span style={styles.childChangedBadge} title={`Đổi lúc ${new Date(s.childChangedAt).toLocaleString('vi-VN')}`}>
+                        Phụ huynh đã đổi con
+                      </span>
+                    )}
+                  </td>
                   <td style={styles.td}>
                     {s.claimCode ? (
                       <span style={styles.codePill}>{s.claimCode}</span>
                     ) : (
-                      <span style={{ color: '#94A3B8' }}>Mã lớp chung</span>
+                      <span style={{ color: '#84664A' }}>Mã lớp chung</span>
                     )}
                   </td>
                   <td style={styles.td}>
@@ -1456,11 +1487,12 @@ function TeacherStudentsTab({ token, classId, cls }) {
                       <button
                         style={styles.copyBtn}
                         onClick={() => {
-                          navigator.clipboard.writeText(`Mã kết nối của bé ${s.rosterName}: ${s.claimCode}`);
-                          toast(`Đã copy mã của bé ${s.rosterName}`, 'success');
+                          const claimLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/vao-lop/m/${s.claimCode}`;
+                          navigator.clipboard.writeText(`Phụ huynh bé ${s.rosterName} bấm link để kết nối vào lớp trên Kèm Con Học: ${claimLink}`);
+                          toast(`Đã sao chép link riêng của bé ${s.rosterName}`, 'success');
                         }}
                       >
-                        <Copy size={12} /> Copy mã
+                        <Copy size={12} /> Link riêng
                       </button>
                     )}
                   </td>
@@ -1667,45 +1699,60 @@ function TeacherAnnouncementsTab({ token, classId }) {
     setReminderText(tpl.template);
   };
 
-  const handleSendReminder = (e) => {
+  const [viewingReadsAnn, setViewingReadsAnn] = useState(null);
+  const [readsData, setReadsData] = useState([]);
+  const [readsLoading, setReadsLoading] = useState(false);
+
+  const handleSendReminder = async (e) => {
     e.preventDefault();
     if (!reminderText.trim()) return;
 
-    // Kiểm tra giới hạn 3 lời nhắc mỗi ngày mỗi lớp
-    if (remindersSentToday >= MAX_REMINDERS_PER_DAY) {
-      toast('Gộp vào một lời nhắc nhé cô (Hôm nay đã gửi 3/3 lời nhắc)', 'error');
-      return;
-    }
-
-    const newReminder = {
-      id: `rem_${Date.now()}`,
-      class_id: classId,
-      teacher_name: 'Hạnh',
-      class_name: 'Lớp 3A',
-      message: reminderText.trim(),
-      target_date: selectedDate,
-      assignment_id: attachAssignment ? selectedAssignmentId : null,
-      created_at: new Date().toISOString(),
-      read_count: 24,
-      done_count: 19,
-      total_count: 28,
-      students: [
-        { name: 'Nguyễn Minh Anh (Mít)', status: 'done', time: '19:05' },
-        { name: 'Trần Bảo Nam', status: 'done', time: '18:40' },
-        { name: 'Lê Gia Hân', status: 'read' },
-        { name: 'Phạm Tuấn Kiệt', status: 'read' },
-        { name: 'Võ Khánh Linh', status: 'unread' },
-        { name: 'Đỗ Quang Huy', status: 'unread' },
-      ],
-    };
-
-    const updated = [newReminder, ...remindersList];
-    setRemindersList(updated);
     try {
-      localStorage.setItem('kem-con-hoc:teacher-reminders', JSON.stringify(updated));
-    } catch {}
+      const res = await fetch(`${API_BASE}/api/v1/teacher/classes/${classId}/announcements`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'Lời nhắc của cô',
+          body: reminderText.trim(),
+          kind: 'reminder',
+          remindFor: selectedDate,
+          templateId: selectedTemplate,
+          assignmentId: attachAssignment ? selectedAssignmentId : null,
+        }),
+      });
 
-    toast('Đã gửi lời nhắc việc cho 28 gia đình! 🔔', 'success');
+      const d = await res.json().catch(() => ({}));
+
+      if (res.ok && d.ok) {
+        toast('Đã gửi lời nhắc việc cho phụ huynh lớp! 🔔', 'success');
+        loadAnnouncements();
+      } else {
+        toast(d.error?.message || d.error || 'Gộp vào một lời nhắc nhé cô', 'error');
+      }
+    } catch {
+      toast('Lỗi kết nối khi gửi lời nhắc', 'error');
+    }
+  };
+
+  const handleOpenReads = async (ann) => {
+    setViewingReadsAnn(ann);
+    setReadsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/teacher/announcements/${ann.id}/reads`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok && d.ok) {
+        setReadsData(d.reads || []);
+      }
+    } catch {
+      toast('Lỗi tải danh sách đã đọc', 'error');
+    } finally {
+      setReadsLoading(false);
+    }
   };
 
   return (
@@ -2049,7 +2096,7 @@ function TeacherAnnouncementsTab({ token, classId }) {
                                 ✓ Đã nhắc con {st.time}
                               </span>
                             ) : st.status === 'read' ? (
-                              <span style={{ color: '#2563EB', fontWeight: 600, background: '#EFF6FF', padding: '2px 8px', borderRadius: 999 }}>
+                              <span style={{ color: '#9A5B00', fontWeight: 700, background: '#FFF1D6', border: '1px solid #F6C56A', padding: '2px 8px', borderRadius: 999 }}>
                                 Đã đọc
                               </span>
                             ) : (
@@ -2248,7 +2295,7 @@ function TeacherSettingsScreen({ token, teacher, onUpdateSuccess, onLogout }) {
       {/* Thư viện "Cách cô dạy" */}
       <div style={{ ...styles.card, marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <Sparkles size={18} color="#2563EB" />
+          <Sparkles size={18} color="#F6A623" />
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Thư viện "Cách cô dạy" (Dùng lại khi soạn bài)</h3>
         </div>
 
@@ -2316,18 +2363,18 @@ function TeacherSettingsScreen({ token, teacher, onUpdateSuccess, onLogout }) {
 }
 
 // ---------------------------------------------------------------------------
-// STYLES: Bento Mềm (Clean, Light, Be Vietnam Pro)
+// STYLES: CỔNG GIÁO VIÊN BẢN GẤU (Mitr + Nunito, bảng màu ấm áp #FFF8EC)
 // ---------------------------------------------------------------------------
 const styles = {
   pageWrapper: {
     minHeight: '100vh',
-    backgroundColor: '#F8FAFC',
-    fontFamily: '"Be Vietnam Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-    color: '#0F172A',
+    backgroundColor: '#FFF8EC',
+    fontFamily: '"Nunito", -apple-system, BlinkMacSystemFont, sans-serif',
+    color: '#4B3621',
   },
   header: {
     backgroundColor: '#FFFFFF',
-    borderBottom: '1px solid #E2E8F0',
+    borderBottom: '1px solid #F0DDC2',
     padding: '12px 24px',
     position: 'sticky',
     top: 0,
@@ -2343,22 +2390,24 @@ const styles = {
   logoBadge: {
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    backgroundColor: '#FFF1D6',
+    border: '1.5px solid #F0DDC2',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: 22,
   },
   brandTitle: {
+    fontFamily: '"Mitr", sans-serif',
     fontSize: 18,
     fontWeight: 700,
     margin: 0,
-    color: '#1E293B',
+    color: '#4B3621',
   },
   schoolSubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: '#84664A',
     margin: 0,
   },
   mainContainer: {
@@ -2373,14 +2422,15 @@ const styles = {
     marginBottom: 20,
   },
   sectionHeading: {
+    fontFamily: '"Mitr", sans-serif',
     fontSize: 22,
     fontWeight: 700,
-    color: '#0F172A',
+    color: '#4B3621',
     margin: '0 0 4px 0',
   },
   sectionSub: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#84664A',
     margin: 0,
   },
   classesGrid: {
@@ -2390,71 +2440,75 @@ const styles = {
   },
   classCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 20,
-    border: '1px solid #E2E8F0',
+    border: '1px solid #F0DDC2',
     cursor: 'pointer',
     transition: 'all 0.15s ease',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    boxShadow: '0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, 0.14)',
   },
   gradeBadge: {
     display: 'inline-block',
     fontSize: 11,
-    fontWeight: 600,
-    color: '#2563EB',
-    backgroundColor: '#EFF6FF',
-    padding: '2px 8px',
-    borderRadius: 6,
+    fontWeight: 800,
+    color: '#9A5B00',
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
+    padding: '3px 9px',
+    borderRadius: 999,
     marginBottom: 6,
   },
   className: {
+    fontFamily: '"Mitr", sans-serif',
     fontSize: 20,
     fontWeight: 700,
-    color: '#1E293B',
+    color: '#4B3621',
     margin: 0,
   },
   joinCodeBox: {
     textAlign: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFF8EC',
     padding: '4px 10px',
-    borderRadius: 8,
+    borderRadius: 10,
+    border: '1px solid #F0DDC2',
     display: 'flex',
     flexDirection: 'column',
   },
   joinCodeBoxLarge: {
     textAlign: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#FFF8EC',
     padding: '6px 14px',
-    borderRadius: 10,
+    borderRadius: 14,
     display: 'flex',
     flexDirection: 'column',
-    border: '1px solid #BFDBFE',
+    border: '2px dashed #F6A623',
   },
   classStatsRow: {
     display: 'flex',
     gap: 16,
     margin: '14px 0',
     paddingTop: 12,
-    borderTop: '1px solid #F1F5F9',
+    borderTop: '1px solid #F0DDC2',
   },
   statItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
     fontSize: 13,
-    color: '#475569',
+    color: '#84664A',
   },
   pendingBadge: {
-    backgroundColor: '#FEF3C7',
-    color: '#92400E',
-    padding: '6px 10px',
-    borderRadius: 8,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    padding: '6px 12px',
+    borderRadius: 12,
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 800,
     display: 'flex',
     alignItems: 'center',
     gap: 6,
     marginBottom: 10,
+    border: '1px solid #F6C56A',
   },
   cardFooter: {
     display: 'flex',
@@ -2464,31 +2518,48 @@ const styles = {
   },
   classBanner: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 24,
-    border: '1px solid #E2E8F0',
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, 0.16)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  qrBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    border: '1px solid #F6C56A',
+    borderRadius: 999,
+    padding: '9px 16px',
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: 'pointer',
   },
   shareZaloBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0068FF',
-    color: '#FFFFFF',
+    backgroundColor: '#F6A623',
+    color: '#4B3621',
     border: 'none',
-    borderRadius: 10,
-    padding: '10px 14px',
+    borderRadius: 999,
+    padding: '9px 16px',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 800,
+    boxShadow: '0 3px 0 #C47F0E',
     cursor: 'pointer',
   },
   tabsRow: {
     display: 'flex',
     gap: 8,
-    borderBottom: '1px solid #E2E8F0',
+    borderBottom: '1px solid #F0DDC2',
     paddingBottom: 8,
     marginBottom: 20,
     overflowX: 'auto',
@@ -2497,43 +2568,46 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    padding: '8px 16px',
-    borderRadius: 8,
-    border: 'none',
-    backgroundColor: 'transparent',
-    color: '#64748B',
-    fontSize: 14,
-    fontWeight: 600,
+    padding: '7px 15px',
+    borderRadius: 999,
+    border: '1px solid #F0DDC2',
+    backgroundColor: '#FFFFFF',
+    color: '#84664A',
+    fontSize: 13,
+    fontWeight: 800,
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   tabBtnActive: {
-    backgroundColor: '#EFF6FF',
-    color: '#2563EB',
+    backgroundColor: '#4B3621',
+    color: '#FFF8EC',
+    borderColor: '#4B3621',
   },
   navBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    padding: '8px 12px',
-    borderRadius: 8,
-    border: 'none',
+    padding: '8px 14px',
+    borderRadius: 999,
+    border: '1px solid transparent',
     backgroundColor: 'transparent',
-    color: '#475569',
+    color: '#84664A',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   navBtnActive: {
-    backgroundColor: '#EFF6FF',
-    color: '#2563EB',
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    border: '1px solid #F6C56A',
   },
   iconBtn: {
     width: 36,
     height: 36,
-    borderRadius: 8,
-    border: '1px solid #E2E8F0',
+    borderRadius: '50%',
+    border: '1px solid #F0DDC2',
     backgroundColor: '#FFFFFF',
-    color: '#475569',
+    color: '#84664A',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2544,13 +2618,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#2563EB',
-    color: '#FFFFFF',
+    backgroundColor: '#F6A623',
+    color: '#4B3621',
     border: 'none',
-    borderRadius: 10,
-    padding: '10px 18px',
-    fontSize: 14,
-    fontWeight: 600,
+    borderRadius: 999,
+    padding: '9px 18px',
+    fontSize: 13.5,
+    fontWeight: 800,
+    boxShadow: '0 3px 0 #C47F0E',
     cursor: 'pointer',
   },
   secondaryBtn: {
@@ -2558,39 +2633,39 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#F1F5F9',
-    color: '#334155',
-    border: '1px solid #CBD5E1',
-    borderRadius: 10,
-    padding: '10px 16px',
-    fontSize: 14,
-    fontWeight: 600,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    border: 'none',
+    borderRadius: 999,
+    padding: '9px 16px',
+    fontSize: 13,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   secondarySmallBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#EFF6FF',
-    color: '#2563EB',
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
     border: 'none',
-    borderRadius: 6,
+    borderRadius: 999,
     padding: '4px 10px',
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   aiInsightBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF3C7',
-    color: '#92400E',
-    border: '1px solid #FDE68A',
-    borderRadius: 10,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    border: '1px solid #F6C56A',
+    borderRadius: 999,
     padding: '8px 14px',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   backBtn: {
@@ -2599,95 +2674,103 @@ const styles = {
     gap: 6,
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#2563EB',
+    color: '#9A5B00',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 800,
     cursor: 'pointer',
     padding: 0,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 20,
-    border: '1px solid #E2E8F0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, 0.16)',
   },
   emptyCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: '40px 20px',
     textAlign: 'center',
-    border: '1px solid #E2E8F0',
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 5px 0 #F0DDC2',
   },
   assignmentCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 18,
     padding: 16,
-    border: '1px solid #E2E8F0',
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 4px 0 #F0DDC2',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   statusBadgeActive: {
     fontSize: 11,
-    fontWeight: 600,
-    color: '#059669',
+    fontWeight: 800,
+    color: '#047857',
     backgroundColor: '#ECFDF5',
-    padding: '2px 8px',
-    borderRadius: 6,
+    border: '1px solid #A7F3D0',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
   statusBadgeDraft: {
     fontSize: 11,
-    fontWeight: 600,
-    color: '#64748B',
-    backgroundColor: '#F1F5F9',
-    padding: '2px 8px',
-    borderRadius: 6,
+    fontWeight: 800,
+    color: '#84664A',
+    backgroundColor: '#FFF8EC',
+    border: '1px solid #F0DDC2',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
   statusBadgePending: {
     fontSize: 11,
-    fontWeight: 600,
-    color: '#D97706',
-    backgroundColor: '#FEF3C7',
-    padding: '2px 8px',
-    borderRadius: 6,
+    fontWeight: 800,
+    color: '#9A5B00',
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
   statusBadgeRejected: {
     fontSize: 11,
-    fontWeight: 600,
-    color: '#DC2626',
-    backgroundColor: '#FEE2E2',
-    padding: '2px 8px',
-    borderRadius: 6,
+    fontWeight: 800,
+    color: '#BE123C',
+    backgroundColor: '#FFF1F2',
+    border: '1px solid #FECDD3',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
   pinnedBadge: {
     fontSize: 11,
-    fontWeight: 600,
-    color: '#2563EB',
-    backgroundColor: '#EFF6FF',
-    padding: '2px 8px',
-    borderRadius: 6,
+    fontWeight: 800,
+    color: '#9A5B00',
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
   ackBadge: {
     fontSize: 11,
-    fontWeight: 600,
-    color: '#D97706',
-    backgroundColor: '#FEF3C7',
-    padding: '2px 8px',
-    borderRadius: 6,
+    fontWeight: 800,
+    color: '#9A5B00',
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
   insightBox: {
-    backgroundColor: '#FFFBEB',
-    border: '1px solid #FDE68A',
-    borderRadius: 12,
+    backgroundColor: '#FFF8EC',
+    border: '1px solid #F0DDC2',
+    borderRadius: 18,
     padding: 16,
     marginBottom: 20,
   },
   itemResultCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
-    border: '1px solid #E2E8F0',
+    border: '1px solid #F0DDC2',
   },
   breakdownRow: {
     display: 'flex',
@@ -2695,42 +2778,46 @@ const styles = {
     flexWrap: 'wrap',
   },
   tagSelf: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#059669',
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#047857',
     backgroundColor: '#ECFDF5',
+    border: '1px solid #A7F3D0',
     padding: '2px 8px',
-    borderRadius: 6,
+    borderRadius: 999,
   },
   tagHint: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#D97706',
-    backgroundColor: '#FEF3C7',
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#9A5B00',
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
     padding: '2px 8px',
-    borderRadius: 6,
+    borderRadius: 999,
   },
   tagGuided: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#2563EB',
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#1D4ED8',
     backgroundColor: '#EFF6FF',
+    border: '1px solid #BFDBFE',
     padding: '2px 8px',
-    borderRadius: 6,
+    borderRadius: 999,
   },
   badgeDone: {
     fontSize: 12,
-    fontWeight: 600,
-    color: '#059669',
+    fontWeight: 800,
+    color: '#047857',
   },
   badgeNotDone: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#84664A',
   },
   tableCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    border: '1px solid #E2E8F0',
+    borderRadius: 18,
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 5px 0 #F0DDC2',
     overflow: 'hidden',
   },
   table: {
@@ -2739,74 +2826,89 @@ const styles = {
     textAlign: 'left',
   },
   th: {
-    backgroundColor: '#F8FAFC',
-    padding: '12px 16px',
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#64748B',
-    borderBottom: '1px solid #E2E8F0',
+    backgroundColor: '#FFF8EC',
+    padding: '10px 14px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.8px',
+    textTransform: 'uppercase',
+    color: '#84664A',
+    borderBottom: '1px solid #F0DDC2',
   },
   td: {
-    padding: '12px 16px',
+    padding: '11px 14px',
     fontSize: 13,
-    color: '#334155',
-    borderBottom: '1px solid #F1F5F9',
+    color: '#4B3621',
+    borderBottom: '1px solid #F6EBD9',
   },
   codePill: {
     fontFamily: 'monospace',
-    fontWeight: 700,
-    backgroundColor: '#F1F5F9',
-    color: '#2563EB',
+    fontWeight: 800,
+    backgroundColor: '#FFF8EC',
+    color: '#4B3621',
+    border: '1px solid #F0DDC2',
     padding: '3px 8px',
-    borderRadius: 6,
+    borderRadius: 999,
     letterSpacing: '0.05em',
   },
+  childChangedBadge: {
+    display: 'inline-block',
+    marginLeft: 6,
+    fontSize: 10.5,
+    fontWeight: 800,
+    color: '#9A5B00',
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
+    padding: '2px 8px',
+    borderRadius: 999,
+  },
   approveBtn: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#047857',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: 6,
+    borderRadius: 999,
     padding: '4px 10px',
-    fontSize: 12,
-    fontWeight: 600,
+    fontSize: 11.5,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   rejectBtn: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#BE123C',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: 6,
+    borderRadius: 999,
     padding: '4px 10px',
-    fontSize: 12,
-    fontWeight: 600,
+    fontSize: 11.5,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   copyBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F1F5F9',
-    color: '#475569',
-    border: 'none',
-    borderRadius: 6,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    border: '1px solid #F6C56A',
+    borderRadius: 999,
     padding: '4px 8px',
     fontSize: 11,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   noteItem: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFF8EC',
     padding: '10px 14px',
-    borderRadius: 10,
-    border: '1px solid #E2E8F0',
+    borderRadius: 14,
+    border: '1px solid #F0DDC2',
   },
   itemBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    backgroundColor: '#FFF8EC',
+    borderRadius: 14,
     padding: 12,
-    border: '1px solid #E2E8F0',
+    border: '1px solid #F0DDC2',
     marginBottom: 10,
   },
   authWrapper: {
@@ -2814,52 +2916,55 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFF8EC',
     padding: 20,
-    fontFamily: '"Be Vietnam Pro", sans-serif',
+    fontFamily: '"Nunito", sans-serif',
   },
   authCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 22,
     padding: '32px 28px',
     width: '100%',
     maxWidth: 440,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-    border: '1px solid #E2E8F0',
+    boxShadow: '0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, 0.16)',
+    border: '1px solid #F0DDC2',
   },
   label: {
     display: 'block',
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#475569',
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#84664A',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
     marginBottom: 4,
   },
   input: {
     width: '100%',
     boxSizing: 'border-box',
-    padding: '10px 12px',
-    borderRadius: 8,
-    border: '1px solid #CBD5E1',
-    fontSize: 14,
-    color: '#1E293B',
+    padding: '9px 12px',
+    borderRadius: 14,
+    border: '2px solid #F0DDC2',
+    fontSize: 13.5,
+    color: '#4B3621',
     outline: 'none',
     fontFamily: 'inherit',
+    backgroundColor: '#FFFFFF',
   },
   linkBtn: {
     background: 'none',
     border: 'none',
-    color: '#2563EB',
+    color: '#9A5B00',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   infoBox: {
-    backgroundColor: '#EFF6FF',
-    border: '1px solid #BFDBFE',
-    borderRadius: 10,
+    backgroundColor: '#FFF1D6',
+    border: '1px solid #F6C56A',
+    borderRadius: 14,
     padding: 12,
-    fontSize: 13,
-    color: '#1E40AF',
+    fontSize: 12.5,
+    color: '#9A5B00',
     lineHeight: 1.5,
   },
   modalBackdrop: {
@@ -2868,7 +2973,8 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    backgroundColor: 'rgba(75, 54, 33, 0.5)',
+    backdropFilter: 'blur(3px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2877,11 +2983,12 @@ const styles = {
   },
   modalBox: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 22,
     padding: 24,
     width: '100%',
     maxWidth: 520,
-    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+    boxShadow: '0 20px 40px rgba(75, 54, 33, 0.25)',
+    border: '2px solid #F0DDC2',
   },
   modalHeader: {
     display: 'flex',
@@ -2895,15 +3002,15 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    fontFamily: '"Be Vietnam Pro", sans-serif',
+    backgroundColor: '#FFF8EC',
+    fontFamily: '"Nunito", sans-serif',
   },
   spinner: {
     width: 36,
     height: 36,
     borderRadius: '50%',
-    border: '3px solid #E2E8F0',
-    borderTopColor: '#2563EB',
+    border: '3px solid #F0DDC2',
+    borderTopColor: '#F6A623',
     animation: 'spin 0.8s linear infinite',
   },
 };

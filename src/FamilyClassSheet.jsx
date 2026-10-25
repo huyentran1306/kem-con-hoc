@@ -1,29 +1,86 @@
 /**
- * LỚP HỌC CỦA CON & KẾT NỐI GIÁO VIÊN (PROMPT 04)
- * Giao diện phụ huynh kết nối con vào lớp học theo Điều 20 Nghị định 13/2023/NĐ-CP
+ * LỚP HỌC CỦA CON & PHỤ HUYNH VÀO LỚP BẰNG LINK (PROMPT 11 - PHẦN C)
+ * Hỗ trợ:
+ * - 7 màn chuẩn theo mockup cong-giao-vien-ban-gau.html
+ * - Vào lớp bằng link /vao-lop/{join_code} và /vao-lop/m/{claim_code}
+ * - Chọn đúng con, hợp khối, cảnh báo lệch khối
+ * - Thêm con nhanh ngay tại màn không rời luồng
+ * - Chặn trùng (Bố & Mẹ cùng vào lớp, 1 con tối đa 5 lớp)
+ * - Đổi con trong 24 giờ khi chưa có kết quả bài làm
+ * - Nhóm lớp theo từng con trong gia đình
+ * - Tuân thủ Điều 20 Nghị định 13/2023/NĐ-CP về dữ liệu trẻ em
  */
 
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Users, Check, X, ShieldAlert, LogOut, ArrowRight, Bell } from 'lucide-react';
+import { BookOpen, Users, Check, X, ShieldAlert, LogOut, ArrowRight, Bell, AlertTriangle, RefreshCw, Plus, CheckCircle, Clock } from 'lucide-react';
 import { toast } from './utils';
+import { fetchClassPreview, joinFamilyClass, changeClassChild, leaveFamilyClass } from './api';
 
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
 
-export function FamilyClassSheet({ token, activeChild, onClose, onOpenAssignment }) {
+export function FamilyClassSheet({
+  token,
+  activeChild,
+  children: familyKids = [],
+  onAddChild,
+  initialCode = '',
+  initialType = 'class', // 'class' | 'claim'
+  onClose,
+  onOpenAssignment,
+}) {
+  const kidsList = Array.isArray(familyKids) && familyKids.length > 0
+    ? familyKids
+    : activeChild ? [activeChild] : [{ id: 'na', name: 'Bé', grade: 'Lớp 3' }];
+
+  const [mode, setMode] = useState(initialCode ? 'join' : 'classes'); // 'classes' | 'join'
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [code, setCode] = useState('');
+
+  // Join flow state
+  const [code, setCode] = useState(initialCode ? initialCode.toUpperCase() : '');
+  const [classPreview, setClassPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+
+  // Child selection
+  const [selectedChildId, setSelectedChildId] = useState(
+    kidsList.length === 1 ? kidsList[0].id : (activeChild?.id || kidsList[0].id)
+  );
+  const [gradeWarningDismissed, setGradeWarningDismissed] = useState(false);
+  const [showInlineAddChild, setShowInlineAddChild] = useState(false);
+  const [newChildName, setNewChildName] = useState('');
+  const [newChildGrade, setNewChildGrade] = useState('Lớp 3');
+
+  // Roster Name & Consents
   const [rosterName, setRosterName] = useState('');
   const [parentConsent, setParentConsent] = useState(false);
   const [childConsent, setChildConsent] = useState(false);
   const [joining, setJoining] = useState(false);
 
+  // Result state
+  const [joinSuccess, setJoinSuccess] = useState(null); // { status, className, teacherName, childName }
+  const [duplicateInfo, setDuplicateInfo] = useState(null); // { linkedBy, linkedAt, childName, status }
+
+  // Change child modal (24h rule)
+  const [changingClassStudent, setChangingClassStudent] = useState(null);
+  const [targetChildId, setTargetChildId] = useState('');
+  const [changingChildLoading, setChangingChildLoading] = useState(false);
+
   useEffect(() => {
     loadClasses();
   }, [token]);
 
+  useEffect(() => {
+    if (initialCode) {
+      handleCheckCode(initialCode);
+    }
+  }, [initialCode]);
+
   async function loadClasses() {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/v1/family/classes`, {
@@ -40,46 +97,115 @@ export function FamilyClassSheet({ token, activeChild, onClose, onOpenAssignment
     }
   }
 
-  async function handleJoin(e) {
-    e.preventDefault();
+  // Parse numerical grade from "Lớp 3", "Khối 3", "3", etc.
+  function parseGrade(g) {
+    if (!g) return null;
+    const m = String(g).match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  async function handleCheckCode(codeToCheck) {
+    const clean = (codeToCheck || code).trim().toUpperCase();
+    if (!clean) return;
+    setPreviewLoading(true);
+    setPreviewError('');
+    setClassPreview(null);
+    setDuplicateInfo(null);
+    setJoinSuccess(null);
+
+    try {
+      const data = await fetchClassPreview(clean);
+      if (data && data.ok && data.class) {
+        setClassPreview(data.class);
+        if (data.class.prefillName) {
+          setRosterName(data.class.prefillName);
+        }
+        // Auto-match child with same grade if multiple kids exist
+        const classGrade = parseGrade(data.class.grade);
+        const matchKid = kidsList.find((k) => parseGrade(k.grade) === classGrade);
+        if (matchKid) {
+          setSelectedChildId(matchKid.id);
+        }
+      } else {
+        setPreviewError(data?.error?.message || data?.error || 'Mã lớp không hợp lệ hoặc đã hết hạn');
+      }
+    } catch (e) {
+      setPreviewError('Lỗi kiểm tra mã lớp, vui lòng thử lại');
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  // Check if selected child is already in this class
+  const selectedChild = kidsList.find((k) => k.id === selectedChildId) || kidsList[0];
+  const classGradeNum = classPreview ? parseGrade(classPreview.grade) : null;
+  const childGradeNum = selectedChild ? parseGrade(selectedChild.grade) : null;
+  const isGradeMismatch = Boolean(classGradeNum && childGradeNum && classGradeNum !== childGradeNum);
+
+  // Check duplicate in locally loaded classes
+  const existingLink = classPreview
+    ? classes.find((c) => c.class_id === classPreview.id && c.child_id === selectedChildId)
+    : null;
+
+  async function handleJoinSubmit(e) {
+    if (e) e.preventDefault();
+    if (!classPreview) return;
     const cleanCode = code.trim().toUpperCase();
-    if (!cleanCode) return;
 
     if (!parentConsent || !childConsent) {
       toast('Vui lòng đánh dấu cả 2 ô đồng ý theo quy định bảo vệ trẻ em', 'warn');
       return;
     }
 
-    setJoining(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/family/classes/join`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: cleanCode,
-          childId: activeChild?.id || 'na',
-          rosterName: rosterName.trim() || activeChild?.name || 'Bé',
-          consent: parentConsent,
-          childConsent: childConsent,
-        }),
+    if (existingLink) {
+      setDuplicateInfo({
+        childName: selectedChild?.name,
+        linkedBy: existingLink.linked_by_name || 'Phụ huynh',
+        linkedAt: existingLink.linked_at ? new Date(existingLink.linked_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'hôm nay',
+        status: existingLink.status,
       });
-      const data = await res.json();
-      if (res.ok && data.ok) {
-        if (data.status === 'active') {
-          toast(`Đã kết nối bé vào Lớp ${data.class?.name || ''}!`, 'success');
-        } else {
-          toast(`Đã gửi yêu cầu vào Lớp ${data.class?.name || ''}, đang chờ cô duyệt`, 'info');
-        }
-        setCode('');
-        setRosterName('');
-        setParentConsent(false);
-        setChildConsent(false);
-        loadClasses();
+      return;
+    }
+
+    setJoining(true);
+    setDuplicateInfo(null);
+
+    try {
+      const payload = {
+        token,
+        childId: selectedChildId,
+        rosterName: rosterName.trim() || selectedChild?.name || 'Bé',
+        consent: parentConsent,
+        childConsent: childConsent,
+      };
+
+      if (classPreview.type === 'claim' || cleanCode.includes('-')) {
+        payload.claimCode = cleanCode;
       } else {
-        toast(data.error?.message || 'Không thể vào lớp', 'error');
+        payload.code = cleanCode;
+      }
+
+      const res = await joinFamilyClass(payload);
+
+      if (res.ok) {
+        setJoinSuccess({
+          status: res.status,
+          className: res.class?.name || classPreview.name,
+          teacherName: res.class?.teacher_name || classPreview.teacher_name,
+          childName: selectedChild?.name,
+        });
+        toast(res.status === 'active' ? 'Đã kết nối vào lớp!' : 'Đã gửi yêu cầu vào lớp cho cô duyệt', 'success');
+        loadClasses();
+      } else if (res.status === 409) {
+        // Duplicate detection from server
+        setDuplicateInfo({
+          childName: selectedChild?.name,
+          linkedBy: res.linkedBy || 'Phụ huynh',
+          linkedAt: res.linkedAt ? new Date(res.linkedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'hôm nay',
+          status: res.statusText || 'active',
+        });
+      } else {
+        toast(res.error?.message || res.error || 'Không thể vào lớp', 'error');
       }
     } catch {
       toast('Lỗi kết nối máy chủ', 'error');
@@ -88,144 +214,610 @@ export function FamilyClassSheet({ token, activeChild, onClose, onOpenAssignment
     }
   }
 
-  async function handleLeaveClass(classStudentId, className) {
-    const deleteOld = confirm(`Rời Lớp ${className}? Bấm OK nếu muốn xoá kết quả cũ của con ở lớp này.`);
+  async function handleInlineAddChild(e) {
+    e.preventDefault();
+    const name = newChildName.trim();
+    if (!name) return;
+
+    const newId = `kid_${Date.now()}`;
+    const newKid = {
+      id: newId,
+      name,
+      grade: newChildGrade,
+      emoji: '👶',
+    };
+
+    if (onAddChild) {
+      onAddChild(newKid);
+    }
+    kidsList.push(newKid);
+    setSelectedChildId(newId);
+    setShowInlineAddChild(false);
+    setNewChildName('');
+    toast(`Đã thêm bé ${name}!`, 'success');
+  }
+
+  async function handleLeave(classStudentId, className) {
+    const ok = confirm(`Rời Lớp ${className}? Con sẽ không còn nhận bài tập từ lớp này nữa.`);
+    if (!ok) return;
+
     try {
-      const res = await fetch(`${API_BASE}/api/v1/family/classes/${classStudentId}?deleteResults=${deleteOld ? '1' : '0'}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await leaveFamilyClass({ token, classStudentId, deleteResults: false });
       if (res.ok) {
         toast(`Đã rời Lớp ${className}`, 'info');
         loadClasses();
+      } else {
+        toast(res.error?.message || 'Lỗi rời lớp', 'error');
       }
     } catch {
-      toast('Lỗi rời lớp', 'error');
+      toast('Lỗi kết nối khi rời lớp', 'error');
     }
   }
 
+  async function handleChangeChildConfirm() {
+    if (!changingClassStudent || !targetChildId) return;
+    setChangingChildLoading(true);
+
+    try {
+      const res = await changeClassChild({
+        token,
+        classStudentId: changingClassStudent.class_student_id,
+        childId: targetChildId,
+      });
+
+      if (res.ok) {
+        toast('Đã đổi con thành công!', 'success');
+        setChangingClassStudent(null);
+        setTargetChildId('');
+        loadClasses();
+      } else {
+        toast(res.error?.message || res.error || 'Không thể đổi con', 'error');
+      }
+    } catch {
+      toast('Lỗi khi đổi con', 'error');
+    } finally {
+      setChangingChildLoading(false);
+    }
+  }
+
+  // Calculate 24h remaining
+  function getHoursRemaining(linkedAt) {
+    if (!linkedAt) return null;
+    const diffMs = 24 * 3600 * 1000 - (Date.now() - new Date(linkedAt).getTime());
+    if (diffMs <= 0) return null;
+    return Math.ceil(diffMs / (3600 * 1000));
+  }
+
   return (
-    <div style={styles.sheetContent}>
-      <div style={styles.headerRow}>
-        <div>
-          <h3 style={styles.title}>🏫 Lớp học của con</h3>
-          <p style={styles.sub}>Kết nối với cô giáo để nhận bài tập và học đúng phương pháp ở lớp</p>
+    <div style={styles.sheetWrap}>
+      {/* Top Header */}
+      <div style={styles.header}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={styles.iconCircle}>🏫</div>
+          <div>
+            <h3 style={styles.title}>
+              {mode === 'join' ? 'Vào lớp của cô' : 'Lớp học của con'}
+            </h3>
+            <p style={styles.sub}>
+              {mode === 'join'
+                ? 'Nhập mã do cô giáo cung cấp để kết nối'
+                : 'Theo dõi bài tập và thông báo từ cô giáo ở trường'}
+            </p>
+          </div>
         </div>
         <button style={styles.closeBtn} onClick={onClose}><X size={18} /></button>
       </div>
 
-      {/* Form Kết nối vào lớp */}
-      <div style={styles.joinCard}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: 15, fontWeight: 700, color: '#1E293B' }}>
-          Kết nối vào lớp mới
-        </h4>
-
-        <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div>
-            <label style={styles.label}>Mã lớp chung (6 ký tự) hoặc Mã học sinh riêng (XXX-XXX)</label>
-            <input
-              style={styles.input}
-              placeholder="Ví dụ: 3A8K2M hoặc CB8-S7F"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              required
-            />
-          </div>
-
-          <div>
-            <label style={styles.label}>Tên của con trong danh sách lớp</label>
-            <input
-              style={styles.input}
-              placeholder={activeChild?.name ? `Ví dụ: ${activeChild.name}` : "Ví dụ: Trần Bảo Ngọc"}
-              value={rosterName}
-              onChange={(e) => setRosterName(e.target.value)}
-            />
-          </div>
-
-          {/* Hai ô đồng ý bắt buộc theo Điều 20 Nghị định 13/2023/NĐ-CP */}
-          <div style={styles.consentBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <ShieldAlert size={15} color="#2563EB" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#1E40AF' }}>
-                Tuân thủ Điều 20 Nghị định 13/2023/NĐ-CP về dữ liệu trẻ em
-              </span>
-            </div>
-
-            <label style={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={parentConsent}
-                onChange={(e) => setParentConsent(e.target.checked)}
-              />
-              <span>Tôi là phụ huynh, đồng ý cho con tham gia lớp và chia sẻ kết quả làm bài với giáo viên.</span>
-            </label>
-
-            <label style={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={childConsent}
-                onChange={(e) => setChildConsent(e.target.checked)}
-              />
-              <span>Con đã được bố mẹ giải thích và đồng ý tham gia lớp học này cùng cô giáo.</span>
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={joining || !parentConsent || !childConsent}
-            style={{
-              ...styles.primaryBtn,
-              opacity: parentConsent && childConsent ? 1 : 0.6,
-            }}
-          >
-            {joining ? 'Đang kết nối...' : 'Tham gia lớp học'}
-          </button>
-        </form>
+      {/* Navigation tabs */}
+      <div style={styles.navRow}>
+        <button
+          style={{ ...styles.navTab, ...(mode === 'classes' ? styles.navTabActive : {}) }}
+          onClick={() => { setMode('classes'); setJoinSuccess(null); }}
+        >
+          Lớp đang học ({classes.length})
+        </button>
+        <button
+          style={{ ...styles.navTab, ...(mode === 'join' ? styles.navTabActive : {}) }}
+          onClick={() => setMode('join')}
+        >
+          ＋ Vào lớp mới
+        </button>
       </div>
 
-      {/* Danh sách lớp đã kết nối */}
-      <h4 style={{ fontSize: 15, fontWeight: 700, margin: '20px 0 10px 0', color: '#1E293B' }}>
-        Các lớp bé đang học ({classes.length})
-      </h4>
+      {/* ========================================================
+          MODE 1: LỚP HỌC CỦA CON (Grouped by Child)
+          ======================================================== */}
+      {mode === 'classes' && (
+        <div style={styles.bodyScroll}>
+          {loading ? (
+            <p style={{ color: '#8A6A4A', textAlign: 'center', padding: 20 }}>Đang tải danh sách lớp...</p>
+          ) : classes.length === 0 ? (
+            <div style={styles.emptyCard}>
+              <div style={{ fontSize: 44, marginBottom: 8 }}>🎒</div>
+              <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '0 0 6px 0' }}>
+                Bé chưa kết nối vào lớp nào
+              </h4>
+              <p style={{ fontSize: 13, color: '#8A6A4A', margin: '0 0 16px 0' }}>
+                Cô giáo sẽ gửi mã lớp hoặc link vào nhóm Zalo. Mẹ chỉ cần nhập mã hoặc bấm vào link là xong nhé!
+              </p>
+              <button style={styles.btnPrimary} onClick={() => setMode('join')}>
+                ＋ Vào lớp bằng mã hoặc link
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Group classes by child */}
+              {kidsList.map((kid) => {
+                const kidClasses = classes.filter((c) => c.child_id === kid.id);
+                return (
+                  <div key={kid.id} style={styles.kidGroup}>
+                    {/* Kid Header */}
+                    <div style={styles.kidGroupHeader}>
+                      <span style={{ fontSize: 22 }}>{kid.emoji || '🧒'}</span>
+                      <strong style={{ fontSize: 15, color: '#4B3621' }}>{kid.name}</strong>
+                      <span style={styles.kidGradeTag}>{kid.grade || 'Tiểu học'}</span>
+                    </div>
 
-      {loading ? (
-        <p style={{ color: '#64748B', fontSize: 13 }}>Đang tải danh sách lớp...</p>
-      ) : classes.length === 0 ? (
-        <div style={styles.emptyCard}>
-          <p style={{ color: '#64748B', margin: 0, fontSize: 13 }}>
-            Bé chưa kết nối vào lớp nào. Hãy nhập mã do cô giáo cung cấp ở trên nhé.
-          </p>
+                    {kidClasses.length === 0 ? (
+                      <div style={styles.kidNoClass}>
+                        <span>Chưa có lớp nào kết nối với {kid.name}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {kidClasses.map((cls) => {
+                          const hoursLeft = getHoursRemaining(cls.linked_at);
+                          const canChangeChild = hoursLeft !== null && (cls.completed_items || 0) === 0;
+
+                          return (
+                            <div key={cls.class_student_id} style={styles.classCard}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                  <strong style={{ fontSize: 15, color: '#4B3621' }}>
+                                    Lớp {cls.class_name} · cô {cls.teacher_name}
+                                  </strong>
+                                </div>
+                                <div style={{ fontSize: 12, color: '#8A6A4A' }}>
+                                  {cls.school_name || 'Trường tiểu học'} · Khối {cls.grade}
+                                  {cls.roster_name && ` · Tên: ${cls.roster_name}`}
+                                </div>
+
+                                {cls.status === 'rejected' && cls.reject_reason && (
+                                  <div style={styles.rejectNotice}>
+                                    ⚠️ Lý do cô từ chối: "{cls.reject_reason}"
+                                  </div>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                                {/* Status Pill */}
+                                {cls.status === 'active' && (
+                                  <span style={{ ...styles.statusPill, ...styles.pillOk }}>Đã kết nối</span>
+                                )}
+                                {cls.status === 'pending' && (
+                                  <span style={{ ...styles.statusPill, ...styles.pillWait }}>Chờ duyệt</span>
+                                )}
+                                {cls.status === 'rejected' && (
+                                  <span style={{ ...styles.statusPill, ...styles.pillNo }}>Bị từ chối</span>
+                                )}
+
+                                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
+                                  {/* Đổi con trong 24h button */}
+                                  {canChangeChild && (
+                                    <button
+                                      type="button"
+                                      style={styles.changeChildBtn}
+                                      onClick={() => {
+                                        setChangingClassStudent(cls);
+                                        const otherKid = kidsList.find((k) => k.id !== cls.child_id);
+                                        setTargetChildId(otherKid ? otherKid.id : '');
+                                      }}
+                                      title="Đổi sang con khác trong gia đình (trong vòng 24 giờ)"
+                                    >
+                                      <RefreshCw size={11} /> Đổi con · còn {hoursLeft}h
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    style={styles.leaveClassBtn}
+                                    onClick={() => handleLeave(cls.class_student_id, cls.class_name)}
+                                    title="Rời lớp này"
+                                  >
+                                    <LogOut size={11} /> Rời lớp
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Bottom action button */}
+              <button
+                type="button"
+                style={styles.btnPrimary}
+                onClick={() => setMode('join')}
+              >
+                ＋ Vào lớp bằng mã hoặc link
+              </button>
+            </div>
+          )}
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {classes.map((c) => (
-            <div key={c.class_student_id} style={styles.classItem}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <span style={styles.gradeBadge}>Khối {c.grade}</span>
-                  <span style={c.status === 'active' ? styles.statusActive : styles.statusPending}>
-                    {c.status === 'active' ? 'Đang học' : 'Chờ cô duyệt'}
-                  </span>
-                </div>
-                <h5 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 2px 0' }}>
-                  Lớp {c.class_name} · {c.school_name}
-                </h5>
-                <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
-                  Giáo viên: <strong>{c.teacher_name}</strong> · Tên con: {c.roster_name}
-                </p>
-              </div>
+      )}
 
-              <div>
+      {/* ========================================================
+          MODE 2: VÀO LỚP FLOW (7 Màn chuẩn)
+          ======================================================== */}
+      {mode === 'join' && (
+        <div style={styles.bodyScroll}>
+          {/* SUCCESS SCREEN */}
+          {joinSuccess ? (
+            <div style={styles.successBox}>
+              <div style={{ fontSize: 52, marginBottom: 8 }}>📨</div>
+              <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: '#4B3621', margin: '0 0 6px 0' }}>
+                {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi cô ${joinSuccess.teacherName} duyệt`}
+              </h3>
+              <p style={{ fontSize: 13, color: '#8A6A4A', maxWidth: 320, margin: '0 auto 16px auto' }}>
+                Cô duyệt xong, bài cô giao sẽ hiện ở màn chính của <strong>{joinSuccess.childName}</strong>.
+              </p>
+
+              {/* Sinh đôi / con khác trong nhà prompt */}
+              <div style={styles.siblingPromptCard}>
+                <div style={{ fontWeight: 800, color: '#4B3621', fontSize: 13, marginBottom: 4 }}>
+                  Nhà còn con khác học Lớp {joinSuccess.className} không?
+                </div>
+                <div style={{ fontSize: 12, color: '#8A6A4A', marginBottom: 12 }}>
+                  Ví dụ anh chị em sinh đôi hoặc học chung lớp
+                </div>
                 <button
-                  style={styles.leaveBtn}
-                  onClick={() => handleLeaveClass(c.class_student_id, c.class_name)}
-                  title="Rời lớp học này"
+                  type="button"
+                  style={styles.btnSecondary}
+                  onClick={() => {
+                    setJoinSuccess(null);
+                    setDuplicateInfo(null);
+                    // Select another kid
+                    const otherKid = kidsList.find((k) => k.name !== joinSuccess.childName);
+                    if (otherKid) setSelectedChildId(otherKid.id);
+                  }}
                 >
-                  <LogOut size={14} /> Rời lớp
+                  ＋ Chọn thêm con
                 </button>
               </div>
+
+              <button
+                type="button"
+                style={{ ...styles.btnPrimary, marginTop: 12 }}
+                onClick={() => {
+                  setJoinSuccess(null);
+                  setMode('classes');
+                }}
+              >
+                Xong
+              </button>
             </div>
-          ))}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Form nhập mã lớp nếu chưa có preview */}
+              {!classPreview && (
+                <div style={styles.card}>
+                  <label style={styles.label}>Nhập Mã lớp chung (6 ký tự) hoặc Mã riêng (XXX-XXX)</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      style={styles.input}
+                      placeholder="Ví dụ: ND9QR7 hoặc CB8-S7F"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCheckCode()}
+                    />
+                    <button
+                      type="button"
+                      style={styles.checkBtn}
+                      onClick={() => handleCheckCode()}
+                      disabled={previewLoading || !code.trim()}
+                    >
+                      {previewLoading ? '...' : 'Kiểm tra'}
+                    </button>
+                  </div>
+                  {previewError && (
+                    <div style={styles.errorText}>⚠️ {previewError}</div>
+                  )}
+                </div>
+              )}
+
+              {/* PREVIEW CARD: THẺ LỚP */}
+              {classPreview && (
+                <div style={styles.classPreviewCard}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <span style={styles.previewTag}>Khối {classPreview.grade} · {classPreview.school_year || '2026-2027'}</span>
+                      <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '4px 0 2px 0' }}>
+                        Lớp {classPreview.name} · cô {classPreview.teacher_name}
+                      </h4>
+                      <p style={{ fontSize: 12, color: '#8A6A4A', margin: 0 }}>
+                        {classPreview.school_name} · Mã: <strong>{classPreview.join_code || code}</strong>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      style={styles.changeCodeBtn}
+                      onClick={() => { setClassPreview(null); setDuplicateInfo(null); }}
+                    >
+                      Đổi mã
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* DUPLICATE WARNING BANNER (Bố mở cùng link mẹ đã kết nối) */}
+              {duplicateInfo && (
+                <div style={styles.duplicateBanner}>
+                  <div style={{ fontSize: 24, marginBottom: 4 }}>ℹ️</div>
+                  <strong style={{ fontSize: 13, color: '#1E40AF' }}>
+                    {duplicateInfo.linkedBy || 'Phụ huynh'} đã kết nối {duplicateInfo.childName} vào lớp này
+                  </strong>
+                  <div style={{ fontSize: 12, color: '#3B82F6', marginTop: 2 }}>
+                    lúc {duplicateInfo.linkedAt} · không cần kết nối lại
+                  </div>
+                  <button
+                    type="button"
+                    style={{ ...styles.btnSecondary, marginTop: 10, padding: '7px 14px' }}
+                    onClick={() => { setMode('classes'); setDuplicateInfo(null); }}
+                  >
+                    Về danh sách lớp
+                  </button>
+                </div>
+              )}
+
+              {/* CHỌN CON */}
+              {classPreview && !duplicateInfo && (
+                <div style={styles.card}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <label style={styles.label}>Con nào học lớp này?</label>
+                    <button
+                      type="button"
+                      style={styles.inlineAddBtn}
+                      onClick={() => setShowInlineAddChild(!showInlineAddChild)}
+                    >
+                      ＋ Thêm con
+                    </button>
+                  </div>
+
+                  {/* Inline Add Child Form */}
+                  {showInlineAddChild && (
+                    <form onSubmit={handleInlineAddChild} style={styles.inlineAddForm}>
+                      <strong style={{ fontSize: 12, color: '#4B3621' }}>Thêm nhanh con vào gia đình:</strong>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                        <input
+                          style={{ ...styles.input, flex: 2 }}
+                          placeholder="Tên con (VD: Bon)"
+                          value={newChildName}
+                          onChange={(e) => setNewChildName(e.target.value)}
+                          required
+                        />
+                        <select
+                          style={{ ...styles.input, flex: 1 }}
+                          value={newChildGrade}
+                          onChange={(e) => setNewChildGrade(e.target.value)}
+                        >
+                          <option value="Lớp 1">Lớp 1</option>
+                          <option value="Lớp 2">Lớp 2</option>
+                          <option value="Lớp 3">Lớp 3</option>
+                          <option value="Lớp 4">Lớp 4</option>
+                          <option value="Lớp 5">Lớp 5</option>
+                        </select>
+                        <button type="submit" style={styles.checkBtn}>Lưu</button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Kids List Cards */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {kidsList.map((kid) => {
+                      const isSelected = kid.id === selectedChildId;
+                      const isMatch = parseGrade(kid.grade) === classGradeNum;
+                      const alreadyInClass = classes.some((c) => c.class_id === classPreview.id && c.child_id === kid.id);
+
+                      return (
+                        <div
+                          key={kid.id}
+                          onClick={() => {
+                            if (!alreadyInClass) {
+                              setSelectedChildId(kid.id);
+                              setGradeWarningDismissed(false);
+                            }
+                          }}
+                          style={{
+                            ...styles.kidCard,
+                            ...(isSelected ? styles.kidCardActive : {}),
+                            ...(alreadyInClass ? styles.kidCardDisabled : {}),
+                          }}
+                        >
+                          <span style={{ fontSize: 24 }}>{kid.emoji || '🧒'}</span>
+                          <div style={{ flex: 1 }}>
+                            <strong style={{ fontSize: 14, color: '#4B3621' }}>{kid.name}</strong>
+                            <div style={{ fontSize: 11.5, color: '#8A6A4A' }}>{kid.grade || 'Lớp 3'}</div>
+                          </div>
+
+                          {isMatch && !alreadyInClass && (
+                            <span style={styles.matchGradeTag}>Hợp khối {classGradeNum}</span>
+                          )}
+
+                          {alreadyInClass && (
+                            <span style={styles.alreadyInClassTag}>Đã ở lớp này</span>
+                          )}
+
+                          {isSelected && !alreadyInClass && (
+                            <div style={styles.selectedCheck}>✓</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* GRADE MISMATCH WARNING MODAL / CARD */}
+                  {isGradeMismatch && !gradeWarningDismissed && (
+                    <div style={styles.gradeMismatchWarning}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <AlertTriangle size={20} color="#D97706" style={{ flexShrink: 0 }} />
+                        <div style={{ fontSize: 12.5, color: '#92400E', lineHeight: 1.4 }}>
+                          <strong>{selectedChild?.name}</strong> đang ghi <strong>{selectedChild?.grade}</strong>, lớp này là <strong>khối {classGradeNum}</strong>.
+                          <br />Đúng con chưa mẹ?
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                        {kidsList.find((k) => parseGrade(k.grade) === classGradeNum) && (
+                          <button
+                            type="button"
+                            style={styles.btnSecondary}
+                            onClick={() => {
+                              const matchKid = kidsList.find((k) => parseGrade(k.grade) === classGradeNum);
+                              if (matchKid) setSelectedChildId(matchKid.id);
+                            }}
+                          >
+                            Chọn lại {kidsList.find((k) => parseGrade(k.grade) === classGradeNum)?.name}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          style={styles.confirmMismatchBtn}
+                          onClick={() => setGradeWarningDismissed(true)}
+                        >
+                          Đúng, vẫn chọn {selectedChild?.name}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tên con trong danh sách lớp */}
+                  <div style={{ marginTop: 14 }}>
+                    <label style={styles.label}>Tên của con trong danh sách lớp</label>
+                    <input
+                      style={{
+                        ...styles.input,
+                        backgroundColor: classPreview.prefillName ? '#FFF8EC' : '#FFFFFF',
+                      }}
+                      placeholder={`Ví dụ: ${selectedChild?.name || 'Nguyễn Minh Anh'}`}
+                      value={rosterName}
+                      onChange={(e) => setRosterName(e.target.value)}
+                      readOnly={Boolean(classPreview.prefillName)}
+                    />
+                    {classPreview.prefillName && (
+                      <small style={{ fontSize: 11, color: '#8A6A4A', marginTop: 3, display: 'block' }}>
+                        🔒 Tên do cô giáo nhập sẵn từ danh sách lớp
+                      </small>
+                    )}
+                  </div>
+
+                  {/* 2 Checkbox đồng ý Điều 20 Nghị định 13/2023/NĐ-CP */}
+                  <div style={styles.consentCard}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <ShieldAlert size={15} color="#9A5B00" />
+                      <strong style={{ fontSize: 11.5, color: '#9A5B00' }}>
+                        Bảo vệ dữ liệu học tập của con
+                      </strong>
+                    </div>
+
+                    <label style={styles.consentRow}>
+                      <input
+                        type="checkbox"
+                        checked={parentConsent}
+                        onChange={(e) => setParentConsent(e.target.checked)}
+                      />
+                      <span>Tôi là phụ huynh, đồng ý cho cô giáo xem kết quả bài tập của con.</span>
+                    </label>
+
+                    <label style={styles.consentRow}>
+                      <input
+                        type="checkbox"
+                        checked={childConsent}
+                        onChange={(e) => setChildConsent(e.target.checked)}
+                      />
+                      <span>Con đã được giải thích và đồng ý tham gia lớp học này.</span>
+                    </label>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.btnPrimary,
+                      marginTop: 14,
+                      opacity: parentConsent && childConsent && !joining ? 1 : 0.6,
+                    }}
+                    disabled={!parentConsent || !childConsent || joining}
+                    onClick={handleJoinSubmit}
+                  >
+                    {joining
+                      ? 'Đang kết nối...'
+                      : classPreview.type === 'claim'
+                      ? 'Vào lớp ngay'
+                      : 'Gửi cô duyệt'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: ĐỔI CON TRONG 24 GIỜ (Prompt 11 Phần C)
+          ======================================================== */}
+      {changingClassStudent && (
+        <div style={styles.modalBackdrop} onClick={() => setChangingClassStudent(null)}>
+          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 32, marginBottom: 4 }}>🔄</div>
+            <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '0 0 6px 0' }}>
+              Đổi con cho Lớp {changingClassStudent.class_name}
+            </h4>
+            <p style={{ fontSize: 12.5, color: '#8A6A4A', margin: '0 0 14px 0' }}>
+              Mẹ có thể chuyển lớp này sang con khác trong nhà trong 24 giờ đầu khi chưa nộp bài nào.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              {kidsList
+                .filter((k) => k.id !== changingClassStudent.child_id)
+                .map((kid) => (
+                  <div
+                    key={kid.id}
+                    onClick={() => setTargetChildId(kid.id)}
+                    style={{
+                      ...styles.kidCard,
+                      ...(targetChildId === kid.id ? styles.kidCardActive : {}),
+                    }}
+                  >
+                    <span style={{ fontSize: 24 }}>{kid.emoji || '🧒'}</span>
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ fontSize: 14, color: '#4B3621' }}>{kid.name}</strong>
+                      <div style={{ fontSize: 11.5, color: '#8A6A4A' }}>{kid.grade}</div>
+                    </div>
+                    {targetChildId === kid.id && <div style={styles.selectedCheck}>✓</div>}
+                  </div>
+                ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                style={styles.btnSecondary}
+                onClick={() => setChangingClassStudent(null)}
+              >
+                Huỷ
+              </button>
+              <button
+                type="button"
+                style={styles.btnPrimary}
+                disabled={!targetChildId || changingChildLoading}
+                onClick={handleChangeChildConfirm}
+              >
+                {changingChildLoading ? 'Đang đổi...' : 'Xác nhận đổi con'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -233,144 +825,408 @@ export function FamilyClassSheet({ token, activeChild, onClose, onOpenAssignment
 }
 
 const styles = {
-  sheetContent: {
-    padding: '16px 20px 32px 20px',
-    fontFamily: '"Be Vietnam Pro", -apple-system, sans-serif',
-    maxHeight: '85vh',
-    overflowY: 'auto',
+  sheetWrap: {
+    padding: '16px 18px 24px 18px',
+    fontFamily: '"Nunito", -apple-system, sans-serif',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
+    color: '#4B3621',
   },
-  headerRow: {
+  header: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    backgroundColor: '#FFF1D6',
+    border: '1.5px solid #F0DDC2',
+    display: 'grid',
+    placeItems: 'center',
+    fontSize: 18,
   },
   title: {
-    fontSize: 20,
+    fontFamily: 'Mitr, sans-serif',
+    fontSize: 18,
     fontWeight: 700,
-    margin: '0 0 4px 0',
-    color: '#1E293B',
+    margin: 0,
+    color: '#4B3621',
   },
   sub: {
-    fontSize: 13,
-    color: '#64748B',
-    margin: 0,
+    fontSize: 12,
+    color: '#8A6A4A',
+    margin: '2px 0 0 0',
   },
   closeBtn: {
     width: 32,
     height: 32,
-    borderRadius: 8,
-    border: '1px solid #E2E8F0',
+    borderRadius: '50%',
+    border: '1px solid #F0DDC2',
     backgroundColor: '#FFFFFF',
+    display: 'grid',
+    placeItems: 'center',
+    cursor: 'pointer',
+    color: '#8A6A4A',
+  },
+  navRow: {
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 14,
+    borderBottom: '1px solid #F0DDC2',
+    paddingBottom: 8,
+  },
+  navTab: {
+    padding: '6px 14px',
+    borderRadius: 999,
+    fontSize: 12.5,
+    fontWeight: 800,
+    border: '1px solid #F0DDC2',
+    backgroundColor: '#FFFFFF',
+    color: '#8A6A4A',
     cursor: 'pointer',
   },
-  joinCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 16,
-    border: '1px solid #E2E8F0',
+  navTabActive: {
+    backgroundColor: '#4B3621',
+    color: '#FFF8EC',
+    borderColor: '#4B3621',
+  },
+  bodyScroll: {
+    overflowY: 'auto',
+    maxHeight: 'calc(80vh - 120px)',
+    paddingRight: 4,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 4px 0 #F0DDC2',
   },
   label: {
     display: 'block',
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#475569',
-    marginBottom: 4,
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#8A6A4A',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
   input: {
     width: '100%',
     boxSizing: 'border-box',
     padding: '9px 12px',
-    borderRadius: 8,
-    border: '1px solid #CBD5E1',
-    fontSize: 13,
+    borderRadius: 12,
+    border: '2px solid #F0DDC2',
+    fontSize: 13.5,
     outline: 'none',
-    backgroundColor: '#FFFFFF',
+    color: '#4B3621',
+    fontWeight: 600,
   },
-  consentBox: {
+  checkBtn: {
+    padding: '0 16px',
+    borderRadius: 12,
+    background: '#F6A623',
+    color: '#4B3621',
+    fontWeight: 800,
+    fontSize: 13,
+    border: 'none',
+    cursor: 'pointer',
+    boxShadow: '0 3px 0 #C47F0E',
+    whiteSpace: 'nowrap',
+  },
+  errorText: {
+    color: '#BE123C',
+    fontSize: 12,
+    fontWeight: 700,
+    marginTop: 6,
+  },
+  classPreviewCard: {
+    backgroundColor: '#FFF8EC',
+    borderRadius: 18,
+    padding: 14,
+    border: '2px dashed #F6A623',
+  },
+  previewTag: {
+    fontSize: 10.5,
+    fontWeight: 800,
+    padding: '2px 8px',
+    borderRadius: 999,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+  },
+  changeCodeBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#9A5B00',
+    fontSize: 12,
+    fontWeight: 800,
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+  duplicateBanner: {
     backgroundColor: '#EFF6FF',
-    borderRadius: 10,
+    border: '1.5px solid #BFDBFE',
+    borderRadius: 16,
+    padding: 14,
+    textAlign: 'center',
+  },
+  inlineAddBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#9A5B00',
+    fontSize: 12,
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
+  inlineAddForm: {
+    backgroundColor: '#FFF8EC',
+    border: '1px solid #F0DDC2',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 10,
+  },
+  kidCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '10px 12px',
+    borderRadius: 14,
+    border: '2px solid #F0DDC2',
+    backgroundColor: '#FFFFFF',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  kidCardActive: {
+    borderColor: '#F6A623',
+    backgroundColor: '#FFF8EC',
+    boxShadow: '0 0 0 3px rgba(246, 166, 35, 0.2)',
+  },
+  kidCardDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
+    backgroundColor: '#F8FAFC',
+  },
+  matchGradeTag: {
+    fontSize: 11,
+    fontWeight: 800,
+    padding: '2px 8px',
+    borderRadius: 999,
+    backgroundColor: '#ECFDF5',
+    color: '#047857',
+    border: '1px solid #A7F3D0',
+  },
+  alreadyInClassTag: {
+    fontSize: 11,
+    fontWeight: 800,
+    padding: '2px 8px',
+    borderRadius: 999,
+    backgroundColor: '#F1F5F9',
+    color: '#64748B',
+  },
+  selectedCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: '50%',
+    backgroundColor: '#F6A623',
+    color: '#4B3621',
+    display: 'grid',
+    placeItems: 'center',
+    fontWeight: 900,
+    fontSize: 12,
+  },
+  gradeMismatchWarning: {
+    backgroundColor: '#FFFBEB',
+    border: '1.5px solid #FDE68A',
+    borderRadius: 14,
     padding: 12,
-    border: '1px solid #BFDBFE',
+    marginTop: 10,
+  },
+  confirmMismatchBtn: {
+    padding: '6px 12px',
+    borderRadius: 999,
+    background: '#FFFFFF',
+    color: '#92400E',
+    border: '2px dashed #FCD34D',
+    fontWeight: 800,
+    fontSize: 11.5,
+    cursor: 'pointer',
+  },
+  consentCard: {
+    backgroundColor: '#FFF8EC',
+    borderRadius: 14,
+    padding: 12,
+    border: '1px solid #F0DDC2',
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
-    marginTop: 4,
+    marginTop: 12,
   },
-  checkLabel: {
+  consentRow: {
     display: 'flex',
     alignItems: 'flex-start',
     gap: 8,
     fontSize: 12,
-    color: '#1E40AF',
+    color: '#4B3621',
     lineHeight: 1.4,
     cursor: 'pointer',
   },
-  primaryBtn: {
-    backgroundColor: '#2563EB',
-    color: '#FFFFFF',
+  btnPrimary: {
+    width: '100%',
+    padding: '11px 16px',
+    borderRadius: 999,
+    backgroundColor: '#F6A623',
+    color: '#4B3621',
     border: 'none',
-    borderRadius: 8,
-    padding: '10px 14px',
-    fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 900,
+    fontSize: 14,
     cursor: 'pointer',
-    marginTop: 6,
+    boxShadow: '0 4px 0 #C47F0E',
+    textAlign: 'center',
   },
-  classItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+  btnSecondary: {
+    padding: '8px 14px',
+    borderRadius: 999,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    border: 'none',
+    fontWeight: 800,
+    fontSize: 12.5,
+    cursor: 'pointer',
+  },
+  successBox: {
+    textAlign: 'center',
+    padding: '20px 10px',
+  },
+  siblingPromptCard: {
+    backgroundColor: '#FFF8EC',
+    border: '1px solid #F0DDC2',
+    borderRadius: 16,
     padding: 14,
-    border: '1px solid #E2E8F0',
+    margin: '16px 0',
+  },
+  emptyCard: {
+    textAlign: 'center',
+    padding: '30px 16px',
+    backgroundColor: '#FFF8EC',
+    borderRadius: 20,
+    border: '1px solid #F0DDC2',
+  },
+  kidGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+  kidGroupHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '4px 6px',
+  },
+  kidGradeTag: {
+    fontSize: 11,
+    fontWeight: 800,
+    padding: '2px 8px',
+    borderRadius: 999,
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+  },
+  kidNoClass: {
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    border: '1px dashed #F0DDC2',
+    fontSize: 12.5,
+    color: '#8A6A4A',
+    textAlign: 'center',
+  },
+  classCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 12,
+    border: '1px solid #F0DDC2',
+    boxShadow: '0 3px 0 #F0DDC2',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
   },
-  gradeBadge: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: '#2563EB',
-    backgroundColor: '#EFF6FF',
-    padding: '2px 6px',
-    borderRadius: 4,
+  statusPill: {
+    fontSize: 10.5,
+    fontWeight: 800,
+    padding: '2px 8px',
+    borderRadius: 999,
+    border: '1px solid',
+    whiteSpace: 'nowrap',
   },
-  statusActive: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: '#059669',
+  pillOk: {
     backgroundColor: '#ECFDF5',
-    padding: '2px 6px',
-    borderRadius: 4,
+    color: '#047857',
+    borderColor: '#A7F3D0',
   },
-  statusPending: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: '#D97706',
-    backgroundColor: '#FEF3C7',
-    padding: '2px 6px',
-    borderRadius: 4,
+  pillWait: {
+    backgroundColor: '#FFF1D6',
+    color: '#9A5B00',
+    borderColor: '#F6C56A',
   },
-  leaveBtn: {
+  pillNo: {
+    backgroundColor: '#FFF1F2',
+    color: '#BE123C',
+    borderColor: '#FECDD3',
+  },
+  changeChildBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'transparent',
-    color: '#DC2626',
-    border: '1px solid #FECDD3',
-    borderRadius: 6,
-    padding: '6px 10px',
-    fontSize: 11,
-    fontWeight: 600,
+    background: '#FFF1D6',
+    color: '#9A5B00',
+    border: '1px solid #F6C56A',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontSize: 10.5,
+    fontWeight: 800,
     cursor: 'pointer',
   },
-  emptyCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 24,
+  leaveClassBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    background: 'none',
+    color: '#BE123C',
+    border: '1px solid #FECDD3',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontSize: 10.5,
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  rejectNotice: {
+    fontSize: 11.5,
+    color: '#BE123C',
+    marginTop: 4,
+  },
+  modalBackdrop: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(75, 54, 33, 0.5)',
+    backdropFilter: 'blur(3px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 20,
+    maxWidth: 380,
+    width: '100%',
     textAlign: 'center',
-    border: '1px solid #E2E8F0',
+    boxShadow: '0 20px 40px rgba(75, 54, 33, 0.25)',
+    border: '2px solid #F0DDC2',
   },
 };

@@ -344,16 +344,34 @@ export function Home() {
         </div>
         {S.children.length > 1 && (
           <div className="chips" style={{ marginTop: 6, gap: 6 }}>
-            {S.children.map((c) => (
-              <button
-                key={c.id}
-                className={`chip ${c.id === S.activeId ? 'on' : ''}`}
-                style={{ padding: '3px 9px', fontSize: 12.5 }}
-                onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang bé ${c.name} ${c.emoji}`) }}
-              >
-                {c.emoji} {c.name}
-              </button>
-            ))}
+            {S.children.map((c) => {
+              const isOtherKid = c.id !== S.activeId;
+              const hasNotice = isOtherKid && ((c.unreadTeacherTasks || 0) > 0 || (c.hasReminderNotice));
+              return (
+                <button
+                  key={c.id}
+                  className={`chip ${c.id === S.activeId ? 'on' : ''}`}
+                  style={{ padding: '3px 9px', fontSize: 12.5, position: 'relative' }}
+                  onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang bé ${c.name} ${c.emoji}`) }}
+                >
+                  {c.emoji} {c.name}
+                  {hasNotice && (
+                    <span
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        backgroundColor: '#EF4444',
+                        display: 'inline-block',
+                        marginLeft: 4,
+                        verticalAlign: 'middle',
+                      }}
+                      title="Bé có bài tập mới hoặc lời nhắc của cô"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

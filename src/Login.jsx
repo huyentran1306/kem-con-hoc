@@ -3,7 +3,7 @@ import { AppCtx } from './ctx'
 import { familyLogin, familyRegister } from './api'
 import { getTheme } from './themes'
 
-export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null }) {
+export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null, classJoinBanner = null }) {
   const { openAdmin, S } = useContext(AppCtx) || {}
   const activeThemeId = S?.theme || (typeof document !== 'undefined' ? document.documentElement.dataset.theme : null) || 'bear'
   const activeTheme = getTheme(activeThemeId)
@@ -47,6 +47,27 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
     <div className="stage">
       <div className="app login-app">
         <div className="scroll" style={{ justifyContent: 'center', paddingBottom: 40 }}>
+          {classJoinBanner && (
+            <div
+              style={{
+                backgroundColor: 'var(--c-hint1-bg, #FFF1D6)',
+                border: '2px solid var(--c-warn-line, #F6C56A)',
+                borderRadius: 18,
+                padding: '12px 16px',
+                marginBottom: 12,
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(246, 166, 35, 0.15)',
+              }}
+            >
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--c-text, #4B3621)' }}>
+                🏫 Đăng nhập để vào <b>{classJoinBanner.className || classJoinBanner.name}</b> của <b>cô {classJoinBanner.teacherName || classJoinBanner.teacher_name}</b>
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #8A6A4A)', marginTop: 3 }}>
+                Đăng nhập xong, mình quay lại đúng màn vào lớp nhé
+              </div>
+            </div>
+          )}
+
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
             <div style={{ fontSize: 56, lineHeight: 1.2 }}>{activeTheme.icon}</div>
             <p className="eyebrow" style={{ marginTop: 8 }}>{activeTheme.name} · Bạn đồng hành dịu dàng</p>

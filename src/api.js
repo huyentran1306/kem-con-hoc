@@ -1064,3 +1064,69 @@ export async function revokeSharedReport(token) {
   })
   return res.json()
 }
+
+/* ============================================================
+   🏫 PROMPT 11: CLASS PREVIEW, JOIN LINK, 24H CHILD CHANGE & REMINDERS
+   ============================================================ */
+
+export async function fetchClassPreview(code) {
+  if (!code) return { ok: false, error: 'Thiếu mã lớp' }
+  const res = await fetch(`${GATEWAY}/api/v1/classes/preview?code=${encodeURIComponent(code)}`)
+  return res.json()
+}
+
+export async function joinFamilyClass({ token, code, childId, rosterName, consent, childConsent, claimCode }) {
+  const res = await fetch(`${GATEWAY}/api/v1/family/classes/join`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      code: code ? code.trim().toUpperCase() : undefined,
+      claimCode: claimCode ? claimCode.trim().toUpperCase() : undefined,
+      childId,
+      rosterName,
+      consent,
+      childConsent,
+    }),
+  })
+  const data = await res.json()
+  return { status: res.status, ...data }
+}
+
+export async function changeClassChild({ token, classStudentId, childId }) {
+  const res = await fetch(`${GATEWAY}/api/v1/family/classes/${classStudentId}/child`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ childId }),
+  })
+  const data = await res.json()
+  return { status: res.status, ...data }
+}
+
+export async function leaveFamilyClass({ token, classStudentId, deleteResults = false }) {
+  const res = await fetch(`${GATEWAY}/api/v1/family/classes/${classStudentId}?deleteResults=${deleteResults ? '1' : '0'}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function fetchFamilyReminders({ token, window = 'today' }) {
+  const res = await fetch(`${GATEWAY}/api/v1/family/reminders?window=${window}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
+
+export async function markFamilyReminderDone({ token, announcementId }) {
+  const res = await fetch(`${GATEWAY}/api/v1/family/announcements/${announcementId}/done`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return res.json()
+}
