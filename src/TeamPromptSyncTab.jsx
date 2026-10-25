@@ -19,16 +19,16 @@ export const PROMPT_CATEGORIES = [
   { id: 'other', name: 'Khác', icon: '🧪' },
 ]
 
-// Models AI công ty phổ biến
+// Models AI phổ biến trong hệ thống
 export const COMPANY_AI_MODELS = [
-  'VideFlow',
+  'Cloudflare Workers AI',
   'Claude 3.7 Sonnet',
   'Claude 3.5 Sonnet',
   'ChatGPT GPT-4o',
   'GPT-4o-mini',
-  'Company Internal AI (Private)',
+  'Google Gemini 1.5 Pro',
+  'Cursor / Antigravity',
   'Llama 3.3 70B',
-  'Gemini 1.5 Pro',
   'Khác (Tùy chọn)',
 ]
 
@@ -39,7 +39,7 @@ const INITIAL_TEAM_PROMPTS = [
     id: 'tp_prompt_00_auth',
     title: 'Prompt 00: Nền Tảng Tài Khoản, Bảo Mật Máy Chủ & Tối Ưu Cloudflare Free Tier',
     category: 'general',
-    targetAi: 'VideFlow',
+    targetAi: 'Cloudflare Workers AI',
     author: 'Huyền (Tech Lead)',
     isRunCompanyAi: false,
     runBy: '',
@@ -53,7 +53,7 @@ const INITIAL_TEAM_PROMPTS = [
     id: 'tp_prompt_06_enhancement',
     title: 'Prompt 06: Sửa Lỗi Nhanh, Bỏ Dữ Liệu Giả & UI Polish',
     category: 'general',
-    targetAi: 'Cursor / VideFlow',
+    targetAi: 'Cursor / Antigravity',
     author: 'Kỹ sư Kèm Con Học',
     isRunCompanyAi: false,
     runBy: '',
@@ -67,7 +67,7 @@ const INITIAL_TEAM_PROMPTS = [
     id: 'tp_prompt_01_themes',
     title: 'Prompt 01: 8 Bộ Giao Diện & Tuỳ Chọn Sở Thích Gia Đình',
     category: 'general',
-    targetAi: 'Cursor / VideFlow',
+    targetAi: 'Cursor / Antigravity',
     author: 'Kỹ sư Kèm Con Học',
     isRunCompanyAi: false,
     runBy: '',
@@ -81,7 +81,7 @@ const INITIAL_TEAM_PROMPTS = [
     id: 'tp_prompt_02_scope',
     title: 'Prompt 02: Bộ Kiểm Tra & Phân Loại Ảnh/Đề Ngoài Phạm Vi',
     category: 'math',
-    targetAi: 'Cursor / VideFlow',
+    targetAi: 'Cursor / Antigravity',
     author: 'Kỹ sư Kèm Con Học',
     isRunCompanyAi: false,
     runBy: '',
@@ -95,7 +95,7 @@ const INITIAL_TEAM_PROMPTS = [
     id: 'tp_longitudinal_1',
     title: 'Prompt Hệ Thống Nhãn Khen Long-Term & AI Adaptive Roadmap',
     category: 'math',
-    targetAi: 'VideFlow',
+    targetAi: 'Cloudflare Workers AI',
     author: 'Tech Lead',
     isRunCompanyAi: false,
     runBy: '',
@@ -109,7 +109,7 @@ const INITIAL_TEAM_PROMPTS = [
     id: 'tp_pedagogy_ai_config_2',
     title: 'Prompt Cấu Hình AI Toàn Cục & Sư Phạm Phản Hồi',
     category: 'math',
-    targetAi: 'VideFlow',
+    targetAi: 'Cloudflare Workers AI',
     author: 'Tech Lead',
     isRunCompanyAi: false,
     runBy: '',
@@ -157,7 +157,7 @@ export default function TeamPromptSyncTab() {
   const [editingId, setEditingId] = useState(null)
   const [formTitle, setFormTitle] = useState('')
   const [formCategory, setFormCategory] = useState('math')
-  const [formTargetAi, setFormTargetAi] = useState('VideFlow')
+  const [formTargetAi, setFormTargetAi] = useState('Cloudflare Workers AI')
   const [formAuthor, setFormAuthor] = useState(() => localStorage.getItem(LAST_AUTHOR_KEY) || 'Thành viên Team')
   const [formDetail, setFormDetail] = useState('')
   const [formMigrationScript, setFormMigrationScript] = useState('')
@@ -212,7 +212,7 @@ export default function TeamPromptSyncTab() {
     }
   }
 
-  // 3. Toggle trạng thái Đã chạy ở VideFlow trực tiếp
+  // 3. Toggle trạng thái Đã kiểm thử trực tiếp
   const handleToggleRunStatus = async (item) => {
     const updatedStatus = !item.isRunCompanyAi
     const nowStr = new Date().toLocaleString('vi-VN', {
@@ -238,8 +238,8 @@ export default function TeamPromptSyncTab() {
     await savePromptsToCloud(
       updatedList,
       updatedStatus
-        ? `✅ Đã đánh dấu "ĐÃ CHẠY Ở VIDEFLOW" cho: ${item.title.slice(0, 30)}…`
-        : `⏳ Đã chuyển về "Chưa chạy ở VideFlow" cho: ${item.title.slice(0, 30)}…`
+        ? `✅ Đã đánh dấu "ĐÃ KIỂM THỬ THÀNH CÔNG" cho: ${item.title.slice(0, 30)}…`
+        : `⏳ Đã chuyển về "Chờ kiểm thử" cho: ${item.title.slice(0, 30)}…`
     )
   }
 
@@ -248,7 +248,7 @@ export default function TeamPromptSyncTab() {
     setEditingId(null)
     setFormTitle('')
     setFormCategory('math')
-    setFormTargetAi('VideFlow')
+    setFormTargetAi('Cloudflare Workers AI')
     setFormDetail('')
     setFormMigrationScript('')
     setFormIsRun(false)
@@ -262,7 +262,7 @@ export default function TeamPromptSyncTab() {
     setEditingId(item.id)
     setFormTitle(item.title)
     setFormCategory(item.category || 'math')
-    setFormTargetAi(item.targetAi || 'VideFlow')
+    setFormTargetAi(item.targetAi || 'Cloudflare Workers AI')
     setFormAuthor(item.author || '')
     setFormDetail(item.promptDetail || '')
     setFormMigrationScript(item.migrationScript || '')
@@ -355,12 +355,12 @@ export default function TeamPromptSyncTab() {
   const handleExportSummary = () => {
     const lines = [
       `# 📋 BÁO CÁO ĐỒNG BỘ PROMPT TEAM (Cập nhật: ${new Date().toLocaleDateString('vi-VN')})`,
-      `Tổng số: ${prompts.length} prompt | Đã chạy ở VideFlow: ${metrics.ranCount} | Chờ chạy: ${metrics.pendingCount}`,
+      `Tổng số: ${prompts.length} prompt | Đã kiểm thử: ${metrics.ranCount} | Chờ kiểm thử: ${metrics.pendingCount}`,
       '------------------------------------------------------------',
     ]
 
     prompts.forEach((p, idx) => {
-      lines.push(`${idx + 1}. [${p.isRunCompanyAi ? '✅ ĐÃ RUN VIDEFLOW' : '⏳ CHỜ RUN'}] ${p.title}`)
+      lines.push(`${idx + 1}. [${p.isRunCompanyAi ? '✅ ĐÃ KIỂM THỬ' : '⏳ CHỜ TEST'}] ${p.title}`)
       lines.push(`   - Danh mục: ${p.category} | Model mục tiêu: ${p.targetAi}`)
       lines.push(`   - Người gửi: ${p.author} ${p.isRunCompanyAi ? `(Người check: ${p.runBy} lúc ${p.runAt})` : ''}`)
       if (p.aiResult) lines.push(`   - Kết quả/Feedback: ${p.aiResult}`)
@@ -477,7 +477,7 @@ export default function TeamPromptSyncTab() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: '#4B3621', letterSpacing: '-0.02em' }}>
-                  Bảng Đồng Bộ Prompt Team — VideFlow
+                  Bảng Đồng Bộ Prompt Team — Kèm Con Học
                 </h2>
                 <span
                   style={{
@@ -494,7 +494,7 @@ export default function TeamPromptSyncTab() {
                 </span>
               </div>
               <p style={{ margin: '6px 0 0', fontSize: 13.5, color: '#8A6A4A', maxWidth: 680, lineHeight: 1.5 }}>
-                Không gian gửi, lưu trữ và theo dõi các Prompt chạy trên hệ thống VideFlow (hoặc Claude, ChatGPT) để team phối hợp nhịp nhàng.
+                Không gian gửi, lưu trữ và theo dõi các Prompt chạy trên hệ thống Cloudflare AI Gateway (hoặc Claude, ChatGPT, Gemini, Cursor) để team phối hợp nhịp nhàng.
               </p>
             </div>
           </div>
@@ -585,7 +585,7 @@ export default function TeamPromptSyncTab() {
             <div style={{ fontSize: 24, fontWeight: 800, color: '#4B3621', marginTop: 3 }}>{metrics.total}</div>
           </div>
           <div style={{ background: '#ECFDF5', borderRadius: 12, padding: '12px 16px', border: '1.5px solid #A7F3D0' }}>
-            <div style={{ fontSize: 11.5, color: '#047857', fontWeight: 700 }}>✅ ĐÃ CHẠY Ở VIDEFLOW</div>
+            <div style={{ fontSize: 11.5, color: '#047857', fontWeight: 700 }}>✅ ĐÃ KIỂM THỬ THÀNH CÔNG</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: '#059669', marginTop: 3 }}>{metrics.ranCount}</div>
           </div>
           <div style={{ background: '#FFFBEB', borderRadius: 12, padding: '12px 16px', border: '1.5px solid #FDE68A' }}>
@@ -839,7 +839,7 @@ export default function TeamPromptSyncTab() {
                       🤖 {item.targetAi || 'AI Công ty'}
                     </span>
 
-                    {/* 🎯 NÚT TOGGLE CHECK ĐÃ CHẠY Ở VIDEFLOW CHƯA */}
+                    {/* 🎯 NÚT TOGGLE CHECK ĐÃ KIỂM THỬ CHƯA */}
                     <button
                       type="button"
                       onClick={() => handleToggleRunStatus(item)}
@@ -857,10 +857,10 @@ export default function TeamPromptSyncTab() {
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                       }}
-                      title="Bấm để đổi trạng thái đã chạy thử ở VideFlow hay chưa"
+                      title="Bấm để đổi trạng thái đã kiểm thử prompt hay chưa"
                     >
                       <span>{item.isRunCompanyAi ? '✅' : '⏳'}</span>
-                      <span>{item.isRunCompanyAi ? 'ĐÃ CHẠY Ở VIDEFLOW' : 'CHƯA CHẠY Ở VIDEFLOW (Bấm để check)'}</span>
+                      <span>{item.isRunCompanyAi ? 'ĐÃ KIỂM THỬ THÀNH CÔNG' : 'CHỜ KIỂM THỬ (Bấm để check)'}</span>
                     </button>
                   </div>
 
@@ -994,7 +994,7 @@ export default function TeamPromptSyncTab() {
                     )}
                   </div>
 
-                  {/* PHẦN GHI CHÚ KẾT QUẢ VIDEFLOW */}
+                  {/* PHẦN GHI CHÚ KẾT QUẢ KIỂM THỬ */}
                   {item.aiResult && (
                     <div
                       style={{
@@ -1006,7 +1006,7 @@ export default function TeamPromptSyncTab() {
                         color: '#065F46',
                       }}
                     >
-                      <b style={{ display: 'block', marginBottom: 2 }}>📝 Phản hồi & Kết quả chạy ({item.targetAi || 'VideFlow'}):</b>
+                      <b style={{ display: 'block', marginBottom: 2 }}>📝 Phản hồi & Kết quả chạy ({item.targetAi || 'AI Gateway'}):</b>
                       <span style={{ whiteSpace: 'pre-wrap' }}>{item.aiResult}</span>
                     </div>
                   )}
@@ -1367,7 +1367,7 @@ export default function TeamPromptSyncTab() {
                 />
               </div>
 
-              {/* 🎯 CHECKLIST: ĐÃ RUN Ở VIDEFLOW CHƯA */}
+              {/* 🎯 CHECKLIST: ĐÃ KIỂM THỬ CHƯA */}
               <div
                 style={{
                   background: formIsRun ? '#ECFDF5' : '#FFF8EC',
@@ -1388,10 +1388,10 @@ export default function TeamPromptSyncTab() {
                   />
                   <div>
                     <span style={{ fontSize: 13.5, fontWeight: 800, color: formIsRun ? '#065F46' : '#9A5B00' }}>
-                      {formIsRun ? '✅ Đã chạy thử nghiệm ở VideFlow' : '⏳ Chưa chạy thử nghiệm ở VideFlow'}
+                      {formIsRun ? '✅ Đã chạy kiểm thử thành công' : '⏳ Chưa chạy kiểm thử'}
                     </span>
                     <span style={{ display: 'block', fontSize: 11.5, color: '#8A6A4A' }}>
-                      (Tích vào đây nếu team đã test prompt này trên VideFlow)
+                      (Tích vào đây nếu team đã test prompt này trên AI Gateway hoặc model mục tiêu)
                     </span>
                   </div>
                 </label>
