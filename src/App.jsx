@@ -12,6 +12,7 @@ import { ThemeDecor } from './ThemeDecor'
 import { applyTheme } from './themes'
 import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
 import { ThemedTabIcon } from './themes/themeIcons'
+import { SeasonParticles } from './seasons/SeasonParticles'
 import { useStudyTracker } from './useStudyTracker'
 import { CalmCornerModal } from './CalmCornerModal'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -282,6 +283,11 @@ export default function App() {
   const [msg, setMsg] = useState('')
   const [study, setStudy] = useState(null)
   const scrollRef = useRef(null)
+  // Đợt 15 chặng 6: dải Dùng thử thu gọn, mở thẳng tab đăng ký, nút nổi thu tròn khi cuộn
+  const [trialCollapsed, setTrialCollapsed] = useState(false)
+  const [loginMode, setLoginMode] = useState('login')
+  const [fabCompact, setFabCompact] = useState(false)
+  const lastScrollTopRef = useRef(0)
   const toastTimer = useRef(null)
   const cloudTimer = useRef(null)
   const lastServerTsRef = useRef(null)
@@ -598,6 +604,8 @@ export default function App() {
 
   /* ---------- đăng nhập / đăng xuất ---------- */
   const handleAuthed = (s) => {
+    setLoginMode('login')
+    setTrialCollapsed(false)
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(s))
       if (s?.isTrial) setAuthToken('trial_token')
@@ -637,8 +645,32 @@ export default function App() {
     setScreen('onb')
   }
 
-  const wipe = async () => {
-    const confirmWipe = await appConfirm('Toàn bộ dữ liệu gia đình sẽ bị xoá vĩnh viễn trên máy chủ, không khôi phục được.', { title: 'Xoá toàn bộ dữ liệu?', okText: 'Tiếp tục', danger: true })
+  // 6.6: ✕ chỉ thu gọn dải; thoát Dùng thử là nút riêng có xác nhận
+  const exitTrial = async () => {
+    const ok = await appConfirm('Những gì vừa thử trong chế độ này sẽ không được lưu lại.', { title: 'Thoát chế độ dùng thử?', okText: 'Thoát dùng thử', cancelText: 'Ở lại' })
+    if (!ok) return
+    setLoginMode('login')
+    logout()
+  }
+  const startRegisterFromTrial = () => {
+    setLoginMode('register')
+    logout()
+  }
+
+  const handleScrollFab = (e) => {
+    const top = e.currentTarget.scrollTop
+    const last = lastScrollTopRef.current
+    lastScrollTopRef.current = top
+    if (top < 40) {
+      if (fabCompact) setFabCompact(false)
+      return
+    }
+    if (top > last + 4 && !fabCompact) setFabCompact(true)
+    else if (top < last - 4 && fabCompact) setFabCompact(false)
+  }
+
+  const wipe = async (opts = {}) => {
+    const confirmWipe = opts && opts.confirmed ? true : await appConfirm('Toàn bộ dữ liệu gia đình sẽ bị xoá vĩnh viễn trên máy chủ, không khôi phục được.', { title: 'Xoá toàn bộ dữ liệu?', okText: 'Tiếp tục', danger: true })
     if (!confirmWipe) return
     const pass = await appPrompt('Nhập mật khẩu gia đình để xác nhận xoá toàn bộ.', { title: 'Xác nhận bằng mật khẩu', type: 'password', okText: 'Xoá vĩnh viễn', danger: true, required: true })
     if (!pass) return
@@ -781,6 +813,7 @@ export default function App() {
             <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
             <Suspense fallback={<div style={{ padding: 24, textAlign: 'center' }}>Đang nạp đăng nhập...</div>}>
               <LoginScreen
+                initialMode={loginMode}
                 onAuthed={handleAuthed}
                 reauthSession={session && !hasToken ? session : null}
                 onOpenJoin={() => setJoinCode('ENTER_CODE')}
@@ -796,62 +829,26 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <div className="app">
-          {session?.isTrial && (
-            <div
-              className="trial-top-banner"
-              style={{
-                background: 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)',
-                color: '#FFFFFF',
-                padding: '7px 14px',
-                fontSize: 12.5,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
-                flexShrink: 0,
-                zIndex: 50,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                <span style={{ fontSize: 14 }}>✨</span>
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Đang dùng thử · Tạo gia đình để lưu
-                </span>
+        <div className="app parent-shell">
+          {session?.isTrial && !trialCollapsed && (
+            <div className="trial-top-banner" role="region" aria-label="Chế độ dùng thử">
+              <div className="trial-txt">
+                <span aria-hidden="true">✨</span>
+                <span>Đang dùng thử · Tạo gia đình để lưu</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                <button
-                  type="button"
-                  onClick={logout}
-                  style={{
-                    background: '#FFFFFF',
-                    color: '#B45309',
-                    border: 'none',
-                    borderRadius: 999,
-                    padding: '3px 10px',
-                    fontSize: 11.5,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  }}
-                >
+              <div className="trial-actions">
+                <button type="button" className="trial-cta" onClick={startRegisterFromTrial}>
                   Tạo tài khoản
+                </button>
+                <button type="button" className="trial-exit" onClick={exitTrial}>
+                  Thoát
                 </button>
                 <button
                   type="button"
-                  onClick={logout}
-                  title="Thoát chế độ dùng thử"
-                  style={{
-                    background: 'rgba(255,255,255,0.25)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: 999,
-                    padding: '3px 8px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="trial-x"
+                  onClick={() => setTrialCollapsed(true)}
+                  title="Thu gọn dải dùng thử"
+                  aria-label="Thu gọn dải dùng thử"
                 >
                   ✕
                 </button>
@@ -859,7 +856,13 @@ export default function App() {
             </div>
           )}
           <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
-          <div className="scroll" ref={scrollRef}>
+          <SeasonParticles themeId={S.theme || 'bear'} motion={S.motion || 'full'} screen={screen} />
+          <div
+            className="scroll"
+            ref={scrollRef}
+            onScroll={handleScrollFab}
+            data-wide={['home', 'report', 'profile', 'toy'].includes(screen) ? '1' : undefined}
+          >
             {study && study.running && (
               <button className="timer-chip" onClick={() => openSheet('timer')}>
                 {study.phase === 'study' ? '📚 Học' : '☕ Nghỉ'} · {fmtTime(study.left)}{' '}
@@ -898,12 +901,18 @@ export default function App() {
 
           {S.onboarded && (
             <button
-              className={`calm-fab ${['explain', 'scaffold', 'done', 'snap', 'analyze'].includes(screen) ? 'mini' : ''}`}
+              className={`calm-fab ${['explain', 'scaffold', 'done', 'snap', 'analyze'].includes(screen) ? 'mini' : ''} ${fabCompact ? 'compact' : ''}`}
               onClick={() => openSheet('calm')}
               title={calmLabel}
               aria-label={calmLabel}
             >
-              <span>😮‍💨</span> <span>{calmLabel}</span>
+              <span className="calm-fab-ic" aria-hidden="true">😮‍💨</span> <span className="calm-fab-label">{calmLabel}</span>
+            </button>
+          )}
+
+          {S.onboarded && session?.isTrial && trialCollapsed && (
+            <button type="button" className="trial-mini" onClick={() => setTrialCollapsed(false)} aria-label="Mở lại dải dùng thử">
+              ✨ Dùng thử
             </button>
           )}
 
@@ -1070,6 +1079,7 @@ function SheetView({ type, data, session }) {
 
   if (type === 'practice') return <PracticeSheet />
   if (type === 'addChild') return <AddChildSheet />
+  if (type === 'editChild') return <EditChildSheet />
   if (type === 'invite' || type === 'members') {
     return (
       <Suspense fallback={<div className="sheet"><div className="pn" style={{ padding: 24, textAlign: 'center' }}>Đang tải...</div></div>}>
@@ -1678,19 +1688,105 @@ function AddChildSheet() {
   )
 }
 
-/* ---------- XÓA DỮ LIỆU ---------- */
-function WipeSheet() {
-  const { closeSheet, wipe } = useContext(AppCtx)
+/* ---------- SỬA HỒ SƠ CON ĐANG CHỌN (Đợt 15 · 6.4) ---------- */
+function EditChildSheet() {
+  const { S, patch, closeSheet, toast } = useContext(AppCtx)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+  const [name, setName] = useState(child?.name || '')
+  const [emoji, setEmoji] = useState(child?.emoji || '🐰')
+  const [grade, setGrade] = useState(child?.grade || GRADES[0])
+  const [book, setBook] = useState(child?.book || BOOKS[0])
+
+  const save = () => {
+    if (!child) { closeSheet(); return }
+    if (!name.trim()) { toast('Đặt biệt danh cho con nhé 🐣'); return }
+    const kids = S.children.map((c) => (c.id === child.id ? { ...c, name: name.trim(), emoji, grade, book } : c))
+    patch({ children: kids })
+    closeSheet()
+    toast(`Đã lưu hồ sơ của ${name.trim()} ${emoji}`)
+  }
+
   return (
     <Sheet>
-      <p className="title">Xóa toàn bộ dữ liệu?</p>
+      <p className="title">Sửa hồ sơ của {child?.name || 'con'}</p>
+      <p className="sub">Chỉ sửa hồ sơ của con đang chọn. Lịch sử học và sticker giữ nguyên.</p>
+      <div className="card">
+        <label className="lbl plum" htmlFor="edit-child-name">Biệt danh</label>
+        <input id="edit-child-name" className="field" placeholder="VD: Bon, Miu…" value={name} maxLength={30} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="card">
+        <span className="lbl plum" id="edit-child-avatar">Hình đại diện</span>
+        <div className="chips" style={{ gap: 4 }} role="radiogroup" aria-labelledby="edit-child-avatar">
+          {EMOJIS.map((e) => (
+            <button
+              key={e}
+              type="button"
+              role="radio"
+              aria-checked={emoji === e}
+              aria-label={`Hình ${e}`}
+              onClick={() => setEmoji(e)}
+              style={{
+                fontSize: 22, width: 44, height: 44, borderRadius: 12,
+                background: emoji === e ? 'var(--c-surface-2)' : 'var(--c-surface)',
+                border: emoji === e ? '2px solid var(--c-accent)' : '1.5px solid var(--c-line)',
+              }}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="card">
+        <span className="lbl plum">Lớp</span>
+        <div className="opt-grid">
+          {GRADES.map((x) => (
+            <button key={x} type="button" className={`opt ${grade === x ? 'on' : ''}`} onClick={() => setGrade(x)}>{x}</button>
+          ))}
+        </div>
+      </div>
+      <div className="card">
+        <span className="lbl plum">Bộ sách</span>
+        <div className="opt-grid" style={{ gridTemplateColumns: '1fr' }}>
+          {BOOKS.map((x) => (
+            <button key={x} type="button" className={`opt col ${book === x ? 'on' : ''}`} onClick={() => setBook(x)}>{x}</button>
+          ))}
+        </div>
+      </div>
+      <div className="btns">
+        <button type="button" className="btn ghost" onClick={closeSheet}>Huỷ</button>
+        <button type="button" className="btn solid" onClick={save}>Lưu</button>
+      </div>
+    </Sheet>
+  )
+}
+
+/* ---------- XÓA DỮ LIỆU (Đợt 15 · 6.4: nút nguy hiểm, gõ tên gia đình để xác nhận) ---------- */
+function WipeSheet() {
+  const { closeSheet, wipe, familyName } = useContext(AppCtx)
+  const expected = String(familyName || '').trim()
+  const [typed, setTyped] = useState('')
+  const matched = Boolean(expected) && typed.trim().toLowerCase() === expected.toLowerCase()
+  return (
+    <Sheet>
+      <p className="title">Xoá toàn bộ dữ liệu?</p>
       <p className="sub">
         Hồ sơ con, lịch sử, sticker, báo cáo… <b>tất cả sẽ mất vĩnh viễn</b> (cả bản đám mây). Không thể khôi phục.
       </p>
+      <label htmlFor="wipe-confirm-name" style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>
+        Gõ đúng tên gia đình <b>{expected}</b> để xác nhận
+      </label>
+      <input
+        id="wipe-confirm-name"
+        className="field"
+        autoComplete="off"
+        placeholder={expected}
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+      />
       <div className="btns">
-        <button className="btn ghost" onClick={closeSheet}>Giữ lại</button>
-        <button className="btn solid" style={{ background: 'var(--red)', boxShadow: 'none' }} onClick={wipe}>
-          Xóa hết
+        <button type="button" className="btn ghost" onClick={closeSheet}>Giữ lại</button>
+        <button type="button" className="btn danger solid" disabled={!matched} onClick={() => wipe({ confirmed: true })}>
+          Xoá vĩnh viễn
         </button>
       </div>
     </Sheet>

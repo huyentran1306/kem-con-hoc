@@ -64,7 +64,7 @@ export function DefaultStudyTracker({ tracker, onOpenReport }) {
           {streak >= 2 && (
             <span
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 800,
                 color: 'var(--c-accent-ink, var(--c-accent))',
                 background: 'var(--c-surface-2)',
@@ -117,7 +117,7 @@ export function DefaultStudyTracker({ tracker, onOpenReport }) {
               </div>
               <span
                 style={{
-                  fontSize: 10.5,
+                  fontSize: 12,
                   fontWeight: isToday ? 800 : 600,
                   color: isToday ? 'var(--c-accent-ink, var(--c-text))' : 'var(--c-text-2)',
                 }}
@@ -285,7 +285,7 @@ export function DefaultReadCard({ question, stepIndex = 0, childName = 'con', on
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 800,
             letterSpacing: 1,
             color: 'var(--c-accent-ink, var(--c-text))',
@@ -317,7 +317,7 @@ export function DefaultReadCard({ question, stepIndex = 0, childName = 'con', on
 export function DefaultHintList({ hints = [], openedLevels = [], onOpenHint }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--c-text-2)', letterSpacing: 0.5 }}>
+      <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text-2)', letterSpacing: 0.5 }}>
         MÁCH NƯỚC CHO MẸ (NẾU CON BÍ)
       </span>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -435,7 +435,7 @@ export function DefaultAnswerReveal({ answerForParent, onRevealed }) {
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
         {unlocked ? (
           <div>
-            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-good-fg)' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-good-fg)' }}>
               🔒 ĐÁP ÁN ĐỐI CHIẾU CHO MẸ:
             </span>
             <p style={{ margin: '4px 0 0', fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>
@@ -533,7 +533,7 @@ export function DefaultTeachBackPicker({ value = 'self', onChange }) {
             className={`btn ${value === opt.id ? 'mint' : 'ghost'}`}
             style={{
               padding: '10px 6px',
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: 700,
               display: 'flex',
               flexDirection: 'column',
@@ -596,7 +596,7 @@ export function DefaultCheckWorkEntry({ onStart, childName }) {
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
-        border: '2px solid var(--c-primary, #7C3AED)',
+        border: 'var(--border-w, 2px) solid var(--c-accent, #7C3AED)',
         background: 'var(--c-surface)',
         borderRadius: 'var(--radius-card, 18px)',
         position: 'relative',
@@ -606,14 +606,14 @@ export function DefaultCheckWorkEntry({ onStart, childName }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 800,
             letterSpacing: 1,
             textTransform: 'uppercase',
-            padding: '3px 8px',
+            padding: '3px 10px',
             borderRadius: 999,
-            background: 'var(--c-primary, #7C3AED)',
-            color: '#fff',
+            background: 'var(--c-accent, #7C3AED)',
+            color: 'var(--c-on-accent, #fff)',
           }}
         >
           ✨ Mới · AI Chấm vở
@@ -624,17 +624,16 @@ export function DefaultCheckWorkEntry({ onStart, childName }) {
         <h3 style={{ fontSize: 16, fontWeight: 800, margin: '2px 0 4px', color: 'var(--c-text)' }}>
           Chấm vở {childName || 'con'} đã làm
         </h3>
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--c-text-2)', lineHeight: 1.45 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--c-text-2)', lineHeight: 1.45 }}>
           Chụp bài {childName || 'con'} làm xong. AI tìm đúng bước sai đầu tiên và đưa mẹ câu hỏi để con <b>tự sửa</b>, không chữa hộ.
         </p>
       </div>
+      {/* Đợt 15 · 6.2: nút phụ, không tranh với "Bắt đầu bài tối nay" */}
       <button
         data-testid="btn-start-check-work"
-        className="btn primary"
+        className="btn ghost btn-sm"
         style={{
-          width: '100%',
-          padding: '12px',
-          fontSize: 14,
+          alignSelf: 'flex-start',
           fontWeight: 800,
           display: 'flex',
           alignItems: 'center',

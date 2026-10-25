@@ -152,16 +152,16 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    background: '#FFFFFF',
+                    background: 'var(--c-surface, #FFFFFF)',
                     display: 'grid',
                     placeItems: 'center',
                     fontSize: 15,
-                    border: '1.5px solid #F0DDC2',
+                    border: '1.5px solid var(--c-line, #F0DDC2)',
                   }}
                 >
                   👩‍🏫
                 </span>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#84664A', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text, #4B3621)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {teacherLabel(rem.teacher_name)} · {rem.class_name} nhắc
                 </div>
               </div>
@@ -169,9 +169,9 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
               {rem.child_name && (
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 800,
-                    padding: '2px 9px',
+                    padding: '3px 10px',
                     borderRadius: 999,
                     background: kidColor.bg,
                     color: kidColor.color,
@@ -190,7 +190,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                 fontSize: 15.5,
                 fontWeight: 700,
                 lineHeight: 1.4,
-                color: '#4B3621',
+                color: 'var(--c-text, #4B3621)',
                 margin: '6px 0 8px 0',
               }}
             >
@@ -198,7 +198,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
             </p>
 
             {/* Thời gian áp dụng */}
-            <div style={{ fontSize: 12, color: '#84664A', marginBottom: 10 }}>
+            <div style={{ fontSize: 13, color: 'var(--c-text, #4B3621)', marginBottom: 10 }}>
               📅 Áp dụng cho: <b>{targetDateFormatted}</b>
             </div>
 
@@ -212,11 +212,11 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     gap: 6,
                     padding: '6px 14px',
                     borderRadius: 999,
-                    background: '#ECFDF5',
-                    color: '#047857',
+                    background: 'var(--c-good-bg, #ECFDF5)',
+                    color: 'var(--c-good-fg, #047857)',
                     fontWeight: 800,
-                    fontSize: 12.5,
-                    border: '1px solid #A7F3D0',
+                    fontSize: 13,
+                    border: '1px solid var(--c-good, #A7F3D0)',
                   }}
                 >
                   ✓ {rem.done_by_name || 'Mẹ'} đã nhắc con lúc {doneTime}
@@ -229,10 +229,10 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     gap: 6,
                     padding: '6px 14px',
                     borderRadius: 999,
-                    background: '#F1F5F9',
-                    color: '#64748B',
+                    background: 'var(--c-surface, #F1F5F9)',
+                    color: 'var(--c-text, #475569)',
                     fontWeight: 700,
-                    fontSize: 12.5,
+                    fontSize: 13,
                   }}
                 >
                   Chưa ghi nhận nhắc con (Chỉ xem)
@@ -240,19 +240,8 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
               ) : (
                 <button
                   type="button"
-                  className="btn solid"
+                  className="btn ghost btn-sm"
                   onClick={() => handleMarkDone(rem.id)}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    fontWeight: 800,
-                    background: '#F6A623',
-                    color: '#4B3621',
-                    border: 'none',
-                    borderRadius: 999,
-                    cursor: 'pointer',
-                    boxShadow: '0 3px 0 #C47F0E',
-                  }}
                 >
                   🔔 Đã nhắc con
                 </button>
@@ -261,19 +250,9 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
               {rem.assignment_id && (
                 <button
                   type="button"
-                  className="btn"
+                  className="btn ghost btn-sm"
                   onClick={() => {
                     if (go) go('prep')
-                  }}
-                  style={{
-                    padding: '7px 14px',
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    background: '#FFFFFF',
-                    border: '1.5px solid #F0DDC2',
-                    borderRadius: 999,
-                    color: '#4B3621',
-                    cursor: 'pointer',
                   }}
                 >
                   📖 Mở bài cô giao ➔
@@ -285,7 +264,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
       })}
 
       {hiddenCount > 0 && (
-        <div style={{ textAlign: 'center', fontSize: 12, color: '#84664A', fontWeight: 700 }}>
+        <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--c-text-2, #84664A)', fontWeight: 700 }}>
           ＋{hiddenCount} lời nhắc khác trong Hộp thông báo
         </div>
       )}

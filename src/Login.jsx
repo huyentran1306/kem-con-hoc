@@ -3,13 +3,15 @@ import { AppCtx } from './ctx'
 import { familyLogin, familyRegister, teacherLabel } from './api'
 import { getTheme } from './themes'
 import { TRIAL_SESSION } from './trialData.js'
+import { formatClassName, formatTeacherName } from './teacher/format.js'
 
-export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null, classJoinBanner = null }) {
+export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null, classJoinBanner = null, initialMode = 'login' }) {
   const { openAdmin, S } = useContext(AppCtx) || {}
   const activeThemeId = S?.theme || (typeof document !== 'undefined' ? document.documentElement.dataset.theme : null) || 'bear'
   const activeTheme = getTheme(activeThemeId)
 
-  const [mode, setMode] = useState('login')
+  // Đợt 15 · 6.6: "Tạo tài khoản" trên dải Dùng thử mở thẳng tab Tạo gia đình mới
+  const [mode, setMode] = useState(initialMode === 'register' && !reauthSession ? 'register' : 'login')
   const [name, setName] = useState(reauthSession?.name || '')
   const [pass, setPass] = useState('')
   const [pass2, setPass2] = useState('')
@@ -61,7 +63,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
               }}
             >
               <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--c-text, #4B3621)' }}>
-                🏫 Đăng nhập để vào <b>{classJoinBanner.className || classJoinBanner.name}</b> của <b>{teacherLabel(classJoinBanner.teacherName || classJoinBanner.teacher_name)}</b>
+                🏫 Đăng nhập để vào <b>{formatClassName(classJoinBanner.className || classJoinBanner.class_name || classJoinBanner.name) || 'lớp của cô'}</b> của <b>{formatTeacherName(classJoinBanner.teacherName || classJoinBanner.teacher_name, { lower: true })}</b>
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #8A6A4A)', marginTop: 3 }}>
                 Đăng nhập xong, mình quay lại đúng màn vào lớp nhé

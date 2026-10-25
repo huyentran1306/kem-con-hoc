@@ -473,3 +473,39 @@ export function WhyChip({ reason, onReport }) {
     </div>
   )
 }
+/* ---------- Công tắc dùng chung (Đợt 15 · 6.1: thay ô tích mặc định) ---------- */
+export function Switch({ on, onChange, label, title, ...rest }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={Boolean(on)}
+      aria-label={label}
+      title={title || label}
+      className={`switch ${on ? 'on' : ''}`}
+      onClick={() => onChange && onChange(!on)}
+      {...rest}
+    >
+      <i />
+    </button>
+  )
+}
+
+/* ---------- Màn rộng (≥1024px): bố cục 2 cột cho trang bố mẹ ---------- */
+export function useWide(query = '(min-width: 1024px)') {
+  const get = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false)
+  const [wide, setWide] = useState(get)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mq = window.matchMedia(query)
+    const on = () => setWide(mq.matches)
+    on()
+    if (mq.addEventListener) mq.addEventListener('change', on)
+    else mq.addListener(on)
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', on)
+      else mq.removeListener(on)
+    }
+  }, [query])
+  return wide
+}

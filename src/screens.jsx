@@ -1,11 +1,11 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { AppCtx } from './ctx'
 import {
   PARENT_TYPES, GRADES, BOOKS, TONES, EMOJIS, PROBLEM, STICKER_REWARD,
   ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CHAT_REPLIES, CALM_LINES,
-  AVAILABLE_STICKERS, WAITING_QUIZZES,
+  AVAILABLE_STICKERS, WAITING_QUIZZES, SCHEDULE_DEFAULT,
 } from './data'
-import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
+import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper, Switch, useWide } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
@@ -18,6 +18,7 @@ import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeN
 import { ZaloReportModal } from './ZaloReportModal'
 import { NpsSurveyCard } from './NpsSurveySheet'
 import { getSlot } from './themes/slots/registry'
+import { SeasonHomeLayer, SeasonStepProgress, SeasonDoneArt, seasonLevelEmoji } from './seasons'
 import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
@@ -305,15 +306,17 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
 
 export function Home() {
   const { S, patch, stats, go, openSheet, toast, soundOn, toggleSound, tracker } = useContext(AppCtx)
+  const wide = useWide()
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const theme = S.theme || 'bear'
   const StudyTrackerSlot = getSlot(theme, 'StudyTracker')
   const StartActionSlot = getSlot(theme, 'StartAction')
+  const CheckWorkEntrySlot = getSlot(theme, 'CheckWorkEntry')
   const now = new Date()
-  const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })
   const hour = now.getHours()
   const minute = now.getMinutes()
   const greet = hour < 11 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
+  const parentLower = S.parent.toLowerCase()
 
   // C2: Dải nhắc trực ca buổi tối trên màn chính (19:30 - 21:30)
   const curMinutes = hour * 60 + minute
@@ -321,273 +324,309 @@ export function Home() {
   const dayCodeMap = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
   const todayCode = dayCodeMap[now.getDay()]
   const todayDuty = (S.schedule || []).find((d) => d.day === todayCode)?.owner || S.parent
+  // Đợt 15 · 6.2: dòng ngày rút gọn "CN 25/10 · Lớp 3"
+  const shortDate = `${todayCode} ${now.getDate()}/${now.getMonth() + 1}`
+
+  const hero = (
+    <div className="hero-band">
+      <div className="home-meta">
+        <p className="sub">
+          {shortDate} · {child.grade}
+        </p>
+        <button
+          className={`sound-pill-btn ${!soundOn ? 'off' : ''}`}
+          onClick={toggleSound}
+          aria-pressed={Boolean(soundOn)}
+          aria-label={soundOn ? 'Tiếng đang bật, bấm để tắt' : 'Tiếng đang tắt, bấm để bật'}
+          title={soundOn ? 'Tiếng đang bật, bấm để tắt' : 'Tiếng đang tắt, bấm để bật'}
+          data-no-sound
+        >
+          <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+        </button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p className="title">{greet}, {parentLower}!</p>
+          <p className="title" style={{ fontSize: 19 }}>Tối nay {child.name} học gì?</p>
+        </div>
+        <BuddyGreeter size={68} />
+      </div>
+      <div className="chips" style={{ marginTop: 6, gap: 8, alignItems: 'center' }}>
+        {S.children.length > 1 &&
+          S.children.map((c) => {
+            const isOtherKid = c.id !== S.activeId
+            const hasNotice = isOtherKid && ((c.unreadTeacherTasks || 0) > 0 || c.hasReminderNotice)
+            return (
+              <button
+                key={c.id}
+                className={`chip ${c.id === S.activeId ? 'on' : ''}`}
+                style={{ position: 'relative' }}
+                aria-pressed={c.id === S.activeId}
+                onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang ${/^bé\s/i.test(c.name) ? c.name : "bé " + c.name} ${c.emoji}`) }}
+              >
+                {c.emoji} {c.name}
+                {hasNotice && (
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--c-danger, #EF4444)',
+                      display: 'inline-block',
+                      marginLeft: 4,
+                      verticalAlign: 'middle',
+                    }}
+                    title="Bé có bài tập mới hoặc lời nhắc của cô"
+                  />
+                )}
+              </button>
+            )
+          })}
+        <button onClick={() => openSheet('stickerBook')} className="sticker-chip" style={{ marginLeft: S.children.length > 1 ? 'auto' : 0 }}>
+          <span aria-hidden="true">📖</span> Sổ sticker: <b>{stats.stickers}</b>
+        </button>
+      </div>
+    </div>
+  )
+
+  // Mỗi khối: side = true thì nằm cột phải trên màn rộng. Thứ tự mảng = thứ tự trên điện thoại.
+  const blocks = []
+  const add = (key, side, node) => { if (node) blocks.push({ key, side, node }) }
+
+  // Đợt 16: thẻ hết mùa, gợi ý đầu mùa, thẻ ngày đặc biệt (chỉ ở màn chính, tự ẩn khi không có gì)
+  add('season', false, <SeasonHomeLayer />)
+
+  // 1. Màn đầu: nút Bắt đầu bài tối nay + Gõ đề, Đọc đề
+  add(
+    'start',
+    false,
+    StartActionSlot ? (
+      <div>
+        <StartActionSlot
+          onStart={(mode) => {
+            if (mode === 'photo' || mode === 'snap') {
+              go('snap')
+            } else if (mode === 'type') {
+              openSheet('typeProblem')
+            } else if (mode === 'voice') {
+              openSheet('typeProblem', { mode: 'voice', autoMic: true })
+            } else {
+              go('snap')
+            }
+          }}
+        />
+      </div>
+    ) : (
+      <button className="big-card plum" onClick={() => go('snap')}>
+        <span className="ic">📷</span>
+        <span className="lbl plum">Có bài tập</span>
+        <b>Chụp bài con đang làm</b>
+        <span className="sub">AI chỉ {parentLower} cách giảng, không đưa đáp án cho con</span>
+      </button>
+    )
+  )
+
+  // Thẻ Làm tiếp bài hôm qua (Prompt 08 Mục 6)
+  add(
+    'resume',
+    false,
+    S.pendingProblemResume && (
+      <div
+        className="card pop"
+        style={{
+          border: 'var(--border-w, 2px) solid var(--c-accent)',
+          padding: '14px 16px',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <b style={{ color: 'var(--c-text)', fontSize: 15, display: 'block' }}>📖 Làm tiếp bài hôm qua</b>
+          <span style={{ color: 'var(--c-text-2)', fontSize: 13 }}>
+            Đang ở bậc {(S.pendingProblemResume.step || 0) + 1} · {S.pendingProblemResume.problem?.dang_bai || S.pendingProblemResume.problem?.type || 'Bài tập'}
+          </span>
+        </div>
+        <button
+          className="btn solid btn-sm"
+          style={{ fontWeight: 800 }}
+          onClick={() => {
+            patch({
+              problem: S.pendingProblemResume.problem,
+              flow: {
+                ...S.flow,
+                step: S.pendingProblemResume.step || 0,
+                unlocked: S.pendingProblemResume.unlocked || false,
+                stuck: 0,
+              },
+              pendingProblemResume: null,
+            })
+            go('scaffold')
+          }}
+        >
+          Làm tiếp
+        </button>
+      </div>
+    )
+  )
+
+  // 2. Cô nhắc (nếu có): thẻ Cô nhắc việc, hộp thông báo, bài cô giao
+  add(
+    'teacher',
+    true,
+    <>
+      <TeacherReminderBanner child={child} S={S} patch={patch} go={go} openSheet={openSheet} toast={toast} />
+      <FamilyAnnouncements childId={child?.id} toast={toast} />
+      <TeacherAssignmentBanner child={child} S={S} patch={patch} go={go} />
+    </>
+  )
+
+  add(
+    'evening',
+    true,
+    isEveningShift && (
+      <div
+        className="card pop"
+        style={{ padding: '10px 14px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }}
+      >
+        <span style={{ fontSize: 24 }} aria-hidden="true">🌙</span>
+        <div>
+          <b style={{ color: 'var(--c-text)', fontSize: 14 }}>
+            Tối nay {todayDuty} trực ca kèm {child.name}
+          </b>
+          <div style={{ fontSize: 13, color: 'var(--c-text-2)', marginTop: 1 }}>
+            Giữ bình tĩnh, đặt câu hỏi gợi mở và khen ngợi nỗ lực của con nhé!
+          </div>
+        </div>
+      </div>
+    )
+  )
+
+  add(
+    'reward',
+    true,
+    stats.stickers >= 10 && (
+      <div className="card pop" style={{ border: 'var(--border-w, 2px) solid var(--c-accent)', textAlign: 'center', padding: '12px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 2 }}>
+          <span style={{ fontSize: 24 }} aria-hidden="true">🏆</span>
+          <b style={{ color: 'var(--c-text)', fontSize: 15 }}>{child.name} đã tích đủ 10 sticker!</b>
+        </div>
+        <p style={{ color: 'var(--c-text-2)', fontSize: 13, margin: '2px 0 10px', lineHeight: 1.4 }}>
+          Con đã hoàn thành 10 bài học nỗ lực. {S.parent} mở phiếu đổi quà để thưởng cho con nhé!
+        </p>
+        <button className="btn solid" style={{ fontWeight: 700, fontSize: 14 }} onClick={() => openSheet('redeem')}>
+          🎁 Mở phiếu đổi quà cho con
+        </button>
+      </div>
+    )
+  )
+
+  // 3. Chấm vở con đã làm (Prompt 14 Phần A Mục 2.1)
+  add(
+    'check',
+    false,
+    CheckWorkEntrySlot && (
+      <div>
+        <CheckWorkEntrySlot childName={child.name} onStart={() => go('check')} />
+      </div>
+    )
+  )
+
+  // 4. Dấu chân tuần (Prompt 07 Phần B)
+  add(
+    'tracker',
+    true,
+    StudyTrackerSlot && (
+      <div>
+        <StudyTrackerSlot tracker={tracker} onOpenReport={() => go('report')} />
+      </div>
+    )
+  )
+
+  // Lựa chọn phụ: Ôn đồ chơi & Hẹn giờ
+  add(
+    'extras',
+    false,
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <button className="big-card sun" style={{ margin: 0, padding: '12px 14px' }} onClick={() => go('toy')}>
+        <span className="ic" style={{ fontSize: 22, display: 'flex', marginBottom: 2 }} aria-hidden="true">🧸</span>
+        <b style={{ fontSize: 14, display: 'block' }}>Chụp đồ chơi</b>
+        <span className="sub">Ôn vui 10 phút</span>
+      </button>
+
+      <button className="big-card sky" style={{ margin: 0, padding: '12px 14px' }} onClick={() => openSheet('timer')}>
+        <span className="ic" style={{ fontSize: 22, display: 'flex', marginBottom: 2 }} aria-hidden="true">⏱</span>
+        <b style={{ fontSize: 14, display: 'block' }}>Hẹn giờ học</b>
+        <span className="sub">15 phút vừa đủ</span>
+      </button>
+    </div>
+  )
+
+  // 5. Hay vướng
+  add(
+    'weak',
+    false,
+    <div>
+      <p className="lbl mut" style={{ marginBottom: 8 }}>Tuần này {child.name} hay vướng</p>
+      <div className="chips">
+        {stats.weak.length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng.</span>}
+        {stats.weak.map((w) => (
+          <button key={w.n} className="chip" onClick={() => { pendingToy = weakToy(w.n); go('game') }}>
+            {w.n} ›
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  add(
+    'tip',
+    false,
+    <div className="card mint">
+      <span className="lbl mint">💡 Gợi ý cho {parentLower}</span>
+      <span style={{ fontSize: 14 }}>
+        Hôm nay để con tự làm trước 10 phút, {parentLower} chỉ vào khi con gọi. Ít nói hơn, con nhớ lâu hơn.
+      </span>
+    </div>
+  )
+
+  // 6. Gần đây
+  add(
+    'recent',
+    true,
+    <div className="card">
+      <span className="lbl plum">Gần đây</span>
+      {stats.history.length === 0 && <span className="sub">Chưa có buổi học nào. Chụp bài đầu tiên nhé!</span>}
+      {[...stats.history].reverse().slice(0, 4).map((h, i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <span className="sub">• {h.txt}</span>
+          <span className="pill g" style={{ flexShrink: 0 }}>{h.when}</span>
+        </div>
+      ))}
+    </div>
+  )
+
+  add(
+    'calm',
+    true,
+    <button className="btn ghost" onClick={() => openSheet('calm')}>😮‍💨 Hôm nay hơi mệt? Thở cùng mình</button>
+  )
+
+  const renderBlocks = (list) => list.map((b) => <Fragment key={b.key}>{b.node}</Fragment>)
 
   return (
     <>
-      <div className="hero-band">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 2 }}>
-          <p className="sub" style={{ margin: 0 }}>
-            {dateStr} · {child.emoji} {child.name} · {child.grade} · {child.book}
-          </p>
-          <button
-            className={`sound-pill-btn ${!soundOn ? 'off' : ''}`}
-            onClick={toggleSound}
-            title={soundOn ? 'Âm thanh: ĐANG BẬT (Bấm để tắt tiếng)' : 'Âm thanh: ĐANG TẮT (Bấm để bật)'}
-            data-no-sound
-          >
-            {soundOn ? '🔊 Tiếng: Bật' : '🔇 Tiếng: Tắt'}
-          </button>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="title">{greet}, {S.parent.toLowerCase()}!</p>
-            <p className="title" style={{ fontSize: 19 }}>Tối nay {child.name} học gì?</p>
-          </div>
-          <BuddyGreeter size={68} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-          <button
-            onClick={() => openSheet('stickerBook')}
-            className="chip"
-            style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D', padding: '3px 10px', fontSize: 12, fontWeight: 700, borderRadius: 20 }}
-          >
-            📖 Sổ Sticker: <b>{stats.stickers}</b> ✨
-          </button>
-        </div>
-        {S.children.length > 1 && (
-          <div className="chips" style={{ marginTop: 6, gap: 6 }}>
-            {S.children.map((c) => {
-              const isOtherKid = c.id !== S.activeId;
-              const hasNotice = isOtherKid && ((c.unreadTeacherTasks || 0) > 0 || (c.hasReminderNotice));
-              return (
-                <button
-                  key={c.id}
-                  className={`chip ${c.id === S.activeId ? 'on' : ''}`}
-                  style={{ padding: '3px 9px', fontSize: 12.5, position: 'relative' }}
-                  onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang ${/^bé\s/i.test(c.name) ? c.name : "bé " + c.name} ${c.emoji}`) }}
-                >
-                  {c.emoji} {c.name}
-                  {hasNotice && (
-                    <span
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        backgroundColor: '#EF4444',
-                        display: 'inline-block',
-                        marginLeft: 4,
-                        verticalAlign: 'middle',
-                      }}
-                      title="Bé có bài tập mới hoặc lời nhắc của cô"
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {isEveningShift && (
-        <div
-          className="card sunset pop"
-          style={{
-            background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
-            border: '1.5px solid #FDBA74',
-            padding: '10px 14px',
-            marginBottom: 12,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-          }}
-        >
-          <span style={{ fontSize: 24 }}>🌙</span>
-          <div>
-            <b style={{ color: '#9A3412', fontSize: 14 }}>
-              Tối nay {todayDuty} trực ca kèm {child.name} 🌙
-            </b>
-            <div style={{ fontSize: 12, color: '#C2410C', marginTop: 1 }}>
-              Giữ bình tĩnh, đặt câu hỏi gợi mở và khen ngợi nỗ lực của con nhé!
-            </div>
-          </div>
-        </div>
-      )}
-
-      {stats.stickers >= 10 && (
-        <div
-          className="card sun pop"
-          style={{
-            border: '2px solid #F59E0B',
-            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-            textAlign: 'center',
-            padding: '12px 14px',
-            marginBottom: 12,
-            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.25)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 2 }}>
-            <span style={{ fontSize: 24 }}>🏆</span>
-            <b style={{ color: '#78350F', fontSize: 15 }}>{child.name} đã tích đủ 10 sticker!</b>
-          </div>
-          <p style={{ color: '#92400E', fontSize: 12.5, margin: '2px 0 10px', lineHeight: 1.4 }}>
-            Con đã hoàn thành 10 bài học nỗ lực. {S.parent} mở phiếu đổi quà để thưởng cho con nhé!
-          </p>
-          <button
-            className="btn solid"
-            style={{ width: '100%', background: '#D97706', fontWeight: 700, fontSize: 13.5, boxShadow: '0 2px 8px rgba(217,119,6,0.3)' }}
-            onClick={() => openSheet('redeem')}
-          >
-            🎁 Mở Phiếu Đổi Quà Cho Con ➔
-          </button>
-        </div>
-      )}
-
-      {/* Thẻ Cô nhắc việc (Prompt 04 Mục 4b) */}
-      <TeacherReminderBanner child={child} S={S} patch={patch} go={go} openSheet={openSheet} toast={toast} />
-
-      {/* Hộp thông báo của cô (thông báo chung + lời nhắc) */}
-      <FamilyAnnouncements childId={child?.id} toast={toast} />
-
-      {/* Thẻ bài tập cô giáo giao (Prompt 04) */}
-      <TeacherAssignmentBanner child={child} S={S} patch={patch} go={go} />
-
-      {/* Thẻ Làm tiếp bài hôm qua (Prompt 08 Mục 6) */}
-      {S.pendingProblemResume && (
-        <div
-          className="card sun pop"
-          style={{
-            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-            border: '2px solid #F59E0B',
-            padding: '14px 16px',
-            marginBottom: 12,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <div>
-            <b style={{ color: '#78350F', fontSize: 15, display: 'block' }}>
-              📖 Làm tiếp bài hôm qua
-            </b>
-            <span style={{ color: '#92400E', fontSize: 12.5 }}>
-              Đang ở Bậc {(S.pendingProblemResume.step || 0) + 1} · {S.pendingProblemResume.problem?.dang_bai || S.pendingProblemResume.problem?.type || 'Bài tập'}
-            </span>
-          </div>
-          <button
-            className="btn solid"
-            style={{ padding: '8px 14px', fontSize: 13, fontWeight: 800, background: '#D97706' }}
-            onClick={() => {
-              patch({
-                problem: S.pendingProblemResume.problem,
-                flow: {
-                  ...S.flow,
-                  step: S.pendingProblemResume.step || 0,
-                  unlocked: S.pendingProblemResume.unlocked || false,
-                  stuck: 0,
-                },
-                pendingProblemResume: null,
-              })
-              go('scaffold')
-            }}
-          >
-            Làm tiếp ➔
-          </button>
-        </div>
-      )}
-
-      {/* 2. Theo dõi học đều mỗi ngày (Prompt 07 Phần B) */}
-      {StudyTrackerSlot && (
-        <div style={{ marginBottom: 12 }}>
-          <StudyTrackerSlot tracker={tracker} onOpenReport={() => go('report')} />
-        </div>
-      )}
-
-      {/* 3. Hành động bắt đầu bài học theo Theme riêng (Prompt 07 & 8-bo-giao-dien-rieng.html) */}
-      {StartActionSlot ? (
-        <div style={{ marginBottom: 12 }}>
-          <StartActionSlot
-            onStart={(mode) => {
-              if (mode === 'photo' || mode === 'snap') {
-                go('snap')
-              } else if (mode === 'type') {
-                openSheet('typeProblem')
-              } else if (mode === 'voice') {
-                openSheet('typeProblem', { mode: 'voice', autoMic: true })
-              } else {
-                go('snap')
-              }
-            }}
-          />
+      {hero}
+      {wide ? (
+        <div className="pg-cols">
+          <div className="pg-col">{renderBlocks(blocks.filter((b) => !b.side))}</div>
+          <div className="pg-col">{renderBlocks(blocks.filter((b) => b.side))}</div>
         </div>
       ) : (
-        <button className="big-card plum" onClick={() => go('snap')}>
-          <span className="ic">📷</span>
-          <span className="lbl plum">Có bài tập</span>
-          <b>Chụp bài con đang làm</b>
-          <span className="sub">AI chỉ {S.parent.toLowerCase()} cách giảng, không đưa đáp án cho con</span>
-        </button>
+        renderBlocks(blocks)
       )}
-
-      {/* Khe mới CheckWorkEntry: Chấm vở con đã làm (Prompt 14 Phần A Mục 2.1) */}
-      {(() => {
-        const CheckWorkEntrySlot = getSlot(theme, 'CheckWorkEntry')
-        if (!CheckWorkEntrySlot) return null
-        return (
-          <div style={{ marginBottom: 12 }}>
-            <CheckWorkEntrySlot
-              childName={child.name}
-              onStart={() => go('check')}
-            />
-          </div>
-        )
-      })()}
-
-      {/* Lựa chọn phụ: Ôn đồ chơi & Hẹn giờ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 4 }}>
-        <button className="big-card sun" style={{ margin: 0, padding: '12px 14px' }} onClick={() => go('toy')}>
-          <span className="ic" style={{ fontSize: 22, display: 'block', marginBottom: 2 }}>🧸</span>
-          <b style={{ fontSize: 13.5, display: 'block' }}>Chụp đồ chơi</b>
-          <span className="sub" style={{ fontSize: 11.5 }}>Ôn vui 10 phút</span>
-        </button>
-
-        <button className="big-card sky" style={{ margin: 0, padding: '12px 14px' }} onClick={() => openSheet('timer')}>
-          <span className="ic" style={{ fontSize: 22, display: 'block', marginBottom: 2 }}>⏱</span>
-          <b style={{ fontSize: 13.5, display: 'block' }}>Hẹn giờ học</b>
-          <span className="sub" style={{ fontSize: 11.5 }}>15 phút vừa đủ</span>
-        </button>
-      </div>
-
-      <div>
-        <p className="lbl mut" style={{ marginBottom: 8 }}>Tuần này {child.name} hay vướng</p>
-        <div className="chips">
-          {stats.weak.map((w) => (
-            <button key={w.n} className="chip" onClick={() => { pendingToy = weakToy(w.n); go('game') }}>
-              {w.n} ›
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="card mint">
-        <span className="lbl mint">💡 Gợi ý cho {S.parent.toLowerCase()}</span>
-        <span style={{ fontSize: 14 }}>
-          Hôm nay để con tự làm trước 10 phút, {S.parent.toLowerCase()} chỉ vào khi con gọi. Ít nói hơn, con nhớ lâu hơn.
-        </span>
-      </div>
-
-      <div className="card">
-        <span className="lbl plum">Gần đây</span>
-        {stats.history.length === 0 && <span className="sub">Chưa có buổi học nào. Chụp bài đầu tiên nhé!</span>}
-        {[...stats.history].reverse().slice(0, 4).map((h, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-            <span className="sub">• {h.txt}</span>
-            <span className="pill g">{h.when}</span>
-          </div>
-        ))}
-      </div>
-
-      <button className="btn ghost" onClick={() => openSheet('calm')}>😮‍💨 Hôm nay hơi mệt? Thở cùng mình</button>
     </>
   )
 }
@@ -659,7 +698,7 @@ export function SnapHomework() {
 
   const sendShot = (shot) => {
     pendingShot = { dataUrl: shot.dataUrl, blob: shot.blob }
-    toast('Đã nhận ảnh — AI đang đọc…')
+    toast('Đã nhận ảnh, AI đang đọc…')
     go('analyze')
   }
 
@@ -676,7 +715,7 @@ export function SnapHomework() {
   const capture = async () => {
     const video = videoRef.current
     if (!video || !video.videoWidth) {
-      toast('Camera chưa sẵn sàng — bấm "Chọn ảnh" nhé 📷')
+      toast('Camera chưa sẵn sàng, bấm "Chọn ảnh" nhé 📷')
       return
     }
     if (busy) return
@@ -1498,10 +1537,10 @@ export function Analyze() {
               style={{ flex: 1.4, padding: '9px 12px', fontSize: 13.5 }}
               onClick={() => {
                 const t = (editedText || '').trim()
-                if (!t) { toast('Đề bài đang trống — hãy nhập đề hoặc chụp lại nhé ✏️'); return }
+                if (!t) { toast('Đề bài đang trống, hãy nhập đề hoặc chụp lại nhé ✏️'); return }
                 const unsure = (t.match(/\[\?\]/g) || []).length
                 if (unsure) {
-                  toast(`Còn ${unsure} chỗ [?] — ${S.parent} sửa theo ảnh rồi bấm Tiếp tục nhé 🔍`)
+                  toast(`Còn ${unsure} chỗ [?], ${S.parent} sửa theo ảnh rồi bấm Tiếp tục nhé 🔍`)
                   return
                 }
                 
@@ -1807,7 +1846,7 @@ export function Explain() {
 }
 
 /* ============================================================
-   5b. ĐÁP ÁN CHO MẸ — giữ 1.5 giây mới hiện, chữ nhỏ & muted,
+   5b. ĐÁP ÁN CHO MẸ, giữ 1.5 giây mới hiện, chữ nhỏ & muted,
    không TTS, không hiển thị cho trẻ
    ============================================================ */
 function ParentAnswer({ text, parent }) {
@@ -1954,6 +1993,8 @@ export function Scaffold() {
           </p>
         </div>
       )}
+
+      <SeasonStepProgress total={steps.length} current={step} />
 
       {steps.map((s, i) => {
         if (i < step)
@@ -2126,9 +2167,9 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
   const timerRef = useRef(null)
 
   const TEACH_BACK_OPTIONS = [
-    { v: 'ok', e: '🌟', t: 'Con tự làm được (Tự chủ)' },
-    { v: 'hint', e: '🟡', t: 'Con cần gợi ý' },
-    { v: 'guided', e: '🔴', t: `${parent} phải hướng dẫn nhiều` },
+    { v: 'ok', e: seasonLevelEmoji('ok', '🌟'), t: 'Con tự làm được (Tự chủ)' },
+    { v: 'hint', e: seasonLevelEmoji('hint', '🟡'), t: 'Con cần gợi ý' },
+    { v: 'guided', e: seasonLevelEmoji('guided', '🔴'), t: `${parent} phải hướng dẫn nhiều` },
   ]
 
   const startRecording = async () => {
@@ -2644,9 +2685,9 @@ export function Done() {
 
   /* Feature 4: Con dạy lại mẹ — đo mức độ tự chủ (Metacognition & Peer Teaching) */
   const TEACH_BACK_OPTIONS = [
-    { v: 'ok', e: '✅', t: 'Con tự làm được' },
-    { v: 'hint', e: '🟡', t: 'Con cần gợi ý' },
-    { v: 'guided', e: '🔴', t: `${S.parent} phải hướng dẫn nhiều` },
+    { v: 'ok', e: seasonLevelEmoji('ok', '✅'), t: 'Con tự làm được' },
+    { v: 'hint', e: seasonLevelEmoji('hint', '🟡'), t: 'Con cần gợi ý' },
+    { v: 'guided', e: seasonLevelEmoji('guided', '🔴'), t: `${S.parent} phải hướng dẫn nhiều` },
   ]
   const pickTeachBack = (v) => {
     soundPop(500)
@@ -2679,6 +2720,7 @@ export function Done() {
   return (
     <>
       <Header title="Xong bài rồi! 🎉" back="home" />
+      <SeasonDoneArt />
       {problem?.isSample && (
         <div
           className="sample-banner"
@@ -2792,7 +2834,7 @@ export function Done() {
           }}
         >
           <div style={{ fontSize: 38, marginBottom: 4 }}>🎁 🏆 🍦</div>
-          <b style={{ color: '#78350F', fontSize: 16 }}>🎉 ĐỦ 10 HUY HIỆU RỒI — ĐỔI QUÀ THÔI!</b>
+          <b style={{ color: '#78350F', fontSize: 16 }}>🎉 ĐỦ 10 HUY HIỆU RỒI, ĐỔI QUÀ THÔI!</b>
           <div style={{ color: '#92400E', fontSize: 13, margin: '6px 0 12px', lineHeight: 1.4 }}>
             Chúc mừng {child.name} đã tích lũy đủ 10 sticker nỗ lực! {S.parent} bấm để mở phiếu đổi quà và bắt đầu chặng mới nhé.
           </div>
@@ -2801,7 +2843,7 @@ export function Done() {
             style={{ width: '100%', background: '#D97706', fontWeight: 700, fontSize: 14.5, boxShadow: '0 4px 12px rgba(217,119,6,0.3)' }}
             onClick={() => openSheet('redeem')}
           >
-            🎁 Mở Phiếu Đổi Quà Cho Con ➔
+            🎁 Mở phiếu đổi quà cho con
           </button>
         </div>
       )}
@@ -3316,7 +3358,7 @@ export function SnapToy() {
   const capture = () => {
     const video = videoRef.current
     if (!video || !video.videoWidth) {
-      toast('Camera chưa sẵn sàng — chọn đồ chơi bên dưới nhé 📷')
+      toast('Camera chưa sẵn sàng, chọn đồ chơi bên dưới nhé 📷')
       return
     }
     const canvas = document.createElement('canvas')
@@ -3409,7 +3451,7 @@ export function SnapToy() {
           </div>
         )}
         <div className="hint">
-          {shot ? 'Đã chụp — AI đang phân tích đồ vật' : 'Chụp cây lược, bút, thước, chai lọ hoặc đồ vật bất kỳ'}
+          {shot ? 'Đã chụp, AI đang phân tích đồ vật' : 'Chụp cây lược, bút, thước, chai lọ hoặc đồ vật bất kỳ'}
         </div>
       </div>
 
@@ -3665,7 +3707,7 @@ export function Game() {
           </button>
           <button className="btn ghost" onClick={() => { setRunning(false); setTl(600); toast('Đã đặt lại ⏱') }}>Đặt lại</button>
         </div>
-        <span className="sub">Hết giờ là dừng — khen con và nghỉ, đừng kéo dài thành cuộc chiến.</span>
+        <span className="sub">Hết giờ là dừng, khen con và nghỉ, đừng kéo dài thành cuộc chiến.</span>
       </div>
     </>
   )
@@ -4184,42 +4226,36 @@ function PenGame() {
       {tab === 'pack' ? (
         <>
           <b style={{ fontSize: 16 }}>✏️ Bó bút học nhân & chia</b>
-          <span style={{ fontSize: 13.5 }}>
-            {S.parent.toLowerCase()} có <b>{cfg.packs} bó bút</b>, mỗi bó có <b>{cfg.perPack} cây bút</b>. Hỏi có tất cả bao nhiêu cây bút?
+          <span style={{ fontSize: 14 }}>
+            {S.parent} có <b>{cfg.packs} bó bút</b>, mỗi bó có <b>{cfg.perPack} cây bút</b>. Hỏi có tất cả bao nhiêu cây bút?
           </span>
 
-          {/* Visual Pen Bundles */}
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cfg.packs}, 1fr)`, gap: 8, margin: '12px 0' }}>
+          {/* Visual Pen Bundles · Đợt 15 · 6.5: lưới tự xuống dòng trong khung */}
+          <div className="pen-bundles">
             {Array.from({ length: cfg.packs }).map((_, pIdx) => (
-              <div
+              <button
+                type="button"
                 key={pIdx}
+                className={`pen-bundle ${activeBundle === pIdx ? 'on' : ''}`}
+                aria-pressed={activeBundle === pIdx}
+                aria-label={`Bó ${pIdx + 1}: ${cfg.perPack} cây bút`}
                 onClick={() => {
                   soundPop(500 + pIdx * 100)
                   setActiveBundle(pIdx)
                 }}
-                style={{
-                  background: activeBundle === pIdx ? '#FEF3C7' : '#FFFFFF',
-                  border: activeBundle === pIdx ? '2px solid #F59E0B' : '1.5px dashed #CBD5E1',
-                  borderRadius: 12,
-                  padding: '8px 4px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all .2s',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                }}
               >
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 4 }}>Bó {pIdx + 1}</div>
-                <div style={{ fontSize: 18, letterSpacing: 2 }}>
+                <div className="pen-lbl" style={{ marginBottom: 4 }}>Bó {pIdx + 1}</div>
+                <div className="pens" aria-hidden="true">
                   {Array.from({ length: cfg.perPack }).map((_, i) => (
-                    <span key={i} title="Bút">✏️</span>
+                    <span key={i}>✏️</span>
                   ))}
                 </div>
-                <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>{cfg.perPack} cây</div>
-              </div>
+                <div className="pen-lbl" style={{ marginTop: 4 }}>{cfg.perPack} cây</div>
+              </button>
             ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 13, color: 'var(--muted)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 14, color: 'var(--c-text-2, var(--muted))' }}>
             💡 Phép tính: <b>{cfg.perPack} × {cfg.packs} = ?</b>
           </div>
 
@@ -4228,8 +4264,9 @@ function PenGame() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   className="field"
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: 0 }}
                   inputMode="numeric"
+                  aria-label="Con đoán tổng số bút"
                   placeholder="Con đoán tổng số bút…"
                   value={guess}
                   onChange={(e) => setGuess(e.target.value)}
@@ -4250,11 +4287,11 @@ function PenGame() {
                   <span>Chưa đúng rồi. Con thử bấm vào từng bó bút để đếm cùng {S.parent.toLowerCase()} nhé!</span>
                 </div>
               )}
-              <div className="btns" style={{ marginTop: 8 }}>
-                <button className="btn ghost" onClick={() => setPackMode('Dễ hơn')}>Dễ hơn (2 bó)</button>
-                <button className="btn ghost" onClick={() => setPackMode('Khó hơn')}>Khó hơn (4 bó)</button>
-                <button className="btn soft" onClick={() => { setRole(true); setQuiz({ a: 3 + Math.floor(Math.random() * 5), b: 2 + Math.floor(Math.random() * 6) }) }}>
-                  Đổi vai con đố {S.parent.toLowerCase()}
+              <div className="pill-row" style={{ marginTop: 8 }}>
+                <button type="button" className={`pill-btn ${cfg.mode === 'Dễ hơn' ? 'on' : ''}`} aria-pressed={cfg.mode === 'Dễ hơn'} onClick={() => setPackMode('Dễ hơn')}>Dễ hơn · 2 bó</button>
+                <button type="button" className={`pill-btn ${cfg.mode === 'Khó hơn' ? 'on' : ''}`} aria-pressed={cfg.mode === 'Khó hơn'} onClick={() => setPackMode('Khó hơn')}>Khó hơn · 4 bó</button>
+                <button type="button" className="pill-btn" onClick={() => { setRole(true); setQuiz({ a: 3 + Math.floor(Math.random() * 5), b: 2 + Math.floor(Math.random() * 6) }) }}>
+                  🔄 Đổi vai: con đố {S.parent.toLowerCase()}
                 </button>
               </div>
             </>
@@ -4444,7 +4481,7 @@ function LegoGame() {
     if (g === answer) {
       soundSuccess()
       setFb('yes'); boom()
-      toast('Đúng rồi! Giỏi quá — đổi vai nhé 🎉')
+      toast('Đúng rồi! Giỏi quá, đổi vai nhé 🎉')
     } else {
       soundWrong()
       setFb('no')
@@ -4497,7 +4534,7 @@ function LegoGame() {
             <button className="btn solid grow0" style={{ width: 'auto', padding: '12px 20px' }} onClick={check}>Đoán</button>
           </div>
           {fb === 'yes' && <div className="card mint pop"><b>Đúng rồi! {cfg.per} × {cfg.floors}{cfg.minus ? ` − ${cfg.minus}` : ''} = {answer}</b></div>}
-          {fb === 'no' && <div className="card sun pop"><span>Chưa đúng. Đếm từng tầng một xem sao — {S.parent.toLowerCase()} không vội đâu.</span></div>}
+          {fb === 'no' && <div className="card sun pop"><span>Chưa đúng. Đếm từng tầng một xem sao, {S.parent.toLowerCase()} không vội đâu.</span></div>}
           <div className="btns">
             <button className="btn ghost" onClick={() => setMode('Dễ hơn')}>Dễ hơn</button>
             <button className="btn ghost" onClick={() => setMode('Khó hơn')}>Khó hơn</button>
@@ -4597,7 +4634,7 @@ function CandyGame() {
     } else {
       soundWrong()
       setSel(cell)
-      toast('Chưa nối được — chọn 2 ô cùng màu có đường đi (≤ 2 góc) nhé')
+      toast('Chưa nối được, chọn 2 ô cùng màu có đường đi (≤ 2 góc) nhé')
     }
   }
 
@@ -4625,7 +4662,7 @@ function CandyGame() {
           ))
         )}
       </div>
-      <span className="sub">Đã nối {moves} cặp. Không vội — nhìn kỹ đường đi nhé.</span>
+      <span className="sub">Đã nối {moves} cặp. Không vội, nhìn kỹ đường đi nhé.</span>
       <button className="btn ghost" onClick={() => { setGrid(genCandy()); setSel(null); setMoves(0) }}>Ván mới</button>
     </div>
   )
@@ -4689,7 +4726,7 @@ function CardGame() {
       </div>
       <b style={{ fontSize: 16 }}>🃏 Lật bài tìm cặp</b>
       <span style={{ fontSize: 13.5 }}>
-        Bên dưới là <b>số hoặc chữ cái</b>. Bấm lật 2 lá — giống nhau thì giữ lại. Tìm đủ 12 cặp là thắng!
+        Bên dưới là <b>số hoặc chữ cái</b>. Bấm lật 2 lá, giống nhau thì giữ lại. Tìm đủ 12 cặp là thắng!
       </span>
       <div className="card-grid">
         {cards.map((c, i) => (
@@ -4702,7 +4739,7 @@ function CardGame() {
           </button>
         ))}
       </div>
-      <span className="sub">Nhớ vị trí các lá đã lật — {S.parent.toLowerCase()} có thể chơi cùng con để xem ai nhớ lâu hơn.</span>
+      <span className="sub">Nhớ vị trí các lá đã lật, {S.parent.toLowerCase()} có thể chơi cùng con để xem ai nhớ lâu hơn.</span>
       <button className="btn ghost" onClick={() => { setCards(genCards()); setFirst(null); setLock(false); setFound(0) }}>Ván mới</button>
     </div>
   )
@@ -4736,7 +4773,7 @@ function ClockGame() {
     setScores((s) => [...s, { player, dev }])
     if (scores.length + 1 >= TOTAL_ROUNDS) {
       boom()
-      toast('Hết 4 lượt — so kết quả nhé! 🎉')
+      toast('Hết 4 lượt, so kết quả nhé! 🎉')
     }
   }
 
@@ -4769,7 +4806,7 @@ function ClockGame() {
       {phase === 'done' && (
         <div className={`card ${Math.abs(elapsed - parseFloat(target)) < 0.3 ? 'mint' : 'sun'} pop`}>
           <span className="lbl plum">Lượt của {player}</span>
-          <b style={{ fontSize: 17 }}>{elapsed.toFixed(2)}s — lệch {Math.abs(elapsed - parseFloat(target)).toFixed(2)}s</b>
+          <b style={{ fontSize: 17 }}>{elapsed.toFixed(2)}s, lệch {Math.abs(elapsed - parseFloat(target)).toFixed(2)}s</b>
           {Math.abs(elapsed - parseFloat(target)) < 0.3 && <span className="sub">Siêu chuẩn! 🎯</span>}
         </div>
       )}
@@ -4826,7 +4863,7 @@ function StickGame() {
       toast('Đúng rồi! Phép tính thành công 🎉')
     } else {
       soundWrong()
-      toast('Chưa đúng — thử lại nhé 💪')
+      toast('Chưa đúng, thử lại nhé 💪')
     }
   }
 
@@ -4897,7 +4934,7 @@ function BowlGame() {
       toast('Đúng rồi! 🎉')
     } else {
       soundWrong()
-      toast('Chưa đúng — đếm lại từng bát nhé')
+      toast('Chưa đúng, đếm lại từng bát nhé')
     }
   }
 
@@ -4987,7 +5024,7 @@ function WeeklyAiCards({ stats, childName }) {
   const reported = Number(safety?.feedback?.total || 0)
   const tile = { flex: 1, minWidth: 0, background: 'var(--c-surface-2)', borderRadius: 14, padding: '10px 10px' }
   const num = { fontSize: 22, fontWeight: 900, color: 'var(--c-text)', lineHeight: 1.1 }
-  const cap = { fontSize: 11.5, color: 'var(--c-text)', marginTop: 2, lineHeight: 1.3 }
+  const cap = { fontSize: 13, color: 'var(--c-text)', marginTop: 2, lineHeight: 1.35 }
   return (
     <div className="card" data-testid="weekly-ai-cards">
       <span className="lbl plum">Tuần này cùng AI</span>
@@ -5003,7 +5040,7 @@ function WeeklyAiCards({ stats, childName }) {
       </div>
       <div style={{ ...tile, marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }} data-testid="weekly-safety">
         <span style={{ fontSize: 22 }}>🛡️</span>
-        <div style={{ fontSize: 12.5, color: 'var(--c-text)', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.45 }}>
           <b>An toàn AI 7 ngày:</b>{' '}
           {safety
             ? `AI tự chặn ${blocked} lần định lộ đáp án · ${leaked === 0 ? 'không lần nào lọt tới con' : `${leaked} lần lọt, đội ngũ đang xem`}${reported ? ` · ${reported} câu bố mẹ báo` : ''}.`
@@ -5042,11 +5079,12 @@ export function Report() {
   const lastTraits = countTraitMap(lastWeekStickers)
 
   // Danh mục phẩm chất theo dõi chính
+  // Đợt 15 · 6.1: phân biệt phẩm chất bằng biểu tượng + nhãn, màu lấy từ bộ giao diện
   const TRACKED_TRAITS = [
-    { trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
-    { trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-    { trait: 'Tập trung', fa: 'fa-solid fa-bullseye', color: '#4F46E5', bg: '#EEF2FF', border: '#C7D2FE' },
-    { trait: 'Tỉ mỉ', fa: 'fa-solid fa-compass-drafting', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0' },
+    { trait: 'Kiên nhẫn', fa: 'fa-solid fa-mountain' },
+    { trait: 'Sáng tạo', fa: 'fa-solid fa-lightbulb' },
+    { trait: 'Tập trung', fa: 'fa-solid fa-bullseye' },
+    { trait: 'Tỉ mỉ', fa: 'fa-solid fa-compass-drafting' },
   ]
 
   // State phân tích AI Lộ trình Sư phạm
@@ -5057,7 +5095,7 @@ export function Report() {
   const handleRunAiAnalysis = async () => {
     soundPop(550)
     setAnalyzing(true)
-    toast('AI đang phân tích biến động phẩm chất & đề xuất lộ trình… 🧠')
+    toast('AI đang phân tích phẩm chất và đề xuất lộ trình… 🧠')
 
     try {
       const result = await aiAnalyzeLongitudinalProgress({
@@ -5084,7 +5122,7 @@ export function Report() {
 - **Môn Toán**: Dạng bài *Toán có lời văn 2 bước* đang là điểm nghẽn lớn nhất (vướng ${stats.weak?.[0]?.v || 3} lần). Con bị quá tải ở khâu phân tích đề bài trước khi đặt phép tính.
 - **Tâm lý & nhịp học**: Con cần các khoảng nghỉ ngắn và trò chơi kết nối thực tế để tái nạp năng lượng sáng tạo.
 
-### 🎯 3. Lộ trình 7 ngày cân bằng (Adaptive Roadmap)
+### 🎯 3. Lộ trình 7 ngày cân bằng
 1. **Ngày 1-2 (Giải phóng áp lực)**: Không giao thêm bài toán chữ dài. Dùng 5 que tính hoặc đồ chơi Lego để trực quan hóa đề bài.
 2. **Ngày 3-4 (Đổi gió cùng Bố)**: Đổi người kèm sang Bố 1 ca cuối tuần, thực hành trò chơi đo chiều cao chai nước hoặc đếm số bước chân.
 3. **Ngày 5-7 (Kích hoạt lại tính sáng tạo)**: Cho con tự đặt đề bài đố ngược lại mẹ ("Con đố mẹ làm được bài này!"), tặng huy hiệu Ngôi sao Sáng tạo khi con nghĩ ra cách giải mới.`
@@ -5101,356 +5139,329 @@ export function Report() {
     }
   }
 
+  // Đợt 15 · 6.3: hiện đủ "vướng 2/3 lần" (dữ liệu cũ có thể chỉ có count)
+  const weakText = (w) => {
+    const v = Number(w?.v ?? w?.count ?? 0)
+    const t = Number(w?.t ?? 0)
+    return t > 0 ? `vướng ${v}/${t} lần` : `vướng ${v} lần`
+  }
+  const weakPct = (w) => {
+    const v = Number(w?.v ?? w?.count ?? 0)
+    const t = Number(w?.t ?? 0)
+    return t > 0 ? (v / t) * 100 : v > 0 ? 100 : 0
+  }
+  const parentLower = S?.parent ? S.parent.toLowerCase() : 'bố mẹ'
+
+  // ---- Các khối báo cáo (thứ tự 6.3: tóm tắt, hay vướng, đã vững, phẩm chất, phân tích, lịch học, riêng người lớn, gửi Zalo) ----
+  const aiKemCard = (
+    <div className="card">
+      <span className="lbl plum">Ai kèm</span>
+      <div style={{ display: 'flex', height: 14, borderRadius: 8, overflow: 'hidden', background: 'var(--c-surface-2)' }}>
+        <i style={{ width: `${momPct}%`, background: 'var(--c-accent)' }} />
+        <i style={{ width: `${dadPct}%`, background: 'var(--c-accent-2, var(--sky))' }} />
+      </div>
+      <span className="sub">
+        Mẹ {momSessions} ca ({momPct}%) · Bố {dadSessions} ca ({dadPct}%) →{' '}
+        {totalSessions === 0
+          ? <b>tuần này chưa ghi nhận ca học nào.</b>
+          : dadSessions === 0
+          ? <b>gợi ý: thử giao 1-2 ca cho bố để mẹ nghỉ ngơi nhé.</b>
+          : momSessions === 0
+          ? <b>tuần này bố đảm nhiệm hết, cảm ơn bố nhiều!</b>
+          : <b>hai người cân sức rồi, giữ nếp nhé!</b>}
+      </span>
+    </div>
+  )
+
+  const weakSection = (
+    <div className="pg-section">
+      <p className="lbl mut">Con hay vướng (cần tháo gỡ)</p>
+      {(stats?.weak || []).length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng 🎉</span>}
+      {(stats?.weak || []).map((w) => (
+        <div className="card" key={w.n}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <b style={{ fontSize: 14 }}>{w.n}</b>
+            <span className="pill c" style={{ flexShrink: 0 }}>{weakText(w)}</span>
+          </div>
+          <Bar pct={weakPct(w)} color="var(--coral)" />
+        </div>
+      ))}
+    </div>
+  )
+
+  const strongSection = (
+    <div className="pg-section">
+      <p className="lbl mut">Con đã vững</p>
+      {(stats?.strong || []).length === 0 && <span className="sub">Chưa có dạng bài nào đủ vững, cứ từ từ nhé.</span>}
+      {(stats?.strong || []).map((w) => (
+        <div className="card" key={w.n}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <b style={{ fontSize: 14 }}>{w.n}</b>
+            <span className="pill m" style={{ flexShrink: 0 }}>{w.v}/{w.t}</span>
+          </div>
+          <Bar pct={100} color="var(--mint)" />
+        </div>
+      ))}
+    </div>
+  )
+
+  const emptyWeekCard = (
+    <div className="card dimmed" style={{ textAlign: 'center', padding: '24px 16px' }}>
+      <div style={{ fontSize: 32, marginBottom: 6 }} aria-hidden="true">🌱 📚</div>
+      <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>Chưa có buổi học nào tuần này</p>
+      <span style={{ fontSize: 14, color: 'var(--c-text-2)', display: 'block', marginTop: 4 }}>
+        Bắt đầu buổi học đầu tiên để AI ghi nhận phẩm chất và theo dõi tiến bộ của {child.name} nhé!
+      </span>
+    </div>
+  )
+
+  // Phẩm chất tuần này so với tuần trước: phân biệt bằng biểu tượng + nhãn, màu theo bộ giao diện
+  const traitsCard = (
+    <div className="card rpt-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+        <span className="lbl plum" style={{ margin: 0 }}>📊 Phẩm chất tuần này so với tuần trước</span>
+      </div>
+      <div className="trait-grid">
+        {TRACKED_TRAITS.map((item) => {
+          const thisCnt = thisTraits[item.trait] || 0
+          const lastCnt = lastTraits[item.trait] || 0
+          const diff = thisCnt - lastCnt
+          return (
+            <div key={item.trait} className="trait-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <span className="trait-ic" aria-hidden="true">
+                    <i className={item.fa} />
+                  </span>
+                  <span className="trait-name">{item.trait}</span>
+                </div>
+                <span className="trait-diff" aria-label={diff > 0 ? `Tăng ${diff}` : diff < 0 ? `Giảm ${-diff}` : 'Giữ đều'}>
+                  {diff > 0 ? `+${diff} ↗` : diff < 0 ? `${diff} ↘` : 'Đều'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+                <span className="trait-num">{thisCnt}</span>
+                <span className="trait-meta">tuần này</span>
+                <span className="trait-meta" style={{ marginLeft: 'auto' }}>trước: {lastCnt}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <span className="sub" style={{ marginTop: 10, display: 'block' }}>
+        💡 <b>Góc nhìn sư phạm:</b> Khi bài tập chuyển sang dạng dài và khó, số sticker <i>Kiên nhẫn</i> thường tăng cao và <i>Sáng tạo</i> tạm thời giảm. Đây là nhịp chuyển tự nhiên, không nên sốt ruột.
+      </span>
+    </div>
+  )
+
+  // Phân tích (AI) đặt dưới phẩm chất
+  const analysisCard = (
+    <div className="card rpt-card accent">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+        <span className="rpt-kicker">
+          <i className="fa-solid fa-brain fa-fw" style={{ marginRight: 6 }} aria-hidden="true" />
+          Con tiến bộ theo tuần
+        </span>
+        <span className="rpt-tag">Theo dõi dài hạn</span>
+      </div>
+
+      <b className="rpt-title" style={{ display: 'block', marginBottom: 6 }}>
+        Phân tích phẩm chất và lộ trình cân bằng
+      </b>
+      <p style={{ fontSize: 14, color: 'var(--c-text)', lineHeight: 1.5, margin: '0 0 12px' }}>
+        Dựa trên <b>{stickerHistory.length} huy hiệu</b> đã tích luỹ qua các tuần, AI tìm hiểu vì sao tuần này con nhận nhiều hay ít huy hiệu <i>Kiên nhẫn</i>, <i>Sáng tạo</i> để cân bằng tâm lý và nhịp học.
+      </p>
+
+      {aiAnalysis ? (
+        <div
+          style={{
+            background: 'var(--c-surface-2)',
+            borderRadius: 14,
+            padding: '14px 12px',
+            border: '1.5px solid var(--c-line)',
+            fontSize: 14,
+            lineHeight: 1.55,
+            color: 'var(--c-text)',
+            marginBottom: 12,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {aiAnalysis}
+        </div>
+      ) : null}
+
+      <button
+        className="btn solid"
+        disabled={analyzing}
+        onClick={handleRunAiAnalysis}
+        style={{ fontWeight: 800, fontSize: 15 }}
+      >
+        {analyzing ? (
+          <>
+            <i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> Đang phân tích cho {child.name}…
+          </>
+        ) : aiAnalysis ? (
+          <>
+            <i className="fa-solid fa-rotate" aria-hidden="true" /> Phân tích lại
+          </>
+        ) : (
+          <>✨ AI phân tích lộ trình cân bằng cho con</>
+        )}
+      </button>
+    </div>
+  )
+
+  // Lưới học 30 ngày trong tháng (Prompt 07 Phần B)
+  const calendarCard = (
+    <div className="card" style={{ padding: '14px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16 }} aria-hidden="true">🗓️</span>
+          <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Lịch học đều tháng {new Date().getMonth() + 1}</b>
+        </div>
+        <span style={{ fontSize: 13, color: 'var(--c-text-2)' }}>
+          Chuỗi: <b style={{ color: 'var(--c-text)' }}>{tracker?.streak || 0} tối</b>
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, textAlign: 'center' }}>
+        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((h) => (
+          <span key={h} style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 2 }}>{h}</span>
+        ))}
+        {(() => {
+          const now = new Date()
+          const firstDayIndex = (new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7
+          const emptyPads = Array.from({ length: firstDayIndex })
+          return (
+            <>
+              {emptyPads.map((_, i) => <div key={'pad_' + i} />)}
+              {(tracker?.month || []).map((m) => (
+                <div
+                  key={m.dateKey}
+                  title={`${m.day}/${now.getMonth() + 1}: ${m.isStudied ? 'Đã học' : 'Chưa học'}`}
+                  aria-label={`Ngày ${m.day}: ${m.isStudied ? 'đã học' : 'chưa học'}`}
+                  style={{
+                    height: 34,
+                    borderRadius: 8,
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontSize: 13,
+                    fontWeight: m.isToday ? 800 : 600,
+                    background: m.isStudied ? 'var(--c-good)' : 'var(--c-bg)',
+                    color: m.isStudied ? 'var(--c-on-good)' : m.isToday ? 'var(--c-accent-ink, var(--c-text))' : 'var(--c-text-2)',
+                    border: m.isToday ? '2px dashed var(--c-accent)' : '1px solid var(--c-line)',
+                  }}
+                >
+                  {m.isStudied ? '✓' : m.day}
+                </div>
+              ))}
+            </>
+          )
+        })()}
+      </div>
+
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--c-line)', fontSize: 13, textAlign: 'center', color: 'var(--c-text-2)' }}>
+        Tháng này: <b style={{ color: 'var(--c-text)' }}>{(tracker?.month || []).filter((m) => m.isStudied).length} tối</b> · chuỗi dài nhất <b style={{ color: 'var(--c-text)' }}>{tracker?.bestStreak || 0} tối</b>
+      </div>
+    </div>
+  )
+
+  // Ghi nhận riêng cho bố mẹ (Prompt 08 Mục 7)
+  const adultsCard = (() => {
+    if (session && session.role === 'viewer') return null
+    const calmHistory = stats?.calmHistory || S?.stats?.[S?.activeId]?.calmHistory || []
+    const thisWeekCalm = calmHistory.filter((item) => {
+      const ts = typeof item === 'number' ? item : item?.ts
+      return ts && getWeekLabel(ts) === 'Tuần này'
+    })
+    const count = thisWeekCalm.length
+    if (count === 0) return null
+
+    const daysSet = new Set()
+    thisWeekCalm.forEach((item) => {
+      const ts = typeof item === 'number' ? item : item?.ts
+      if (ts) daysSet.add(new Date(ts).toLocaleDateString('vi-VN', { weekday: 'short' }))
+    })
+
+    return (
+      <div className="card rpt-card" style={{ padding: '16px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+          <span className="rpt-kicker">🔒 Riêng cho người lớn trong nhà</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text-2)' }}>{Array.from(daysSet).join(', ')}</span>
+        </div>
+
+        <h4 className="rpt-title" style={{ margin: '0 0 6px' }}>
+          Tuần này {parentLower} đã dừng lại {count} lần trước khi nổi nóng 💚
+        </h4>
+        <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '0 0 10px', lineHeight: 1.45 }}>
+          {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {parentLower}!
+        </p>
+
+        <div className="switch-row" style={{ borderTop: '1px dashed var(--c-line)', paddingTop: 8 }}>
+          <span id="rpt-calm-zalo-lbl" style={{ fontSize: 14, color: 'var(--c-text)' }}>Gửi kèm báo cáo Zalo</span>
+          <Switch
+            on={Boolean(S?.shareCalmWithZalo)}
+            onChange={(v) => patch && patch({ shareCalmWithZalo: v })}
+            label="Gửi kèm báo cáo Zalo"
+            aria-describedby="rpt-calm-zalo-lbl"
+          />
+        </div>
+      </div>
+    )
+  })()
+
+  const weekendCard = (
+    <div className="card plum">
+      <span className="lbl plum">Một việc cho cuối tuần</span>
+      <span style={{ fontSize: 14 }}>
+        Đi chợ cùng con: "3 bó rau, mỗi bó 5 nghìn, trả 20 nghìn thì thối bao nhiêu?"
+      </span>
+    </div>
+  )
+
   return (
     <>
       <Header title={`Tuần này của ${child.name}`} />
       <p className="sub">{totalSessions} ca · mẹ kèm {momSessions} ca, bố kèm {dadSessions} ca · {stickerHistory.length} mốc dữ liệu phẩm chất</p>
 
-      {thisWeekStickers.length === 0 ? (
-        <div className="card dimmed" style={{ textAlign: 'center', padding: '24px 16px', margin: '12px 0' }}>
-          <div style={{ fontSize: 32, marginBottom: 6 }}>🌱 📚</div>
-          <p className="sub" style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#475569' }}>
-            Chưa có buổi học nào tuần này
-          </p>
-          <span style={{ fontSize: 12.5, color: '#64748B', display: 'block', marginTop: 4 }}>
-            Bắt đầu buổi học đầu tiên để AI ghi nhận phẩm chất và theo dõi tiến bộ của {child.name} nhé!
-          </span>
-        </div>
-      ) : (
-        <>
-      {/* 1. AI Phân tích Lộ trình Sư phạm & Biến động phẩm chất */}
-      <div
-        className="card pop"
-        style={{
-          border: '2px solid #8B5CF6',
-          background: 'linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%)',
-          boxShadow: '0 8px 24px rgba(139, 92, 246, 0.16)',
-          padding: '16px 14px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: '#6D28D9' }}>
-            <i className="fa-solid fa-brain fa-fw" style={{ marginRight: 6 }} />
-            AI Adaptive Roadmap (Big Data)
-          </span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#EDE9FE', color: '#6D28D9' }}>
-            Theo dõi dài hạn
-          </span>
-        </div>
+      <div className="pg-grid2">
+        {/* 1. Tóm tắt tuần */}
+        {aiKemCard}
+        {/* Đợt 15 P1: An toàn AI · con giảng lại · tự sửa lỗi (prompt 14 mục 2.7, 3.7, 4.3) */}
+        <WeeklyAiCards stats={stats} childName={child.name} />
 
-        <b style={{ fontSize: 16, color: '#4C1D95', display: 'block', lineHeight: 1.35, marginBottom: 6 }}>
-          Phân Tích Biến Động Phẩm Chất & Lộ Trình Cân Bằng
-        </b>
-        <p style={{ fontSize: 13, color: '#5B21B6', lineHeight: 1.45, margin: '0 0 12px' }}>
-          Dựa trên <b>{stickerHistory.length} huy hiệu</b> đã tích lũy qua các tuần, AI giải mã nguyên nhân tại sao tuần này con nhận nhiều hay ít huy hiệu <i>Kiên nhẫn / Sáng tạo</i> để cân bằng tâm lý và nhịp học.
-        </p>
+        {/* 2-3. Con hay vướng, con đã vững */}
+        {weakSection}
+        {strongSection}
 
-        {aiAnalysis ? (
-          <div
-            style={{
-              background: '#FFFFFF',
-              borderRadius: 14,
-              padding: '14px 12px',
-              border: '1.5px solid #DDD6FE',
-              fontSize: 13.5,
-              lineHeight: 1.55,
-              color: '#1E293B',
-              marginBottom: 12,
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {aiAnalysis}
-          </div>
-        ) : null}
+        {/* 4. Phẩm chất, rồi khối Phân tích */}
+        {thisWeekStickers.length === 0 ? (
+          <div className="pg-span">{emptyWeekCard}</div>
+        ) : (
+          <>
+            {traitsCard}
+            {analysisCard}
+            {/* 5. Lịch học */}
+            {calendarCard}
+          </>
+        )}
 
+        {/* 6. Riêng cho người lớn */}
+        {adultsCard}
+        {weekendCard}
+
+        {/* 7. Gửi Zalo */}
         <button
-          className="btn solid"
-          disabled={analyzing}
-          onClick={handleRunAiAnalysis}
-          style={{
-            width: '100%',
-            background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-            boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
-            fontWeight: 800,
-            fontSize: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
+          className="btn solid pg-span"
+          onClick={() => {
+            soundPop(600)
+            setShowZaloReport(true)
           }}
+          style={{ fontWeight: 800, fontSize: 15 }}
         >
-          {analyzing ? (
-            <>
-              <i className="fa-solid fa-spinner fa-spin" /> Đang phân tích Big Data ({child.name})…
-            </>
-          ) : aiAnalysis ? (
-            <>
-              <i className="fa-solid fa-rotate" /> Cập Nhật Lại Phân Tích AI
-            </>
-          ) : (
-            <>
-              <i className="fa-solid fa-wand-magic-sparkles" /> ✨ AI Phân Tích Lộ Trình Cân Bằng Cho Con
-            </>
-          )}
+          💬 Gửi báo cáo vào nhóm Zalo gia đình
         </button>
       </div>
-
-      {/* Lưới học 30 ngày trong tháng (Prompt 07 Phần B) */}
-      <div className="card" style={{ padding: '14px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 16 }}>🗓️</span>
-            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Lịch học đều tháng {new Date().getMonth() + 1}</b>
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
-            Chuỗi: <b style={{ color: 'var(--c-accent-ink, var(--c-accent))' }}>{tracker?.streak || 0} tối</b>
-          </span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, textAlign: 'center' }}>
-          {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((h) => (
-            <span key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 2 }}>{h}</span>
-          ))}
-          {(() => {
-            const now = new Date()
-            const firstDayIndex = (new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7
-            const emptyPads = Array.from({ length: firstDayIndex })
-            return (
-              <>
-                {emptyPads.map((_, i) => <div key={'pad_' + i} />)}
-                {(tracker?.month || []).map((m) => (
-                  <div
-                    key={m.dateKey}
-                    title={`${m.day}/${now.getMonth() + 1}: ${m.isStudied ? 'Đã học' : 'Chưa học'}`}
-                    style={{
-                      height: 32,
-                      borderRadius: 8,
-                      display: 'grid',
-                      placeItems: 'center',
-                      fontSize: 12,
-                      fontWeight: m.isToday ? 800 : 600,
-                      background: m.isStudied ? 'var(--c-good)' : 'var(--c-bg)',
-                      color: m.isStudied ? 'var(--c-on-good)' : m.isToday ? 'var(--c-accent-ink, var(--c-text))' : 'var(--c-text-2)',
-                      border: m.isToday ? '2px dashed var(--c-accent)' : '1px solid var(--c-line)',
-                    }}
-                  >
-                    {m.isStudied ? '✓' : m.day}
-                  </div>
-                ))}
-              </>
-            )
-          })()}
-        </div>
-
-        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--c-line)', fontSize: 12.5, textAlign: 'center', color: 'var(--c-text-2)' }}>
-          Tháng này: <b style={{ color: 'var(--c-text)' }}>{(tracker?.month || []).filter((m) => m.isStudied).length} tối</b> · chuỗi dài nhất <b style={{ color: 'var(--c-text)' }}>{tracker?.bestStreak || 0} tối</b>
-        </div>
-      </div>
-
-      {/* 2. So sánh Biến động Phẩm chất Tuần này vs Tuần trước (FontAwesome tone-sur-tone) */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span className="lbl plum" style={{ margin: 0 }}>📊 Biến Động Phẩm Chất (Longitudinal Trait Tracker)</span>
-          <span style={{ fontSize: 11, color: '#64748B' }}>Tuần này vs Tuần trước</span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-          {TRACKED_TRAITS.map((item) => {
-            const thisCnt = thisTraits[item.trait] || 0
-            const lastCnt = lastTraits[item.trait] || 0
-            const diff = thisCnt - lastCnt
-            return (
-              <div
-                key={item.trait}
-                style={{
-                  background: item.bg,
-                  border: `1.5px solid ${item.border}`,
-                  borderRadius: 14,
-                  padding: '10px 12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 8,
-                        background: '#FFFFFF',
-                        border: `1px solid ${item.border}`,
-                        color: item.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 13,
-                      }}
-                    >
-                      <i className={item.fa} />
-                    </div>
-                    <b style={{ fontSize: 13, color: item.color }}>{item.trait}</b>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      padding: '1px 6px',
-                      borderRadius: 99,
-                      background: diff > 0 ? '#DCFCE7' : diff < 0 ? '#FEE2E2' : '#F1F5F9',
-                      color: diff > 0 ? '#166534' : diff < 0 ? '#991B1B' : '#64748B',
-                    }}
-                  >
-                    {diff > 0 ? `+${diff} ↗` : diff < 0 ? `${diff} ↘` : 'Đều'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                  <span style={{ fontSize: 20, fontWeight: 800, color: item.color }}>{thisCnt}</span>
-                  <span style={{ fontSize: 11.5, color: '#64748B' }}>tuần này</span>
-                  <span style={{ fontSize: 11.5, color: '#94A3B8', marginLeft: 'auto' }}>trước: {lastCnt}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        <span className="sub" style={{ marginTop: 10, display: 'block' }}>
-          💡 <b>Góc nhìn sư phạm:</b> Khi bài tập chuyển sang dạng dài và khó, số sticker <i>Kiên nhẫn</i> thường tăng cao và <i>Sáng tạo</i> tạm thời giảm. Đây là nhịp chuyển tự nhiên, không nên sốt ruột.
-        </span>
-      </div>
-      </>
-      )}
-
-      {/* Đợt 15 P1: An toàn AI · con giảng lại · tự sửa lỗi (prompt 14 mục 2.7, 3.7, 4.3) */}
-      <WeeklyAiCards stats={stats} childName={child.name} />
-
-      {/* 3. Phân chia ca kèm giữa Bố và Mẹ */}
-      <div className="card">
-        <span className="lbl plum">Ai kèm</span>
-        <div style={{ display: 'flex', height: 14, borderRadius: 8, overflow: 'hidden' }}>
-          <i style={{ width: `${momPct}%`, background: 'var(--plum)' }} />
-          <i style={{ width: `${dadPct}%`, background: 'var(--sky)' }} />
-        </div>
-        <span className="sub">
-          Mẹ {momSessions} ca ({momPct}%) · Bố {dadSessions} ca ({dadPct}%) →{' '}
-          {totalSessions === 0
-            ? <b>tuần này chưa ghi nhận ca học nào.</b>
-            : dadSessions === 0
-            ? <b>gợi ý: thử giao 1-2 ca cho bố để mẹ nghỉ ngơi nhé.</b>
-            : momSessions === 0
-            ? <b>tuần này bố đảm nhiệm hết — cảm ơn bố nhiều!</b>
-            : <b>hai người cân sức rồi, giữ nếp nhé!</b>}
-        </span>
-      </div>
-
-      {/* 4. Dạng bài con hay vướng */}
-      <p className="lbl mut">Con hay vướng (Cần tháo gỡ)</p>
-      {(stats?.weak || []).length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng 🎉</span>}
-      {(stats?.weak || []).map((w) => (
-        <div className="card" key={w.n}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-            <b style={{ fontSize: 14 }}>{w.n}</b>
-            <span className="pill c">vướng {w.v}/{w.t}</span>
-          </div>
-          <Bar pct={(w.v / w.t) * 100} color="var(--coral)" />
-        </div>
-      ))}
-
-      {/* 5. Dạng bài con đã vững */}
-      <p className="lbl mut">Con đã vững</p>
-      {(stats?.strong || []).map((w) => (
-        <div className="card" key={w.n}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-            <b style={{ fontSize: 14 }}>{w.n}</b>
-            <span className="pill m">{w.v}/{w.t}</span>
-          </div>
-          <Bar pct={100} color="var(--mint)" />
-        </div>
-      ))}
-
-      {/* 6. Ghi nhận riêng cho bố mẹ (Prompt 08 Mục 7) */}
-      {(() => {
-        if (session && session.role === 'viewer') return null
-        const calmHistory = stats?.calmHistory || S?.stats?.[S?.activeId]?.calmHistory || []
-        const thisWeekCalm = calmHistory.filter((item) => {
-          const ts = typeof item === 'number' ? item : item?.ts
-          return ts && getWeekLabel(ts) === 'Tuần này'
-        })
-        const count = thisWeekCalm.length
-        if (count === 0) return null
-
-        const daysSet = new Set()
-        thisWeekCalm.forEach((item) => {
-          const ts = typeof item === 'number' ? item : item?.ts
-          if (ts) daysSet.add(new Date(ts).toLocaleDateString('vi-VN', { weekday: 'short' }))
-        })
-
-        const parentName = S?.parent ? S.parent.toLowerCase() : 'bố mẹ'
-
-        return (
-          <div
-            className="card"
-            style={{
-              background: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
-              border: '1.5px solid #D8B4FE',
-              padding: '16px 18px',
-              borderRadius: 20,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 11.5, fontWeight: 800, color: '#7E22CE', letterSpacing: 0.5 }}>
-                🔒 RIÊNG CHO NGƯỜI LỚN TRONG NHÀ
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#6B21A8' }}>
-                {Array.from(daysSet).join(', ')}
-              </span>
-            </div>
-
-            <h4 style={{ fontSize: 16, fontWeight: 800, color: '#581C87', margin: '0 0 6px' }}>
-              Tuần này {parentName} đã dừng lại {count} lần trước khi nổi nóng 💚
-            </h4>
-            <p style={{ fontSize: 13, color: '#6B21A8', margin: '0 0 10px', lineHeight: 1.45 }}>
-              {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {parentName}!
-            </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #D8B4FE', paddingTop: 8 }}>
-              <span style={{ fontSize: 12, color: '#7E22CE' }}>Gửi kèm báo cáo Zalo</span>
-              <input
-                type="checkbox"
-                style={{ width: 18, height: 18, accentColor: '#7E22CE' }}
-                checked={Boolean(S?.shareCalmWithZalo)}
-                onChange={(e) => patch && patch({ shareCalmWithZalo: e.target.checked })}
-              />
-            </div>
-          </div>
-        )
-      })()}
-
-      <div className="card plum">
-        <span className="lbl plum">Một việc cho cuối tuần</span>
-        <span style={{ fontSize: 14 }}>
-          Đi chợ cùng con: "3 bó rau, mỗi bó 5 nghìn, trả 20 nghìn thì thối bao nhiêu?"
-        </span>
-      </div>
-
-      <button
-        className="btn solid"
-        onClick={() => {
-          soundPop(600)
-          setShowZaloReport(true)
-        }}
-        style={{
-          width: '100%',
-          background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-          boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
-          fontWeight: 800,
-          fontSize: 15,
-        }}
-      >
-        💬 Gửi báo cáo vào nhóm Zalo gia đình
-      </button>
 
       {showZaloReport && (
         <ZaloReportModal
@@ -5472,10 +5483,14 @@ export function Report() {
    ============================================================ */
 export function Profile() {
   const { S, stats, patch, go, openSheet, toast, logout, familyName, openAdmin, soundOn, toggleSound } = useContext(AppCtx)
-  const child = S.children.find((c) => c.id === S.activeId)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+  const familyLabel = /^gia đình\b/i.test(String(familyName || '').trim()) ? String(familyName).trim() : `Gia đình ${familyName || ''}`.trim()
+
+  // Gia đình chưa có lịch (vd. Dùng thử) thì dùng lịch mặc định, tránh lỗi trang
+  const schedule = Array.isArray(S.schedule) ? S.schedule : SCHEDULE_DEFAULT || []
 
   const toggleOwner = (i) => {
-    const sch = S.schedule.map((d, j) => (j === i ? { ...d, owner: d.owner === 'Mẹ' ? 'Bố' : 'Mẹ' } : d))
+    const sch = schedule.map((d, j) => (j === i ? { ...d, owner: d.owner === 'Mẹ' ? 'Bố' : 'Mẹ' } : d))
     patch({ schedule: sch })
     toast(`Ca ${sch[i].day} chuyển cho ${sch[i].owner} 👌`)
   }
@@ -5483,182 +5498,191 @@ export function Profile() {
   return (
     <>
       <Header title="Con tôi" />
-      <div className="chips" style={{ marginBottom: 8 }}>
-        {S.children.map((c) => (
-          <button
-            key={c.id}
-            className={`chip ${c.id === S.activeId ? 'on' : ''}`}
-            onClick={() => { patch({ activeId: c.id }); toast(`Đang xem ${c.name} ${c.emoji}`) }}
-          >
-            {c.emoji} {c.name}
-          </button>
-        ))}
-      </div>
-      <div className="card plum">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 38 }}>{child.emoji}</span>
-          <div>
-            <b style={{ fontSize: 17 }}>{child.name} · {child.grade}</b>
-            <div className="sub">{child.book} · Toán, Tiếng Việt, Tiếng Anh</div>
-          </div>
-        </div>
-      </div>
-
-      <button className="big-card sun" onClick={() => openSheet('stickerBook')}>
-        <span className="ic">📖</span>
-        <span className="lbl sun">Bộ sưu tập huy hiệu</span>
-        <b>Sổ dán Sticker của {child.name}</b>
-        <span className="sub">Đã sưu tập {stats.stickers} sticker lấp lánh ✨</span>
-      </button>
-
-      <button className="big-card mint" onClick={() => openSheet('pwa')}>
-        <span className="ic">📱</span>
-        <span className="lbl mint">Tiện ích cài đặt</span>
-        <b>Cài app vào Màn hình chính (PWA)</b>
-        <span className="sub">Mở app toàn màn hình mượt mà như app tải từ App Store</span>
-      </button>
-
-      <button className="big-card" style={{ border: '1.5px solid #A7F3D0', background: '#F0FDF4' }} onClick={() => openSheet('safetyPortal')}>
-        <span className="ic">🛡️</span>
-        <span className="lbl mint">Minh bạch & An toàn</span>
-        <b>AI an toàn thế nào?</b>
-        <span className="sub">Cam kết 4 lớp: không giải hộ, không lộ đáp án, mẹ luôn làm chủ</span>
-      </button>
-
-      <button className="big-card" onClick={() => openSheet('addChild')}>
-        <span className="ic">➕</span>
-        <b>Thêm con</b>
-        <span className="sub">Mỗi bé 1 lớp,1 bộ sách riêng</span>
-      </button>
-
-      <button className="big-card sky" onClick={() => openSheet('members')}>
-        <span className="ic">👨‍👩‍👧</span>
-        <b>Thành viên gia đình</b>
-        <span className="sub">Mời người thân (Bố, Ông Bà, Gia sư) cùng kèm con, chia sẻ buổi học</span>
-      </button>
-
-      <button className="big-card mint" onClick={() => openSheet('familyClasses')}>
-        <span className="ic">🏫</span>
-        <b>Lớp học của con</b>
-        <span className="sub">Kết nối với cô giáo ở trường, nhận bài tập về nhà theo cách cô dạy</span>
-      </button>
-
-      <button className="big-card" style={{ borderColor: 'var(--c-accent)' }} onClick={() => openSheet('themePicker')}>
-        <span className="ic">🎨</span>
-        <b>Giao diện cả nhà</b>
-        <span className="sub">
-          Đang dùng: <b>{getTheme(S.theme || 'candy').name}</b> · 8 bộ phong cách đổi 1 chạm
-        </span>
-      </button>
-
-      {/* Công tắc Nhắc nghỉ khi căng thẳng (Prompt 08 Mục 1) */}
-      <div
-        className="card"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '12px 14px',
-          background: 'var(--c-surface)',
-          borderRadius: 14,
-          border: '1px solid var(--c-line)',
-        }}
-      >
-        <div>
-          <b style={{ fontSize: 14, color: 'var(--c-text)', display: 'block' }}>Nhắc nghỉ khi căng thẳng</b>
-          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Tự động nhắc mẹ con nghỉ 1 phút khi bí hoặc làm lâu</span>
-        </div>
-        <input
-          type="checkbox"
-          style={{ width: 22, height: 22, accentColor: 'var(--c-accent)' }}
-          checked={S.calmNudgeEnabled !== false}
-          onChange={(e) => patch({ calmNudgeEnabled: e.target.checked })}
-        />
-      </div>
-
-      <div className="card sky">
-        <span className="lbl sky">Lịch chia ca T2–T6</span>
-        {S.schedule.map((d, i) => (
-          <div className="row" key={d.day}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <b style={{ width: 28 }}>{d.day}</b>
-              <span className={`pill ${d.owner === 'Bố' ? 'b' : 'p'}`}>{d.owner}</span>
-            </div>
-            <button className={`switch ${d.owner === 'Bố' ? 'on' : ''}`} onClick={() => toggleOwner(i)} title="Đổi người trực">
-              <i />
+      {S.children.length > 1 && (
+        <div className="chips">
+          {S.children.map((c) => (
+            <button
+              key={c.id}
+              className={`chip ${c.id === S.activeId ? 'on' : ''}`}
+              aria-pressed={c.id === S.activeId}
+              onClick={() => { patch({ activeId: c.id }); toast(`Đang xem ${c.name} ${c.emoji}`) }}
+            >
+              {c.emoji} {c.name}
             </button>
-          </div>
-        ))}
-        <span className="sub">Người trực ca sẽ thấy lời nhắc khi mở app buổi tối · bấm nút để đổi Mẹ/Bố</span>
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div className="card">
-        <span className="lbl plum">Đồng bộ đám mây ☁️</span>
-        <div className="row">
-          <span style={{ fontSize: 14 }}>Tự động sao lưu dữ liệu đám mây</span>
-          <button
-            className={`switch ${S.cloudSync ? 'on' : ''}`}
-            onClick={() => { patch({ cloudSync: !S.cloudSync }); toast(!S.cloudSync ? 'Đã bật đồng bộ ☁️' : 'Đã tắt đồng bộ') }}
-            title="Bật/tắt đồng bộ"
-          >
-            <i />
+      {/* ===== Nhóm 1 · Con ===== */}
+      <h2 className="pg-section-title">Con</h2>
+      <div className="pg-grid2">
+        <div className="card plum">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 38 }} aria-hidden="true">{child.emoji}</span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <b style={{ fontSize: 17 }}>{child.name} · {child.grade}</b>
+              <div className="sub">{child.book} · Toán, Tiếng Việt, Tiếng Anh</div>
+            </div>
+          </div>
+          <button type="button" className="btn ghost btn-sm" style={{ alignSelf: 'flex-start', marginTop: 4 }} onClick={() => openSheet('editChild')}>
+            ✏️ Sửa hồ sơ của {child.name}
           </button>
         </div>
-        <span className="sub">Đổi máy vẫn thấy hồ sơ, lịch sử và sticker của con.</span>
+
+        <button className="big-card sun" onClick={() => openSheet('stickerBook')}>
+          <span className="ic" aria-hidden="true">📖</span>
+          <span className="lbl sun">Bộ sưu tập huy hiệu</span>
+          <b>Sổ dán sticker của {child.name}</b>
+          <span className="sub">Đã sưu tập {stats.stickers} sticker lấp lánh ✨</span>
+        </button>
+
+        <button className="big-card mint" onClick={() => openSheet('familyClasses')}>
+          <span className="ic" aria-hidden="true">🏫</span>
+          <b>Lớp học của con</b>
+          <span className="sub">Kết nối với cô giáo ở trường, nhận bài tập về nhà theo cách cô dạy</span>
+        </button>
+
+        <button className="big-card" onClick={() => openSheet('addChild')}>
+          <span className="ic" aria-hidden="true">➕</span>
+          <b>Thêm con</b>
+          <span className="sub">Mỗi bé 1 lớp, 1 bộ sách riêng</span>
+        </button>
       </div>
 
-      <div className="card">
-        <span className="lbl plum">Âm thanh & Tiếng bấm nút 🎵</span>
-        <div className="row">
-          <div>
-            <b style={{ fontSize: 14 }}>Âm thanh hiệu ứng & tiếng bấm</b>
-            <div className="sub" style={{ fontSize: 12.5, marginTop: 2 }}>
-              Tiếng bấm nút vui tai cho bé, chuông chiến thắng và pháo hoa.
+      {/* ===== Nhóm 2 · Cả nhà ===== */}
+      <h2 className="pg-section-title">Cả nhà</h2>
+      <div className="pg-grid2">
+        <button className="big-card sky" onClick={() => openSheet('members')}>
+          <span className="ic" aria-hidden="true">👨‍👩‍👧</span>
+          <b>Thành viên gia đình</b>
+          <span className="sub">Mời người thân (bố, ông bà, gia sư) cùng kèm con, chia sẻ buổi học</span>
+        </button>
+
+        <button className="big-card" style={{ borderColor: 'var(--c-accent)' }} onClick={() => openSheet('themePicker')}>
+          <span className="ic" aria-hidden="true">🎨</span>
+          <b>Giao diện cả nhà</b>
+          <span className="sub">
+            Đang dùng: <b>{getTheme(S.theme || 'candy').name}</b> · 8 bộ phong cách đổi 1 chạm
+          </span>
+        </button>
+
+        <div className="card sky pg-span">
+          <span className="lbl sky">Lịch chia ca T2 đến T6</span>
+          {schedule.map((d, i) => (
+            <div className="row" key={d.day}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <b style={{ width: 28 }}>{d.day}</b>
+                <span className={`pill ${d.owner === 'Bố' ? 'b' : 'p'}`}>{d.owner}</span>
+              </div>
+              <Switch
+                on={d.owner === 'Bố'}
+                onChange={() => toggleOwner(i)}
+                label={`Ca ${d.day}: đổi người trực (đang là ${d.owner})`}
+              />
+            </div>
+          ))}
+          <span className="sub">Người trực ca sẽ thấy lời nhắc khi mở app buổi tối · bấm công tắc để đổi mẹ hoặc bố</span>
+        </div>
+      </div>
+
+      {/* ===== Nhóm 3 · Cài đặt ===== */}
+      <h2 className="pg-section-title">Cài đặt</h2>
+      <div className="pg-grid2">
+        <div className="card">
+          <span className="lbl plum">Âm thanh và tiếng bấm nút 🎵</span>
+          <div className="switch-row">
+            <div>
+              <b style={{ fontSize: 14 }}>Âm thanh hiệu ứng và tiếng bấm</b>
+              <div className="sub" style={{ marginTop: 2 }}>
+                Tiếng bấm nút vui tai cho bé, chuông chiến thắng và pháo hoa.
+              </div>
+            </div>
+            <Switch on={soundOn} onChange={() => toggleSound()} label="Âm thanh hiệu ứng và tiếng bấm" data-no-sound />
+          </div>
+          <span className="sub">
+            {soundOn
+              ? '🔊 Đang bật: bấm nút có tiếng, tạo cảm hứng cho bé khi học.'
+              : '🔇 Đang tắt: giữ không gian yên tĩnh cho cả nhà.'}
+          </span>
+        </div>
+
+        {/* Công tắc Nhắc nghỉ khi căng thẳng (Prompt 08 Mục 1) */}
+        <div className="card">
+          <span className="lbl plum">Nhắc nghỉ</span>
+          <div className="switch-row">
+            <div>
+              <b style={{ fontSize: 14, color: 'var(--c-text)', display: 'block' }}>Nhắc nghỉ khi căng thẳng</b>
+              <span className="sub">Tự động nhắc {S.parent.toLowerCase()} con nghỉ 1 phút khi bí hoặc làm lâu</span>
+            </div>
+            <Switch
+              on={S.calmNudgeEnabled !== false}
+              onChange={(v) => patch({ calmNudgeEnabled: v })}
+              label="Nhắc nghỉ khi căng thẳng"
+            />
+          </div>
+        </div>
+
+        <div className="card">
+          <span className="lbl plum">Đồng bộ đám mây ☁️</span>
+          <div className="switch-row">
+            <span style={{ fontSize: 14 }}>Tự động sao lưu dữ liệu lên đám mây</span>
+            <Switch
+              on={Boolean(S.cloudSync)}
+              onChange={() => { patch({ cloudSync: !S.cloudSync }); toast(!S.cloudSync ? 'Đã bật đồng bộ ☁️' : 'Đã tắt đồng bộ') }}
+              label="Tự động sao lưu dữ liệu lên đám mây"
+            />
+          </div>
+          <span className="sub">Đổi máy vẫn thấy hồ sơ, lịch sử và sticker của con.</span>
+        </div>
+
+        <button className="big-card mint" onClick={() => openSheet('pwa')}>
+          <span className="ic" aria-hidden="true">📱</span>
+          <span className="lbl mint">Tiện ích</span>
+          <b>Cài app ra màn hình chính</b>
+          <span className="sub">Mở app toàn màn hình, nhanh như app tải từ cửa hàng</span>
+        </button>
+      </div>
+
+      {/* ===== Nhóm 4 · Riêng tư và an toàn ===== */}
+      <h2 className="pg-section-title">Riêng tư và an toàn</h2>
+      <div className="pg-grid2">
+        <button className="big-card" onClick={() => openSheet('safetyPortal')}>
+          <span className="ic" aria-hidden="true">🛡️</span>
+          <span className="lbl mint">Minh bạch và an toàn</span>
+          <b>AI an toàn thế nào?</b>
+          <span className="sub">Cam kết 4 lớp: không giải hộ, không lộ đáp án, {S.parent.toLowerCase()} luôn làm chủ</span>
+        </button>
+
+        <div className="card">
+          <span className="lbl plum">Quyền riêng tư</span>
+          <span className="sub">
+            Ảnh chỉ dùng để đọc đề, app không lưu ảnh. Hồ sơ, sticker, lịch sử học được lưu trên máy chủ để dùng được trên nhiều máy; {S.parent.toLowerCase()} có thể xoá toàn bộ bất cứ lúc nào.
+          </span>
+        </div>
+
+        <div className="card" style={{ gap: 10 }}>
+          <b style={{ fontSize: 15 }}>Xoá dữ liệu</b>
+          <span className="sub">Xoá vĩnh viễn hồ sơ con, lịch sử, sticker và báo cáo. Không khôi phục được.</span>
+          <button className="btn danger" onClick={() => openSheet('wipe')}>
+            🗑 Xoá toàn bộ dữ liệu
+          </button>
+        </div>
+
+        <div className="card" style={{ gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 22 }} aria-hidden="true">🏠</span>
+            <div style={{ minWidth: 0 }}>
+              <b style={{ fontSize: 15 }}>{familyLabel}</b>
+              <div className="sub">Tài khoản riêng của gia đình mình</div>
             </div>
           </div>
           <button
-            className={`switch ${soundOn ? 'on' : ''}`}
-            onClick={toggleSound}
-            title="Bật/tắt âm thanh"
-            data-no-sound
+            className="btn ghost"
+            onClick={() => { logout(); toast('Đã đăng xuất 👋') }}
           >
-            <i />
+            Đăng xuất
           </button>
         </div>
-        <span className="sub">
-          {soundOn
-            ? '🔊 Đang bật: Bấm nút có tiếng, tạo cảm hứng cho bé khi học.'
-            : '🔇 Đang tắt: Giữ không gian yên tĩnh tuyệt đối cho ba mẹ.'}
-        </span>
-      </div>
-
-      <div className="card">
-        <span className="lbl plum">Quyền riêng tư</span>
-        <span className="sub">
-          Ảnh chỉ dùng để đọc đề, app không lưu ảnh. Hồ sơ, sticker, lịch sử học được lưu trên máy chủ để dùng được trên nhiều máy; {S.parent.toLowerCase()} có thể xoá toàn bộ bất cứ lúc nào.
-        </span>
-        <button className="btn ghost" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} onClick={() => openSheet('wipe')}>
-          🗑 Xóa toàn bộ dữ liệu
-        </button>
-      </div>
-
-      <button className="btn ghost" onClick={() => go('onb')}>Sửa hồ sơ</button>
-
-      <div className="card" style={{ gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 22 }}>🏠</span>
-          <div>
-            <b style={{ fontSize: 15 }}>Gia đình {familyName}</b>
-            <div className="sub">Tài khoản riêng của gia đình mình</div>
-          </div>
-        </div>
-        <button
-          className="btn ghost"
-          style={{ borderColor: 'var(--red)', color: 'var(--red)' }}
-          onClick={() => { logout(); toast('Đã đăng xuất 👋') }}
-        >
-          Đăng xuất
-        </button>
       </div>
     </>
   )
