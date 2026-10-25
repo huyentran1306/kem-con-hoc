@@ -189,4 +189,54 @@ Tài liệu theo dõi quá trình thực hiện 5 Chặng theo đúng quy địn
 - **Worker version ID**: `a087ce4d-6080-4875-80d7-daca0f8a5f2f`
 - **Đường dẫn Preview Chặng 3**: [https://preview-d14-ch3.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch3.kem-con-hoc-5xf.pages.dev)
 
+---
+
+## CHẶNG 4: GIAO DIỆN MINH BẠCH & TAB AN TOÀN AI CHO ADMIN & PHỤ HUYNH BÁO CÂU CHƯA HỢP (PHẦN C NÂNG CAO)
+
+### 1. Mục tiêu và Kết quả đạt được
+- **Đạt 100% mục tiêu của Chặng 4**:
+  1. **Tấm khiên Minh bạch cho Phụ huynh (`SafetyPortalSheet`)**:
+     - Hiển thị 4 lớp cam kết sư phạm & an toàn: (1) Prompt Sư phạm Socratic, (2) Bộ chặn rò rỉ đáp án (Guard Module), (3) Máy tính độc lập & Khử ảo giác, (4) Quyền chốt của Phụ huynh.
+     - Số liệu thực tế: Tỷ lệ an toàn (100%), số bài tự sửa thành công.
+     - Truy cập dễ dàng từ trang Cài đặt con / Profile (`🛡️ AI an toàn thế nào?`).
+  2. **Báo câu hỏi AI chưa hợp lý (`AiFeedbackSheet` & `/api/v1/ai-feedback`)**:
+     - Phụ huynh có thể báo trực tiếp từ chip giải thích (`WhyChip -> Câu chưa hợp?`) hoặc khi học bài.
+     - 4 lý do chuẩn: `too_hard` (Quá khó so với tuổi con), `leak` (Lộ đáp án), `teacher_way` (Khác cách cô dạy trên lớp), `wrong` (Sai kiến thức/đề bài).
+     - Lưu trực tiếp vào bảng D1 `ai_feedback` kèm ghi chú cụ thể của phụ huynh.
+  3. **Tab An toàn AI cho Admin (`AdminSafetyTab` trong `src/Admin.jsx`)**:
+     - Nhật ký can thiệp Guard (`guard_log`): Xem chi tiết trước/sau can thiệp, lý do chặn, phương án thay thế.
+     - Danh sách phụ huynh phản hồi (`ai_feedback`): Lọc theo trạng thái `open` / `closed`, nút xem chi tiết và đóng ticket khi đã tinh chỉnh prompt.
+     - Công cụ kiểm thử trực tiếp (Sandbox): Cho phép Admin nhập đề bài, đáp án và câu văn để kiểm tra tức thời bộ chặn `checkAnswerLeak()`.
+  4. **Bộ tấn công đỏ (Red-Team Attack Suite - 20 kịch bản)**:
+     - Tập dữ liệu `ai-eval/tan-cong.json` bao gồm 20 kỹ thuật tấn công tinh vi (prompt injection, social engineering, reverse roleplay, tiếng Việt số chữ, schema override, emotional guilt, system debug override, rhyme trick, etc.).
+     - Script kiểm thử tự động `npm run ai-redteam` (`scripts/ai-redteam.mjs`).
+     - **Kết quả: 20/20 (100%) cuộc tấn công bị chặn an toàn**, tự động thay thế bằng câu hỏi gợi mở sư phạm, không có bất kỳ rò rỉ nào lọt qua. Báo cáo chi tiết tại `ai-eval/ket-qua-redteam.md`.
+
+### 2. Các file đã tạo / chỉnh sửa
+- **`src/AdminSafetyTab.jsx`**: Giao diện quản trị An toàn AI (KPI an toàn, nhật ký Guard Log, hòm thư phản hồi Phụ huynh, Sandbox test trực tiếp).
+- **`src/Admin.jsx`**: Tích hợp tab `🛡️ An toàn AI & Feedback` vào thanh điều hướng Admin và trình chuyển đổi tab.
+- **`src/safety.js`**: Module tổng hợp số liệu an toàn, danh sách 4 lớp cam kết và API endpoints.
+- **`src/App.jsx`**: Tích hợp `AiFeedbackSheet` và `SafetyPortalSheet` vào hệ thống `SheetView`.
+- **`src/screens.jsx`**: Thêm nút mở `SafetyPortalSheet` tại màn hình Profile và truyền callback `onReport` vào `WhyChip` trong màn hình `Scaffold`.
+- **`src/api.js`**: Thêm các hàm client `sendAiFeedback()`, `getSafetySummary()`, `getSafetyLogs()`, `getSafetyFeedbacks()`, `closeSafetyFeedback()`.
+- **`ai-eval/tan-cong.json`**: Tập dữ liệu 20 kịch bản tấn công đỏ.
+- **`scripts/ai-redteam.mjs`**: Script chạy kiểm thử Red-Team và xuất báo cáo markdown.
+- **`ai-eval/ket-qua-redteam.md`**: Báo cáo kiểm thử 20 kịch bản tấn công đỏ.
+- **`scripts/test-dot14-chang-4.mjs`**: 7 bài test kiểm thử tự động Chặng 4.
+- **`package.json`**: Thêm lệnh `ai-redteam` và bổ sung `test-dot14-chang-4.mjs` vào `npm test`.
+
+### 3. Kết quả kiểm thử
+- **Red-Team Suite (`npm run ai-redteam`)**: 20/20 (100%) kịch bản tấn công bị chặn an toàn.
+- **Unit & Logic test (`scripts/test-dot14-chang-4.mjs`)**: 7/7 ca PASSED (100%).
+- **Full test suite (`npm test`)**: 20 bộ test passed 100%.
+- **Vite Production Build**: Build thành công trong 276ms.
+- **Deploy Worker Gateway**: Version ID `342f4d0b-a8ed-44ce-b3fe-828b04ac25bf` thành công.
+- **Deploy Cloudflare Pages Preview**: `https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev` thành công.
+
+### 4. Mã Commit và Đường dẫn Bản Preview Chặng 4
+- **Mã commit (workspace)**: `a40aef5` (`dot14-chang-4: Giao dien minh bach & Tab An toan AI cho Admin & Phu huynh bao cau chua hop`)
+- **Worker version ID**: `342f4d0b-a8ed-44ce-b3fe-828b04ac25bf`
+- **Đường dẫn Preview Chặng 4**: [https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch4.kem-con-hoc-5xf.pages.dev)
+
+
 
