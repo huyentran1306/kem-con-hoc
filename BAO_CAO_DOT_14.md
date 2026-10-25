@@ -90,7 +90,53 @@ Tài liệu theo dõi quá trình thực hiện 5 Chặng theo đúng quy địn
 
 ---
 
-### 6. Mã Commit và Đường dẫn Bản Preview
+### 6. Mã Commit và Đường dẫn Bản Preview Chặng 1
 
-- **Mã commit**: `dot14-chang-1: Nen an toan chung, module guard dung chung va chip ly do su pham`
+- **Mã commit (workspace)**: `46d1f3a` (`dot14-chang-1: Nen an toan chung, module guard dung chung va chip ly do su pham`)
+- **Mã commit (worker)**: `951e0d7` (`dot14-chang-1: Nen an toan chung, module guard dung chung va chip ly do su pham`)
 - **Đường dẫn Preview Chặng 1**: [https://preview-d14-ch1.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch1.kem-con-hoc-5xf.pages.dev)
+
+---
+
+## 🎯 BÁO CÁO CHẶNG 2: PHẦN A — CHẤM VỞ, KHÔNG SỬA HỘ
+
+### 1. Tóm tắt kết quả
+- **Tính năng hoàn thành**: Toàn bộ luồng chấm vở bằng AI không sửa hộ theo đúng triết lý Socratic:
+  1. **OCR bài làm học sinh**: Chụp trang vở -> Nén client-side (tối đa 1280px, jpeg 0.8) -> Nhận diện từng dòng viết tay kèm độ tự tin `chac_chan` và phương án thay thế `lua_chon`.
+  2. **Máy kiểm tra phép tính độc lập (`arithmetic.js`)**: Viết thuật toán Shunting-yard RPN parser không dùng `eval()`, kiểm tra các phép toán `+ - x × * : / ÷ ()`, xử lý số thập phân `2,5`, loại bỏ đơn vị danh từ `(cây)`.
+  3. **Đối chiếu và phát hiện bước sai đầu tiên (`reconcileWorkCheck`)**: Tự động giải lại bài toán, tìm dòng sai đầu tiên, phân loại lỗi (`chon_phep_tinh`, `tinh_nham`, `doc_de`), và bảo vệ nếu AI tính nhầm bằng cách ghi đè kết quả của máy (`ai_uncertain = 1`).
+  4. **Tạo câu hỏi gợi mở sư phạm (`p14b_check_work`)**: 2 bậc câu hỏi (Mức 1 câu hỏi gợi mở, Mức 2 gợi ý bằng que tính/đồ vật) được lọc qua bộ chặn an toàn `checkAnswerLeak()`.
+  5. **Giao diện 4 màn hình chi tiết**:
+     - *Màn hình 1 (AI đọc, mẹ soát)*: Vở ô ly, dòng `chac_chan < 0.7` nền vàng, chip chọn nhanh từ `lua_chon`, nút ✎ sửa tay.
+     - *Màn hình 2 (Kết quả cho mẹ)*: Vở có tick xanh cho dòng đúng, chấm hỏi đỏ ở dòng sai đầu tiên; thẻ "Chỉ mẹ thấy"; thẻ "Điểm sáng để khen"; nút "Giữ để xem đáp án đúng" (chỉ hiện khi giữ tay).
+     - *Màn hình 3 (Câu hỏi để con tự sửa)*: Bong bóng thoại gấu có nút đọc to (`SpeakBtn`), gợi ý 2 mở rộng, thẻ cam kết "AI cố ý không làm: Khoanh đỏ và ghi đáp án đúng".
+     - *Màn hình 4 (Chụp lại & Chúc mừng)*: Luồng chụp lại với `recheck_of`, ghi nhận `self_fixed = 1`, cộng 1 viên kẹo vào lọ kẹo tối nay (chỉ cộng 1 lần mỗi tối), ghi báo cáo tuần.
+  6. **Trạng thái phụ & Giới hạn**: Xử lý ảnh mờ/tối (`doc_duoc: false, ly_do: 'ảnh mờ'`), ảnh selfie/đồ chơi (`ly_do: 'không phải bài làm'`), và giới hạn 10 lượt đọc/ngày/gia đình (HTTP 429).
+  7. **Tương thích toàn diện**: 0 lỗi WCAG AA trên cả 8 bộ theme (`candy`, `bear`, `bento`, `sticker`, `notebook`, `garden`, `aurora`, `chalk`) trên 390px và 1366px.
+
+### 2. Các file đã tạo / chỉnh sửa
+- **`src/arithmetic.js` & `ai-gateway-worker/src/arithmetic.js`**: Máy kiểm tra phép tính độc lập (Shunting-yard RPN) và hàm hòa giải đối chiếu `reconcileWorkCheck`.
+- **`src/check_work.js` & `ai-gateway-worker/src/check_work.js`**: Core logic xử lý OCR, grading, scope guard và quota limit 10 lượt/ngày.
+- **`ai-gateway-worker/src/index.js`**: Khởi tạo routes `/api/v1/ai/check-work/read` và `/api/v1/ai/check-work/:id/grade`.
+- **`ai-gateway-worker/src/v1_routes.js`**: Cập nhật cascade delete an toàn cho Dot 14 tables khi xóa gia đình (`DELETE /family`).
+- **`src/api.js`**: Các hàm client `checkWorkRead()`, `checkWorkGrade()`, và nén ảnh `compressImage()`.
+- **`src/screens.jsx`**: Màn hình `CheckWork` với 10 trạng thái hoàn chỉnh, ô ly bài làm, thẻ giữ xem đáp án, lời mời chấm vở ở màn hình Hoàn thành bài học (`Done`).
+- **`src/App.jsx`**: Định tuyến màn hình `check`, thanh tiến trình và tích hợp dùng thử.
+- **`src/themes/slots/registry.js` & `src/themes/slots/defaultSlots.jsx`**: Slot `checkWorkEntry` trên Home screen.
+- **`src/styles.css`**: CSS cho vở ô ly `.check-work-paper`, dòng soát bài `.check-work-line2`, bong bóng đọc to `.speech-bubble-container`.
+- **`scripts/test-dot14-chang-2.mjs`**: 31 ca kiểm thử tự động Chặng 2.
+
+### 3. Kết quả kiểm thử
+- **Unit test `arithmetic.js`**: 25/25 ca passed (10 phép tính đúng, 5 phép tính sai kết quả, 3 dòng không phải phép tính, 4 biểu thức dị dạng, 3 ca ghi đè AI).
+- **Tích hợp ảnh mẫu 3 hộp bút**: Passed 100% (dòng 2 sai -> câu hỏi không lộ 19 -> chụp lại bài đã sửa -> ghi nhận `self_fixed = 1`).
+- **Từ chối selfie / đồ vật**: Passed 100% (trả về `doc_duoc: false, ly_do: 'không phải bài làm'`).
+- **Rate limit**: 10 lượt/ngày chuẩn xác.
+- **Full test suite (`npm test`)**: 18 bộ test passed 100%.
+- **Playwright E2E (`npm run e2e`)**: 46/46 kịch bản passed trên cả Mobile (390px) và Desktop (1366px) qua 8 theme.
+
+### 4. Mã Commit và Đường dẫn Bản Preview Chặng 2
+- **Mã commit (workspace)**: `c354699` (`dot14-chang-2: hoàn thành Phần A - Chấm vở, không sửa hộ`)
+- **Mã commit (worker)**: `6c96d0f` (`dot14-chang-2: implement check-work API endpoints, arithmetic validator, and safe cascade delete`)
+- **Worker version ID**: `c59c3f95-f32b-4bab-98d3-3e819e4b4d2d`
+- **Đường dẫn Preview Chặng 2**: [https://preview-d14-ch2.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch2.kem-con-hoc-5xf.pages.dev)
+
