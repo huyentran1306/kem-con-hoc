@@ -18,11 +18,26 @@ import './ui/staff/tokens.css';
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
 const TEACHER_TOKEN_KEY = 'kem-con-hoc:teacher:token';
 
+export function formatClassName(name) {
+  if (!name) return '';
+  const s = String(name).trim();
+  return /^lớp\s+/i.test(s) ? s : `Lớp ${s}`;
+}
+
 export default function TeacherPortal({ onExit }) {
   const [token, setToken] = useState(() => localStorage.getItem(TEACHER_TOKEN_KEY) || '');
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname;
+      const h = window.location.hash;
+      if (p === '/teacher/dang-ky' || p.startsWith('/teacher/dang-ky') || h.includes('dang-ky')) {
+        return 'register';
+      }
+    }
+    return 'login';
+  });
   const [currentView, setCurrentView] = useState('classes'); // 'classes' | 'class_detail' | 'settings'
   const [selectedClassId, setSelectedClassId] = useState(null);
 
@@ -601,7 +616,7 @@ function TeacherClassesList({ token, teacher, onSelectClass }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
                   <span style={styles.gradeBadge}>Khối {c.grade} · {c.school_year}</span>
-                  <h3 style={styles.className}>Lớp {c.name}</h3>
+                  <h3 style={styles.className}>{formatClassName(c.name)}</h3>
                 </div>
                 <div style={styles.joinCodeBox} title="Mã lớp chung">
                   <span style={{ fontSize: 10, color: '#84664A', fontWeight: 800 }}>MÃ LỚP</span>
@@ -818,7 +833,7 @@ function TeacherClassDetail({ token, classId, onBack }) {
         <div>
           <span style={styles.gradeBadge}>Khối {cls.grade} · {cls.school_year || '2026-2027'}</span>
           <h2 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 24, fontWeight: 700, color: '#4B3621', margin: '4px 0' }}>
-            Lớp {cls.name}
+            {formatClassName(cls.name)}
           </h2>
           <p style={{ fontSize: 13, color: '#84664A', margin: 0 }}>{cls.school_name}</p>
         </div>
@@ -977,13 +992,13 @@ function TeacherAssignmentsTab({ token, classId, cls }) {
                 <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0', color: '#1E293B' }}>{a.title}</h4>
                 <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
                   <Calendar size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  Hạn nộp: {new Date(a.due_at).toLocaleDateString('vi-VN')} · {a.item_count || 0} câu hỏi
+                  Hạn nộp: {a.due_at ? new Date(a.due_at).toLocaleDateString('vi-VN') : 'Chưa đặt hạn'} · {a.item_count || 0} câu hỏi
                 </p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button style={styles.secondaryBtn} onClick={() => setSelectedAsgId(a.id)}>
-                  Xem kết quả làm bài
+                  {a.status === 'draft' ? 'Duyệt bài giảng' : 'Xem kết quả làm bài'}
                 </button>
               </div>
             </div>
@@ -1094,7 +1109,7 @@ function CreateAssignmentModal({ token, classId, cls, onClose, onCreated }) {
     <div style={styles.modalBackdrop}>
       <div style={{ ...styles.modalBox, maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={styles.modalHeader}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Soạn bài tập cho Lớp {cls.name}</h3>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Soạn bài tập cho {formatClassName(cls.name)}</h3>
           <button style={styles.iconBtn} onClick={onClose}><X size={18} /></button>
         </div>
 
@@ -1768,7 +1783,7 @@ function TeacherAnnouncementsTab({ token, classId }) {
             fontWeight: 700,
             cursor: 'pointer',
             border: '1.5px solid #CBD5E1',
-            background: seg === 'announcements' ? '#4F46E5' : '#FFFFFF',
+            background: seg === 'announcements' ? 'var(--s-accent, #9B6916)' : '#FFFFFF',
             color: seg === 'announcements' ? '#FFFFFF' : '#334155',
           }}
           onClick={() => setSeg('announcements')}
@@ -1789,7 +1804,7 @@ function TeacherAnnouncementsTab({ token, classId }) {
           }}
           onClick={() => setSeg('reminders')}
         >
-          ⏰ Nhắc việc (Mục 4b)
+          ⏰ Nhắc việc
         </button>
       </div>
 
@@ -2576,6 +2591,8 @@ const styles = {
     fontSize: 13,
     fontWeight: 800,
     cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
     transition: 'all 0.15s ease',
   },
   tabBtnActive: {

@@ -34,10 +34,17 @@ export function removeAuthToken() {
   } catch {}
 }
 
+export function getAdminToken() {
+  try {
+    return localStorage.getItem('kem-con-hoc:admin-auth') || ''
+  } catch {}
+  return ''
+}
+
 async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeaders = {}) {
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), timeoutMs)
-  const token = getAuthToken()
+  const token = getAdminToken() || getAuthToken()
   const headers = { 'Content-Type': 'application/json', ...extraHeaders }
   if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`
@@ -395,7 +402,9 @@ export async function aiPractice(problem, child) {
    ============================================================ */
 export async function dbKvGet(key) {
   try {
-    const r = await fetch(GATEWAY + '/db/kv/' + encodeURIComponent(key))
+    const token = getAdminToken() || getAuthToken()
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const r = await fetch(GATEWAY + '/db/kv/' + encodeURIComponent(key), { headers })
     if (!r.ok) return null
     const j = await r.json()
     return j.found ? j.value : null
@@ -406,9 +415,12 @@ export async function dbKvGet(key) {
 
 export async function dbKvSet(key, value) {
   try {
+    const token = getAdminToken() || getAuthToken()
+    const headers = { 'Content-Type': 'application/json' }
+    if (token) headers.Authorization = `Bearer ${token}`
     const r = await fetch(GATEWAY + '/db/kv/' + encodeURIComponent(key), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ value }),
     })
     return r.ok
@@ -617,7 +629,7 @@ export async function loadPublicConfig(force = false) {
     return publicConfigCache
   }
   try {
-    const url = force ? `${GATEWAY}/api/v1/config/public?t=${now}` : `${GATEWAY}/api/v1/config/public`
+    const url = force ? `${GATEWAY}/api/v1/config/public?_refresh=1` : `${GATEWAY}/api/v1/config/public`
     const res = await fetch(url)
     if (res.ok) {
       const data = await res.json()

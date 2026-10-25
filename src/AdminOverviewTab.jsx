@@ -72,13 +72,13 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
   const peakHours = data?.peakHours || [];
   const recentSessions = data?.recentSessions || [];
 
-  // An toàn độ trễ, không bao giờ để xảy ra NaNs
+  // An toàn độ trễ, không có dữ liệu thì null
   const medianLatencySec = typeof aiHealth?.medianLatencyMs === 'number' && !isNaN(aiHealth.medianLatencyMs)
     ? (aiHealth.medianLatencyMs / 1000).toFixed(1)
-    : '1.2';
+    : null;
   const p95LatencySec = typeof aiHealth?.p95LatencyMs === 'number' && !isNaN(aiHealth.p95LatencyMs)
     ? (aiHealth.p95LatencyMs / 1000).toFixed(1)
-    : '2.4';
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -173,7 +173,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
             <Sparkles size={18} color="#10B981" />
           </div>
           <div className="stitch-kpi-num" style={{ color: '#047857' }}>
-            {metrics.selfRelianceRate || 85}%
+            {metrics.selfRelianceRate != null ? `${metrics.selfRelianceRate}%` : 'Chưa có dữ liệu'}
           </div>
           <div style={{ fontSize: 12.5, color: '#047857', fontWeight: 700 }}>
             Tiêu chuẩn sư phạm gợi mở từng bước
@@ -216,7 +216,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
             <div style={{ background: 'var(--adm-bg)', padding: 12, borderRadius: 14, border: '1.5px solid var(--adm-border)' }}>
               <div style={{ fontSize: 12, color: 'var(--adm-sub)', fontWeight: 700 }}>ĐỘ TRỄ TRUNG VỊ</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--adm-text)', margin: '4px 0' }}>
-                {medianLatencySec}s
+                {medianLatencySec != null ? `${medianLatencySec}s` : 'Chưa có dữ liệu'}
               </div>
               <div style={{ fontSize: 11.5, color: '#047857', fontWeight: 600 }}>Tốc độ phản hồi tốt</div>
             </div>
@@ -224,7 +224,7 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
             <div style={{ background: 'var(--adm-bg)', padding: 12, borderRadius: 14, border: '1.5px solid var(--adm-border)' }}>
               <div style={{ fontSize: 12, color: 'var(--adm-sub)', fontWeight: 700 }}>ĐỘ TRỄ P95 (SQL)</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--adm-text)', margin: '4px 0' }}>
-                {p95LatencySec}s
+                {p95LatencySec != null ? `${p95LatencySec}s` : 'Chưa có dữ liệu'}
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--adm-sub)' }}>Không quá tải CPU</div>
             </div>

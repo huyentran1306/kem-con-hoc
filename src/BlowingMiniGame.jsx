@@ -369,20 +369,20 @@ export function BlowingMiniGame({
               <p style={{ fontSize: 12, color: 'var(--c-text-2)', marginBottom: 8 }}>
                 🔒 <i>Mic chỉ nghe tiếng thổi ngay trên máy, không ghi âm, không gửi đi.</i>
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
                 <button
                   className="btn solid"
-                  style={{ flex: 1, padding: '12px 14px', fontSize: 14, fontWeight: 700 }}
+                  style={{ width: '100%', padding: '12px 14px', fontSize: 14, fontWeight: 700 }}
                   onClick={startMic}
                 >
                   🎙️ Bật mic thổi cùng con
                 </button>
                 <button
                   className="btn ghost"
-                  style={{ padding: '12px 14px', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 14px', fontSize: 13 }}
                   onClick={() => setMicState('fallback')}
                 >
-                  Giữ nút bấm
+                  Hoặc chạm & giữ nút bấm
                 </button>
               </div>
             </div>

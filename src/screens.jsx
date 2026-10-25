@@ -15,6 +15,7 @@ import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeN
 import { ZaloReportModal } from './ZaloReportModal'
 import { NpsSurveyCard } from './NpsSurveySheet'
 import { getSlot } from './themes/slots/registry'
+import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
 import { getStudyDateKey } from './useStudyTracker'
@@ -1553,6 +1554,8 @@ export function Scaffold() {
     }
   }, [stuck, stepSeconds, S.calmNudgeEnabled, snoozeUntil, nudgeProblemCount, showNudge])
 
+  const ScaffoldActionsSlot = getSlot(S.theme, 'ScaffoldActions') || DefaultScaffoldActions
+
   const stepOk = () => {
     const ns = step + 1
     patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
@@ -1565,16 +1568,12 @@ export function Scaffold() {
   const stepStuck = () => {
     const ns = stuck + 1
     patch({ flow: { ...S.flow, stuck: ns } })
-    if (ns >= 2) {
-      // Mở nhẹ nhàng qua Góc hạ hoả thay vì hộp thoại ép buộc
-      openSheet('calm')
-    }
   }
 
   const onOpen = () => {
     patch({ flow: { ...S.flow, unlocked: true } })
     boom()
-    toast('Đáp án đã mở — chỉ cho ' + S.parent.toLowerCase() + ' đối chiếu thôi nhé')
+    toast('Đáp án đã mở, chỉ cho ' + S.parent.toLowerCase() + ' đối chiếu thôi nhé')
   }
 
   return (
@@ -1697,19 +1696,20 @@ export function Scaffold() {
               </div>
 
               <ParentAnswer key={'pa-' + i} text={s.answerForParent || s.answer || s.hint} parent={S.parent} />
-              <div className="btns">
+              
+              <div style={{ marginTop: 12, marginBottom: 8 }}>
+                <ScaffoldActionsSlot onStuck={stepStuck} onAnswered={stepOk} />
+              </div>
+
+              <div className="btns" style={{ marginTop: 8 }}>
                 <button className="btn soft" onClick={() => setShowAns(!showAns)}>
                   {showAns ? '🙈 Đóng đáp án' : '👀 Xem đáp án gợi ý'}
                 </button>
               </div>
               {showAns && (
-                <div className="card mint pop">
+                <div className="card mint pop" style={{ marginTop: 8 }}>
                   <span className="lbl mint">Đáp án gợi ý ({S.parent.toLowerCase()} đối chiếu)</span>
                   <span style={{ fontSize: 14 }}>{s.answer || s.hint}</span>
-                  <div className="btns" style={{ marginTop: 8 }}>
-                    <button className="btn solid" onClick={stepOk}>✅ Con trả lời đúng</button>
-                    <button className="btn ghost" onClick={stepStuck}>❌ Con còn bí</button>
-                  </div>
                 </div>
               )}
             </div>

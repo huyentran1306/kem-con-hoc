@@ -13,7 +13,7 @@ export function Header({ title, back, right, hideSound }) {
           ‹
         </button>
       )}
-      <p className="title" style={{ fontSize: 20 }}>
+      <p className="title" style={{ fontSize: 20, color: 'var(--c-accent-ink, var(--c-text))' }}>
         {title}
       </p>
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -316,7 +316,27 @@ export function HoldReveal({ locked, onLockedPress, onOpen }) {
       onPointerUp={up}
       onPointerLeave={up}
       onPointerCancel={up}
+      onMouseDown={down}
+      onMouseUp={up}
+      onMouseLeave={up}
+      onTouchStart={down}
+      onTouchEnd={up}
+      onTouchCancel={up}
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault()
+          if (!timer.current) down()
+        }
+      }}
+      onKeyUp={(e) => {
+        if (e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault()
+          up()
+        }
+      }}
       onContextMenu={(e) => e.preventDefault()}
+      tabIndex={0}
+      aria-label="Bấm giữ 2 giây để mở đáp án (hoặc giữ phím Space)"
     >
       <i className="fill" style={{ width: `${progress}%` }} />
       <span>

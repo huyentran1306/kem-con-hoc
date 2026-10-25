@@ -325,7 +325,7 @@ export default function AdminPortal({ onExit }) {
           </div>
           <div>
             <h1 className="stitch-brand-title">Kèm Con Học</h1>
-            <span className="stitch-brand-badge">Admin · Stitch</span>
+            <span className="stitch-brand-badge">Admin</span>
           </div>
         </div>
 
@@ -467,7 +467,7 @@ export default function AdminPortal({ onExit }) {
             <BearMascot mood="happy" size={42} />
           </div>
           <div className="stitch-bear-notice-text">
-            Hôm nay đã có 84 buổi kèm học thành công!
+            Đồng hành cùng bé học mỗi ngày!
           </div>
         </div>
 

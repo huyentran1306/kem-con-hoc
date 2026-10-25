@@ -1,12 +1,10 @@
-import { useContext, useEffect, useMemo, useRef, useState, Component } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState, Component, lazy, Suspense } from 'react'
 import { AppCtx } from './ctx'
 import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
 import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview } from './api'
-import LoginScreen from './Login'
-import AdminPortal from './Admin'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
@@ -14,13 +12,16 @@ import { applyTheme } from './themes'
 import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
 import { ThemedTabIcon } from './themes/themeIcons'
 import { useStudyTracker } from './useStudyTracker'
-import { FamilyMembersSheet } from './FamilyMembersSheet'
-import { JoinFamilyView } from './JoinFamilyView'
-import { PublicReportView } from './PublicReportView'
-import TeacherPortal from './TeacherPortal'
-import { FamilyClassSheet } from './FamilyClassSheet'
 import { CalmCornerModal } from './CalmCornerModal'
 import { ErrorBoundary } from './ErrorBoundary'
+
+const LoginScreen = lazy(() => import('./Login'))
+const AdminPortal = lazy(() => import('./Admin'))
+const TeacherPortal = lazy(() => import('./TeacherPortal'))
+const FamilyMembersSheet = lazy(() => import('./FamilyMembersSheet').then(m => ({ default: m.FamilyMembersSheet })))
+const JoinFamilyView = lazy(() => import('./JoinFamilyView').then(m => ({ default: m.JoinFamilyView })))
+const PublicReportView = lazy(() => import('./PublicReportView').then(m => ({ default: m.PublicReportView })))
+const FamilyClassSheet = lazy(() => import('./FamilyClassSheet').then(m => ({ default: m.FamilyClassSheet })))
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -265,6 +266,7 @@ export default function App() {
   const lastServerTsRef = useRef(null)
   const isMergingRef = useRef(false)
   const hydratedRef = useRef(false)
+  const lastSavedHashRef = useRef('')
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
@@ -331,9 +333,9 @@ export default function App() {
     else if (S.onboarded && screen === 'onb') setScreen('home')
   }, [S.onboarded])
 
-  /* ---------- tải cấu hình công khai (Prompt, Scope rules, Theme mặc định) ---------- */
+  /* ---------- tải cấu hình công khai (Scope rules, Theme mặc định) ---------- */
   useEffect(() => {
-    loadPublicConfig(true)
+    loadPublicConfig(false)
       .then((cfg) => {
         const themesCfg = cfg?.themesConfig
         const defaultTheme = themesCfg?.default
@@ -398,6 +400,10 @@ export default function App() {
           setS(nextState)
           toast('Đã đồng bộ dữ liệu mới nhất từ đám mây ☁️')
         }
+        try {
+          const { screen: _s, study: _st, _ts: _t, ...initRest } = (cloud?.state || S)
+          lastSavedHashRef.current = JSON.stringify(initRest)
+        } catch (e) {}
         hydratedRef.current = true
         setHydrated(true)
       })()
@@ -406,27 +412,42 @@ export default function App() {
     }
   }, [famId])
 
-  /* ---------- lưu localStorage + đồng bộ cloud (debounce) ---------- */
+  /* ---------- lưu localStorage + đồng bộ cloud (debounce & hash check P2.8) ---------- */
   useEffect(() => {
     if (!famId) return
-    const { screen: _s, study: _st, ...rest } = S
-    const payload = { ...rest, _ts: Date.now() }
+    const { screen: _s, study: _st, _ts: _t, ...rest } = S
     if (!hydratedRef.current) return
+
+    let serialized = ''
+    try {
+      serialized = JSON.stringify(rest)
+    } catch (e) {
+      serialized = ''
+    }
+
+    const payload = { ...rest, _ts: Date.now() }
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(payload))
     } catch (e) { }
 
     if (isMergingRef.current) {
       isMergingRef.current = false
+      lastSavedHashRef.current = serialized
       return
     }
 
     if (!S.cloudSync) return
+    // Chỉ ghi cloud khi state thực sự thay đổi nội dung (P2.8)
+    if (lastSavedHashRef.current === serialized) {
+      return
+    }
+
     clearTimeout(cloudTimer.current)
     cloudTimer.current = setTimeout(async () => {
       const saveRes = await cloudSaveState(famId, payload, lastServerTsRef.current)
       if (saveRes && saveRes.saved && saveRes.ts) {
         lastServerTsRef.current = saveRes.ts
+        lastSavedHashRef.current = serialized
       } else if (saveRes && saveRes.conflict) {
         lastServerTsRef.current = saveRes.serverTs || null
         // Gộp state khi có xung đột (Section 3 Prompt 00)
@@ -444,6 +465,7 @@ export default function App() {
           stickerHistory: mergedHistory,
           _ts: saveRes.serverTsMs || Date.now(),
         }))
+        lastSavedHashRef.current = JSON.stringify({ ...saveRes.serverState, stickerHistory: mergedHistory })
         toast('Đã gộp dữ liệu đồng bộ an toàn ⭐️')
       }
     }, 2500)
@@ -606,22 +628,24 @@ export default function App() {
 
   if (showAdmin) {
     return (
-      <AdminPortal
-        onExit={() => {
-          setShowAdmin(false)
-          if (window.location.pathname.startsWith('/admin')) {
-            window.history.pushState(null, '', '/')
-          } else {
-            window.location.hash = ''
-          }
-        }}
-      />
+      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp Quản trị...</div>}>
+        <AdminPortal
+          onExit={() => {
+            setShowAdmin(false)
+            if (window.location.pathname.startsWith('/admin')) {
+              window.history.pushState(null, '', '/')
+            } else {
+              window.location.hash = ''
+            }
+          }}
+        />
+      </Suspense>
     )
   }
 
   if (showTeacher) {
     return (
-      <>
+      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp Cổng Giáo Viên...</div>}>
         <TeacherPortal
           onExit={() => {
             setShowTeacher(false)
@@ -637,38 +661,42 @@ export default function App() {
             {msg}
           </div>
         )}
-      </>
+      </Suspense>
     )
   }
 
   if (reportToken) {
     return (
-      <PublicReportView
-        reportToken={reportToken}
-        onHome={() => {
-          window.history.pushState(null, '', '/')
-          setReportToken('')
-        }}
-      />
+      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp báo cáo...</div>}>
+        <PublicReportView
+          reportToken={reportToken}
+          onHome={() => {
+            window.history.pushState(null, '', '/')
+            setReportToken('')
+          }}
+        />
+      </Suspense>
     )
   }
 
   if (joinCode) {
     return (
-      <JoinFamilyView
-        inviteCode={joinCode === 'ENTER_CODE' ? '' : joinCode}
-        onJoined={(res) => {
-          window.history.pushState(null, '', '/')
-          setJoinCode('')
-          window.location.reload()
-        }}
-        onCancel={() => {
-          window.history.pushState(null, '', '/')
-          setJoinCode('')
-        }}
-        toast={toast}
-        boom={boom}
-      />
+      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp lời mời...</div>}>
+        <JoinFamilyView
+          inviteCode={joinCode === 'ENTER_CODE' ? '' : joinCode}
+          onJoined={(res) => {
+            window.history.pushState(null, '', '/')
+            setJoinCode('')
+            window.location.reload()
+          }}
+          onCancel={() => {
+            window.history.pushState(null, '', '/')
+            setJoinCode('')
+          }}
+          toast={toast}
+          boom={boom}
+        />
+      </Suspense>
     )
   }
 
@@ -679,12 +707,14 @@ export default function App() {
         <div className="stage">
           <div className="app">
             <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
-            <LoginScreen
-              onAuthed={handleAuthed}
-              reauthSession={session && !hasToken ? session : null}
-              onOpenJoin={() => setJoinCode('ENTER_CODE')}
-              classJoinBanner={classJoinBanner}
-            />
+            <Suspense fallback={<div style={{ padding: 24, textAlign: 'center' }}>Đang nạp đăng nhập...</div>}>
+              <LoginScreen
+                onAuthed={handleAuthed}
+                reauthSession={session && !hasToken ? session : null}
+                onOpenJoin={() => setJoinCode('ENTER_CODE')}
+                classJoinBanner={classJoinBanner}
+              />
+            </Suspense>
           </div>
         </div>
       </AppCtx.Provider>
@@ -732,8 +762,13 @@ export default function App() {
           )}
 
           {S.onboarded && (
-            <button className="calm-fab" onClick={() => openSheet('calm')}>
-              😮‍💨 {calmLabel}
+            <button
+              className={`calm-fab ${['explain', 'scaffold', 'done', 'snap', 'analyze'].includes(screen) ? 'mini' : ''}`}
+              onClick={() => openSheet('calm')}
+              title={calmLabel}
+              aria-label={calmLabel}
+            >
+              <span>😮‍💨</span> <span>{calmLabel}</span>
             </button>
           )}
 
@@ -788,11 +823,11 @@ function SheetView({ type, data, session }) {
               toast('✅ Đã hạ độ khó! Con thử làm với số dễ hơn nhé')
             } else {
               patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
-              toast('Mạng chậm — thử lại sau nhé')
+              toast('Mạng chậm, thử lại sau nhé')
             }
           } catch (err) {
             patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
-            toast('Mạng chậm — thử lại sau nhé')
+            toast('Mạng chậm, thử lại sau nhé')
           }
         }}
         onOpenHint={() => {
@@ -867,11 +902,11 @@ function SheetView({ type, data, session }) {
           toast('✅ Đã hạ độ khó! Con thử làm với số dễ hơn nhé')
         } else {
           patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
-          toast('Mạng chậm — thử lại sau nhé')
+          toast('Mạng chậm, thử lại sau nhé')
         }
       } catch (err) {
         patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
-        toast('Mạng chậm — thử lại sau nhé')
+        toast('Mạng chậm, thử lại sau nhé')
       }
     }
 
@@ -901,29 +936,33 @@ function SheetView({ type, data, session }) {
   if (type === 'addChild') return <AddChildSheet />
   if (type === 'invite' || type === 'members') {
     return (
-      <FamilyMembersSheet
-        onClose={closeSheet}
-        toast={toast}
-        currentUser={session?.member || { role: 'owner', displayName: S.parent }}
-        familyName={session ? session.name : S.familyName || 'Gia đình'}
-      />
+      <Suspense fallback={<div className="sheet"><div className="pn" style={{ padding: 24, textAlign: 'center' }}>Đang tải...</div></div>}>
+        <FamilyMembersSheet
+          onClose={closeSheet}
+          toast={toast}
+          currentUser={session?.member || { role: 'owner', displayName: S.parent }}
+          familyName={session ? session.name : S.familyName || 'Gia đình'}
+        />
+      </Suspense>
     )
   }
   if (type === 'familyClasses') {
     return (
       <Sheet>
-        <FamilyClassSheet
-          token={getAuthToken()}
-          activeChild={child}
-          children={S.children}
-          onAddChild={(newKid) => {
-            const updated = [...(S.children || []), newKid]
-            patch({ children: updated, activeId: newKid.id })
-          }}
-          initialCode={data?.code || ''}
-          initialType={data?.joinType || 'class'}
-          onClose={closeSheet}
-        />
+        <Suspense fallback={<div style={{ padding: 24, textAlign: 'center' }}>Đang tải...</div>}>
+          <FamilyClassSheet
+            token={getAuthToken()}
+            activeChild={child}
+            children={S.children}
+            onAddChild={(newKid) => {
+              const updated = [...(S.children || []), newKid]
+              patch({ children: updated, activeId: newKid.id })
+            }}
+            initialCode={data?.code || ''}
+            initialType={data?.joinType || 'class'}
+            onClose={closeSheet}
+          />
+        </Suspense>
       </Sheet>
     )
   }
@@ -1017,7 +1056,7 @@ function TimerSheet() {
   return (
     <Sheet>
       <p className="title">Hẹn giờ học</p>
-      <p className="sub">Học <b>15 phút</b>, nghỉ <b>5 phút</b>. Tối đa 3 vòng — đủ để não con nghỉ mà vẫn giữ nếp.</p>
+      <p className="sub">Học <b>15 phút</b>, nghỉ <b>5 phút</b>. Tối đa 3 vòng, đủ để não con nghỉ mà vẫn giữ nếp.</p>
 
       {study && (
         <div className="card plum">
@@ -1094,7 +1133,7 @@ function InviteSheet() {
   const url = typeof window !== 'undefined' ? window.location.origin : ''
   const shareUrl =
     'https://zalo.me/share?url=' + encodeURIComponent(url) +
-    '&title=' + encodeURIComponent(`Kèm Con Học — ${familyName || 'gia đình mình'} mời bạn cùng kèm con mỗi tối`)
+    '&title=' + encodeURIComponent(`Kèm Con Học, ${familyName || 'gia đình mình'} mời bạn cùng kèm con mỗi tối`)
 
   const copy = async () => {
     try {
@@ -1102,7 +1141,7 @@ function InviteSheet() {
       setCopied(true)
       toast('Đã sao chép link 📋')
     } catch (e) {
-      toast('Không copy được — bấm giữ ô link để copy nhé')
+      toast('Không copy được, bấm giữ ô link để copy nhé')
     }
   }
 
@@ -1110,7 +1149,7 @@ function InviteSheet() {
     <Sheet>
       <p className="title">Mời bố cùng kèm con 📲</p>
       <p className="sub">
-        App không tự nhắn tin được — bạn hãy <b>sao chép link</b> rồi gửi cho bố, hoặc bấm{' '}
+        App không tự nhắn tin được, bạn hãy <b>sao chép link</b> rồi gửi cho bố, hoặc bấm{' '}
         <b>Chia sẻ qua Zalo</b> để mở sẵn khung nhắn. Bố mở link, tạo tài khoản gia đình riêng là xong.
       </p>
       <div className="card">
@@ -1135,7 +1174,7 @@ function InviteSheet() {
           patch({ partner: true })
           closeSheet()
           window.open(shareUrl, '_blank')
-          toast('Đã mở Zalo — gửi link cho bố nhé 📲')
+          toast('Đã mở Zalo, gửi link cho bố nhé 📲')
         }}
       >
         Chia sẻ qua Zalo
@@ -1176,7 +1215,7 @@ function ReportIssueSheet({ problem }) {
     }
     setSaving(false)
     closeSheet()
-    toast(ok ? 'Đã gửi góp ý — cảm ơn bạn, AI sẽ được cải thiện 💛' : 'Đã lưu góp ý trên máy (mạng chậm) 💛')
+    toast(ok ? 'Đã gửi góp ý, cảm ơn bạn, AI sẽ được cải thiện 💛' : 'Đã lưu góp ý trên máy (mạng chậm) 💛')
   }
 
   return (
@@ -1388,7 +1427,7 @@ function StickerBookSheet() {
       {(curStats.stickers >= 10 || list.length >= 10) && (
         <div className="card sun pop" style={{ border: '2px solid #F59E0B', background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)', marginBottom: 12, textAlign: 'center', padding: '14px 12px' }}>
           <div style={{ fontSize: 36, marginBottom: 4 }}>🎁 🏆 🍦</div>
-          <b style={{ color: '#78350F', fontSize: 16 }}>ĐỦ 10 HUY HIỆU — ĐỔI QUÀ CHO BÉ!</b>
+          <b style={{ color: '#78350F', fontSize: 16 }}>ĐỦ 10 HUY HIỆU: ĐỔI QUÀ CHO BÉ!</b>
           <div style={{ color: '#92400E', fontSize: 13, margin: '4px 0 10px', lineHeight: 1.4 }}>
             Chúc mừng {child.name} đã tích đủ 10 sticker nỗ lực! {S.parent} bấm để mở phiếu đổi quà và bắt đầu chặng mới nhé.
           </div>
@@ -1442,7 +1481,7 @@ function StickerBookSheet() {
           {isUnlocked(selected) ? (
             <span className="pill g">✓ Đã dán vào sổ ({selected.when || 'Hôm nay'})</span>
           ) : (
-            <span className="pill c">🔒 Chưa mở khóa — hoàn thành thêm bài học để nhận nhé!</span>
+            <span className="pill c">🔒 Chưa mở khóa, hoàn thành thêm bài học để nhận nhé!</span>
           )}
         </div>
       )}
@@ -1609,7 +1648,7 @@ function RedeemRewardSheet() {
       <div style={{ textAlign: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 52, animation: 'float 2s ease-in-out infinite' }}>🏆 🎁 ✨</div>
         <p className="title" style={{ margin: '4px 0 2px', color: '#B45309' }}>
-          ĐỦ 10 HUY HIỆU — ĐỔI QUÀ CHO {child.name.toUpperCase()}!
+          ĐỦ 10 HUY HIỆU: ĐỔI QUÀ CHO {child.name.toUpperCase()}!
         </p>
         <span className="sub">
           Chúc mừng {child.name} đã hoàn thành xuất sắc 10 buổi học nỗ lực. {S.parent} và con cùng chọn phần quà nhé:

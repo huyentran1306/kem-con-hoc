@@ -24,6 +24,7 @@ async function postJson(baseUrl, endpoint, payload) {
     headers: {
       'Content-Type': 'application/json',
       'User-Agent': 'Mozilla/5.0 (Node.js D1 Sync Script)',
+      Authorization: `Bearer ${process.env.ADMIN_KEY || 'kem-con-hoc-admin-secret-2026'}`,
     },
     body: JSON.stringify(payload),
   })
