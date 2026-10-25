@@ -90,9 +90,9 @@ export function extractJson(raw) {
 
 /* ============================================================
    🔍 OCR — đọc chữ từ ảnh chụp bài tập (multipart → /vision/ocr & /vision/analyze)
-   Hỗ trợ p1_ocr_v2 gộp phân loại phạm vi (bài tập, nhạy cảm, đồ chơi, ảnh mờ, nhiều bài)
+   Hỗ trợ p1_ocr_v3/v2 gộp phân loại phạm vi (bài tập, nhạy cảm, đồ chơi, ảnh mờ, nhiều bài)
    ============================================================ */
-export async function aiOcr(file, timeoutMs = 15000, context = {}) {
+export async function aiOcr(file, timeoutMs = 25000, context = {}) {
   if (isTrialActive()) {
     return {
       text: PRELOADED_TRIAL_LESSONS[0].de_bai,
@@ -100,55 +100,54 @@ export async function aiOcr(file, timeoutMs = 15000, context = {}) {
       raw: PRELOADED_TRIAL_LESSONS[0].de_bai,
     }
   }
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  // Mỗi tầng có timeout riêng: tầng 1 chậm không được "ăn" hết thời gian của tầng dự phòng
+  const postWithTimeout = async (url, body, ms) => {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), ms)
+    try {
+      return await fetch(url, { method: 'POST', body, signal: ctrl.signal })
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  // Ưu tiên p1_ocr_v3 (chép nguyên văn, tách bài làm của con, đánh dấu [?]) → v2 → v1
+  const ocrPrompt = renderPrompt('p1_ocr_v3') || renderPrompt('p1_ocr_v2') || renderPrompt('p1_ocr')
+
+  // Tầng 1: model vision qua /vision/analyze
   try {
     const fd = new FormData()
     fd.append('image', file, 'homework.jpg')
-    // Ưu tiên p1_ocr_v2 gộp kiểm tra phạm vi, fallback sang p1_ocr cũ
-    const ocrPrompt = renderPrompt('p1_ocr_v2') || renderPrompt('p1_ocr')
+    // Worker mới lấy prompt phía máy chủ theo prompt_id; 'prompt' chỉ để worker cũ còn chạy
+    fd.append('prompt_id', 'p1_ocr_v3')
     fd.append('prompt', ocrPrompt)
-
-    // Ưu tiên 1: Llama 3.2 Vision qua /vision/analyze
-    try {
-      const rVision = await fetch(AI_GATEWAY + '/vision/analyze', {
-        method: 'POST',
-        body: fd,
-        signal: ctrl.signal,
-      })
-      if (rVision.ok) {
-        const jv = await rVision.json()
-        let analysis = jv.analysis || ''
-        if (analysis) {
-          analysis = analysis
-            .replace(/^Được rồi,.*?:\s*/i, '')
-            .replace(/^\*\*ĐỀ BÀI:\*\*\s*/i, '')
-            .replace(/^Đề bài toán tiểu học là:\s*/i, '')
-            .replace(/Tôi hy vọng điều đó.*$/is, '')
-            .trim()
-          if (analysis.length >= 3) {
-            const scope = parseOcrV2Result(analysis, context)
-            const text = (scope.de_bai || analysis).trim()
-            return {
-              text,
-              scopeResult: scope,
-              raw: analysis,
-            }
-          }
-        }
+    const rVision = await postWithTimeout(AI_GATEWAY + '/vision/analyze', fd, timeoutMs)
+    if (rVision.ok) {
+      const jv = await rVision.json()
+      let analysis = jv.analysis || ''
+      if (analysis && typeof analysis === 'object') analysis = JSON.stringify(analysis)
+      analysis = String(analysis)
+        .replace(/^Được rồi,.*?:\s*/i, '')
+        .replace(/^\*\*ĐỀ BÀI:\*\*\s*/i, '')
+        .replace(/^Đề bài toán tiểu học là:\s*/i, '')
+        .replace(/Tôi hy vọng điều đó.*$/is, '')
+        .trim()
+      if (analysis.length >= 3) {
+        const scope = parseOcrV2Result(analysis, context)
+        // JSON hợp lệ → chỉ lấy de_bai (rỗng = không đọc được), không bao giờ trả JSON thô làm đề
+        const text = scope.fromJson ? (scope.de_bai || '').trim() : (scope.de_bai || analysis).trim()
+        return { text, scopeResult: scope, raw: analysis, structured: !!scope.fromJson }
       }
-    } catch (eVision) {
-      console.warn('Vision analyze retry fallback:', eVision)
     }
+  } catch (eVision) {
+    console.warn('Vision analyze failed, fallback /vision/ocr:', eVision)
+  }
 
-    // Ưu tiên 2: Fallback sang /vision/ocr
+  // Tầng 2: OCR thô (yếu với tiếng Việt viết tay) — sẽ được p2_clean làm sạch ở bước sau
+  try {
     const fdOcr = new FormData()
     fdOcr.append('image', file, 'homework.jpg')
-    const r = await fetch(AI_GATEWAY + '/vision/ocr', {
-      method: 'POST',
-      body: fdOcr,
-      signal: ctrl.signal,
-    })
+    const r = await postWithTimeout(AI_GATEWAY + '/vision/ocr', fdOcr, 10000)
     if (r.ok) {
       const j = await r.json()
       const text = j.extracted_text || null
@@ -159,16 +158,15 @@ export async function aiOcr(file, timeoutMs = 15000, context = {}) {
           text: scope.de_bai || cleanText,
           scopeResult: scope,
           raw: cleanText,
+          structured: false,
         }
       }
     }
-
-    return null
   } catch (e) {
-    return null
-  } finally {
-    clearTimeout(timer)
+    console.warn('Vision OCR fallback failed:', e)
   }
+
+  return null
 }
 
 /* ============================================================
@@ -207,6 +205,7 @@ export async function aiAnalyzeToy(blobOrFile, timeoutMs = 12000) {
   try {
     const fd = new FormData()
     fd.append('image', blobOrFile, 'toy.jpg')
+    fd.append('prompt_id', 'p5_toy')
     fd.append('prompt', renderPrompt('p5_toy'))
     const r = await fetch(AI_GATEWAY + '/vision/analyze', {
       method: 'POST',
@@ -1149,13 +1148,60 @@ export async function revokeSharedReport(token) {
    🏫 PROMPT 11: CLASS PREVIEW, JOIN LINK, 24H CHILD CHANGE & REMINDERS
    ============================================================ */
 
+/* Máy chủ có chỗ trả camelCase (teacherName, className), có chỗ snake_case (teacher_name, class_name).
+   Gom về cả hai kiểu để mọi màn hình đọc được tên lớp / tên cô. */
+export function normalizeClassInfo(c) {
+  if (!c || typeof c !== 'object') return c
+  const t = c.teacher && typeof c.teacher === 'object' ? c.teacher : {}
+  const teacherName =
+    c.teacher_name || c.teacherName || c.teacher_display_name || c.teacherDisplayName ||
+    t.display_name || t.displayName || t.name || (typeof c.teacher === 'string' ? c.teacher : '') || ''
+  const className = c.class_name || c.className || c.name || ''
+  const schoolName = c.school_name || c.schoolName || ''
+  const schoolYear = c.school_year || c.schoolYear || ''
+  const joinCode = c.join_code || c.joinCode || ''
+  return {
+    ...c,
+    id: c.id ?? c.classId ?? c.class_id,
+    class_id: c.class_id ?? c.classId ?? c.id,
+    name: c.name || className,
+    class_name: className,
+    className,
+    teacher_name: teacherName,
+    teacherName,
+    school_name: schoolName,
+    schoolName,
+    school_year: schoolYear,
+    join_code: joinCode,
+    grade: c.grade ?? c.gradeLevel ?? '',
+    prefillName: c.prefillName || c.prefill_name || '',
+    class_student_id: c.class_student_id ?? c.classStudentId,
+    child_id: c.child_id ?? c.childId,
+    linked_at: c.linked_at || c.linkedAt,
+    roster_name: c.roster_name || c.rosterName,
+    reject_reason: c.reject_reason || c.rejectReason,
+    completed_items: c.completed_items ?? c.completedItems,
+    linked_by_name: c.linked_by_name || c.linkedByName,
+  }
+}
+
+/* "Cô Mai" / "Thầy An" giữ nguyên; "Mai" → "cô Mai"; trống → "cô chủ nhiệm" */
+export function teacherLabel(name) {
+  const n = String(name || '').trim()
+  if (!n) return 'cô chủ nhiệm'
+  return /^(cô|thầy|co|thay)\s/i.test(n) ? n : `cô ${n}`
+}
+
 export async function fetchClassPreview(code) {
   if (!code) return { ok: false, error: 'Thiếu mã lớp' }
   const res = await fetch(`${GATEWAY}/api/v1/classes/preview?code=${encodeURIComponent(code)}`)
-  return res.json()
+  const data = await res.json().catch(() => ({}))
+  if (data && data.class) data.class = normalizeClassInfo(data.class)
+  if (res.status === 404 && data && !data.error) data.error = 'Không tìm thấy lớp với mã này'
+  return data
 }
 
-export async function joinFamilyClass({ token, code, childId, rosterName, consent, childConsent, claimCode }) {
+export async function joinFamilyClass({ token, code, childId, childName, childGrade, rosterName, consent, childConsent, claimCode }) {
   const res = await fetch(`${GATEWAY}/api/v1/family/classes/join`, {
     method: 'POST',
     headers: {
@@ -1166,13 +1212,17 @@ export async function joinFamilyClass({ token, code, childId, rosterName, consen
       code: code ? code.trim().toUpperCase() : undefined,
       claimCode: claimCode ? claimCode.trim().toUpperCase() : undefined,
       childId,
+      childName,
+      childGrade,
       rosterName,
       consent,
       childConsent,
     }),
   })
-  const data = await res.json()
-  return { status: res.status, ...data }
+  const data = await res.json().catch(() => ({}))
+  if (data && data.class) data.class = normalizeClassInfo(data.class)
+  // httpStatus: mã HTTP thật (409 = trùng). status: trạng thái vào lớp từ máy chủ (active/pending) nếu có.
+  return { status: res.status, ...data, httpStatus: res.status, ok: data.ok ?? res.ok }
 }
 
 export async function changeClassChild({ token, classStudentId, childId }) {

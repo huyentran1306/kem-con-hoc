@@ -213,7 +213,96 @@ export function evaluateTextScope(text, { childGrade, childName, parentRole, cus
 /* ============================================================
    2. PARSE KẾT QUẢ TỪ VISION OCR V2 (HỖ TRỢ JSON & FALLBACK TEXT)
    ============================================================ */
-export function parseOcrV2Result(rawResponse, { childGrade, childName, parentRole, customRules } = {}) {
+/* ============================================================
+   Parse JSON "dễ tính" cho output model vision
+   Model nhỏ hay trả JSON lỗi: bọc ```json, xuống dòng thật trong chuỗi,
+   dấu " chưa escape, dấu phẩy thừa. Sửa các lỗi phổ biến trước khi bỏ cuộc.
+   ============================================================ */
+export function parseLooseJson(raw) {
+  if (raw && typeof raw === 'object') return raw
+  let s = String(raw || '').replace(/```(?:json)?/gi, '')
+  const start = s.indexOf('{')
+  const end = s.lastIndexOf('}')
+  if (start < 0 || end <= start) return null
+  s = s.slice(start, end + 1)
+  try {
+    return JSON.parse(s)
+  } catch (e) {}
+
+  // Sửa ký tự điều khiển & dấu nháy chưa escape bên trong chuỗi
+  let out = ''
+  let inStr = false
+  let esc = false
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]
+    if (!inStr) {
+      if (ch === '"') inStr = true
+      out += ch
+      continue
+    }
+    if (esc) {
+      out += ch
+      esc = false
+      continue
+    }
+    if (ch === '\\') {
+      out += ch
+      esc = true
+      continue
+    }
+    if (ch === '"') {
+      // Dấu " là kết thúc chuỗi nếu ký tự kế tiếp (bỏ khoảng trắng) là , : } ]
+      let j = i + 1
+      while (j < s.length && /\s/.test(s[j])) j++
+      if (j >= s.length || /[,:}\]]/.test(s[j])) {
+        inStr = false
+        out += ch
+      } else {
+        out += '\\"'
+      }
+      continue
+    }
+    if (ch === '\n') out += '\\n'
+    else if (ch === '\r') continue
+    else if (ch === '\t') out += '\\t'
+    else out += ch
+  }
+  out = out.replace(/,\s*([}\]])/g, '$1')
+  try {
+    return JSON.parse(out)
+  } catch (e) {}
+
+  // Bất đắc dĩ: lấy riêng pham_vi + de_bai bằng regex
+  const pv = s.match(/"pham_vi"\s*:\s*"([a-z_]+)"/)
+  const db = s.match(/"de_bai"\s*:\s*"([\s\S]*?)"\s*[,}]/)
+  if (pv) {
+    return {
+      pham_vi: pv[1],
+      de_bai: db ? db[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '',
+    }
+  }
+  return null
+}
+
+/* Wrapper: parse JSON dễ tính + gắn thêm trường v3 (bài làm của con, chỗ đọc chưa chắc) */
+export function parseOcrV2Result(rawResponse, opts = {}) {
+  const parsed = parseLooseJson(rawResponse)
+  if (parsed && typeof parsed === 'object' && parsed.pham_vi) {
+    const res = parseOcrV2Core(parsed, opts)
+    const uncertain = Array.isArray(parsed.cho_khong_chac)
+      ? parsed.cho_khong_chac.map((x) => String(x || '').trim()).filter(Boolean).slice(0, 12)
+      : []
+    return {
+      ...res,
+      fromJson: true,
+      bai_lam_cua_con: typeof parsed.bai_lam_cua_con === 'string' ? parsed.bai_lam_cua_con.trim() : '',
+      cho_khong_chac: uncertain,
+    }
+  }
+  return parseOcrV2Core(rawResponse, opts)
+}
+
+function parseOcrV2Core(rawResponse, { childGrade, childName, parentRole, customRules } = {}) {
   const rules = customRules || getActiveScopeRules()
   const xungHo = parentRole || 'Mẹ'
   const lopConNum = parseGradeNum(childGrade) || 3
@@ -371,7 +460,7 @@ export function parseOcrV2Result(rawResponse, { childGrade, childName, parentRol
       passed: true,
       category: 'bai_tap',
       action: 'allow',
-      de_bai: deBai || String(rawResponse || '').trim(),
+      de_bai: deBai || (typeof rawResponse === 'string' ? rawResponse.trim() : ''),
       mon_doan: parsed.mon_doan || 'toan',
       lop_doan: lopDoan,
       confidence: parsed.do_tin_cay || 0.9,

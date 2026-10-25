@@ -1,143 +1,185 @@
-import React from 'react'
+/* ============================================================
+   KÈM CON HỌC — LINH VẬT ĐỒNG HÀNH BIẾT CỬ ĐỘNG
+   <BuddyMascot buddyId state size />  — vẽ 1 linh vật
+   <ThemeBuddy state size />           — tự lấy linh vật theo bộ giao diện đang dùng
+   <BuddyGreeter />                    — linh vật chào ở trang chủ, chạm để nói chuyện
+   <BuddyPopLayer /> + buddyReact()    — linh vật bật lên khi con làm đúng / bối rối
+   Trạng thái: idle | hello | reading | thinking | cheer | love | surprised | oops | sleepy
+   (tên cũ hello/nudge/cheer và chao/nhac/vui vẫn dùng được)
+   ============================================================ */
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { AppCtx } from '../../ctx'
+import { CUSTOM_BUDDIES } from '../customPalette.js'
 import { BUDDY_QUOTES } from './buddyQuotes.js'
+import { buddyInnerSVG, hasBuddyArt, normalizeBuddyState, BUDDY_NAMES, BUDDY_VIEWBOX } from './buddyArt.js'
+import './buddy.css'
 
-export { BUDDY_QUOTES }
+export { BUDDY_QUOTES, BUDDY_NAMES }
 
-export function BuddyMascot({ buddyId = 'unicorn', state = 'hello', size = 56 }) {
-  if (buddyId === 'none') return null
+const TAP_LINES = ['Hí hí, nhột quá!', 'Con chạm nhẹ quá à, thích ghê!', 'Thêm một cái ôm nữa nha!']
 
-  switch (buddyId) {
-    case 'bear':
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          <circle cx="28" cy="28" r="16" fill="#F59E0B" />
-          <circle cx="28" cy="28" r="9" fill="#FDE68A" />
-          <circle cx="72" cy="28" r="16" fill="#F59E0B" />
-          <circle cx="72" cy="28" r="9" fill="#FDE68A" />
-          <circle cx="50" cy="54" r="34" fill="#D97706" />
-          <ellipse cx="50" cy="62" rx="16" ry="12" fill="#FEF3C7" />
-          <ellipse cx="50" cy="58" rx="6" ry="4" fill="#78350F" />
-          <circle cx="38" cy="48" r="4" fill="#78350F" />
-          <circle cx="62" cy="48" r="4" fill="#78350F" />
-          {/* Nơ / Phụ kiện đổi màu theo bộ */}
-          <path d="M42 82 Q 50 86, 58 82 Q 54 90, 42 82" fill="var(--c-accent, #EF4444)" />
-        </svg>
-      )
-
-    case 'unicorn':
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          {/* Bờm cầu vồng */}
-          <path d="M30 40 C 20 50, 15 70, 35 85" fill="none" stroke="var(--c-accent, #EC4899)" strokeWidth="8" strokeLinecap="round" />
-          {/* Đầu kỳ lân */}
-          <path d="M40 30 Q 75 32, 65 65 Q 50 82, 35 70 Z" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="2" />
-          {/* Sừng xoắn */}
-          <polygon points="50,30 65,8 58,30" fill="#F59E0B" stroke="#D97706" strokeWidth="1" />
-          {/* Tai */}
-          <polygon points="40,32 36,18 46,28" fill="#FBCFE8" />
-          {/* Mắt lấp lánh */}
-          <ellipse cx="56" cy="46" rx="4" ry="5" fill="#4B5563" />
-          <circle cx="58" cy="44" r="1.5" fill="#FFFFFF" />
-          {/* Má hồng */}
-          <circle cx="62" cy="56" r="4" fill="#F472B6" opacity="0.6" />
-        </svg>
-      )
-
-    case 'dragon':
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          {/* Đầu rồng */}
-          <circle cx="50" cy="52" r="32" fill="#10B981" />
-          {/* Sừng vàng */}
-          <polygon points="34,30 26,12 40,24" fill="#F59E0B" />
-          <polygon points="66,30 74,12 60,24" fill="#F59E0B" />
-          {/* Mũi & Lỗ mũi */}
-          <ellipse cx="50" cy="62" rx="14" ry="10" fill="#6EE7B7" />
-          <circle cx="45" cy="60" r="2.5" fill="#065F46" />
-          <circle cx="55" cy="60" r="2.5" fill="#065F46" />
-          {/* Mắt to */}
-          <circle cx="38" cy="44" r="5" fill="#FFFFFF" />
-          <circle cx="39" cy="44" r="3" fill="#064E3B" />
-          <circle cx="62" cy="44" r="5" fill="#FFFFFF" />
-          <circle cx="61" cy="44" r="3" fill="#064E3B" />
-          {/* Khăn quàng cổ màu accent */}
-          <path d="M30 76 Q 50 88, 70 76 Q 50 94, 30 76" fill="var(--c-accent, #3B82F6)" />
-        </svg>
-      )
-
-    case 'cat':
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          {/* Tai mèo */}
-          <polygon points="26,35 22,12 42,28" fill="#F97316" />
-          <polygon points="26,32 25,18 38,28" fill="#FED7AA" />
-          <polygon points="74,35 78,12 58,28" fill="#F97316" />
-          <polygon points="74,32 75,18 62,28" fill="#FED7AA" />
-          {/* Mặt mèo */}
-          <circle cx="50" cy="54" r="32" fill="#EA580C" />
-          <ellipse cx="50" cy="62" rx="14" ry="10" fill="#FFEDD5" />
-          <polygon points="47,56 53,56 50,60" fill="#BE185D" />
-          <circle cx="38" cy="48" r="4" fill="#1E293B" />
-          <circle cx="62" cy="48" r="4" fill="#1E293B" />
-          {/* Râu */}
-          <line x1="24" y1="58" x2="36" y2="60" stroke="#7C2D12" strokeWidth="1.5" />
-          <line x1="24" y1="64" x2="36" y2="64" stroke="#7C2D12" strokeWidth="1.5" />
-          <line x1="76" y1="58" x2="64" y2="60" stroke="#7C2D12" strokeWidth="1.5" />
-          <line x1="76" y1="64" x2="64" y2="64" stroke="#7C2D12" strokeWidth="1.5" />
-        </svg>
-      )
-
-    case 'star':
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          {/* Ngôi sao 5 cánh */}
-          <polygon
-            points="50,12 61,38 88,38 66,54 74,80 50,64 26,80 34,54 12,38 39,38"
-            fill="#FACC15"
-            stroke="#CA8A04"
-            strokeWidth="2"
-          />
-          {/* Mặt cười */}
-          <circle cx="43" cy="44" r="3" fill="#713F12" />
-          <circle cx="57" cy="44" r="3" fill="#713F12" />
-          <path d="M45 52 Q 50 58, 55 52" fill="none" stroke="#713F12" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="39" cy="48" r="3" fill="#F87171" opacity="0.6" />
-          <circle cx="61" cy="48" r="3" fill="#F87171" opacity="0.6" />
-        </svg>
-      )
-
-    case 'cloud':
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          <path
-            d="M25 65 A 16 16 0 0 1 35 38 A 22 22 0 0 1 72 40 A 18 18 0 0 1 78 65 Z"
-            fill="#E0F2FE"
-            stroke="#38BDF8"
-            strokeWidth="2.5"
-          />
-          {/* Mắt & Miệng */}
-          <circle cx="44" cy="52" r="3" fill="#0369A1" />
-          <circle cx="60" cy="52" r="3" fill="#0369A1" />
-          <path d="M48 58 Q 52 62, 56 58" fill="none" stroke="#0369A1" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="38" cy="56" r="3" fill="#F472B6" opacity="0.6" />
-          <circle cx="66" cy="56" r="3" fill="#F472B6" opacity="0.6" />
-        </svg>
-      )
-
-    case 'sprout':
-    default:
-      return (
-        <svg viewBox="0 0 100 100" width={size} height={size}>
-          {/* Hạt & Thân */}
-          <ellipse cx="50" cy="72" rx="18" ry="12" fill="#78350F" />
-          <path d="M50 70 Q 50 42, 46 32" fill="none" stroke="#16A34A" strokeWidth="4" strokeLinecap="round" />
-          {/* 2 lá mầm */}
-          <path d="M46 34 C 30 20, 18 36, 46 36 Z" fill="#4ADE80" stroke="#15803D" strokeWidth="1.5" />
-          <path d="M46 34 C 64 20, 76 36, 46 36 Z" fill="#22C55E" stroke="#15803D" strokeWidth="1.5" />
-          {/* Mắt cười trên hạt */}
-          <circle cx="44" cy="70" r="2.5" fill="#FEF3C7" />
-          <circle cx="56" cy="70" r="2.5" fill="#FEF3C7" />
-        </svg>
-      )
+/* Bộ giao diện → linh vật (lấy theo autoIcon trong CUSTOM_BUDDIES; bento không dùng linh vật) */
+export function resolveBuddyId(themeId) {
+  if (themeId === 'custom') {
+    try {
+      const cfg = JSON.parse(localStorage.getItem('kem-con-hoc:custom-theme') || '{}')
+      if (cfg && cfg.buddy) return cfg.buddy
+    } catch (e) {}
+    return 'unicorn'
   }
+  const found = CUSTOM_BUDDIES.find((b) => b.autoIcon === themeId)
+  return found ? found.id : 'bear'
+}
+
+export function useThemeBuddyId() {
+  const ctx = useContext(AppCtx)
+  return resolveBuddyId(ctx?.S?.theme || 'bear')
+}
+
+export function buddyQuote(buddyId, key = 'hello') {
+  return BUDDY_QUOTES[buddyId]?.[key] || ''
+}
+
+export function BuddyMascot({ buddyId = 'unicorn', state = 'hello', size = 56, interactive = false, onTap, label, className = '' }) {
+  const st = normalizeBuddyState(state)
+  const html = useMemo(() => buddyInnerSVG(buddyId, st), [buddyId, st])
+  const [tap, setTap] = useState(0)
+  const timer = useRef(null)
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  if (!hasBuddyArt(buddyId)) return null
+
+  const doTap = () => {
+    setTap((n) => n + 1)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setTap(0), 900)
+    if (onTap) onTap()
+  }
+  const name = label || BUDDY_NAMES[buddyId] || 'Linh vật'
+  // Thân linh vật nằm đúng trong ô size×size; đạo cụ (tim, kính lúp, zzz) được tràn ra ngoài
+  const svgStyle = { width: size * 1.4, height: size * 1.4, left: -size * 0.2, top: -size * 0.24 }
+
+  return (
+    <span
+      className={`kbuddy-wrap ${interactive ? 'is-tappable' : ''} ${tap ? 'tap' : ''} ${className}`}
+      style={{ width: size, height: size }}
+      role={interactive ? 'button' : 'img'}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `${name} – chạm để nói chuyện` : name}
+      onClick={interactive ? doTap : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                doTap()
+              }
+            }
+          : undefined
+      }
+    >
+      <svg
+        key={tap ? `t${tap}` : 'n'}
+        className={`kbuddy b-${buddyId} st-${st}`}
+        viewBox={BUDDY_VIEWBOX}
+        style={svgStyle}
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {tap > 0 &&
+        [-14, 2, 16].map((dx, i) => (
+          <svg key={`${tap}-${i}`} className="kb-heart" viewBox="0 0 10 11" style={{ '--dx': `${dx}px` }} aria-hidden="true">
+            <path d="M0 3C0-1 5-1 5 2.5C5-1 10-1 10 3C10 6 5 9 5 10.5C5 9 0 6 0 3Z" fill="var(--c-accent, #EC4899)" />
+          </svg>
+        ))}
+    </span>
+  )
+}
+
+/* Linh vật theo bộ giao diện đang dùng (bento/“Không dùng” → không vẽ gì) */
+export function ThemeBuddy(props) {
+  const buddyId = useThemeBuddyId()
+  if (!hasBuddyArt(buddyId)) return props.fallback || null
+  return <BuddyMascot buddyId={buddyId} {...props} />
+}
+
+/* Trang chủ: chào khi vừa mở, chạm vào thì nhún, thả tim và nói chuyện */
+export function BuddyGreeter({ size = 72 }) {
+  const buddyId = useThemeBuddyId()
+  const [state, setState] = useState('hello')
+  const [say, setSay] = useState(null)
+  const idx = useRef(0)
+  const t1 = useRef(null)
+  const t2 = useRef(null)
+
+  useEffect(() => {
+    t1.current = setTimeout(() => setState('idle'), 3600)
+    return () => {
+      clearTimeout(t1.current)
+      clearTimeout(t2.current)
+    }
+  }, [])
+
+  if (!hasBuddyArt(buddyId)) return null
+
+  const lines = [buddyQuote(buddyId, 'hello'), ...TAP_LINES].filter(Boolean)
+  const onTap = () => {
+    setState('idle')
+    setSay({ text: lines[idx.current % lines.length], k: Date.now() })
+    idx.current += 1
+    clearTimeout(t2.current)
+    t2.current = setTimeout(() => setSay(null), 3200)
+  }
+
+  return (
+    <div className="kb-greeter">
+      {say && (
+        <div className="kb-say" key={say.k} role="status">
+          {say.text}
+        </div>
+      )}
+      <BuddyMascot buddyId={buddyId} state={state} size={size} interactive onTap={onTap} />
+    </div>
+  )
+}
+
+/* ---------- Linh vật bật lên (toàn app) ---------- */
+const POP_EVENT = 'kch:buddy'
+
+/** Gọi ở bất kỳ đâu: buddyReact('cheer') / buddyReact('oops', 'Mình thử lại nhé') */
+export function buddyReact(state = 'cheer', text, ms = 2400) {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(new CustomEvent(POP_EVENT, { detail: { state, text, ms } }))
+  } catch (e) {}
+}
+
+export function BuddyPopLayer() {
+  const buddyId = useThemeBuddyId()
+  const [pop, setPop] = useState(null)
+
+  useEffect(() => {
+    let t
+    const onPop = (e) => {
+      const d = e.detail || {}
+      clearTimeout(t)
+      setPop({ state: d.state || 'cheer', text: d.text, k: Date.now() })
+      t = setTimeout(() => setPop(null), d.ms || 2400)
+    }
+    window.addEventListener(POP_EVENT, onPop)
+    return () => {
+      window.removeEventListener(POP_EVENT, onPop)
+      clearTimeout(t)
+    }
+  }, [])
+
+  if (!pop || !hasBuddyArt(buddyId)) return null
+  const text = pop.text === undefined ? (pop.state === 'cheer' ? buddyQuote(buddyId, 'cheer') : '') : pop.text
+
+  return (
+    <div className="kb-pop" key={pop.k} role="status" aria-live="polite">
+      <BuddyMascot buddyId={buddyId} state={pop.state} size={64} />
+      {text && <div className="kb-say">{text}</div>}
+    </div>
+  )
 }

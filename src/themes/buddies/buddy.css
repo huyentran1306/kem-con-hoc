@@ -1,0 +1,115 @@
+/* ============================================================
+   KÈM CON HỌC — CHUYỂN ĐỘNG LINH VẬT (.kbuddy)
+   Dùng chung cho mọi bộ giao diện. data-motion="off" và
+   prefers-reduced-motion: linh vật đứng yên nhưng giữ biểu cảm.
+   ============================================================ */
+
+.kbuddy-wrap{position:relative;display:inline-block;flex:0 0 auto;vertical-align:middle;-webkit-tap-highlight-color:transparent}
+.kbuddy-wrap.is-tappable{cursor:pointer;border-radius:50%}
+.kbuddy-wrap.is-tappable:focus-visible{outline:3px solid var(--c-accent, #D9577F);outline-offset:2px}
+.kbuddy{position:absolute;display:block;overflow:visible;pointer-events:none}
+.kbuddy *{transform-box:fill-box}
+.kbuddy .bd-root{transform-origin:50% 100%}
+
+/* Chớp mắt & phụ kiện */
+.kbuddy .eye.blink{transform-origin:50% 50%;animation:kbBlink 4.6s infinite}
+@keyframes kbBlink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.1)}}
+.kbuddy .acc-earL{transform-origin:70% 100%;animation:kbEarL 3.2s ease-in-out infinite}
+.kbuddy .acc-earR{transform-origin:30% 100%;animation:kbEarR 3.2s ease-in-out infinite}
+@keyframes kbEarL{0%,70%,100%{transform:rotate(0)}78%{transform:rotate(-10deg)}86%{transform:rotate(4deg)}}
+@keyframes kbEarR{0%,40%,100%{transform:rotate(0)}48%{transform:rotate(10deg)}56%{transform:rotate(-4deg)}}
+.kbuddy .acc-mane{transform-origin:50% 0%;animation:kbMane 2.8s ease-in-out infinite}
+@keyframes kbMane{0%,100%{transform:translateY(0)}50%{transform:translateY(1.5px)}}
+.kbuddy .acc-whisk{transform-origin:50% 50%;animation:kbWhisk 2.8s ease-in-out infinite}
+@keyframes kbWhisk{0%,80%,100%{transform:scaleX(1)}85%{transform:scaleX(1.08)}90%{transform:scaleX(.96)}}
+.kbuddy .acc-leaves{transform-origin:50% 100%;animation:kbLeaves 2.8s ease-in-out infinite}
+@keyframes kbLeaves{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.kbuddy .acc-horns{transform-origin:50% 100%}
+
+/* Thân theo trạng thái */
+.kbuddy.st-idle .bd-root,.kbuddy.st-reading .bd-root{animation:kbBreathe 3.2s ease-in-out infinite}
+@keyframes kbBreathe{0%,100%{transform:scale(1,1)}50%{transform:scale(.985,1.03)}}
+.kbuddy.b-cloud.st-idle .bd-root{animation:kbFloat 3.4s ease-in-out infinite}
+@keyframes kbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.kbuddy.b-star.st-idle .bd-root{animation:kbTwirl 4s ease-in-out infinite}
+@keyframes kbTwirl{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.kbuddy.st-hello .bd-root{animation:kbHop 1.8s ease-in-out infinite}
+@keyframes kbHop{0%,62%,100%{transform:translateY(0) rotate(0)}12%{transform:translateY(-9px) rotate(-7deg)}24%{transform:translateY(0) rotate(0) scale(1.04,.96)}36%{transform:translateY(-6px) rotate(7deg)}48%{transform:translateY(0) rotate(0)}}
+.kbuddy.st-reading .bd-root{transform:rotate(2deg)}
+.kbuddy.st-thinking .bd-root{animation:kbSway 2.6s ease-in-out infinite}
+@keyframes kbSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.kbuddy.st-cheer .bd-root{animation:kbJump .9s cubic-bezier(.3,.6,.4,1) infinite}
+@keyframes kbJump{0%,100%{transform:translateY(0) scale(1.08,.9)}18%{transform:translateY(0) scale(.94,1.08)}45%{transform:translateY(-20px) scale(.97,1.04) rotate(-3deg)}72%{transform:translateY(0) scale(1.1,.88)}86%{transform:scale(.98,1.02)}}
+.kbuddy.st-oops .bd-root{animation:kbShiver 2.2s ease-in-out infinite}
+@keyframes kbShiver{0%,40%,100%{transform:rotate(-5deg) translateX(0)}44%{transform:rotate(-5deg) translateX(-1.5px)}48%{transform:rotate(-5deg) translateX(1.5px)}52%{transform:rotate(-5deg) translateX(-1px)}56%{transform:rotate(-5deg) translateX(0)}}
+.kbuddy.st-sleepy .bd-root{animation:kbDoze 4.2s ease-in-out infinite}
+@keyframes kbDoze{0%,100%{transform:rotate(5deg) scale(1,1)}50%{transform:rotate(7deg) scale(1.02,.98)}}
+.kbuddy.st-surprised .bd-root{animation:kbStartle .5s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes kbStartle{0%{transform:scale(1)}40%{transform:translateY(-8px) scale(1.1,1.12)}100%{transform:scale(1)}}
+.kbuddy.st-love .bd-root{animation:kbSqueeze 1.6s ease-in-out infinite}
+@keyframes kbSqueeze{0%,100%{transform:scale(1)}50%{transform:scale(1.05,.95) rotate(-3deg)}}
+.kbuddy-wrap.tap .kbuddy .bd-root{animation:kbSquish .55s cubic-bezier(.3,1.4,.5,1) !important}
+@keyframes kbSquish{0%{transform:scale(1)}25%{transform:scale(1.2,.8)}55%{transform:scale(.9,1.12)}80%{transform:scale(1.04,.97)}100%{transform:scale(1)}}
+
+/* Đạo cụ */
+.kbuddy .pr-mag{animation:kbMag 2.6s ease-in-out infinite alternate}
+@keyframes kbMag{from{transform:translateX(-18px) rotate(-6deg)}to{transform:translateX(18px) rotate(6deg)}}
+.kbuddy .pupil-look{animation:kbLook 2.6s ease-in-out infinite alternate}
+@keyframes kbLook{from{transform:translateX(-1.6px)}to{transform:translateX(1.6px)}}
+.kbuddy .pr-glint{animation:kbGlint 2.6s ease-in-out infinite}
+@keyframes kbGlint{0%,100%{opacity:.9}50%{opacity:.35}}
+.kbuddy .pr-float{animation:kbFloatUp 2.4s ease-out infinite;opacity:0}
+@keyframes kbFloatUp{0%{transform:translateY(6px) scale(.5);opacity:0}20%{opacity:1}100%{transform:translateY(-26px) scale(1.1);opacity:0}}
+.kbuddy .pr-z{animation:kbZ 3s ease-in-out infinite;opacity:0}
+@keyframes kbZ{0%{transform:translate(0,4px) scale(.6);opacity:0}25%{opacity:1}100%{transform:translate(10px,-22px) scale(1.1);opacity:0}}
+.kbuddy .pr-dot{animation:kbDot 1.4s ease-in-out infinite}
+@keyframes kbDot{0%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-2px)}}
+.kbuddy .pr-q{transform-origin:50% 100%;animation:kbQ 1.6s ease-in-out infinite}
+@keyframes kbQ{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg) translateY(-2px)}}
+.kbuddy .pr-sweat{animation:kbSweat 2.2s ease-in infinite}
+@keyframes kbSweat{0%,30%{transform:translateY(0);opacity:0}40%{opacity:1}100%{transform:translateY(10px);opacity:0}}
+.kbuddy .pr-spark{transform-origin:50% 50%;animation:kbSpark 1.8s ease-in-out infinite}
+@keyframes kbSpark{0%,100%{transform:scale(.3) rotate(0);opacity:0}50%{transform:scale(1) rotate(45deg);opacity:1}}
+.kbuddy .pr-puff{animation:kbPuff 3.4s ease-out infinite;opacity:0}
+@keyframes kbPuff{0%,55%{transform:translate(0,0) scale(.4);opacity:0}65%{opacity:.85}100%{transform:translate(-12px,-14px) scale(1.3);opacity:0}}
+.kbuddy .pr-pop{transform-origin:50% 50%;animation:kbPopIn .5s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes kbPopIn{from{transform:scale(0)}to{transform:scale(1)}}
+.kbuddy .cheek-glow{animation:kbGlow 1.2s ease-in-out infinite}
+@keyframes kbGlow{0%,100%{opacity:.55}50%{opacity:.95}}
+
+/* Tim bay khi chạm */
+.kb-heart{position:absolute;left:50%;top:10%;width:16px;height:16px;margin-left:-8px;pointer-events:none;animation:kbHeart 1s ease-out forwards}
+.kb-heart:nth-child(3){animation-delay:.12s}
+.kb-heart:nth-child(4){animation-delay:.24s}
+@keyframes kbHeart{0%{transform:translate(0,0) scale(.3);opacity:0}20%{opacity:1}100%{transform:translate(var(--dx,0),-42px) scale(1.1);opacity:0}}
+
+/* Lời nói của linh vật */
+.kb-say{position:relative;background:var(--c-surface, #fff);color:var(--c-text, #3A2A33);border:var(--border-w, 1.5px) solid var(--c-line, #F4DDE7);border-radius:16px;padding:8px 12px;font-size:13px;font-weight:700;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.08);animation:kbSay .35s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes kbSay{from{transform:scale(.85) translateY(4px);opacity:0}to{transform:none;opacity:1}}
+
+/* Lời chào ở trang chủ */
+.kb-greeter{position:relative;flex:0 0 auto}
+.kb-greeter .kb-say{position:absolute;right:calc(100% + 6px);top:50%;transform-origin:100% 50%;width:max-content;max-width:200px;margin-top:-22px;z-index:3}
+.kb-greeter .kb-say::after{content:"";position:absolute;right:-7px;top:16px;border:7px solid transparent;border-left-color:var(--c-surface, #fff);border-right:0}
+
+/* Linh vật bật lên khi con làm đúng / bối rối */
+.kb-pop{position:absolute;left:14px;bottom:calc(150px + env(safe-area-inset-bottom, 0px));z-index:9;display:flex;align-items:flex-end;gap:6px;pointer-events:none;animation:kbPopUp .45s cubic-bezier(.3,1.5,.5,1) both;max-width:calc(100% - 28px)}
+.kb-pop .kb-say{margin-bottom:34px}
+@keyframes kbPopUp{from{transform:translateY(40px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+
+/* Linh vật trong khung camera / ảnh đang đọc */
+.kb-peek{position:absolute;left:10px;bottom:6px;z-index:2;pointer-events:none}
+.kb-cam-buddy{position:absolute;right:10px;bottom:8px;z-index:3;display:flex;align-items:flex-end;gap:6px;pointer-events:none;max-width:calc(100% - 20px)}
+.kb-cam-buddy .kb-say{margin-bottom:28px;font-size:12px;padding:6px 10px}
+.kb-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4}
+.kb-flash.go{animation:kbFlash .55s ease-out}
+@keyframes kbFlash{0%{opacity:.95}100%{opacity:0}}
+
+/* Giảm chuyển động: đứng yên, vẫn giữ biểu cảm & đạo cụ */
+[data-motion="off"] .kbuddy .pr-float,[data-motion="off"] .kbuddy .pr-z,[data-motion="off"] .kbuddy .pr-puff,[data-motion="off"] .kbuddy .pr-sweat,[data-motion="off"] .kbuddy .pr-spark{opacity:1}
+[data-motion="off"] .kb-heart{display:none}
+@media (prefers-reduced-motion: reduce){
+  .kbuddy *,.kbuddy,.kb-heart,.kb-pop,.kb-say,.kb-flash.go{animation:none !important}
+  .kbuddy .pr-float,.kbuddy .pr-z,.kbuddy .pr-puff,.kbuddy .pr-sweat,.kbuddy .pr-spark{opacity:1}
+  .kb-heart{display:none}
+}

@@ -11,12 +11,13 @@
  * - Tuân thủ Điều 20 Nghị định 13/2023/NĐ-CP về dữ liệu trẻ em
  */
 
+import { appConfirm } from './dialog'
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Users, Check, X, ShieldAlert, LogOut, ArrowRight, Bell, AlertTriangle, RefreshCw, Plus, CheckCircle, Clock } from 'lucide-react';
 import { toast } from './utils';
-import { fetchClassPreview, joinFamilyClass, changeClassChild, leaveFamilyClass } from './api';
+import { fetchClassPreview, joinFamilyClass, changeClassChild, leaveFamilyClass, normalizeClassInfo, teacherLabel, GATEWAY } from './api';
 
-const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
+const API_BASE = GATEWAY;
 
 export function FamilyClassSheet({
   token,
@@ -88,7 +89,7 @@ export function FamilyClassSheet({
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setClasses(data.classes || []);
+        setClasses((data.classes || []).map(normalizeClassInfo));
       }
     } catch {
       toast('Lỗi tải danh sách lớp học', 'error');
@@ -127,7 +128,8 @@ export function FamilyClassSheet({
           setSelectedChildId(matchKid.id);
         }
       } else {
-        setPreviewError(data?.error?.message || data?.error || 'Mã lớp không hợp lệ hoặc đã hết hạn');
+        const errMsg = data?.error?.message || (typeof data?.error === 'string' ? data.error : '') || data?.message;
+        setPreviewError(errMsg || 'Mã lớp không hợp lệ hoặc đã hết hạn');
       }
     } catch (e) {
       setPreviewError('Lỗi kiểm tra mã lớp, vui lòng thử lại');
@@ -174,12 +176,14 @@ export function FamilyClassSheet({
       const payload = {
         token,
         childId: selectedChildId,
+        childName: selectedChild?.name,
+        childGrade: selectedChild?.grade,
         rosterName: rosterName.trim() || selectedChild?.name || 'Bé',
         consent: parentConsent,
         childConsent: childConsent,
       };
 
-      if (classPreview.type === 'claim' || cleanCode.includes('-')) {
+      if (initialType === 'claim' || classPreview.type === 'claim') {
         payload.claimCode = cleanCode;
       } else {
         payload.code = cleanCode;
@@ -187,25 +191,27 @@ export function FamilyClassSheet({
 
       const res = await joinFamilyClass(payload);
 
-      if (res.ok) {
+      if (res.ok && res.httpStatus !== 409) {
+        const joinStatus =
+          [res.joinStatus, res.classStudent?.status, typeof res.status === 'string' ? res.status : null].find(Boolean) || 'pending';
         setJoinSuccess({
-          status: res.status,
+          status: joinStatus,
           className: res.class?.name || classPreview.name,
           teacherName: res.class?.teacher_name || classPreview.teacher_name,
           childName: selectedChild?.name,
         });
-        toast(res.status === 'active' ? 'Đã kết nối vào lớp!' : 'Đã gửi yêu cầu vào lớp cho cô duyệt', 'success');
+        toast(joinStatus === 'active' ? 'Đã kết nối vào lớp!' : 'Đã gửi yêu cầu vào lớp cho cô duyệt', 'success');
         loadClasses();
-      } else if (res.status === 409) {
+      } else if (res.httpStatus === 409) {
         // Duplicate detection from server
         setDuplicateInfo({
           childName: selectedChild?.name,
           linkedBy: res.linkedBy || 'Phụ huynh',
           linkedAt: res.linkedAt ? new Date(res.linkedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'hôm nay',
-          status: res.statusText || 'active',
+          status: (typeof res.status === 'string' ? res.status : res.statusText) || 'active',
         });
       } else {
-        toast(res.error?.message || res.error || 'Không thể vào lớp', 'error');
+        toast(res.error?.message || (typeof res.error === 'string' ? res.error : '') || res.message || 'Không thể vào lớp, vui lòng thử lại', 'error');
       }
     } catch {
       toast('Lỗi kết nối máy chủ', 'error');
@@ -238,7 +244,7 @@ export function FamilyClassSheet({
   }
 
   async function handleLeave(classStudentId, className) {
-    const ok = confirm(`Rời Lớp ${className}? Con sẽ không còn nhận bài tập từ lớp này nữa.`);
+    const ok = await appConfirm('Con sẽ không còn nhận bài tập từ lớp này nữa.', { title: `Rời Lớp ${className}?`, okText: 'Rời lớp', danger: true });
     if (!ok) return;
 
     try {
@@ -373,7 +379,7 @@ export function FamilyClassSheet({
                               <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                                   <strong style={{ fontSize: 15, color: '#4B3621' }}>
-                                    Lớp {cls.class_name} · cô {cls.teacher_name}
+                                    Lớp {cls.class_name} · {teacherLabel(cls.teacher_name)}
                                   </strong>
                                 </div>
                                 <div style={{ fontSize: 12, color: '#8A6A4A' }}>
@@ -459,7 +465,7 @@ export function FamilyClassSheet({
             <div style={styles.successBox}>
               <div style={{ fontSize: 52, marginBottom: 8 }}>📨</div>
               <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: '#4B3621', margin: '0 0 6px 0' }}>
-                {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi cô ${joinSuccess.teacherName} duyệt`}
+                {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi ${teacherLabel(joinSuccess.teacherName)} duyệt`}
               </h3>
               <p style={{ fontSize: 13, color: '#8A6A4A', maxWidth: 320, margin: '0 auto 16px auto' }}>
                 Cô duyệt xong, bài cô giao sẽ hiện ở màn chính của <strong>{joinSuccess.childName}</strong>.
@@ -535,7 +541,7 @@ export function FamilyClassSheet({
                     <div>
                       <span style={styles.previewTag}>Khối {classPreview.grade} · {classPreview.school_year || '2026-2027'}</span>
                       <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '4px 0 2px 0' }}>
-                        Lớp {classPreview.name} · cô {classPreview.teacher_name}
+                        Lớp {classPreview.name} · {teacherLabel(classPreview.teacher_name)}
                       </h4>
                       <p style={{ fontSize: 12, color: '#8A6A4A', margin: 0 }}>
                         {classPreview.school_name} · Mã: <strong>{classPreview.join_code || code}</strong>

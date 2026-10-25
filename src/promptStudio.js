@@ -53,6 +53,33 @@ QUY TẮC BẮT BUỘC:
 - Tuyệt đối không tự giải bài toán hay trả lời câu hỏi.`,
   },
 
+  p1_ocr_v3: {
+    id: 'p1_ocr_v3',
+    name: '1c. Đọc ảnh chép nguyên văn + tách bài làm của con (v3 JSON)',
+    desc: 'Chép đúng từng chữ (cả chữ viết tay), không tự sửa/điền, đánh dấu [?] chỗ đọc chưa chắc, tách đề và bài làm của con, kèm phân loại phạm vi',
+    variables: [],
+    requiredVars: [],
+    template: `Bạn là công cụ CHÉP LẠI chữ trong ảnh bài tập tiểu học Việt Nam (sách giáo khoa, phiếu bài tập, vở ô ly; có thể có chữ viết tay của trẻ, của bố mẹ hoặc cô giáo).
+Nhìn ảnh và trả về DUY NHẤT một JSON hợp lệ, không markdown, không thêm chữ nào khác:
+{"pham_vi": "bai_tap" | "khong_phai_bai_tap" | "nhay_cam" | "anh_mo" | "nhieu_bai", "do_tin_cay": 0.0-1.0, "ly_do": "<tối đa 15 chữ>", "mon_doan": "toan" | "tieng_viet" | "tieng_anh" | "khac", "lop_doan": 1-12 hoặc null, "so_bai": 1, "cac_bai": ["<Câu 1 ...>", "<Câu 2 ...>"], "de_bai": "<đề bài chép nguyên văn>", "bai_lam_cua_con": "<phần trẻ đã viết/điền, không có thì để rỗng>", "cho_khong_chac": ["<chữ hoặc số đọc chưa chắc>"]}
+
+CÁCH CHÉP CHỮ (quan trọng nhất):
+- Chép NGUYÊN VĂN từng chữ, từng số, từng dấu thanh như trong ảnh. KHÔNG sửa chính tả, KHÔNG tự điền chỗ trống, KHÔNG giải bài, KHÔNG thêm lời dẫn.
+- Giữ nguyên chỗ trống và ký hiệu: "...", "___", "□", "?", các dấu + - × : = > <, phân số dạng a/b, đơn vị (cm, dm, m, kg, g, l, giờ, phút, đồng).
+- Bài chính tả tiếng Việt (điền l/n, s/x, ch/tr, d/gi/r, dấu hỏi/ngã, vần...) phải giữ nguyên chỗ cần điền, tuyệt đối không điền giúp.
+- Phép tính đặt cột dọc: viết lại thành hàng ngang, vd "345 + 128 = ...".
+- Chữ viết tay khó đọc: đoán theo ngữ cảnh bài tiểu học. Nếu vẫn không chắc, viết "[?]" ngay sau chữ đó (vd "Lan có 1[?] cái kẹo") và ghi chữ đó vào "cho_khong_chac". SỐ không chắc thì LUÔN đánh dấu [?], tuyệt đối không bịa số.
+- Tách đề và bài làm: phần đề (chữ in, hoặc chữ cô/bố mẹ chép đề vào vở) → "de_bai". Phần trẻ tự viết để trả lời (đáp án đã điền, phép tính, lời giải, đáp án đã khoanh, nét gạch xoá) → "bai_lam_cua_con". KHÔNG đưa bài làm của trẻ vào "de_bai".
+- Trong chuỗi JSON: xuống dòng viết là \\n, dấu nháy kép viết là \\".
+
+PHÂN LOẠI:
+- "bai_tap": ảnh là trang sách, vở, phiếu bài tập có đề bài đọc được.
+- "nhay_cam": có mặt người rõ, giấy tờ riêng tư, bằng lái, CCCD, bạo lực, nội dung người lớn. Khi đó để "de_bai": "" và "bai_lam_cua_con": "".
+- "khong_phai_bai_tap": đồ vật gia đình, đồ chơi, thú cưng, màn hình game, phong cảnh.
+- "anh_mo": mờ, rung tay, mất góc hoặc thiếu sáng tới mức KHÔNG đọc được phần lớn đề. Nếu chỉ vài chữ khó đọc thì vẫn là "bai_tap" và dùng [?].
+- "nhieu_bai": có từ 2 bài tập độc lập trở lên (Bài 1, Bài 2...). Tách từng bài vào "cac_bai", mỗi bài chép nguyên văn như "de_bai". Các ý a), b), c) của CÙNG một bài vẫn tính là 1 bài.`,
+  },
+
   p2_clean: {
     id: 'p2_clean',
     name: '2. Làm sạch đề sau OCR (dự phòng)',

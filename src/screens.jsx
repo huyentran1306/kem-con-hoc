@@ -7,8 +7,9 @@ import {
 } from './data'
 import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
+import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm } from './api'
+import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY } from './api'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
@@ -19,6 +20,8 @@ import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
 import { getStudyDateKey } from './useStudyTracker'
+import { ThemeBuddy, BuddyGreeter, buddyReact, useThemeBuddyId, BUDDY_NAMES } from './themes/buddies/buddySvgs'
+import FamilyAnnouncements from './FamilyAnnouncements.jsx'
 
 
 /* ============================================================
@@ -147,7 +150,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
   useEffect(() => {
     const token = getAuthToken()
     if (!token) return
-    fetch('https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family/assignments', {
+    fetch(`${GATEWAY}/api/v1/family/assignments`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -155,7 +158,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
         if (data.ok && Array.isArray(data.assignments) && data.assignments.length > 0) {
           const first = data.assignments[0]
           setAssignment(first)
-          fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family/assignments/${first.assignment_id}`, {
+          fetch(`${GATEWAY}/api/v1/family/assignments/${first.assignment_id}`, {
             headers: { Authorization: `Bearer ${token}` }
           })
             .then(r => r.json())
@@ -333,8 +336,13 @@ export function Home() {
             {soundOn ? '🔊 Tiếng: Bật' : '🔇 Tiếng: Tắt'}
           </button>
         </div>
-        <p className="title">{greet}, {S.parent.toLowerCase()}!</p>
-        <p className="title" style={{ fontSize: 19 }}>Tối nay {child.name} học gì?</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p className="title">{greet}, {S.parent.toLowerCase()}!</p>
+            <p className="title" style={{ fontSize: 19 }}>Tối nay {child.name} học gì?</p>
+          </div>
+          <BuddyGreeter size={68} />
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
           <button
             onClick={() => openSheet('stickerBook')}
@@ -434,6 +442,9 @@ export function Home() {
 
       {/* Thẻ Cô nhắc việc (Prompt 04 Mục 4b) */}
       <TeacherReminderBanner child={child} S={S} patch={patch} go={go} openSheet={openSheet} toast={toast} />
+
+      {/* Hộp thông báo của cô (thông báo chung + lời nhắc) */}
+      <FamilyAnnouncements childId={child?.id} toast={toast} />
 
       {/* Thẻ bài tập cô giáo giao (Prompt 04) */}
       <TeacherAssignmentBanner child={child} S={S} patch={patch} go={go} />
@@ -588,20 +599,41 @@ let pendingToy = null
 export function SnapHomework() {
   const { go, openSheet, toast } = useContext(AppCtx)
   const fileRef = useRef(null)
+  const nativeCamRef = useRef(null)
   const videoRef = useRef(null)
+  const frameRef = useRef(null)
   const [camOn, setCamOn] = useState(false)
   const [camErr, setCamErr] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [qualityWarn, setQualityWarn] = useState(null) // ảnh tối/mờ → hỏi chụp lại hay vẫn gửi
+  const [flashKey, setFlashKey] = useState(0)
+  const [peekState, setPeekState] = useState('idle')
 
   useEffect(() => {
     let cancelled = false
     let stream = null
     ;(async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        // Xin độ phân giải cao: mặc định nhiều máy chỉ trả 640×480 → chữ viết tay nhỏ không đọc nổi
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 2560 },
+            height: { ideal: 1440 },
+          },
+        })
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop())
           return
         }
+        // Bật lấy nét liên tục nếu máy hỗ trợ (Android Chrome)
+        try {
+          const track = stream.getVideoTracks()[0]
+          const caps = (track && track.getCapabilities && track.getCapabilities()) || {}
+          if (Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+            await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+          }
+        } catch (e) {}
         const video = videoRef.current
         if (!video) return
         video.srcObject = stream
@@ -623,54 +655,63 @@ export function SnapHomework() {
     }
   }, [])
 
-  const capture = () => {
+  const sendShot = (shot) => {
+    pendingShot = { dataUrl: shot.dataUrl, blob: shot.blob }
+    toast('Đã nhận ảnh — AI đang đọc…')
+    go('analyze')
+  }
+
+  const handleShot = (shot) => {
+    if (shot.quality && (shot.quality.isDark || shot.quality.isBlurry)) {
+      setQualityWarn(shot)
+      setPeekState('oops')
+      return
+    }
+    setPeekState('cheer')
+    sendShot(shot)
+  }
+
+  const capture = async () => {
     const video = videoRef.current
     if (!video || !video.videoWidth) {
       toast('Camera chưa sẵn sàng — bấm "Chọn ảnh" nhé 📷')
       return
     }
-    const canvas = document.createElement('canvas')
-    let w = video.videoWidth
-    let h = video.videoHeight
-    const maxDim = 1200
-    if (w > maxDim || h > maxDim) {
-      if (w > h) {
-        h = Math.round((h * maxDim) / w)
-        w = maxDim
-      } else {
-        w = Math.round((w * maxDim) / h)
-        h = maxDim
-      }
+    if (busy) return
+    setBusy(true)
+    setQualityWarn(null)
+    setFlashKey((k) => k + 1)
+    setPeekState('surprised')
+    try {
+      // Chỉ lấy vùng trong khung nét đứt (bỏ bàn, mép vở, bài bên cạnh)
+      const canvas = captureVideoFrame(video, frameRef.current)
+      const shot = await prepareHomeworkShot(canvas)
+      handleShot(shot)
+    } catch (e) {
+      toast('Chụp chưa được, thử lại nhé 📷')
+    } finally {
+      setBusy(false)
     }
-    canvas.width = w
-    canvas.height = h
-    canvas.getContext('2d').drawImage(video, 0, 0, w, h)
-    canvas.toBlob((blob) => {
-      if (!blob) return
-      pendingShot = { dataUrl: canvas.toDataURL('image/jpeg', 0.8), blob }
-      toast('Đã chụp — AI đang đọc…')
-      go('analyze')
-    }, 'image/jpeg', 0.8)
   }
 
   const onPickFile = async (e) => {
     const f = e.target.files && e.target.files[0]
     e.target.value = ''
     if (!f) return
-    toast('Đang nén ảnh & chuẩn bị gửi AI… ⚡')
+    setBusy(true)
+    setQualityWarn(null)
+    toast('Đang xử lý ảnh cho AI đọc… ⚡')
     try {
-      const { blob, dataUrl } = await compressImage(f, 1200, 0.8)
-      pendingShot = { dataUrl, blob }
-      toast('Đã nhận ảnh, AI đang đọc…')
-      go('analyze')
+      const canvas = await fileToCanvas(f)
+      const shot = await prepareHomeworkShot(canvas)
+      handleShot(shot)
     } catch (err) {
+      // Trình duyệt cũ không xử lý được canvas → gửi nguyên file
       const reader = new FileReader()
-      reader.onload = () => {
-        pendingShot = { dataUrl: reader.result, blob: f }
-        toast('Đã nhận ảnh, AI đang đọc…')
-        go('analyze')
-      }
+      reader.onload = () => sendShot({ dataUrl: reader.result, blob: f })
       reader.readAsDataURL(f)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -678,7 +719,13 @@ export function SnapHomework() {
     <>
       <Header title="Chụp bài tập" back="home" />
       <div className="cam">
-        <div className="frame" />
+        <div className="frame" ref={frameRef} />
+        {camOn && (
+          <div className="kb-peek">
+            <ThemeBuddy state={peekState} size={50} />
+          </div>
+        )}
+        <div key={flashKey} className={`kb-flash ${flashKey ? 'go' : ''}`} />
         <video
           ref={videoRef}
           playsInline
@@ -709,18 +756,68 @@ export function SnapHomework() {
             </button>
           </div>
         )}
-        <div className="hint">Căn bài vào trong khung · chỉ chụp 1 bài</div>
+        <div className="hint">{busy ? 'Đang xử lý ảnh…' : 'Căn đúng 1 bài vào khung · giữ máy song song trang vở'}</div>
       </div>
-      <button className="shutter" aria-label="Chụp" onClick={capture} disabled={!camOn} />
+
+      {qualityWarn && (
+        <div className="card sun pop" style={{ border: '2px solid #F59E0B', background: '#FFFBEB', margin: '10px 0' }}>
+          <b style={{ color: '#92400E', fontSize: 15 }}>
+            📷 {qualityWarn.quality.isDark ? 'Ảnh hơi tối' : 'Ảnh hơi mờ'}
+          </b>
+          <p style={{ fontSize: 13.5, color: '#78350F', lineHeight: 1.5, margin: '6px 0 10px' }}>
+            {qualityWarn.quality.isDark
+              ? 'Bật thêm đèn hoặc ra chỗ sáng hơn, tránh để bóng tay che trang vở.'
+              : 'Giữ máy thật yên, song song với trang vở, cách khoảng 20–30cm.'}{' '}
+            Chữ viết tay cần ảnh rõ thì AI mới đọc đúng.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className="btn ghost"
+              style={{ flex: 1, padding: '9px 10px', fontSize: 13, background: '#fff' }}
+              onClick={() => { setQualityWarn(null); setPeekState('idle') }}
+            >
+              📷 Chụp lại
+            </button>
+            <button
+              className="btn solid"
+              style={{ flex: 1.2, padding: '9px 10px', fontSize: 13 }}
+              onClick={() => {
+                const s = qualityWarn
+                setQualityWarn(null)
+                sendShot(s)
+              }}
+            >
+              Vẫn gửi ➔
+            </button>
+          </div>
+        </div>
+      )}
+
+      <button className="shutter" aria-label="Chụp" onClick={capture} disabled={!camOn || busy} />
       <div className="btns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 8 }}>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13 }} onClick={() => fileRef.current.click()}>🖼 Chọn ảnh</button>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13 }} onClick={() => openSheet('typeProblem')}>⌨️ Gõ đề</button>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13, borderColor: 'var(--plum)', color: 'var(--plum-deep)', background: 'var(--plum-tint)' }} onClick={() => openSheet('typeProblem')}>🎙️ Đọc đề</button>
       </div>
+      <button
+        className="btn ghost"
+        style={{ width: '100%', marginTop: 8, padding: '9px 10px', fontSize: 12.5 }}
+        onClick={() => nativeCamRef.current && nativeCamRef.current.click()}
+      >
+        📸 Chữ viết tay nhỏ? Chụp bằng camera của máy (nét hơn)
+      </button>
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
+        style={{ display: 'none' }}
+        onChange={onPickFile}
+      />
+      <input
+        ref={nativeCamRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         style={{ display: 'none' }}
         onChange={onPickFile}
       />
@@ -732,7 +829,7 @@ export function SnapHomework() {
 /* ============================================================
    4. AI PHÂN TÍCH
    ============================================================ */
-const CHECKLIST = ['Nén & đọc chữ từ ảnh', 'Làm sạch đề bài (chuẩn chính tả)', 'Đối chiếu SGK & phương pháp', 'Soạn 4 câu hỏi gợi mở']
+const CHECKLIST = ['Xử lý ảnh & đọc chữ', 'Kiểm tra đề bài', 'Đối chiếu SGK & phương pháp', 'Soạn 4 câu hỏi gợi mở']
 
 /* Câu hỏi 0 — hiển thị ngay khi gửi đề, không phụ thuộc AI */
 const QUESTION_ZERO = {
@@ -747,6 +844,42 @@ const detectSubject = (t) => {
   return 'vie'
 }
 
+/* Linh vật trong khung ảnh lúc AI đọc đề / soạn bài / gặp trục trặc */
+const READ_LINES = ['Đang soi từng chữ…', 'Đang đọc nét viết tay của con…', 'Đang tách đề và bài làm…']
+const THINK_LINES = ['Đang nghĩ câu hỏi gợi mở…', 'Đang đối chiếu SGK…', 'Sắp xong rồi…']
+function AnalyzeBuddy({ aiState, done }) {
+  const [i, setI] = useState(0)
+  const loading = aiState === 'loading' || aiState === 'cleaning'
+  useEffect(() => {
+    if (!loading) return undefined
+    const t = setInterval(() => setI((n) => n + 1), 2400)
+    return () => clearInterval(t)
+  }, [loading])
+  const state =
+    aiState === 'ocr_failed' || aiState === 'scope_blocked' || aiState === 'scope_warn'
+      ? 'oops'
+      : aiState === 'network_slow' || aiState === 'error'
+        ? 'sleepy'
+        : aiState === 'done'
+          ? 'cheer'
+          : aiState === 'review' || aiState === 'scope_pick_one'
+            ? 'idle'
+            : done >= 3
+              ? 'thinking'
+              : 'reading'
+  const lines = state === 'thinking' ? THINK_LINES : aiState === 'cleaning' ? ['Đang kiểm tra lại đề…'] : READ_LINES
+  return (
+    <div className="kb-cam-buddy">
+      {loading && (
+        <div className="kb-say" key={`${state}-${i % lines.length}`}>
+          {lines[i % lines.length]}
+        </div>
+      )}
+      <ThemeBuddy state={state} size={58} />
+    </div>
+  )
+}
+
 export function Analyze() {
   const { S, patch, go, openSheet, toast } = useContext(AppCtx)
   const [done, setDone] = useState(0)
@@ -759,6 +892,11 @@ export function Analyze() {
   const [scopeResult, setScopeResult] = useState(null)
   const [redirectNote, setRedirectNote] = useState('')
   const [reAskReason, setReAskReason] = useState(null)
+  const [childWork, setChildWork] = useState('') // phần con đã viết tay, AI tách khỏi đề
+  const [uncertain, setUncertain] = useState([]) // chữ/số AI đọc chưa chắc
+  const [zoomOpen, setZoomOpen] = useState(false)
+  const hasCamBuddy = Boolean(BUDDY_NAMES[useThemeBuddyId()])
+  const [zoom, setZoom] = useState(1)
   const reqRef = useRef(null)
   const child = S.children.find((c) => c.id === S.activeId)
 
@@ -861,7 +999,7 @@ export function Analyze() {
         let ocr = S.flow.ocr
         if (shot) {
           setDone(1) // Bước 1: Bắt đầu OCR
-          const ocrRes = await aiOcr(shot.blob, 15000, {
+          const ocrRes = await aiOcr(shot.blob, 25000, {
             childGrade: child?.grade,
             childName: child?.name,
             parentRole: S.parent,
@@ -888,6 +1026,11 @@ export function Analyze() {
           if (!raw && !scope) {
             return { error: 'ocr_failed' }
           }
+
+          // Đề đọc từ JSON (p1_ocr_v3/v2) = model đã nhìn ảnh và chép nguyên văn
+          const structured = !!(scope && scope.fromJson)
+          setChildWork((scope && scope.bai_lam_cua_con) || '')
+          setUncertain((scope && scope.cho_khong_chac) || [])
 
           // 1. KIỂM TRA PHẠM VI ẢNH
           if (scope) {
@@ -956,10 +1099,16 @@ export function Analyze() {
             setOcrText(raw.trim())
             setEditedText(raw.trim())
             // Bước 2: làm sạch đề qua aiExtractProblem
-            setAiState('cleaning')
-            const cleaned = await aiExtractProblem(raw.trim())
-            if (cancelled) return null
-            ocr = cleaned && cleaned.trim() ? cleaned.trim() : raw.trim()
+            if (structured) {
+              // KHÔNG cho LLM chữ (không nhìn ảnh) "sửa" lại đề: dễ đổi số, tự điền chỗ trống
+              ocr = raw.trim()
+            } else {
+              // Chỉ làm sạch khi rơi xuống OCR thô (/vision/ocr)
+              setAiState('cleaning')
+              const cleaned = await aiExtractProblem(raw.trim())
+              if (cancelled) return null
+              ocr = cleaned && cleaned.trim() ? cleaned.trim() : raw.trim()
+            }
             setOcrText(ocr)
             setEditedText(ocr)
             patch({ flow: { ...S.flow, ocr } })
@@ -1020,12 +1169,71 @@ export function Analyze() {
       <Header title="AI đang đọc bài…" />
       <div className="cam" style={{ minHeight: 170 }}>
         {shotImg ? (
-          <img src={shotImg} alt="Bài tập của con" decoding="async" style={{ width: '82%', borderRadius: 12, maxHeight: 260, objectFit: 'contain' }} />
+          <>
+            <img
+              src={shotImg}
+              alt="Bài tập của con"
+              decoding="async"
+              onClick={() => setZoomOpen(true)}
+              style={{ width: '82%', borderRadius: 12, maxHeight: 260, objectFit: 'contain', cursor: 'zoom-in' }}
+            />
+            <button
+              type="button"
+              onClick={() => setZoomOpen(true)}
+              style={{ position: 'absolute', top: 10, right: 10, zIndex: 3, border: 'none', borderRadius: 999, padding: '5px 10px', fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,.92)', color: '#3B2A45' }}
+            >
+              🔍 Phóng to
+            </button>
+          </>
         ) : (
           <div className="photo" style={{ width: '82%' }}>{S.flow.ocr}</div>
         )}
-        <div className="scanline" />
+        {hasCamBuddy ? (
+          <AnalyzeBuddy aiState={aiState} done={done} />
+        ) : (
+          <div className="scanline" style={{ pointerEvents: 'none' }} />
+        )}
       </div>
+
+      {zoomOpen && shotImg && (
+        <div
+          onClick={() => setZoomOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,10,20,.94)', display: 'flex', flexDirection: 'column' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ display: 'flex', gap: 8, padding: '12px 16px', alignItems: 'center', justifyContent: 'flex-end' }}
+          >
+            {[1, 2, 3].map((z) => (
+              <button
+                key={z}
+                type="button"
+                onClick={() => setZoom(z)}
+                style={{ border: '1.5px solid #fff', borderRadius: 999, padding: '6px 12px', fontSize: 13, fontWeight: 700, color: '#fff', background: zoom === z ? 'rgba(255,255,255,.28)' : 'transparent' }}
+              >
+                {z}×
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setZoomOpen(false)}
+              style={{ border: 'none', borderRadius: 999, padding: '6px 14px', fontSize: 13, fontWeight: 700, color: '#3B2A45', background: '#fff' }}
+            >
+              ✕ Đóng
+            </button>
+          </div>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', padding: '0 8px 16px' }}
+          >
+            <img
+              src={shotImg}
+              alt="Ảnh bài tập phóng to"
+              style={{ width: `${zoom * 100}%`, maxWidth: 'none', display: 'block', margin: zoom === 1 ? '0 auto' : 0, borderRadius: 8 }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="loader">
         {CHECKLIST.map((c, i) => (
@@ -1206,6 +1414,26 @@ export function Analyze() {
               </span>
             </div>
           )}
+          {(() => {
+            const n = (editedText.match(/\[\?\]/g) || []).length
+            if (!n && !uncertain.length) return null
+            return (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', padding: '8px 12px', borderRadius: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 13, color: '#92400E', fontWeight: 700, lineHeight: 1.5 }}>
+                  🔍 {n ? `Có ${n} chỗ AI đọc chưa chắc (đánh dấu [?]).` : 'AI đọc chưa chắc vài chữ/số.'} {S.parent} bấm 🔍 Phóng to ảnh rồi sửa giúp con nhé.
+                </span>
+                {uncertain.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                    {uncertain.map((u, i) => (
+                      <span key={i} style={{ background: '#fff', border: '1px solid #FCD34D', borderRadius: 999, padding: '2px 10px', fontSize: 12.5, color: '#78350F' }}>
+                        {u}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
           <span className="pill g">✅ AI nhận diện đề bài như sau</span>
           <div style={{ marginTop: 8 }}>
             <textarea
@@ -1222,6 +1450,16 @@ export function Analyze() {
             <span className="sub" style={{ fontSize: 11.5, marginTop: 4 }}>
               ✏️ Bạn có thể sửa, xoá hoặc nhập lại đề. Chỉ khi bấm "Tiếp tục", AI mới soạn bài giảng.
             </span>
+            {childWork && (
+              <details style={{ marginTop: 8, fontSize: 13 }}>
+                <summary style={{ cursor: 'pointer', color: 'var(--plum-deep)', fontWeight: 700 }}>
+                  ✍️ Phần con đã viết (AI tách riêng, không đưa vào đề)
+                </summary>
+                <div style={{ whiteSpace: 'pre-wrap', marginTop: 6, padding: '8px 10px', background: '#fff', borderRadius: 8, border: '1px dashed #CBD5E1', lineHeight: 1.5 }}>
+                  {childWork}
+                </div>
+              </details>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button
@@ -1237,6 +1475,11 @@ export function Analyze() {
               onClick={() => {
                 const t = (editedText || '').trim()
                 if (!t) { toast('Đề bài đang trống — hãy nhập đề hoặc chụp lại nhé ✏️'); return }
+                const unsure = (t.match(/\[\?\]/g) || []).length
+                if (unsure) {
+                  toast(`Còn ${unsure} chỗ [?] — ${S.parent} sửa theo ảnh rồi bấm Tiếp tục nhé 🔍`)
+                  return
+                }
                 
                 // Chạy lại luật kiểm tra đề chữ trước khi gửi AI
                 const textScope = evaluateTextScope(t, {
@@ -1576,12 +1819,16 @@ export function Scaffold() {
     if (ns >= steps.length) {
       boom()
       toast(`🎉 ${child.name} tự giải xong cả ${steps.length} bậc!`)
+      buddyReact('cheer')
+    } else {
+      buddyReact('cheer', `Giỏi quá! Lên bậc ${ns + 1} nào`, 1800)
     }
   }
 
   const stepStuck = () => {
     const ns = stuck + 1
     patch({ flow: { ...S.flow, stuck: ns } })
+    buddyReact('oops', 'Không sao đâu, mình xem gợi ý tiếp nhé', 2200)
   }
 
   const onOpen = () => {
@@ -2204,6 +2451,7 @@ export function Done() {
     setStats({ stickers: newList.length, stickersList: newList, stickerHistory: newHistory })
     soundSuccess()
     boom()
+    buddyReact('cheer')
     toast(`${child.name} nhận huy hiệu ${found.n}! 🎉`)
     if (newList.length >= 10) {
       setTimeout(() => {

@@ -8,6 +8,7 @@
  * 4. Hộp thử nghiệm nhanh bộ lọc Guard trực tiếp
  */
 
+import { appAlert } from './dialog'
 import React, { useState, useEffect } from 'react'
 import { Card, Button, StatusPill, Kpi, Segmented, DataTable, EmptyState } from './ui/staff/index.jsx'
 import { getSafetySummary, getSafetyLog, closeAiFeedback, testGuardFilter } from './api.js'
@@ -57,7 +58,7 @@ export function AdminSafetyTab({ token }) {
         prev.map((f) => (f.id === id ? { ...f, status: 'closed', closed_by: 'admin' } : f))
       )
     } catch (e) {
-      alert('Không thể đóng phản hồi: ' + e.message)
+      appAlert('Không thể đóng phản hồi: ' + e.message, { title: 'Có lỗi' })
     }
   }
 
@@ -76,7 +77,7 @@ export function AdminSafetyTab({ token }) {
       const res = await testGuardFilter({ promptId: testPromptId, data, context })
       setTestResult(res?.result || null)
     } catch (e) {
-      alert('Lỗi test: ' + e.message)
+      appAlert('Lỗi khi chạy thử: ' + e.message, { title: 'Có lỗi' })
     } finally {
       setTesting(false)
     }

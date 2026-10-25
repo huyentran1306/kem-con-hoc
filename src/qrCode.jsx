@@ -3,13 +3,14 @@
  * Imports pure JS generator from ./qrCode.js and exposes React component QrCodeModal
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { generateQrSvgString } from './qrCode.js';
 
 export { generateQrSvgString };
 
 export function QrCodeModal({ url, title, sub, onClose }) {
-  const svgMarkup = generateQrSvgString(url, { size: 240, margin: 2, fgColor: '#4B3621' });
+  const svgMarkup = generateQrSvgString(url, { size: 240, margin: 4, fgColor: '#2B1D12' });
+  const [copied, setCopied] = useState(false);
 
   return (
     <div
@@ -77,9 +78,19 @@ export function QrCodeModal({ url, title, sub, onClose }) {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
-            onClick={() => {
-              navigator.clipboard?.writeText(url);
-              alert('Đã sao chép liên kết vào lớp!');
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(url);
+              } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (err) {}
+                ta.remove();
+              }
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
             }}
             style={{
               flex: 1,
@@ -93,7 +104,7 @@ export function QrCodeModal({ url, title, sub, onClose }) {
               cursor: 'pointer',
             }}
           >
-            ⧉ Sao chép link
+            {copied ? '✓ Đã sao chép' : '⧉ Sao chép link'}
           </button>
           <button
             type="button"

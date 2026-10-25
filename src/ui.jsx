@@ -1,3 +1,4 @@
+import { appAlert } from './dialog'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { AppCtx } from './ctx'
 import { speak, toast } from './utils'
@@ -153,7 +154,7 @@ export function VoiceInputBtn({ onResult, placeholder = 'Bấm để nói bằng
 
   const fallbackWhisper = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert('Trình duyệt chưa hỗ trợ quyền micro!')
+      appAlert('Trình duyệt này chưa hỗ trợ micro. Mình gõ đề thay nhé.', { title: 'Không dùng được micro' })
       return
     }
 
@@ -208,7 +209,7 @@ export function VoiceInputBtn({ onResult, placeholder = 'Bấm để nói bằng
       clearAutoStop()
       stopTracks()
       setListening(false)
-      alert('Vui lòng cấp quyền truy cập micro để nói!')
+      appAlert('Bấm cho phép micro trong cài đặt trình duyệt rồi thử lại nhé.', { title: 'Cần quyền micro' })
     }
   }
 

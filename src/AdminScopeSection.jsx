@@ -1,3 +1,4 @@
+import { appConfirm } from './dialog'
 import { useState, useEffect, useMemo } from 'react'
 import {
   DEFAULT_SCOPE_RULES,
@@ -112,8 +113,8 @@ export function AdminScopeSection({ adminKey }) {
     }
   }
 
-  const handleResetDefault = () => {
-    if (window.confirm('Khôi phục toàn bộ luật phạm vi và lời nhắn về mặc định ban đầu?')) {
+  const handleResetDefault = async () => {
+    if (await appConfirm('Khôi phục toàn bộ luật phạm vi và lời nhắn về mặc định ban đầu?', { okText: 'Khôi phục' })) {
       setActiveScopeRules(DEFAULT_SCOPE_RULES)
       setRules(DEFAULT_SCOPE_RULES)
       toast('Đã khôi phục cài đặt gốc!')

@@ -1,3 +1,4 @@
+import { appAlert, appConfirm } from './dialog'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   DEFAULT_PROMPTS,
@@ -292,7 +293,7 @@ export default function PromptStudioTab() {
   const handleSaveRule = (e) => {
     e.preventDefault()
     if (!editingRule.title.trim() || !editingRule.methods.trim()) {
-      alert('Vui lòng nhập Tên quy tắc và Phương pháp sư phạm!')
+      appAlert('Vui lòng nhập tên quy tắc và phương pháp sư phạm.', { title: 'Còn thiếu thông tin' })
       return
     }
     let updatedList = [...(aiConfig.pedagogy_routing || [])]
@@ -310,8 +311,8 @@ export default function PromptStudioTab() {
     toast('Đã lưu quy tắc sư phạm thành công!')
   }
 
-  const handleDeleteRule = (ruleId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa quy tắc sư phạm này?')) return
+  const handleDeleteRule = async (ruleId) => {
+    if (!(await appConfirm('Xoá quy tắc sư phạm này?', { danger: true }))) return
     const updatedList = (aiConfig.pedagogy_routing || []).filter((r) => r.id !== ruleId)
     const updated = { ...aiConfig, pedagogy_routing: updatedList }
     setAiConfig(updated)
@@ -319,8 +320,8 @@ export default function PromptStudioTab() {
     toast('Đã xóa quy tắc!')
   }
 
-  const handleResetAiConfig = () => {
-    if (!window.confirm('Đặt lại toàn bộ Model, Temperature và Bảng quy tắc sư phạm về mặc định?')) return
+  const handleResetAiConfig = async () => {
+    if (!(await appConfirm('Đặt lại toàn bộ model, temperature và bảng quy tắc sư phạm về mặc định?', { okText: 'Đặt lại' }))) return
     const def = { ...DEFAULT_AI_CONFIG }
     setAiConfig(def)
     setActiveAiConfig(def)
@@ -633,7 +634,7 @@ export default function PromptStudioTab() {
       if (st && st.label === 'lỗi') errorPrompts.push(DEFAULT_PROMPTS[k].name)
     })
     if (errorPrompts.length > 0) {
-      alert(`Còn prompt chưa hợp lệ:\n- ${errorPrompts.join('\n- ')}\nVui lòng sửa lại các biến bắt buộc trước khi lưu!`)
+      appAlert(`Còn prompt chưa hợp lệ:\n- ${errorPrompts.join('\n- ')}\nSửa lại các biến bắt buộc rồi lưu nhé.`, { title: 'Chưa lưu được' })
       return
     }
 

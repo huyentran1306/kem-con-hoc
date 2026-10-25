@@ -1,3 +1,4 @@
+import { appConfirm } from './dialog'
 import React, { useState, useEffect } from 'react'
 import {
   getFamilyMembers,
@@ -69,7 +70,7 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
   }
 
   const handleRevokeInvite = async (code) => {
-    if (!window.confirm(`Bạn có chắc muốn thu hồi mã mời ${code}?`)) return
+    if (!(await appConfirm(`Mã mời ${code} sẽ không dùng được nữa.`, { title: 'Thu hồi mã mời?', okText: 'Thu hồi' }))) return
     try {
       const res = await revokeFamilyInvite(code)
       if (res.ok) {
@@ -84,7 +85,7 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
   const handleChangeRole = async (memberId, currentRole) => {
     const newRole = currentRole === 'guardian' ? 'viewer' : 'guardian'
     const roleName = newRole === 'guardian' ? 'Kèm con' : 'Chỉ xem'
-    if (!window.confirm(`Đổi vai trò thành viên này sang "${roleName}"?`)) return
+    if (!(await appConfirm(`Đổi vai trò thành viên này sang "${roleName}"?`, { okText: 'Đổi vai trò' }))) return
     try {
       const res = await updateFamilyMember(memberId, { role: newRole })
       if (res.ok) {
@@ -97,7 +98,7 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
   }
 
   const handleDeleteMember = async (memberId, name) => {
-    if (!window.confirm(`Xoá thành viên "${name}" khỏi gia đình?`)) return
+    if (!(await appConfirm(`Xoá thành viên "${name}" khỏi gia đình?`, { danger: true }))) return
     try {
       const res = await deleteFamilyMember(memberId)
       if (res.ok) {

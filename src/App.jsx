@@ -1,3 +1,4 @@
+import { appAlert, appConfirm, appPrompt } from './dialog'
 import { useContext, useEffect, useMemo, useRef, useState, Component, lazy, Suspense } from 'react'
 import { AppCtx } from './ctx'
 import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
@@ -26,6 +27,7 @@ const FamilyMembersSheet = lazy(() => import('./FamilyMembersSheet').then(m => (
 const JoinFamilyView = lazy(() => import('./JoinFamilyView').then(m => ({ default: m.JoinFamilyView })))
 const PublicReportView = lazy(() => import('./PublicReportView').then(m => ({ default: m.PublicReportView })))
 const FamilyClassSheet = lazy(() => import('./FamilyClassSheet').then(m => ({ default: m.FamilyClassSheet })))
+import { BuddyPopLayer } from './themes/buddies/buddySvgs'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -606,13 +608,13 @@ export default function App() {
   }
 
   const wipe = async () => {
-    const confirmWipe = window.confirm('Bạn có chắc chắn muốn xoá toàn bộ dữ liệu gia đình không? Thao tác này sẽ xoá vĩnh viễn trên máy chủ.')
+    const confirmWipe = await appConfirm('Toàn bộ dữ liệu gia đình sẽ bị xoá vĩnh viễn trên máy chủ, không khôi phục được.', { title: 'Xoá toàn bộ dữ liệu?', okText: 'Tiếp tục', danger: true })
     if (!confirmWipe) return
-    const pass = window.prompt('Nhập mật khẩu gia đình để xác nhận xoá toàn bộ:')
+    const pass = await appPrompt('Nhập mật khẩu gia đình để xác nhận xoá toàn bộ.', { title: 'Xác nhận bằng mật khẩu', type: 'password', okText: 'Xoá vĩnh viễn', danger: true, required: true })
     if (!pass) return
     const delRes = await cloudDeleteFamily(pass)
     if (!delRes.ok) {
-      alert(delRes.error || 'Mật khẩu xác nhận không đúng')
+      appAlert(delRes.error || 'Mật khẩu xác nhận không đúng.', { title: 'Chưa xoá được' })
       return
     }
     try {
@@ -842,6 +844,8 @@ export default function App() {
               })}
             </nav>
           )}
+
+          {S.onboarded && <BuddyPopLayer />}
 
           {S.onboarded && (
             <button

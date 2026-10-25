@@ -926,7 +926,7 @@ export function SideNav({
                 transition: 'all 0.15s ease',
               }}
             >
-              <span style={{ fontSize: 15 }}>{item.icon}</span>
+              <span style={{ fontSize: 15, display: 'inline-flex', alignItems: 'center' }}>{item.icon}</span>
               <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {item.label}
               </span>
@@ -1201,7 +1201,7 @@ export function StaffShell({
                   padding: '4px 0',
                 }}
               >
-                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                <span style={{ fontSize: 18, display: 'inline-flex', alignItems: 'center' }}>{item.icon}</span>
                 <span>{item.label}</span>
               </button>
             );

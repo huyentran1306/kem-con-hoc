@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { AppCtx } from './ctx'
-import { familyLogin, familyRegister } from './api'
+import { familyLogin, familyRegister, teacherLabel } from './api'
 import { getTheme } from './themes'
 import { TRIAL_SESSION } from './trialData.js'
 
@@ -61,7 +61,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
               }}
             >
               <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--c-text, #4B3621)' }}>
-                🏫 Đăng nhập để vào <b>{classJoinBanner.className || classJoinBanner.name}</b> của <b>cô {classJoinBanner.teacherName || classJoinBanner.teacher_name}</b>
+                🏫 Đăng nhập để vào <b>{classJoinBanner.className || classJoinBanner.name}</b> của <b>{teacherLabel(classJoinBanner.teacherName || classJoinBanner.teacher_name)}</b>
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #8A6A4A)', marginTop: 3 }}>
                 Đăng nhập xong, mình quay lại đúng màn vào lớp nhé

@@ -7,6 +7,7 @@
    4. Phát hành theo 3 mức, bộ theo mùa, và lịch sử phiên bản
    ============================================================ */
 
+import { appPrompt } from './dialog'
 import { useState, useEffect, useRef } from 'react'
 import {
   BUILTIN_THEME_SPECS,
@@ -428,8 +429,8 @@ export default function AdminThemeDesignerTab({ token, adminProfile }) {
               <button
                 type="button"
                 className="stitch-btn-secondary"
-                onClick={() => {
-                  const code = prompt('Nhập mã chia sẻ 6 ký tự (VD: ADM-7KP):')
+                onClick={async () => {
+                  const code = await appPrompt('Nhập mã chia sẻ 6 ký tự, ví dụ ADM-7KP.', { title: 'Nhập mã bộ giao diện', placeholder: 'ADM-7KP', required: true })
                   if (code) toast(`Đang giải mã và nhập cấu hình từ mã "${code.toUpperCase()}"...`)
                 }}
                 style={{ fontSize: 13, padding: '8px 14px' }}

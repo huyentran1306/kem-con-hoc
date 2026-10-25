@@ -1,3 +1,4 @@
+import { appAlert, appConfirm } from './dialog'
 import { useState, useEffect, useMemo } from 'react'
 import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
 import { toast } from './utils'
@@ -199,14 +200,14 @@ export default function TeamPromptSyncTab() {
 
   // 6. Xóa prompt
   const handleDelete = async (item) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa prompt: "${item.title}"?`)) return
+    if (!(await appConfirm(`Xoá prompt "${item.title}" khỏi danh sách?`, { danger: true }))) return
     const updated = prompts.filter((p) => p.id !== item.id)
     await savePromptsToCloud(updated, 'Đã xóa prompt khỏi danh sách')
   }
 
   // 6b. Đặt lại toàn bộ về Chờ chạy test (Chưa chạy)
   const handleResetAllPending = async () => {
-    if (!window.confirm('Bạn có chắc muốn đặt lại toàn bộ prompts về trạng thái "CHỜ CHẠY TEST" (Chưa chạy) không?')) return
+    if (!(await appConfirm('Đặt lại toàn bộ prompts về trạng thái "Chờ chạy test"?', { okText: 'Đặt lại' }))) return
     const updated = prompts.map((p) => ({
       ...p,
       isRunCompanyAi: false,
@@ -221,11 +222,11 @@ export default function TeamPromptSyncTab() {
   const handleSaveForm = async (e) => {
     e?.preventDefault()
     if (!formTitle.trim()) {
-      alert('Vui lòng nhập Tiêu đề Prompt!')
+      appAlert('Vui lòng nhập tiêu đề prompt.', { title: 'Còn thiếu thông tin' })
       return
     }
     if (!formDetail.trim()) {
-      alert('Vui lòng nhập Nội dung chi tiết của Prompt!')
+      appAlert('Vui lòng nhập nội dung chi tiết của prompt.', { title: 'Còn thiếu thông tin' })
       return
     }
 

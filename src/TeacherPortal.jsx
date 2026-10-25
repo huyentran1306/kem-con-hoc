@@ -3,6 +3,7 @@
  * Thiết kế bản Gấu ấm áp, Mitr + Nunito, WCAG AA, không còn màu xanh dương viết cứng
  */
 
+import { appConfirm, appPrompt } from './dialog'
 import React, { useState, useEffect } from 'react';
 import {
   Users, BookOpen, Bell, Settings, Plus, Check, X,
@@ -18,6 +19,7 @@ import {
   Segmented, Toggle, Field, TextArea, EmptyState, Banner, SaveBar,
   AssistantCard, StaffShell, SideNav, ClassSwitcher
 } from './ui/staff';
+import { BearClassIcon, BearStudentsIcon, BearSettingsIcon, BearBookIcon, BearBellIcon, BearQrIcon, BearResultsIcon } from './TeacherBearIcons.jsx';
 import './ui/staff/tokens.css';
 
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
@@ -145,12 +147,12 @@ export default function TeacherPortal({ onExit }) {
   const totalPendingStudents = classes.reduce((acc, c) => acc + (c.pending_students_count || 0), 0);
 
   const navItems = [
-    { id: 'classes', label: 'Lớp của cô', icon: '🏫' },
-    { id: 'assignments', label: 'Bài tập & Soạn bài', icon: '📝' },
-    { id: 'students', label: 'Học sinh', icon: '👥', badge: totalPendingStudents },
-    { id: 'announcements', label: 'Thông báo & Nhắc việc', icon: '⏰' },
-    { id: 'results', label: 'Kết quả', icon: '📊' },
-    { id: 'settings', label: 'Cài đặt của cô', icon: '⚙️' },
+    { id: 'classes', label: 'Lớp của cô', icon: <BearClassIcon size={22} /> },
+    { id: 'assignments', label: 'Bài tập & Soạn bài', icon: <BearBookIcon size={22} /> },
+    { id: 'students', label: 'Học sinh', icon: <BearStudentsIcon size={22} />, badge: totalPendingStudents },
+    { id: 'announcements', label: 'Thông báo & Nhắc việc', icon: <BearBellIcon size={22} /> },
+    { id: 'results', label: 'Kết quả', icon: <BearResultsIcon size={22} /> },
+    { id: 'settings', label: 'Cài đặt của cô', icon: <BearSettingsIcon size={22} /> },
   ];
 
   function handleNavSelect(itemId) {
@@ -744,7 +746,7 @@ function TeacherClassesList({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#FEF3C7', display: 'grid', placeItems: 'center', fontSize: 18 }}>
-                    👥
+                    <BearStudentsIcon size={28} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, color: 'var(--s-text)', fontSize: 14 }}>
@@ -803,11 +805,11 @@ function TeacherClassesList({
 
               <div style={styles.classStatsRow}>
                 <div style={styles.statItem}>
-                  <Users size={16} color="#84664A" />
+                  <BearStudentsIcon size={20} />
                   <span><strong>{c.active_students_count || 0}</strong> học sinh</span>
                 </div>
                 <div style={styles.statItem}>
-                  <BookOpen size={16} color="#047857" />
+                  <BearBookIcon size={20} />
                   <span><strong>{c.published_assignments_count || 0}</strong> bài đang mở</span>
                 </div>
               </div>
@@ -1068,7 +1070,7 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
             onClick={() => setShowQrModal(true)}
             title="In hoặc chiếu mã QR trong buổi họp phụ huynh"
           >
-            <QrCode size={16} /> Mã QR
+            <BearQrIcon size={20} /> Mã QR
           </button>
           <button
             type="button"
@@ -1103,31 +1105,31 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
           style={{ ...styles.tabBtn, ...(tab === 'assignments' ? styles.tabBtnActive : {}) }}
           onClick={() => { setTab('assignments'); setSelectedResultAsgId(null); }}
         >
-          <BookOpen size={16} /> Bài tập & Soạn bài
+          <BearBookIcon size={20} /> Bài tập & Soạn bài
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'students' ? styles.tabBtnActive : {}) }}
           onClick={() => { setTab('students'); setSelectedResultAsgId(null); }}
         >
-          <Users size={16} /> Danh sách học sinh {cls.pending_students_count > 0 && `(${cls.pending_students_count} chờ)`}
+          <BearStudentsIcon size={20} /> Danh sách học sinh {cls.pending_students_count > 0 && `(${cls.pending_students_count} chờ)`}
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'announcements' ? styles.tabBtnActive : {}) }}
           onClick={() => { setTab('announcements'); setSelectedResultAsgId(null); }}
         >
-          <Bell size={16} /> Thông báo & Nhắc việc
+          <BearBellIcon size={20} /> Thông báo & Nhắc việc
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'results' ? styles.tabBtnActive : {}) }}
           onClick={() => setTab('results')}
         >
-          <BarChart3 size={16} /> Kết quả
+          <BearResultsIcon size={20} /> Kết quả
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'settings' ? styles.tabBtnActive : {}) }}
           onClick={() => { setTab('settings'); setSelectedResultAsgId(null); }}
         >
-          <Settings size={16} /> Cài đặt lớp
+          <BearSettingsIcon size={20} /> Cài đặt lớp
         </button>
       </div>
 
@@ -1809,7 +1811,8 @@ function TeacherStudentsTab({ token, classId, cls }) {
   }
 
   async function handleReject(studentId) {
-    const reason = prompt('Lý do từ chối (tùy chọn):');
+    const reason = await appPrompt('Cô có thể ghi lý do để phụ huynh biết (không bắt buộc).', { title: 'Từ chối học sinh này?', okText: 'Từ chối', placeholder: 'VD: Con không học lớp này' });
+    if (reason === null) return;
     try {
       const res = await fetch(`${API_BASE}/api/v1/teacher/class-students/${studentId}/reject`, {
         method: 'POST',
@@ -2565,7 +2568,7 @@ function TeacherClassSettingsTab({ token, classId, cls, onUpdated }) {
   }
 
   async function handleRotateCode() {
-    if (!confirm('Tạo mã lớp mới? Mã cũ sẽ không còn kết nối được nữa.')) return;
+    if (!(await appConfirm('Mã cũ sẽ không còn dùng để vào lớp được nữa.', { title: 'Tạo mã lớp mới?', okText: 'Tạo mã mới' }))) return;
     try {
       const res = await fetch(`${API_BASE}/api/v1/teacher/classes/${classId}/rotate-code`, {
         method: 'POST',
@@ -2684,7 +2687,7 @@ function TeacherSettingsScreen({ token, teacher, onUpdateSuccess, onLogout }) {
   }
 
   async function handleDeleteNote(id) {
-    if (!confirm('Xoá phương pháp này khỏi thư viện?')) return;
+    if (!(await appConfirm('Xoá phương pháp này khỏi thư viện của cô?', { danger: true }))) return;
     try {
       await fetch(`${API_BASE}/api/v1/teacher/method-notes/${id}`, {
         method: 'DELETE',

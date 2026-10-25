@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react'
 import { isReminderInDisplayWindow, isLateNightUrgent } from './teacherReminderData.js'
-import { getAuthToken, fetchFamilyReminders, markFamilyReminderDone } from './api'
+import { getAuthToken, fetchFamilyReminders, markFamilyReminderDone, teacherLabel } from './api'
 
 const KID_COLORS = [
   { bg: '#FFF1D6', color: '#9A5B00', border: '#F6C56A' }, // Amber
@@ -42,26 +42,30 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
     if (token) {
       try {
         const res = await fetchFamilyReminders({ token, window: 'today' })
-        if (res && res.ok && Array.isArray(res.reminders) && res.reminders.length > 0) {
-          // Normalize server reminders
-          const serverReminders = res.reminders.map((r) => ({
-            id: r.id,
-            teacher_name: r.teacher_name || 'Hạnh',
-            class_name: r.class_name || 'Lớp của con',
-            child_name: r.child_name || child?.name || 'Mít',
-            child_id: r.child_id,
-            message: r.body || r.message,
-            target_date: r.remind_for || r.target_date,
-            assignment_id: r.assignment_id || null,
-            done_at: r.done_at,
-            done_by_name: r.done_by_name,
+        const list = res && (res.reminders || res.items || res.announcements)
+        if (res && res.ok !== false && Array.isArray(list)) {
+          // Máy chủ có thể trả camelCase hoặc snake_case → đọc cả hai
+          const serverReminders = list.map((r) => ({
+            id: r.id ?? r.announcementId ?? r.announcement_id,
+            teacher_name: r.teacher_name || r.teacherName || '',
+            class_name: r.class_name || r.className || 'Lớp của con',
+            child_name: r.child_name || r.childName || '',
+            child_id: r.child_id ?? r.childId,
+            message: r.body || r.message || r.content || '',
+            target_date: r.remind_for || r.remindFor || r.target_date || r.targetDate,
+            assignment_id: r.assignment_id || r.assignmentId || null,
+            done_at: r.done_at || r.doneAt,
+            done_by_name: r.done_by_name || r.doneByName,
           }))
+          // Đã đăng nhập: chỉ hiện lời nhắc thật của cô (không dùng dữ liệu mẫu)
           setReminders(serverReminders)
           return
         }
       } catch (e) {
         console.warn('Load reminders error:', e)
       }
+      setReminders([])
+      return
     }
 
     // Fallback to local storage or demo reminder
@@ -181,7 +185,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                   👩‍🏫
                 </span>
                 <div style={{ fontSize: 12.5, fontWeight: 800, color: '#84664A', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Cô {rem.teacher_name} · {rem.class_name} nhắc
+                  {teacherLabel(rem.teacher_name)} · {rem.class_name} nhắc
                 </div>
               </div>
 
