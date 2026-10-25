@@ -8,7 +8,7 @@ import {
 import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade } from './api'
+import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm } from './api'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
@@ -1776,6 +1776,377 @@ export function Scaffold() {
 }
 
 /* ============================================================
+   🎓 TEACH-BACK CARD: NGHE CON GIẢNG LẠI (Prompt 14 Phần B)
+   ============================================================ */
+export function TeachBackCard({ problem, child, parent, currentChoice, sessionId, toast, onPickChoice }) {
+  const [tbState, setTbState] = useState('idle') // idle | recording | transcribing | review | grading | result
+  const [recordSec, setRecordSec] = useState(0)
+  const [transcript, setTranscript] = useState('')
+  const [tbResult, setTbResult] = useState(null)
+  const [round, setRound] = useState(1)
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
+  const timerRef = useRef(null)
+
+  const TEACH_BACK_OPTIONS = [
+    { v: 'ok', e: '🌟', t: 'Con tự làm được (Tự chủ)' },
+    { v: 'hint', e: '🟡', t: 'Con cần gợi ý' },
+    { v: 'guided', e: '🔴', t: `${parent} phải hướng dẫn nhiều` },
+  ]
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      audioChunksRef.current = []
+      const mr = new MediaRecorder(stream)
+      mediaRecorderRef.current = mr
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+      mr.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        stream.getTracks().forEach((t) => t.stop())
+        setTbState('transcribing')
+        try {
+          const res = await teachBackTranscribe({ audioBlob })
+          setTranscript(res.transcript || '')
+          setTbState('review')
+        } catch (err) {
+          toast('Không bóc băng được âm thanh, dùng lời giảng mẫu nhé!')
+          useSample()
+        }
+      }
+      mr.start(250)
+      setRecordSec(0)
+      setTbState('recording')
+      timerRef.current = setInterval(() => {
+        setRecordSec((s) => {
+          if (s >= 59) {
+            stopRecording()
+            return 60
+          }
+          return s + 1
+        })
+      }, 1000)
+    } catch (err) {
+      toast('Không kết nối được micro, đang dùng lời giảng mẫu!')
+      useSample()
+    }
+  }
+
+  const stopRecording = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop()
+    }
+  }
+
+  const useSample = () => {
+    setTranscript('Con lấy ba hộp, mỗi hộp tám cây bút là hai mươi tư cây. Xong mẹ cho bạn Na năm cây thì con lấy hai mươi tư trừ đi năm còn mười chín cây bút ạ.')
+    setTbState('review')
+  }
+
+  const submitGrade = async () => {
+    if (!transcript.trim()) {
+      toast('Lời giảng đang trống, con thử kể lại nhé!')
+      return
+    }
+    setTbState('grading')
+    try {
+      const res = await teachBackGrade({
+        sessionId: sessionId || `sess_${Date.now()}`,
+        childId: child?.id || 'child_1',
+        problemText: problem?.ocr || problem?.text || problem?.de_bai || '',
+        standardSteps: problem?.answer || '',
+        transcript,
+        round,
+        finalAnswer: problem?.answer || '19 cây bút',
+        lop: child?.grade || 'Lớp 3',
+        tenCon: child?.name || 'Mít',
+      })
+      setTbResult(res)
+      setTbState('result')
+      const mapped = res.muc_de_xuat === 'self' ? 'ok' : res.muc_de_xuat
+      onPickChoice(mapped, res.teach_back_id)
+    } catch (err) {
+      toast('Lỗi chấm: ' + (err.message || 'Thử lại'))
+      setTbState('review')
+    }
+  }
+
+  const CRITERIA_MAP = {
+    du_kien: 'Nêu đủ dữ kiện đề bài',
+    phep_tinh: 'Chọn đúng phép tính',
+    ket_qua: 'Tính đúng kết quả từng bước',
+    vi_sao: 'Giải thích được vì sao làm như vậy',
+  }
+
+  return (
+    <div className={`card plum pop teach-back-box ${tbState === 'recording' ? 'teach-back-recording' : ''}`} style={{ border: '2px solid var(--plum)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span className="pill p">🎓 Con dạy lại {parent.toLowerCase()}</span>
+        {round > 1 && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--plum)' }}>Vòng {round}</span>}
+      </div>
+
+      <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--plum-deep)', margin: '4px 0 10px', lineHeight: 1.45 }}>
+        {problem?.teachBack || 'Nếu lần sau gặp dạng bài này, con sẽ làm bước nào trước?'}
+      </div>
+
+      {tbState === 'idle' && (
+        <div>
+          <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 12px', lineHeight: 1.45 }}>
+            Khuyến khích con nói tự nhiên trong 30-60 giây. AI sẽ lắng nghe và đối chiếu 4 tiêu chí sư phạm để mẹ đánh giá!
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              className="btn solid"
+              data-testid="tb-record-btn"
+              style={{
+                width: '100%',
+                background: 'var(--c-primary, #7C3AED)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '12px',
+                fontWeight: 800,
+                fontSize: 14,
+              }}
+              onClick={startRecording}
+            >
+              <span style={{ fontSize: 18 }}>🎙️</span> Bấm để {child?.name || 'con'} giảng lại
+            </button>
+            <button
+              className="btn soft"
+              data-testid="tb-sample-btn"
+              style={{ width: '100%', fontSize: 12.5, padding: '8px', color: 'var(--c-text-2)' }}
+              onClick={useSample}
+            >
+              🎧 Dùng lời giảng mẫu của {child?.name || 'Mít'} (3 hộp bút)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tbState === 'recording' && (
+        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+          <div className="recording-bar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="recording-dot" />
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#DC2626' }}>
+                Đang nghe {child?.name || 'con'} nói...
+              </span>
+            </div>
+            <div className="audio-waves">
+              <div className="audio-wave-bar" style={{ animationDelay: '0.1s' }} />
+              <div className="audio-wave-bar" style={{ animationDelay: '0.3s' }} />
+              <div className="audio-wave-bar" style={{ animationDelay: '0.2s' }} />
+              <div className="audio-wave-bar" style={{ animationDelay: '0.4s' }} />
+              <div className="audio-wave-bar" style={{ animationDelay: '0.15s' }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#DC2626', fontVariantNumeric: 'tabular-nums' }}>
+              00:{recordSec < 10 ? `0${recordSec}` : recordSec} / 01:00
+            </span>
+          </div>
+          <button
+            className="btn solid"
+            style={{ width: '100%', background: '#DC2626', color: '#fff', fontWeight: 800, padding: '12px' }}
+            onClick={stopRecording}
+          >
+            ⏹️ Dừng ghi âm & AI chấm lời giảng
+          </button>
+        </div>
+      )}
+
+      {tbState === 'transcribing' && (
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>🎧</div>
+          <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)', margin: 0 }}>
+            AI đang lắng nghe và bóc băng lời con nói...
+          </p>
+        </div>
+      )}
+
+      {tbState === 'review' && (
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--plum)', textTransform: 'uppercase', marginBottom: 6 }}>
+            Lời con kể lại (mẹ có thể sửa nhanh nếu mic nghe nhầm):
+          </div>
+          <textarea
+            value={transcript}
+            onChange={(e) => setTranscript(e.target.value)}
+            rows={3}
+            style={{
+              width: '100%',
+              padding: 10,
+              borderRadius: 10,
+              border: '1.5px solid var(--c-line)',
+              fontSize: 13.5,
+              lineHeight: 1.45,
+              marginBottom: 10,
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+            }}
+          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className="btn soft"
+              style={{ flex: 1, fontSize: 12.5 }}
+              onClick={() => setTbState('idle')}
+            >
+              🔄 Kể lại
+            </button>
+            <button
+              className="btn solid"
+              data-testid="tb-submit-btn"
+              style={{ flex: 2, background: 'var(--c-primary, #7C3AED)', color: '#fff', fontWeight: 800 }}
+              onClick={submitGrade}
+            >
+              Chấm bài giảng này ›
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tbState === 'grading' && (
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>🔍</div>
+          <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)', margin: 0 }}>
+            AI đang so khớp 4 tiêu chí rubric & kiểm tra trích dẫn thật...
+          </p>
+        </div>
+      )}
+
+      {tbState === 'result' && tbResult && (
+        <div>
+          {/* 4 tiêu chí rubric */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--plum)', textTransform: 'uppercase', marginBottom: 6 }}>
+              Rubric 4 tiêu chí đối chiếu:
+            </div>
+            {(tbResult.tieu_chi || []).map((tc) => (
+              <div key={tc.ma} className={`criterion-row ${tc.dat ? 'pass' : 'fail'}`}>
+                <span style={{ fontSize: 16 }}>{tc.dat ? '✅' : '🟡'}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)' }}>
+                    {CRITERIA_MAP[tc.ma] || tc.ma}
+                  </div>
+                  {tc.trich && (
+                    <span className="criterion-quote">
+                      “{tc.trich}”
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Lời khen cho con */}
+          {tbResult.loi_khen_cho_con && (
+            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '10px 12px', borderRadius: 10, marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#047857', textTransform: 'uppercase' }}>
+                🌟 Lời khen con:
+              </div>
+              <div style={{ fontSize: 13, color: '#065F46', fontWeight: 600, marginTop: 2 }}>
+                {tbResult.loi_khen_cho_con}
+              </div>
+            </div>
+          )}
+
+          {/* Đề xuất mức hiểu bài của AI */}
+          <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 12px', borderRadius: 10, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', textTransform: 'uppercase' }}>
+              AI đề xuất mức hiểu bài:
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--c-text)', marginTop: 2 }}>
+              {tbResult.muc_de_xuat === 'self' && '🌟 Tự chủ (Đạt cả 4 tiêu chí)'}
+              {tbResult.muc_de_xuat === 'hint' && '🟡 Cần gợi ý (Đạt 2-3 tiêu chí)'}
+              {tbResult.muc_de_xuat === 'guided' && '🔴 Cần hướng dẫn (Đạt 0-1 tiêu chí)'}
+            </div>
+          </div>
+
+          {/* Gợi ý hỏi thêm vòng 2 nếu chưa đạt vi_sao */}
+          {tbResult.cau_hoi_them && round === 1 && (
+            <div style={{ background: '#FEF3C7', border: '1.5px solid #FCD34D', padding: '10px 12px', borderRadius: 10, marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', textTransform: 'uppercase' }}>
+                💡 Gợi ý để {parent.toLowerCase()} hỏi thêm con:
+              </div>
+              <div style={{ fontSize: 13, color: '#78350F', fontWeight: 700, margin: '4px 0 8px' }}>
+                "{tbResult.cau_hoi_them}"
+              </div>
+              <button
+                className="btn soft"
+                style={{ width: '100%', fontSize: 12, padding: '6px', background: '#FFF' }}
+                onClick={() => {
+                  setRound(2)
+                  setTbState('idle')
+                }}
+              >
+                🎙️ Hỏi thêm và ghi âm tiếp (Vòng 2)
+              </button>
+            </div>
+          )}
+
+          {/* Mẹ luôn là người chốt mức cuối cùng */}
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--plum)', textTransform: 'uppercase', marginBottom: 6 }}>
+            {parent} chốt mức hiểu bài hôm nay:
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {TEACH_BACK_OPTIONS.map((o) => (
+              <button
+                key={o.v}
+                className={`btn ${currentChoice === o.v ? 'solid' : 'soft'}`}
+                style={{
+                  width: '100%',
+                  background: currentChoice === o.v ? 'var(--plum)' : '#fff',
+                  color: currentChoice === o.v ? '#fff' : 'var(--plum-deep)',
+                  border: currentChoice === o.v ? 'none' : '1.5px solid var(--plum-line)',
+                  fontSize: 13,
+                  fontWeight: currentChoice === o.v ? 800 : 600,
+                  padding: '8px 12px',
+                  textAlign: 'left',
+                }}
+                onClick={() => onPickChoice(o.v, tbResult?.teach_back_id)}
+              >
+                {o.e} {o.t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tbState === 'idle' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', textTransform: 'uppercase' }}>
+            Hoặc {parent.toLowerCase()} tự chấm nhanh không cần ghi âm:
+          </div>
+          {TEACH_BACK_OPTIONS.map((o) => (
+            <button
+              key={o.v}
+              className={`btn ${currentChoice === o.v ? 'solid' : 'soft'}`}
+              style={{
+                width: '100%',
+                background: currentChoice === o.v ? 'var(--plum)' : '#fff',
+                color: currentChoice === o.v ? '#fff' : 'var(--plum-deep)',
+                border: currentChoice === o.v ? 'none' : '1.5px solid var(--plum-line)',
+                fontSize: 13,
+                fontWeight: currentChoice === o.v ? 800 : 600,
+                padding: '8px 12px',
+                textAlign: 'left',
+              }}
+              onClick={() => onPickChoice(o.v)}
+            >
+              {o.e} {o.t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ============================================================
    7. KẾT THÚC
    ============================================================ */
 export function Done() {
@@ -2020,32 +2391,21 @@ export function Done() {
         <span style={{ fontSize: 22 }}>📷</span>
       </div>
 
-      <div className="card plum pop" style={{ border: '2px solid var(--plum)' }}>
-        <span className="pill p">🎓 Con dạy lại {S.parent.toLowerCase()}</span>
-        <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--plum-deep)', margin: '8px 0 10px', lineHeight: 1.45 }}>
-          {problem.teachBack || 'Nếu lần sau gặp dạng bài này, con sẽ làm bước nào trước?'}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {TEACH_BACK_OPTIONS.map((o) => (
-            <button
-              key={o.v}
-              className={`btn ${S.flow.teachBack === o.v ? 'solid' : 'soft'}`}
-              style={{
-                width: '100%',
-                background: S.flow.teachBack === o.v ? 'var(--plum)' : '#fff',
-                color: S.flow.teachBack === o.v ? '#fff' : 'var(--plum-deep)',
-                border: S.flow.teachBack === o.v ? 'none' : '1.5px solid var(--plum-line)',
-              }}
-              onClick={() => pickTeachBack(o.v)}
-            >
-              {o.e} {o.t}
-            </button>
-          ))}
-        </div>
-        <span className="sub" style={{ fontSize: 11.5, marginTop: 8 }}>
-          Giúp {S.parent.toLowerCase()} biết con đã thực sự hiểu bài chưa — không tính điểm, chỉ để đồng hành tốt hơn.
-        </span>
-      </div>
+      {/* Feature 4: Con dạy lại mẹ — Đo mức độ tự chủ & Rubric 4 tiêu chí (Prompt 14 Phần B) */}
+      <TeachBackCard
+        problem={problem}
+        child={child}
+        parent={S.parent}
+        currentChoice={S.flow.teachBack}
+        sessionId={S.sessionId}
+        toast={toast}
+        onPickChoice={(v, tbId) => {
+          pickTeachBack(v)
+          if (tbId) {
+            teachBackConfirm({ teachBackId: tbId, finalLevel: v === 'ok' ? 'self' : v }).catch(() => {})
+          }
+        }}
+      />
 
       {problem.fiveMinGame && (
         <div className="card sun pop" style={{ padding: '12px 14px', border: '1.5px solid #FDE68A', background: '#FEFCE8' }}>

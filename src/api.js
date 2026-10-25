@@ -1361,3 +1361,126 @@ export async function checkWorkHistory() {
   const res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/history`, { headers })
   return res.json()
 }
+
+/* ============================================================
+   🎓 NGHE CON GIẢNG LẠI (Prompt 14 Phần B)
+   ============================================================ */
+
+export async function teachBackTranscribe({ audioBlob }) {
+  if (isTrialActive()) {
+    await new Promise((r) => setTimeout(r, 600))
+    return {
+      ok: true,
+      transcript:
+        'Con lấy ba hộp mỗi hộp tám cây bút là hai mươi tư cây, rồi mẹ cho bạn Na năm cây nên con lấy hai mươi tư trừ đi năm còn mười chín cây bút ạ.',
+    }
+  }
+
+  const token = getAuthToken()
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  let body
+  if (audioBlob instanceof Blob || audioBlob instanceof File) {
+    const formData = new FormData()
+    formData.append('audio', audioBlob, 'teachback.webm')
+    body = formData
+  } else if (typeof audioBlob === 'string') {
+    headers['Content-Type'] = 'application/json'
+    body = JSON.stringify({ audio: audioBlob })
+  } else {
+    body = audioBlob
+  }
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/teach-back/transcribe`, {
+    method: 'POST',
+    headers,
+    body,
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || 'Lỗi nhận diện giọng nói')
+    err.status = res.status
+    throw err
+  }
+  return data
+}
+
+export async function teachBackGrade({
+  sessionId,
+  childId,
+  familyId,
+  problemText,
+  standardSteps,
+  transcript,
+  round = 1,
+  finalAnswer,
+  lop = 'Lớp 3',
+  tenCon = 'Mít',
+}) {
+  if (isTrialActive()) {
+    await new Promise((r) => setTimeout(r, 700))
+    return {
+      ok: true,
+      teach_back_id: `tb_trial_${Date.now()}`,
+      tieu_chi: [
+        { ma: 'du_kien', dat: true, trich: 'ba hộp mỗi hộp tám cây bút' },
+        { ma: 'phep_tinh', dat: true, trich: 'nhân tám rồi trừ đi năm' },
+        { ma: 'ket_qua', dat: true, trich: 'còn mười chín cây bút' },
+        { ma: 'vi_sao', dat: true, trich: 'mẹ cho bạn Na năm cây nên con lấy hai mươi tư trừ đi năm' },
+      ],
+      muc_de_xuat: 'self',
+      cau_hoi_them: '',
+      loi_khen_cho_con: `Bé ${tenCon} kể lại các bước rất tự tin và nhớ chính xác từng số liệu!`,
+      hallucination_detected: false,
+    }
+  }
+
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/teach-back/grade`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      sessionId,
+      childId,
+      familyId,
+      problemText,
+      standardSteps,
+      transcript,
+      round,
+      finalAnswer,
+      lop,
+      tenCon,
+    }),
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || 'Lỗi chấm bài giảng lại')
+    err.status = res.status
+    throw err
+  }
+  return data
+}
+
+export async function teachBackConfirm({ teachBackId, finalLevel }) {
+  if (isTrialActive()) {
+    return { ok: true, id: teachBackId, final_level: finalLevel }
+  }
+
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/teach-back/${teachBackId}/confirm`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ finalLevel }),
+  })
+
+  return res.json()
+}
