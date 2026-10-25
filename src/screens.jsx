@@ -8,7 +8,7 @@ import {
 import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken } from './api'
+import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade } from './api'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
@@ -515,6 +515,20 @@ export function Home() {
           <span className="sub">AI chỉ {S.parent.toLowerCase()} cách giảng, không đưa đáp án cho con</span>
         </button>
       )}
+
+      {/* Khe mới CheckWorkEntry: Chấm vở con đã làm (Prompt 14 Phần A Mục 2.1) */}
+      {(() => {
+        const CheckWorkEntrySlot = getSlot(theme, 'CheckWorkEntry')
+        if (!CheckWorkEntrySlot) return null
+        return (
+          <div style={{ marginBottom: 12 }}>
+            <CheckWorkEntrySlot
+              childName={child.name}
+              onStart={() => go('check')}
+            />
+          </div>
+        )
+      })()}
 
       {/* Lựa chọn phụ: Ôn đồ chơi & Hẹn giờ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 4 }}>
@@ -1968,6 +1982,42 @@ export function Done() {
         <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
         <b style={{ fontSize: 16 }}>{problem.answer}</b>
         {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
+      </div>
+
+      {/* Lời mời chấm vở sau khi hoàn thành bài học (Prompt 14 Mục 2.1) */}
+      <div
+        className="card"
+        data-testid="done-check-work-invite"
+        style={{
+          padding: '12px 14px',
+          border: '1.5px dashed var(--c-primary, #7C3AED)',
+          background: 'var(--c-surface-2, rgba(124, 58, 237, 0.05))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          cursor: 'pointer',
+          borderRadius: 14,
+        }}
+        onClick={() => {
+          patch({
+            checkWorkInit: {
+              sessionId: S.sessionId || `sess_${Date.now()}`,
+              problemText: problem?.ocr || problem?.text || problem?.de_bai || '',
+            },
+          })
+          go('check')
+        }}
+      >
+        <div>
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-primary, #7C3AED)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            📝 Chấm vở AI
+          </span>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)', marginTop: 2 }}>
+            {child.name} làm vào vở chưa? <b>Chụp để AI xem lại ›</b>
+          </div>
+        </div>
+        <span style={{ fontSize: 22 }}>📷</span>
       </div>
 
       <div className="card plum pop" style={{ border: '2px solid var(--plum)' }}>
@@ -4846,5 +4896,916 @@ export function Profile() {
         </button>
       </div>
     </>
+  )
+}
+
+/* ============================================================
+   📝 13. CHẤM VỞ, KHÔNG SỬA HỘ (Prompt 14 Phần A)
+   ============================================================ */
+export function CheckWork() {
+  const { S, patch, go, toast, boom, stats, setStats } = useContext(AppCtx)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+  const childName = child?.name || 'Mít'
+
+  const initData = S.checkWorkInit || {}
+  const [step, setStep] = useState('capture') // capture | scanning | review | grading | result_parent | result_child | retake | celebration | blur | invalid_scope
+  const [problemText, setProblemText] = useState(initData.problemText || '')
+  const [sessionId, setSessionId] = useState(initData.sessionId || null)
+  const [recheckOf, setRecheckOf] = useState(null)
+  const [checkId, setCheckId] = useState(null)
+  const [lines, setLines] = useState([])
+  const [linesEdited, setLinesEdited] = useState(0)
+  const [gradeResult, setGradeResult] = useState(null)
+  const [isHoldingAnswer, setIsHoldingAnswer] = useState(false)
+  const [expandHint2, setExpandHint2] = useState(false)
+  const [editingLineIdx, setEditingLineIdx] = useState(null)
+  const [editingText, setEditingText] = useState('')
+  const [candiesAdded, setCandiesAdded] = useState(false)
+  const [alreadyHadCandyTonight, setAlreadyHadCandyTonight] = useState(false)
+
+  const fileInputRef = useRef(null)
+  const retakeInputRef = useRef(null)
+
+  // Khởi tạo trạng thái ban đầu nếu có bài từ Xong bài
+  useEffect(() => {
+    if (initData.problemText) {
+      setProblemText(initData.problemText)
+    }
+    if (initData.sessionId) {
+      setSessionId(initData.sessionId)
+    }
+  }, [initData])
+
+  // Xử lý nén ảnh (tối đa 1280px, jpeg 0.8) và gửi đọc
+  const processAndReadImage = async (file, isRetake = false, isSelfie = false) => {
+    try {
+      setStep('scanning')
+      soundTap()
+
+      let compressedBlob = file
+      if (file instanceof File || file instanceof Blob) {
+        try {
+          const compRes = await compressImage(file, 1280, 0.8)
+          compressedBlob = compRes.blob
+        } catch (e) {
+          console.warn('Compress image fallback to original:', e)
+        }
+      }
+
+      const res = await checkWorkRead({
+        image: compressedBlob,
+        childId: child?.id || 'child_default',
+        sessionId,
+        problemText,
+        recheckOf: isRetake ? checkId : undefined,
+        isSelfie,
+      })
+
+      if (res.doc_duoc === false) {
+        if (res.ly_do?.includes('không phải bài làm')) {
+          setStep('invalid_scope')
+          return
+        }
+        setStep('blur')
+        return
+      }
+
+      setCheckId(res.check_id)
+      if (res.de_bai) setProblemText(res.de_bai)
+      setLines(res.cac_dong || [])
+      setLinesEdited(0)
+
+      if (isRetake) {
+        // Tự động chấm lại sau khi con chụp bài đã sửa
+        await doGrade(res.check_id, res.de_bai || problemText, res.cac_dong || [], 0, true)
+      } else {
+        setStep('review')
+      }
+    } catch (err) {
+      console.error('Lỗi đọc ảnh:', err)
+      if (err.status === 429) {
+        toast('Hôm nay đã dùng hết 10 lượt đọc ảnh. Mẹ và bé quay lại vào ngày mai nhé! 🌙')
+      } else {
+        toast('Không thể đọc ảnh, mẹ thử chụp lại hoặc gõ bài làm nhé')
+      }
+      setStep('capture')
+    }
+  }
+
+  // Gọi API chấm bài
+  const doGrade = async (idToGrade, probTxt, linesToGrade, editedFlag = linesEdited, isRetake = false) => {
+    try {
+      setStep('grading')
+      soundPop()
+
+      const res = await checkWorkGrade({
+        checkId: idToGrade,
+        deBai: probTxt,
+        cacDong: linesToGrade,
+        linesEdited: editedFlag,
+        lop: child?.grade || 'Lớp 3',
+        xungHo: S.parent || 'mẹ',
+        tenCon: childName,
+        recheckOf: isRetake ? checkId : undefined,
+      })
+
+      setGradeResult(res)
+
+      if (isRetake && res.self_fixed === 1) {
+        // Con tự sửa đúng thành công!
+        handleSelfFixedSuccess(res)
+        setStep('celebration')
+      } else if (res.ket_qua === 'dung_het') {
+        // Bài làm ban đầu đã đúng hết
+        handleAllCorrectSuccess(res)
+        setStep('result_parent')
+      } else {
+        setStep('result_parent')
+      }
+    } catch (err) {
+      console.error('Lỗi chấm bài:', err)
+      toast('Có lỗi khi chấm bài, mẹ thử lại nhé')
+      setStep('review')
+    }
+  }
+
+  // Xử lý cộng kẹo và ghi nhận khi con tự sửa thành công
+  const handleSelfFixedSuccess = (res) => {
+    soundFanfare()
+    boom()
+
+    const now = Date.now()
+    const activeId = S.activeId
+    const cStats = S.stats[activeId] || {}
+    const curStudyLog = cStats.studyLog || []
+    const todayKey = getStudyDateKey(now)
+    const alreadyEarned = curStudyLog.some((e) => e.dateKey === todayKey)
+
+    setAlreadyHadCandyTonight(alreadyEarned)
+
+    if (!alreadyEarned) {
+      setCandiesAdded(true)
+      const newEntry = {
+        id: 'sess_' + now + '_' + Math.random().toString(36).slice(2, 6),
+        ts: now,
+        dateKey: todayKey,
+        problemType: `Chấm vở: Tự sửa được lỗi ${res.loai_loi || 'chọn phép tính'}`,
+        kind: 'check',
+        minutes: 10,
+        partial: false,
+      }
+      const updatedLog = [newEntry, ...curStudyLog]
+      patch({
+        stats: {
+          ...S.stats,
+          [activeId]: {
+            ...cStats,
+            studyLog: updatedLog,
+          },
+        },
+      })
+    }
+  }
+
+  const handleAllCorrectSuccess = (res) => {
+    soundSuccess()
+    boom()
+  }
+
+  // Chọn từ phương án thay thế
+  const applyChoice = (lineIdx, choiceVal) => {
+    const updated = lines.map((l, idx) => {
+      if (idx !== lineIdx) return l
+      // Thay số hoặc từ trong nội dung
+      const oldNum = l.lua_chon?.[0] || ''
+      const newContent = oldNum ? l.noi_dung.replace(oldNum, choiceVal) : choiceVal
+      return { ...l, noi_dung: newContent, chac_chan: 0.95 }
+    })
+    setLines(updated)
+    setLinesEdited(1)
+    toast(`Đã đổi dòng ${lines[lineIdx].so} thành "${choiceVal}"`)
+  }
+
+  // Sửa thủ công dòng
+  const saveManualEdit = (idx) => {
+    if (!editingText.trim()) return
+    const updated = lines.map((l, i) => (i === idx ? { ...l, noi_dung: editingText.trim(), chac_chan: 1.0 } : l))
+    setLines(updated)
+    setLinesEdited(1)
+    setEditingLineIdx(null)
+    setEditingText('')
+    toast(`Đã cập nhật dòng ${lines[idx].so}`)
+  }
+
+  // Dùng ảnh mẫu 3 hộp bút
+  const handleUseSample = () => {
+    setProblemText('Bài 3. Có 3 hộp, mỗi hộp 8 bút. Mẹ cho bạn Na 5 bút. Hỏi còn mấy bút?')
+    setLines([
+      { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.95 },
+      { so: 2, noi_dung: '24 + 5 = 29 (cây)', chac_chan: 0.62, lua_chon: ['29', '20'] },
+      { so: 3, noi_dung: 'Đáp số: 29 cây bút', chac_chan: 0.92 },
+    ])
+    setCheckId(`chk_sample_${Date.now()}`)
+    setLinesEdited(0)
+    setStep('review')
+    toast('Đã nạp bài mẫu 3 hộp bút 📝')
+  }
+
+  // Thử chụp lại với bài đã sửa mẫu
+  const handleUseSampleRetake = async () => {
+    const fixedLines = [
+      { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.98 },
+      { so: 2, noi_dung: '24 - 5 = 19 (cây)', chac_chan: 0.95 },
+      { so: 3, noi_dung: 'Đáp số: 19 cây bút', chac_chan: 0.96 },
+    ]
+    setLines(fixedLines)
+    await doGrade(checkId, problemText, fixedLines, 0, true)
+  }
+
+  return (
+    <div className="check-work-flow" data-testid="check-work-screen" style={{ paddingBottom: 24 }}>
+      {/* 1. MÀN HÌNH CHỤP ẢNH VỞ */}
+      {step === 'capture' && (
+        <>
+          <Header title={`Chụp vở của ${childName}`} back="home" />
+
+          <div
+            className="card"
+            style={{
+              padding: 16,
+              background: 'var(--c-surface, #fff)',
+              border: '2px solid var(--c-line, #E2E8F0)',
+              borderRadius: 'var(--radius-card, 18px)',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                height: 180,
+                border: '2px dashed var(--c-primary, #7C3AED)',
+                borderRadius: 14,
+                background: 'var(--c-surface-2, #F8FAFC)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: 16,
+                boxSizing: 'border-box',
+              }}
+            >
+              <span style={{ fontSize: 44 }}>📸</span>
+              <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Đặt trang vở vào giữa khung chụp</b>
+              <span style={{ fontSize: 12.5, color: 'var(--c-text-2)' }}>AI sẽ đọc từng dòng phép tính của con</span>
+            </div>
+
+            <div
+              className="card"
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: 'var(--c-surface-2, #F1F5F9)',
+                border: '1px solid var(--c-line)',
+                textAlign: 'left',
+                fontSize: 13,
+                lineHeight: 1.5,
+              }}
+            >
+              <b style={{ color: 'var(--c-text)', display: 'block', marginBottom: 4 }}>Để AI đọc đúng:</b>
+              <div>• Chụp cả <b>đề và bài làm</b></div>
+              <div>• Một bài mỗi lần, đủ sáng</div>
+              <div>• Giữ máy thẳng, không che chữ</div>
+            </div>
+
+            <span style={{ fontSize: 12, color: 'var(--c-text-2)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              🔒 Ảnh chỉ dùng để đọc rồi xoá, không lưu trên máy chủ.
+            </span>
+
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) processAndReadImage(f)
+              }}
+            />
+
+            <button
+              data-testid="btn-capture-camera"
+              className="btn primary"
+              style={{ width: '100%', padding: '14px', fontSize: 16, fontWeight: 800 }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              📷 Chụp ảnh vở
+            </button>
+
+            <button
+              data-testid="btn-choose-photo"
+              className="btn ghost"
+              style={{ width: '100%', padding: '12px', fontSize: 14, fontWeight: 700 }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              🖼️ Chọn ảnh có sẵn
+            </button>
+
+            <button
+              data-testid="btn-sample-photo"
+              className="chip"
+              style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
+              onClick={handleUseSample}
+            >
+              ✨ Dùng ảnh mẫu 3 hộp bút (Dùng thử)
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* 2. MÀN HÌNH ĐANG QUÉT ẢNH */}
+      {step === 'scanning' && (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ fontSize: 48, marginBottom: 16, animation: 'pulse-dot 1.2s infinite' }}>🔍</div>
+          <h3 style={{ fontSize: 19, fontWeight: 800, color: 'var(--c-text)' }}>AI đang đọc chữ viết tay...</h3>
+          <p style={{ fontSize: 14, color: 'var(--c-text-2)', marginTop: 6 }}>
+            Đọc từng dòng bài giải của {childName}, giữ nguyên bài làm của con
+          </p>
+        </div>
+      )}
+
+      {/* 3. MÀN HÌNH AI ĐỌC, MẸ SOÁT */}
+      {step === 'review' && (
+        <>
+          <Header title="AI đọc được thế này" back="home" rightAction={{ label: 'Chụp lại', onClick: () => setStep('capture') }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                color: 'var(--c-primary, #7C3AED)',
+                background: 'rgba(124, 58, 237, 0.1)',
+                padding: '4px 10px',
+                borderRadius: 999,
+              }}
+            >
+              ✨ Đọc chữ viết tay · {lines.length} dòng
+            </span>
+            <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Mẹ chạm để sửa chỗ AI đọc nhầm</span>
+          </div>
+
+          {problemText && (
+            <div className="check-work-line2" style={{ background: 'var(--c-surface-2)', borderStyle: 'dashed' }}>
+              <span className="num-badge">Đề</span>
+              <span className="content" style={{ fontSize: 13, fontWeight: 600 }}>{problemText}</span>
+            </div>
+          )}
+
+          {lines.map((ln, idx) => {
+            const isWarn = ln.chac_chan < 0.7
+            const isEditing = editingLineIdx === idx
+
+            return (
+              <div key={idx} style={{ marginBottom: 10 }}>
+                <div className={`check-work-line2 ${isWarn ? 'warn' : ''}`}>
+                  <span className="num-badge">{ln.so || idx + 1}</span>
+                  {isEditing ? (
+                    <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+                      <input
+                        type="text"
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          borderRadius: 8,
+                          border: '1.5px solid var(--c-primary)',
+                          fontSize: 14,
+                          fontWeight: 700,
+                        }}
+                        autoFocus
+                      />
+                      <button className="btn primary" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => saveManualEdit(idx)}>
+                        Lưu
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="content">{ln.noi_dung}</span>
+                      <button
+                        className="edit-btn"
+                        title="Sửa dòng này"
+                        onClick={() => {
+                          setEditingLineIdx(idx)
+                          setEditingText(ln.noi_dung)
+                        }}
+                      >
+                        ✎
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {isWarn && !isEditing && ln.lua_chon && ln.lua_chon.length > 0 && (
+                  <div
+                    className="card"
+                    style={{
+                      padding: '8px 12px',
+                      background: '#FFFBEB',
+                      border: '1px solid #FCD34D',
+                      borderRadius: 12,
+                      marginTop: -4,
+                      marginBottom: 8,
+                      fontSize: 12.5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                    }}
+                  >
+                    <span>
+                      ⚠️ <b>AI chưa chắc một chữ ở dòng {ln.so}</b>: {childName} viết{' '}
+                      <b>{ln.lua_chon.join(' hay ')}</b>?
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {ln.lua_chon.map((opt) => (
+                        <button
+                          key={opt}
+                          className="chip"
+                          style={{
+                            padding: '3px 10px',
+                            fontWeight: 800,
+                            fontSize: 12,
+                            background: '#FDE68A',
+                            color: '#78350F',
+                            border: '1px solid #F59E0B',
+                          }}
+                          onClick={() => applyChoice(idx, opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                      <button
+                        className="chip"
+                        style={{ padding: '3px 10px', fontSize: 12, background: '#fff', border: '1px solid #CBD5E1' }}
+                        onClick={() => {
+                          setEditingLineIdx(idx)
+                          setEditingText(ln.noi_dung)
+                        }}
+                      >
+                        Mẹ sửa
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          <button
+            data-testid="btn-confirm-grade"
+            className="btn primary"
+            style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800, marginTop: 12 }}
+            onClick={() => doGrade(checkId, problemText, lines, linesEdited)}
+          >
+            Đúng rồi, chấm giúp mình
+          </button>
+        </>
+      )}
+
+      {/* 4. MÀN HÌNH ĐANG CHẤM */}
+      {step === 'grading' && (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ fontSize: 48, marginBottom: 16, animation: 'pulse-dot 1.2s infinite' }}>⚙️</div>
+          <h3 style={{ fontSize: 19, fontWeight: 800, color: 'var(--c-text)' }}>AI đang chấm và kiểm tra phép tính...</h3>
+          <p style={{ fontSize: 14, color: 'var(--c-text-2)', marginTop: 6 }}>
+            Giải lại độc lập, kiểm tra từng phép tính và tìm bước sai đầu tiên
+          </p>
+        </div>
+      )}
+
+      {/* 5. MÀN HÌNH KẾT QUẢ CHO MẸ (CHỈ MẸ THẤY) */}
+      {step === 'result_parent' && gradeResult && (
+        <>
+          <Header title="Kết quả cho mẹ" back="home" />
+
+          {/* Vở bài làm có đánh dấu */}
+          <div className="check-work-paper" style={{ marginBottom: 14 }}>
+            {lines.map((ln, idx) => {
+              const lineNum = ln.so || idx + 1
+              const isWrongLine = lineNum === gradeResult.dong_sai_dau_tien
+              const isCorrectLine = gradeResult.ket_qua === 'dung_het' || (gradeResult.dong_sai_dau_tien && lineNum < gradeResult.dong_sai_dau_tien)
+
+              return (
+                <div key={idx} className={`ln ${isWrongLine ? 'q' : isCorrectLine ? 'ok' : ''}`}>
+                  {ln.noi_dung}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Cảnh báo nếu AI chưa chắc */}
+          {gradeResult.ai_uncertain === 1 && (
+            <div
+              className="card"
+              style={{
+                padding: '10px 14px',
+                background: '#FEF3C7',
+                border: '1.5px solid #F59E0B',
+                color: '#92400E',
+                marginBottom: 10,
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              ⚠️ AI chưa chắc một số bước giải, mẹ xem giúp nhé!
+            </div>
+          )}
+
+          {/* Thẻ Chỉ mẹ thấy */}
+          <div
+            className="card"
+            style={{
+              padding: '12px 14px',
+              background: 'rgba(124, 58, 237, 0.05)',
+              border: '2px dashed var(--c-primary, #7C3AED)',
+              borderRadius: 16,
+              marginBottom: 10,
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-primary, #7C3AED)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              🔒 Chỉ mẹ thấy
+            </span>
+            {gradeResult.ket_qua === 'dung_het' ? (
+              <div style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>
+                🎉 Bài làm đúng hoàn toàn! Không có bước sai nào.
+              </div>
+            ) : (
+              <div style={{ marginTop: 4, fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.5 }}>
+                Bước sai đầu tiên: <b>Dòng {gradeResult.dong_sai_dau_tien}</b>.{' '}
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                    background: '#FEE2E2',
+                    color: '#DC2626',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    marginLeft: 4,
+                  }}
+                >
+                  {gradeResult.loai_loi === 'chon_phep_tinh' ? 'Chọn phép tính' : gradeResult.loai_loi === 'tinh_nham' ? 'Tính nhẩm' : gradeResult.loai_loi || 'Cần xem lại'}
+                </span>
+                <div style={{ marginTop: 6, color: 'var(--c-text-2)' }}>
+                  {gradeResult.giai_thich_cho_me}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Thẻ Điểm sáng để khen */}
+          {gradeResult.loi_khen_cu_the && (
+            <div
+              className="card"
+              style={{
+                padding: '12px 14px',
+                background: '#ECFDF5',
+                border: '1.5px solid #10B981',
+                borderRadius: 16,
+                marginBottom: 10,
+              }}
+            >
+              <b style={{ color: '#065F46', fontSize: 13.5, display: 'block', marginBottom: 2 }}>
+                🌟 Điểm sáng để khen {childName}
+              </b>
+              <div style={{ fontSize: 13, color: '#047857', lineHeight: 1.45 }}>
+                {gradeResult.loi_khen_cu_the}
+              </div>
+            </div>
+          )}
+
+          {/* Nút Giữ để xem đáp án đúng (chỉ mẹ) */}
+          <div
+            className="card hold-reveal-card"
+            data-testid="hold-reveal-answer"
+            style={{
+              padding: '14px',
+              textAlign: 'center',
+              border: '1.5px solid var(--c-line)',
+              background: isHoldingAnswer ? '#FEF3C7' : 'var(--c-surface-2)',
+              borderRadius: 14,
+              marginBottom: 16,
+              transition: 'background 0.2s',
+            }}
+            onPointerDown={() => setIsHoldingAnswer(true)}
+            onPointerUp={() => setIsHoldingAnswer(false)}
+            onPointerLeave={() => setIsHoldingAnswer(false)}
+            onMouseDown={() => setIsHoldingAnswer(true)}
+            onMouseUp={() => setIsHoldingAnswer(false)}
+            onMouseLeave={() => setIsHoldingAnswer(false)}
+            onTouchStart={() => setIsHoldingAnswer(true)}
+            onTouchEnd={() => setIsHoldingAnswer(false)}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault()
+                setIsHoldingAnswer(true)
+              }
+            }}
+            onKeyUp={(e) => {
+              if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault()
+                setIsHoldingAnswer(false)
+              }
+            }}
+          >
+            {isHoldingAnswer ? (
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#92400E', textTransform: 'uppercase' }}>
+                  Đáp án chuẩn (Chỉ mẹ):
+                </span>
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#78350F', marginTop: 2 }}>
+                  {gradeResult.dap_an_dung_cho_me || '19 cây bút'}
+                </div>
+              </div>
+            ) : (
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text-2)' }}>
+                ✋ Giữ để xem đáp án đúng (chỉ mẹ)
+              </span>
+            )}
+          </div>
+
+          {gradeResult.ket_qua === 'dung_het' ? (
+            <button
+              className="btn primary"
+              style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800 }}
+              onClick={() => go('home')}
+            >
+              🎉 Con làm đúng hết! Về trang chủ
+            </button>
+          ) : (
+            <button
+              data-testid="btn-view-child-question"
+              className="btn primary"
+              style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800 }}
+              onClick={() => setStep('result_child')}
+            >
+              Xem câu hỏi cho {childName} tự sửa ➔
+            </button>
+          )}
+        </>
+      )}
+
+      {/* 6. MÀN HÌNH CÂU HỎI ĐỂ CON TỰ SỬA */}
+      {step === 'result_child' && gradeResult && (
+        <>
+          <Header title={`Để ${childName} tự phát hiện`} back={() => setStep('result_parent')} />
+
+          {/* Bong bóng đọc to câu hỏi mức 1 */}
+          <div className="speech-bubble-container">
+            <div className="speech-bubble-avatar">🐻</div>
+            <div className="speech-bubble-body">
+              <div className="speech-bubble-label">
+                <span>Mẹ đọc to · gợi ý 1</span>
+                <SpeakBtn text={gradeResult.cau_hoi_cho_con?.muc_1} />
+              </div>
+              <p className="speech-bubble-text">
+                "{gradeResult.cau_hoi_cho_con?.muc_1 || 'Con đọc lại đề nhé. Phép tính này làm thế nào nhỉ?'}"
+              </p>
+            </div>
+          </div>
+
+          {/* Gợi ý 2 bằng đồ vật (chạm mới mở) */}
+          {gradeResult.cau_hoi_cho_con?.muc_2 && (
+            <div
+              className="card"
+              style={{
+                padding: '12px 14px',
+                background: 'var(--c-surface-2)',
+                border: '1.5px solid var(--c-line)',
+                borderRadius: 16,
+                marginBottom: 12,
+                cursor: 'pointer',
+              }}
+              onClick={() => setExpandHint2(!expandHint2)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <b style={{ fontSize: 13.5, color: 'var(--c-text)' }}>
+                  💡 Gợi ý 2 (chỉ mở khi con vẫn chưa thấy)
+                </b>
+                <span style={{ fontSize: 14 }}>{expandHint2 ? '▲' : '▼'}</span>
+              </div>
+              {expandHint2 && (
+                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--c-text-2)', lineHeight: 1.45, borderTop: '1px solid var(--c-line)', paddingTop: 8 }}>
+                  {gradeResult.cau_hoi_cho_con.muc_2}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Thẻ AI cố ý không làm */}
+          <div
+            className="card"
+            style={{
+              padding: '12px 14px',
+              background: 'var(--c-surface)',
+              border: '1.5px solid var(--c-line)',
+              borderRadius: 16,
+              marginBottom: 12,
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              AI cố ý không làm
+            </span>
+            <div style={{ marginTop: 4, fontSize: 13.5, color: '#64748B' }}>
+              <span style={{ textDecoration: 'line-through', textDecorationColor: '#EF4444', textDecorationThickness: 2 }}>
+                Khoanh đỏ và ghi đáp án đúng
+              </span>
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginTop: 2 }}>
+              Con tự tìm ra và tự sửa thì mới nhớ lâu! ✨
+            </div>
+          </div>
+
+          <div style={{ fontSize: 12, color: 'var(--c-text-2)', textAlign: 'center', marginBottom: 14 }}>
+            ✨ Câu hỏi đã qua bộ chặn an toàn: không chứa đáp án trong câu.
+          </div>
+
+          <button
+            data-testid="btn-retake-fixed"
+            className="btn primary"
+            style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800 }}
+            onClick={() => setStep('retake')}
+          >
+            {childName} sửa xong, chụp lại 📷
+          </button>
+        </>
+      )}
+
+      {/* 7. MÀN HÌNH CHỤP LẠI (RETAKE) */}
+      {step === 'retake' && (
+        <>
+          <Header title={`Chụp lại vở của ${childName}`} back={() => setStep('result_child')} />
+
+          <div
+            className="card"
+            style={{
+              padding: 20,
+              background: 'var(--c-surface)',
+              border: '2px solid var(--c-line)',
+              borderRadius: 18,
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <div style={{ fontSize: 44 }}>📷</div>
+            <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--c-text)' }}>
+              Chụp lại bài sau khi {childName} đã sửa
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: 0 }}>
+              AI sẽ chấm lại để ghi nhận <b>"con tự sửa được"</b> và cộng kẹo vào lọ!
+            </p>
+
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              ref={retakeInputRef}
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) processAndReadImage(f, true)
+              }}
+            />
+
+            <button
+              data-testid="btn-take-retake-photo"
+              className="btn primary"
+              style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800, marginTop: 8 }}
+              onClick={() => retakeInputRef.current?.click()}
+            >
+              📷 Chụp lại bài đã sửa
+            </button>
+
+            <button
+              data-testid="btn-sample-retake"
+              className="chip"
+              style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
+              onClick={handleUseSampleRetake}
+            >
+              ✨ Dùng bài đã sửa mẫu (19 cây bút)
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* 8. MÀN HÌNH CHÚC MỪNG CON TỰ SỬA ĐÚNG (CELEBRATION) */}
+      {step === 'celebration' && (
+        <div style={{ textAlign: 'center', padding: '20px 8px' }}>
+          <div style={{ fontSize: 60, marginBottom: 8 }}>🎉</div>
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--c-text)', margin: '0 0 6px' }}>
+            {childName} tự tìm ra lỗi sau 1 câu hỏi!
+          </h2>
+          <p style={{ fontSize: 14, color: 'var(--c-text-2)', marginBottom: 16 }}>
+            Bé không cần chữa hộ mà tự tìm ra cách làm đúng!
+          </p>
+
+          {/* Vở bài làm đúng hết */}
+          <div className="check-work-paper" style={{ textAlign: 'left', marginBottom: 14 }}>
+            {lines.map((ln, idx) => (
+              <div key={idx} className="ln ok">
+                {ln.noi_dung}
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="card"
+            style={{
+              padding: '14px 16px',
+              background: '#ECFDF5',
+              border: '2px solid #10B981',
+              borderRadius: 16,
+              marginBottom: 12,
+              textAlign: 'left',
+            }}
+          >
+            <b style={{ color: '#065F46', fontSize: 15, display: 'block', marginBottom: 2 }}>
+              {candiesAdded ? '🍬 +1 viên kẹo vào lọ!' : '🍬 Đã tính vào lọ kẹo tối nay'}
+            </b>
+            <div style={{ fontSize: 13, color: '#047857' }}>
+              Ghi vào báo cáo tuần: <b>tự sửa được lỗi {gradeResult?.loai_loi === 'chon_phep_tinh' ? 'chọn phép tính' : gradeResult?.loai_loi || 'toán'}</b>.
+            </div>
+          </div>
+
+          <div
+            className="card"
+            style={{
+              padding: '12px 14px',
+              background: 'var(--c-surface-2)',
+              border: '1.5px solid var(--c-line)',
+              borderRadius: 16,
+              marginBottom: 20,
+              textAlign: 'left',
+              fontSize: 13,
+              color: 'var(--c-text-2)',
+            }}
+          >
+            <b style={{ color: 'var(--c-text)', display: 'block', marginBottom: 2 }}>🧠 AI theo dõi tiếp:</b>
+            Lần sau gặp dạng bài này, AI sẽ nhắc {childName} chú ý từ khoá trước khi thực hiện phép tính.
+          </div>
+
+          <button
+            data-testid="btn-done-check-work"
+            className="btn primary"
+            style={{ width: '100%', padding: '14px', fontSize: 16, fontWeight: 800 }}
+            onClick={() => go('home')}
+          >
+            Xong, về trang chủ
+          </button>
+        </div>
+      )}
+
+      {/* 9. TRẠNG THÁI PHỤ: ẢNH MỜ / TỐI */}
+      {step === 'blur' && (
+        <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+          <div style={{ fontSize: 50, marginBottom: 12 }}>🌫️</div>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Ảnh hơi mờ hoặc thiếu sáng</h3>
+          <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '8px 0 16px' }}>
+            AI chưa đọc rõ nét chữ của {childName}. Mẹ hãy bật đèn, giữ chắc tay và chụp gần hơn nhé!
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button className="btn primary" style={{ padding: '12px' }} onClick={() => setStep('capture')}>
+              📷 Chụp lại ảnh khác
+            </button>
+            <button className="btn ghost" style={{ padding: '12px' }} onClick={handleUseSample}>
+              ✨ Dùng bài mẫu để thử tính năng
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 10. TRẠNG THÁI PHỤ: KHÔNG PHẢI BÀI LÀM */}
+      {step === 'invalid_scope' && (
+        <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+          <div style={{ fontSize: 50, marginBottom: 12 }}>🖼️</div>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Đây không phải bài làm của con</h3>
+          <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '8px 0 16px' }}>
+            AI chỉ nhận diện trang vở bài tập, không nhận diện ảnh selfie, đồ chơi hay phong cảnh gia đình.
+          </p>
+          <button className="btn primary" style={{ width: '100%', padding: '12px' }} onClick={() => setStep('capture')}>
+            📷 Chụp trang vở bài tập
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

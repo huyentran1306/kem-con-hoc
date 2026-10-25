@@ -15,6 +15,7 @@ import {
   DefaultDoneCelebration,
   DefaultTeachBackPicker,
   DefaultDoneNext,
+  DefaultCheckWorkEntry,
 } from './defaultSlots'
 
 import {
@@ -84,6 +85,7 @@ const DEFAULT_SLOTS = {
   DoneCelebration: DefaultDoneCelebration,
   TeachBackPicker: DefaultTeachBackPicker,
   DoneNext: DefaultDoneNext,
+  CheckWorkEntry: DefaultCheckWorkEntry,
 }
 
 export function getSlot(themeId, slotName) {

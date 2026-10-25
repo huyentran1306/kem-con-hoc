@@ -1210,3 +1210,154 @@ export async function markFamilyReminderDone({ token, announcementId }) {
   })
   return res.json()
 }
+
+/* ============================================================
+   CHẤM VỞ, KHÔNG SỬA HỘ (Prompt 14 Phần A)
+   ============================================================ */
+
+export async function checkWorkRead({ image, childId, sessionId, problemText, recheckOf, isSelfie }) {
+  if (isTrialActive()) {
+    await new Promise((r) => setTimeout(r, 600))
+    if (isSelfie) {
+      return {
+        check_id: `chk_trial_${Date.now()}_rejected`,
+        de_bai: problemText || '',
+        cac_dong: [],
+        doc_duoc: false,
+        ly_do: 'không phải bài làm',
+      }
+    }
+    return {
+      check_id: `chk_trial_${Date.now()}`,
+      de_bai: problemText || 'Bài 3. Có 3 hộp, mỗi hộp 8 bút. Mẹ cho bạn Na 5 bút. Hỏi còn mấy bút?',
+      cac_dong: recheckOf
+        ? [
+            { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.98 },
+            { so: 2, noi_dung: '24 - 5 = 19 (cây)', chac_chan: 0.95 },
+            { so: 3, noi_dung: 'Đáp số: 19 cây bút', chac_chan: 0.96 },
+          ]
+        : [
+            { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.95 },
+            { so: 2, noi_dung: '24 + 5 = 29 (cây)', chac_chan: 0.62, lua_chon: ['29', '20'] },
+            { so: 3, noi_dung: 'Đáp số: 29 cây bút', chac_chan: 0.92 },
+          ],
+      doc_duoc: true,
+      ly_do: '',
+    }
+  }
+
+  const token = getAuthToken()
+  const formData = new FormData()
+  if (image instanceof Blob || image instanceof File) {
+    formData.append('image', image)
+  } else if (typeof image === 'string') {
+    formData.append('image', image)
+  }
+  if (childId) formData.append('child_id', childId)
+  if (sessionId) formData.append('session_id', sessionId)
+  if (problemText) formData.append('problem_text', problemText)
+  if (recheckOf) formData.append('recheck_of', recheckOf)
+  if (isSelfie) formData.append('is_selfie', 'true')
+
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/read`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || 'Lỗi đọc ảnh bài làm')
+    err.status = res.status
+    err.data = data
+    throw err
+  }
+  return data
+}
+
+export async function checkWorkGrade({ checkId, deBai, cacDong, linesEdited, lop, xungHo, tenCon, recheckOf }) {
+  if (isTrialActive()) {
+    await new Promise((r) => setTimeout(r, 800))
+    const isFixed = cacDong && cacDong.some((d) => (d.noi_dung || d).includes('- 5') || (d.noi_dung || d).includes('19'))
+    if (isFixed || recheckOf) {
+      return {
+        check_id: checkId,
+        ket_qua: 'dung_het',
+        loi_giai_chuan: ['8 + 8 + 8 = 24', '24 - 5 = 19'],
+        dong_sai_dau_tien: null,
+        loai_loi: null,
+        giai_thich_cho_me: 'Con đã sửa lại phép tính đúng hoàn toàn.',
+        gia_tri_dung_dong_sai: null,
+        dap_an_dung_cho_me: '19 cây bút',
+        loi_khen_cu_the: 'Con rất tự giác và tìm ra phép trừ chuẩn xác!',
+        cau_hoi_cho_con: {
+          muc_1: 'Con tự tìm ra phép trừ và làm đúng rồi, con giỏi lắm!',
+          muc_2: '',
+        },
+        self_fixed: 1,
+        guard_action: 'pass',
+      }
+    }
+    return {
+      check_id: checkId,
+      ket_qua: 'co_buoc_sai',
+      loi_giai_chuan: ['8 + 8 + 8 = 24', '24 - 5 = 19'],
+      dong_sai_dau_tien: 2,
+      loai_loi: 'chon_phep_tinh',
+      giai_thich_cho_me: 'Đề là cho đi bạn Na nên phải bớt, con lại làm phép cộng. Lỗi hay gặp khi thấy chữ cho là cộng.',
+      gia_tri_dung_dong_sai: '19',
+      dap_an_dung_cho_me: '19 cây bút',
+      loi_khen_cu_the: 'Dòng 1 con làm đúng phép tính và ghi đơn vị đầy đủ.',
+      cau_hoi_cho_con: {
+        muc_1: 'Con đọc lại đề nhé. Mẹ cho bạn Na 5 cây thì bút của mình nhiều lên hay ít đi?',
+        muc_2: 'Mẹ có 24 que tính, mẹ lấy bớt đi 5 que đưa bạn Na, con xem trên bàn còn mấy que?',
+      },
+      self_fixed: 0,
+      guard_action: 'pass',
+    }
+  }
+
+  const token = getAuthToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/${checkId}/grade`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      de_bai: deBai,
+      cac_dong: cacDong,
+      lines_edited: linesEdited,
+      lop,
+      xung_ho: xungHo,
+      ten_con: tenCon,
+    }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || 'Lỗi chấm bài')
+    err.status = res.status
+    err.data = data
+    throw err
+  }
+  return data
+}
+
+export async function checkWorkGet(checkId) {
+  const token = getAuthToken()
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/${checkId}`, { headers })
+  return res.json()
+}
+
+export async function checkWorkHistory() {
+  const token = getAuthToken()
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/history`, { headers })
+  return res.json()
+}

@@ -871,6 +871,7 @@ const TAB_CAP = {
   home: 'Home', snap: 'SnapHomework', analyze: 'Analyze', explain: 'Explain',
   scaffold: 'Scaffold', done: 'Done', ask: 'AskAI', chat: 'AskAI', toy: 'SnapToy',
   game: 'Game', report: 'Report', profile: 'Profile',
+  check: 'CheckWork', check_work: 'CheckWork',
 }
 
 /* ============================================================

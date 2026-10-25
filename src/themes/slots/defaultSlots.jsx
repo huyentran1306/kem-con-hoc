@@ -584,3 +584,68 @@ export function DefaultDoneNext({ siblingProblem, game, onOpen, onFinish }) {
     </div>
   )
 }
+
+// 13. CheckWorkEntry (Khe thẻ Chấm vở con đã làm - Prompt 14 Phần A)
+export function DefaultCheckWorkEntry({ onStart, childName }) {
+  return (
+    <div
+      className="card check-work-entry-card"
+      data-testid="check-work-entry"
+      style={{
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        border: '2px solid var(--c-primary, #7C3AED)',
+        background: 'var(--c-surface)',
+        borderRadius: 'var(--radius-card, 18px)',
+        position: 'relative',
+        boxShadow: 'var(--shadow-card, 0 4px 14px rgba(0,0,0,0.06))',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: 1,
+            textTransform: 'uppercase',
+            padding: '3px 8px',
+            borderRadius: 999,
+            background: 'var(--c-primary, #7C3AED)',
+            color: '#fff',
+          }}
+        >
+          ✨ Mới · AI Chấm vở
+        </span>
+        <span style={{ fontSize: 20 }}>📝</span>
+      </div>
+      <div>
+        <h3 style={{ fontSize: 16, fontWeight: 800, margin: '2px 0 4px', color: 'var(--c-text)' }}>
+          Chấm vở {childName || 'con'} đã làm
+        </h3>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--c-text-2)', lineHeight: 1.45 }}>
+          Chụp bài {childName || 'con'} làm xong. AI tìm đúng bước sai đầu tiên và đưa mẹ câu hỏi để con <b>tự sửa</b>, không chữa hộ.
+        </p>
+      </div>
+      <button
+        data-testid="btn-start-check-work"
+        className="btn primary"
+        style={{
+          width: '100%',
+          padding: '12px',
+          fontSize: 14,
+          fontWeight: 800,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+        }}
+        onClick={onStart}
+      >
+        <span>✨</span>
+        <span>Chấm vở ngay</span>
+      </button>
+    </div>
+  )
+}
