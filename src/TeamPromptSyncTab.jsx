@@ -279,6 +279,19 @@ export default function TeamPromptSyncTab() {
     await savePromptsToCloud(updated, 'Đã xóa prompt khỏi danh sách')
   }
 
+  // 6b. Đặt lại toàn bộ về Chờ chạy test (Chưa chạy)
+  const handleResetAllPending = async () => {
+    if (!window.confirm('Bạn có chắc muốn đặt lại toàn bộ prompts về trạng thái "CHỜ CHẠY TEST" (Chưa chạy) không?')) return
+    const updated = prompts.map((p) => ({
+      ...p,
+      isRunCompanyAi: false,
+      runBy: '',
+      runAt: '',
+      aiResult: '',
+    }))
+    await savePromptsToCloud(updated, '⏳ Đã đặt lại toàn bộ prompts về CHỜ CHẠY TEST!')
+  }
+
   // 7. Lưu form (Thêm hoặc Sửa)
   const handleSaveForm = async (e) => {
     e?.preventDefault()
@@ -522,6 +535,30 @@ export default function TeamPromptSyncTab() {
             >
               <span>{loading ? '⏳' : '🔄'}</span>
               <span>{loading ? 'Đang sync…' : 'Đồng bộ Cloud'}</span>
+            </button>
+
+            <button
+              onClick={handleResetAllPending}
+              disabled={loading || syncing}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '9px 15px',
+                borderRadius: 10,
+                background: '#FFF8EC',
+                color: '#9A5B00',
+                border: '1.5px solid #F6C56A',
+                fontWeight: 700,
+                fontSize: 12.5,
+                cursor: 'pointer',
+                boxShadow: '0 2px 0 #E2CDAF',
+                transition: 'all 0.15s ease',
+              }}
+              title="Đặt lại toàn bộ 15 prompts về trạng thái Chờ chạy test"
+            >
+              <span>⏳</span>
+              <span>Đặt lại về Chưa Chạy</span>
             </button>
 
             <button
