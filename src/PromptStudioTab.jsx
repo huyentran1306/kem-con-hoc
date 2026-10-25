@@ -1136,15 +1136,34 @@ export default function PromptStudioTab() {
           </div>
 
           {/* TEST BENCH (CHẠY THỬ) */}
-          <div className="prompt-studio-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', padding: 18, display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 18 }}>🧪</span>
-                <b style={{ fontSize: 15, color: '#0F172A' }}>Chạy thử prompt (Test Bench)</b>
+          <div className="prompt-studio-card" style={{ background: '#FFFFFF', borderRadius: 16, border: '1px solid #E2E8F0', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, width: '100%', paddingBottom: 12, borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 22 }}>🧪</span>
+                <div>
+                  <b style={{ fontSize: 16, color: '#0F172A', display: 'block', lineHeight: 1.2 }}>Chạy thử prompt (Test Bench)</b>
+                  <span style={{ fontSize: 12.5, color: '#64748B' }}>Mô phỏng phản hồi AI trực tiếp với các tham số học tập</span>
+                </div>
               </div>
               <button
-                className="admin-btn sm"
-                style={{ background: 'var(--plum)', color: '#fff', fontWeight: 800 }}
+                type="button"
+                className="stitch-btn-primary"
+                style={{
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: 13.5,
+                  padding: '9px 18px',
+                  borderRadius: 10,
+                  border: 'none',
+                  cursor: testRunning || validation.isError ? 'not-allowed' : 'pointer',
+                  opacity: testRunning || validation.isError ? 0.6 : 1,
+                  boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'all 0.15s ease',
+                }}
                 onClick={handleRunTest}
                 disabled={testRunning || validation.isError}
               >
@@ -1153,52 +1172,72 @@ export default function PromptStudioTab() {
             </div>
 
             {/* TEST INPUTS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B' }}>Môn học:</label>
-                <select className="field" style={{ fontSize: 13, padding: 6, width: '100%', boxSizing: 'border-box' }} value={testMon} onChange={(e) => setTestMon(e.target.value)}>
-                  {['Toán', 'Tiếng Việt', 'Tiếng Anh'].map((x) => <option key={x} value={x}>{x}</option>)}
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 5 }}>Môn học:</label>
+                <select
+                  className="stitch-select"
+                  style={{ fontSize: 13.5, padding: '9px 12px', width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1.5px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontWeight: 600 }}
+                  value={testMon}
+                  onChange={(e) => setTestMon(e.target.value)}
+                >
+                  {['Toán', 'Tiếng Việt', 'Tiếng Anh'].map((x) => <option key={x} value={x} style={{ color: '#0F172A', background: '#FFFFFF' }}>{x}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B' }}>Lớp:</label>
-                <select className="field" style={{ fontSize: 13, padding: 6, width: '100%', boxSizing: 'border-box' }} value={testLop} onChange={(e) => setTestLop(e.target.value)}>
-                  {['Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5'].map((x) => <option key={x} value={x}>{x}</option>)}
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 5 }}>Lớp:</label>
+                <select
+                  className="stitch-select"
+                  style={{ fontSize: 13.5, padding: '9px 12px', width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1.5px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontWeight: 600 }}
+                  value={testLop}
+                  onChange={(e) => setTestLop(e.target.value)}
+                >
+                  {['Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5'].map((x) => <option key={x} value={x} style={{ color: '#0F172A', background: '#FFFFFF' }}>{x}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B' }}>Bộ sách:</label>
-                <select className="field" style={{ fontSize: 13, padding: 6, width: '100%', boxSizing: 'border-box' }} value={testSach} onChange={(e) => setTestSach(e.target.value)}>
-                  {['Kết nối tri thức', 'Chân trời sáng tạo', 'Cánh Diều'].map((x) => <option key={x} value={x}>{x}</option>)}
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 5 }}>Bộ sách:</label>
+                <select
+                  className="stitch-select"
+                  style={{ fontSize: 13.5, padding: '9px 12px', width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1.5px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontWeight: 600 }}
+                  value={testSach}
+                  onChange={(e) => setTestSach(e.target.value)}
+                >
+                  {['Kết nối tri thức', 'Chân trời sáng tạo', 'Cánh Diều'].map((x) => <option key={x} value={x} style={{ color: '#0F172A', background: '#FFFFFF' }}>{x}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B' }}>Giọng:</label>
-                <select className="field" style={{ fontSize: 13, padding: 6, width: '100%', boxSizing: 'border-box' }} value={testGiong} onChange={(e) => setTestGiong(e.target.value)}>
-                  {['Nhẹ nhàng', 'Vui nhộn', 'Ngắn gọn'].map((x) => <option key={x} value={x}>{x}</option>)}
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 5 }}>Giọng:</label>
+                <select
+                  className="stitch-select"
+                  style={{ fontSize: 13.5, padding: '9px 12px', width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1.5px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontWeight: 600 }}
+                  value={testGiong}
+                  onChange={(e) => setTestGiong(e.target.value)}
+                >
+                  {['Nhẹ nhàng', 'Vui nhộn', 'Ngắn gọn'].map((x) => <option key={x} value={x} style={{ color: '#0F172A', background: '#FFFFFF' }}>{x}</option>)}
                 </select>
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B' }}>Đề bài mẫu:</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 5 }}>Đề bài mẫu:</label>
               <input
-                className="field"
-                style={{ fontSize: 13, padding: 8, width: '100%', boxSizing: 'border-box' }}
+                className="stitch-input"
+                style={{ fontSize: 13.5, padding: '10px 14px', width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1.5px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A' }}
                 value={testDeBai}
                 onChange={(e) => setTestDeBai(e.target.value)}
-                placeholder="Nhập đề bài mẫu để test..."
+                placeholder="Ví dụ: Mẹ mua 9 quả táo. Mẹ cho Na 3 quả. Hỏi mẹ còn mấy quả táo?"
               />
             </div>
 
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B' }}>Ghi chú phụ huynh (nếu có):</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 5 }}>Ghi chú phụ huynh (nếu có):</label>
               <input
-                className="field"
-                style={{ fontSize: 13, padding: 8, width: '100%', boxSizing: 'border-box' }}
+                className="stitch-input"
+                style={{ fontSize: 13.5, padding: '10px 14px', width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1.5px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A' }}
                 value={testGhiChu}
                 onChange={(e) => setTestGhiChu(e.target.value)}
-                placeholder="Nhập ghi chú phụ huynh để thử nghiệm prompt 3b..."
+                placeholder="Ví dụ: Con chưa học phép nhân, giảng bằng phép cộng/trừ nhé."
               />
             </div>
 
