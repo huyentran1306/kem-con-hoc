@@ -140,3 +140,53 @@ Tài liệu theo dõi quá trình thực hiện 5 Chặng theo đúng quy địn
 - **Worker version ID**: `c59c3f95-f32b-4bab-98d3-3e819e4b4d2d`
 - **Đường dẫn Preview Chặng 2**: [https://preview-d14-ch2.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch2.kem-con-hoc-5xf.pages.dev)
 
+---
+
+## 🎯 BÁO CÁO CHẶNG 3: PHẦN B — NGHE CON GIẢNG LẠI (TEACH-BACK AI)
+
+### 1. Tóm tắt kết quả
+- **Tính năng hoàn thành**: Toàn bộ quy trình lắng nghe và đánh giá lời giảng lại của học sinh theo phương pháp Metacognition & Peer Teaching:
+  1. **Thu âm lời con giảng (30-60 giây)**: MediaRecorder ghi âm giọng nói với thanh sóng âm thanh động (`audio-waves`), đồng hồ đếm ngược `00:xx / 01:00`, nút "Dừng & Chấm bài giảng", và nút nạp tức thì lời giảng mẫu của bé Mít (3 hộp bút).
+  2. **Bóc băng âm thanh (`/api/v1/ai/teach-back/transcribe`)**: Chuyển giọng nói thành văn bản tiếng Việt, hỗ trợ phụ huynh soát và chỉnh sửa nhanh nếu micro nghe nhầm.
+  3. **Khử ảo giác trích dẫn (Anti-Hallucination Quote Checker - `verifyQuote`)**: AI bắt buộc phải trích dẫn câu nói thật của con. Bộ kiểm tra độc lập tại Worker chuẩn hóa Unicode tiếng Việt (`normalizeViForMatch`), xác thực trích dẫn có tồn tại trong transcript. Nếu AI bịa trích dẫn, hệ thống tự động hủy điểm tiêu chí đó (`dat: false`), xóa trích dẫn ảo giác, và bật cờ cảnh báo `hallucination_detected = 1`.
+  4. **Rubric 4 tiêu chí sư phạm cốt lõi**:
+     - `du_kien`: Nêu đủ dữ kiện của đề bài (có trích dẫn thật).
+     - `phep_tinh`: Chọn đúng phép tính cần làm (có trích dẫn thật).
+     - `ket_qua`: Ra đúng kết quả từng bước (có trích dẫn thật).
+     - `vi_sao`: Giải thích được vì sao làm như vậy (có trích dẫn thật).
+  5. **Đề xuất mức hiểu bài tự chủ (`computeSuggestedLevel`)**:
+     - `self` (Tự chủ): Đạt cả 4/4 tiêu chí.
+     - `hint` (Cần gợi ý): Đạt 2 đến 3 tiêu chí.
+     - `guided` (Cần hướng dẫn): Đạt 0 đến 1 tiêu chí.
+  6. **Gợi ý câu hỏi thêm cho mẹ (Vòng 2)**: Nếu con chưa đạt tiêu chí `vi_sao`, AI gợi ý câu hỏi để mẹ hỏi tiếp. Câu hỏi này được lọc qua `checkAnswerLeak()`, tuyệt đối không làm lộ đáp án cuối cùng.
+  7. **Quyền quyết định tối cao của phụ huynh**: Mẹ luôn là người bấm nút chốt mức hiểu bài hôm nay (`🌟 Con tự làm được`, `🟡 Con cần gợi ý`, `🔴 Mẹ phải hướng dẫn nhiều`). Khi mẹ chọn, hệ thống gọi `/api/v1/ai/teach-back/:id/confirm` lưu lại mức chính thức vào cơ sở dữ liệu `teach_backs` và lịch sử học tập.
+  8. **Trang bị đầy đủ trên 8 bộ Theme**: Đạt chuẩn tương phản WCAG AA trên cả 8 bộ theme (`candy`, `bear`, `bento`, `sticker`, `notebook`, `garden`, `aurora`, `chalk`).
+
+### 2. Các file đã tạo / chỉnh sửa
+- **`ai-gateway-worker/src/teach_back.js` & `src/teach_back.js`**: Core module xử lý bóc băng giọng nói, khử ảo giác trích dẫn, chấm điểm 4 tiêu chí, đề xuất mức tự chủ và chặn rò rỉ đáp án.
+- **`ai-gateway-worker/src/index.js`**: Thêm các routes:
+  - `POST /api/v1/ai/teach-back/transcribe`: Bóc băng audio Blob/Base64.
+  - `POST /api/v1/ai/teach-back/grade`: Chấm lời con nói qua Prompt 14d, lọc ảo giác, lưu vào bảng `teach_backs`.
+  - `POST /api/v1/ai/teach-back/:id/confirm`: Phụ huynh chốt mức hiểu bài cuối cùng.
+- **`src/api.js`**: Client API endpoints `teachBackTranscribe()`, `teachBackGrade()`, `teachBackConfirm()`.
+- **`src/screens.jsx`**: Thành phần `TeachBackCard` tích hợp trực tiếp tại màn hình Hoàn thành bài (`Done`), cung cấp đầy đủ các trạng thái ghi âm, bóc băng, xem lại, hiển thị 4 tiêu chí kèm trích dẫn thật, lời khen, và các nút chốt mức.
+- **`src/styles.css`**: CSS cho hiệu ứng sóng âm `audio-waves`, hiệu ứng ghi âm `recording-dot`, hàng tiêu chí `criterion-row` và trích dẫn `criterion-quote`.
+- **`scripts/test-dot14-chang-3.mjs`**: 17 ca kiểm thử tự động Chặng 3 (chuẩn hóa tiếng Việt, khử ảo giác, rubric 4 tiêu chí, đề xuất mức, chặn lộ đáp án và gọi live worker).
+
+### 3. Kết quả kiểm thử
+- **Unit & Logic test (`scripts/test-dot14-chang-3.mjs`)**: 17/17 ca PASSED (0 FAIL).
+  - Chuẩn hóa tiếng Việt: Đạt.
+  - Khử ảo giác trích dẫn: Bắt chính xác câu trích dẫn không có thật.
+  - Đề xuất mức tự chủ: Đạt cả 4 ngưỡng (4/4 -> self, 3/4 -> hint, 2/4 -> hint, 1/4 -> guided).
+  - Khử câu hỏi rò rỉ đáp án trong `cau_hoi_them`: Đạt.
+  - Tích hợp Live Gateway Worker: HTTP 200 OK, trả đủ 4 tiêu chí và lưu confirm thành công.
+- **Full test suite (`npm test`)**: 19 bộ test passed 100%.
+- **Vite Production Build**: Build thành công trong 268ms.
+
+### 4. Mã Commit và Đường dẫn Bản Preview Chặng 3
+- **Mã commit (workspace)**: `462ff3e` (`dot14-chang-3: implement teach-back UI, quote verification, and student autonomy levels`)
+- **Mã commit (worker)**: `9d33fb2` (`dot14-chang-3: implement teach-back AI grading, quote verification, and endpoints`)
+- **Worker version ID**: `a087ce4d-6080-4875-80d7-daca0f8a5f2f`
+- **Đường dẫn Preview Chặng 3**: [https://preview-d14-ch3.kem-con-hoc-5xf.pages.dev](https://preview-d14-ch3.kem-con-hoc-5xf.pages.dev)
+
+
