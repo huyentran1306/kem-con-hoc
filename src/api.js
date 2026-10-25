@@ -36,8 +36,9 @@ export function removeAuthToken() {
 }
 
 export function getAdminToken() {
+  // Đợt 15: token phiên quản trị do máy chủ cấp (khoá mới, xem src/adminApi.js)
   try {
-    return localStorage.getItem('kem-con-hoc:admin-auth') || ''
+    return localStorage.getItem('kem-con-hoc:admin-token') || ''
   } catch {}
   return ''
 }

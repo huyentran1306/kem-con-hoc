@@ -1,11 +1,35 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { GATEWAY } from './api'
-import { toast } from './utils'
+import { onToast } from './utils'
+import {
+  adminFetch,
+  readAdminToken,
+  saveAdminToken,
+  clearAdminToken,
+  ADMIN_UNAUTHORIZED_EVENT,
+  ADMIN_LOCKED_EVENT,
+} from './adminApi'
 import './admin.css'
 
-// Subsystems
-import { BearMascot } from './AdminMascot'
+// Bộ quy chuẩn giao diện dùng chung
+import { ToastHost, ConfirmHost, staffToast, EmptyState, Button, BearMascot } from './ui/staff'
+
+// Khung admin (Đợt 15 · Chặng 2)
 import { AdminLockScreen } from './AdminLockScreen'
+import { ShellSidebar } from './admin/ShellSidebar.jsx'
+import { ShellHeader } from './admin/ShellHeader.jsx'
+import { ShellLogin, ShellChecking } from './admin/ShellLogin.jsx'
+import {
+  ADMIN_PAGES,
+  pageById,
+  pagePath,
+  pageIdFromLocation,
+  canSeePage,
+  visiblePages,
+  isAdminLocation,
+} from './admin/ShellRoutes.jsx'
+
+// Các trang
 import { AdminOverviewTab } from './AdminOverviewTab'
 import { AdminFamiliesTab } from './AdminFamiliesTab'
 import { AdminSessionsTab } from './AdminSessionsTab'
@@ -13,631 +37,390 @@ import { AdminReportsTab } from './AdminReportsTab'
 import { AdminTeachersTab } from './AdminTeachersTab'
 import { AdminConfigTab } from './AdminConfigTab'
 import { AdminToolsTab } from './AdminToolsTab'
-import {
-  BearOverviewIcon,
-  BearFamiliesIcon,
-  BearSessionsIcon,
-  BearReportsIcon,
-  BearTeachersIcon,
-  BearConfigIcon,
-  BearToolsIcon,
-  BearSubModelIcon,
-  BearSubPromptIcon,
-  BearSubRouterIcon,
-  BearSubScopeIcon,
-  BearSubThemesIcon,
-  BearSubAdminsIcon,
-  BearSubAuditIcon,
-  BearSubInfraIcon,
-  BearSubZaloIcon,
-  BearSubSqlIcon,
-  BearSubSyncIcon,
-} from './AdminBearIcons'
 import { AdminSafetyTab } from './AdminSafetyTab.jsx'
 
-const ADMIN_STORAGE_KEY = 'kem-con-hoc:admin-auth'
-const ADMIN_THEME_KEY = 'kem-con-hoc:admin-theme'
-const ADMIN_PROFILE_KEY = 'kem-con-hoc:admin-profile'
+/**
+ * Đợt 15: cờ cũ `kem-con-hoc:admin-auth` (chỉ cần đặt 'true' là vào được admin) bị xoá hẳn.
+ * Không đọc lại ở bất cứ đâu; khung admin chỉ hiện sau khi GET /api/v1/admin/me trả phiên hợp lệ.
+ */
+const LEGACY_ADMIN_KEYS = ['kem-con-hoc:admin-auth', 'kem-con-hoc:admin-profile', 'kem-con-hoc:admin-theme']
+function purgeLegacyAdminKeys() {
+  try {
+    LEGACY_ADMIN_KEYS.forEach((k) => localStorage.removeItem(k))
+  } catch (e) {}
+}
+purgeLegacyAdminKeys()
 
-export const CONFIG_SUBTABS = [
-  { id: 'model', label: 'Mô hình & Tham số', icon: <BearSubModelIcon size={18} /> },
-  { id: 'prompts', label: 'Prompt Studio', icon: <BearSubPromptIcon size={18} /> },
-  { id: 'router', label: 'Router Sư phạm', icon: <BearSubRouterIcon size={18} /> },
-  { id: 'scope', label: 'Phạm vi Đề & Ảnh', icon: <BearSubScopeIcon size={18} /> },
-  { id: 'themes', label: 'Giao diện App', icon: <BearSubThemesIcon size={18} /> },
-  { id: 'admins', label: 'Quản trị viên & PIN', icon: <BearSubAdminsIcon size={18} /> },
-  { id: 'audit', label: 'Nhật ký thao tác', icon: <BearSubAuditIcon size={18} /> },
-  { id: 'infra', label: 'Hạ tầng Cloudflare', icon: <BearSubInfraIcon size={18} /> },
-  { id: 'zalo', label: 'Thông báo & Zalo', icon: <BearSubZaloIcon size={18} /> },
-]
+export const CONFIG_SUBTABS = ADMIN_PAGES.filter((p) => p.kind === 'config').map((p) => ({ id: p.sub, label: p.label, page: p.id }))
+export const TOOLS_SUBTABS = ADMIN_PAGES.filter((p) => p.kind === 'tools').map((p) => ({ id: p.sub, label: p.label, page: p.id }))
 
-export const TOOLS_SUBTABS = [
-  { id: 'sql', label: 'D1 SQL Studio (Chỉ đọc)', icon: <BearSubSqlIcon size={18} /> },
-  { id: 'team_prompts', label: 'Team Prompts Sync', icon: <BearSubSyncIcon size={18} /> },
-]
+// Mã tab cũ (AdminOverviewTab gọi onNavigateTab('teachers')…) → trang mới
+const LEGACY_TAB_TO_PAGE = {
+  overview: 'overview',
+  families: 'families',
+  sessions: 'sessions',
+  reports: 'reports',
+  teachers: 'teachers',
+  safety: 'safety',
+  config: 'model',
+  tools: 'sql',
+}
+
+/** Kiểm tra phiên ở máy chủ: 'ready' | 'locked' | 'login' | 'error' */
+async function checkAdminSession() {
+  const token = readAdminToken()
+  if (!token) return { status: 'login' }
+  try {
+    const res = await fetch(`${GATEWAY}/api/v1/admin/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+    if (res.status === 423) return { status: 'locked', token }
+    const data = await res.json().catch(() => ({}))
+    if (res.ok && data.ok && data.admin) return { status: 'ready', token, admin: data.admin }
+    if (res.status === 401 || res.status === 403) return { status: 'login', expired: true }
+    return { status: 'error' }
+  } catch (e) {
+    return { status: 'error' }
+  }
+}
 
 export default function AdminPortal({ onExit }) {
-  // Theme state: 'bear' (default) or 'blue'
-  const [theme, setTheme] = useState(() => {
-    try {
-      const saved = localStorage.getItem(ADMIN_THEME_KEY)
-      return saved === 'blue' ? 'blue' : 'bear'
-    } catch (e) {
-      return 'bear'
-    }
-  })
+  // checking | login | locked | ready | error
+  const [status, setStatus] = useState('checking')
+  const [token, setToken] = useState('')
+  const [profile, setProfile] = useState(null)
+  const [loginNotice, setLoginNotice] = useState('')
 
-  // Token & Profile State
-  const [token, setToken] = useState(() => {
-    try {
-      return localStorage.getItem(ADMIN_STORAGE_KEY) || ''
-    } catch (e) {
-      return ''
-    }
-  })
+  const [activeTab, setActiveTab] = useState(() => pageIdFromLocation())
+  const [search, setSearch] = useState(() => (typeof window !== 'undefined' ? window.location.search : ''))
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  const [adminProfile, setAdminProfile] = useState(() => {
-    try {
-      const p = localStorage.getItem(ADMIN_PROFILE_KEY)
-      return p ? JSON.parse(p) : { email: 'admin@kemconhoc.vn', name: 'Quản trị viên', role: 'superadmin' }
-    } catch (e) {
-      return { email: 'admin@kemconhoc.vn', name: 'Quản trị viên', role: 'superadmin' }
-    }
-  })
+  const [health, setHealth] = useState('pending')
+  const [counts, setCounts] = useState(undefined)
+  const [todaySessions, setTodaySessions] = useState(null)
 
-  const [authed, setAuthed] = useState(() => Boolean(token))
-  const [isLocked, setIsLocked] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview') // overview | families | sessions | reports | teachers | config | tools
-  const [configSubTab, setConfigSubTab] = useState('model') // model | prompts | router | scope | themes | admins | audit | infra | zalo
-  const [toolsSubTab, setToolsSubTab] = useState('sql') // sql | team_prompts
-  const [showMobileNav, setShowMobileNav] = useState(false)
-
-  // Login form state
-  const [loginEmail, setLoginEmail] = useState('')
-  const [loginPass, setLoginPass] = useState('')
-  const [loginBusy, setLoginBusy] = useState(false)
-  const [loginError, setLoginError] = useState('')
-  const [showPass, setShowPass] = useState(false)
-
-  // Inactivity auto-lock timer (default 15 minutes = 900,000 ms)
+  const statusRef = useRef(status)
+  statusRef.current = status
   const idleTimerRef = useRef(null)
 
-  // Persist and apply theme
-  useEffect(() => {
-    try {
-      localStorage.setItem(ADMIN_THEME_KEY, theme)
-    } catch (e) {}
-    document.documentElement.setAttribute('data-admin-theme', theme)
-  }, [theme])
+  const role = profile?.role || 'support'
+  const page = pageById(activeTab)
 
-  // Inactivity watcher
-  useEffect(() => {
-    if (!authed || isLocked) return
-
-    const resetIdleTimer = () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-      idleTimerRef.current = setTimeout(() => {
-        handleTriggerLock()
-      }, 15 * 60 * 1000) // 15 mins
+  // ---------- Phiên làm việc ----------
+  const verifySession = useCallback(async () => {
+    setStatus('checking')
+    const r = await checkAdminSession()
+    if (r.status === 'ready') {
+      setToken(r.token)
+      setProfile(r.admin)
+      setLoginNotice('')
+      setStatus('ready')
+    } else if (r.status === 'locked') {
+      setToken(r.token)
+      setStatus('locked')
+    } else if (r.status === 'login') {
+      clearAdminToken()
+      setToken('')
+      setProfile(null)
+      if (r.expired) setLoginNotice('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại')
+      setStatus('login')
+    } else {
+      setStatus('error')
     }
+  }, [])
 
-    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart']
-    events.forEach((ev) => window.addEventListener(ev, resetIdleTimer))
-    resetIdleTimer()
+  // Lần đầu mở: hỏi máy chủ trước khi hiện bất cứ thứ gì
+  useEffect(() => {
+    verifySession()
+  }, [verifySession])
+
+  // Giao diện Bản Gấu cố định
+  useEffect(() => {
+    document.documentElement.setAttribute('data-admin-theme', 'bear')
+    return () => document.documentElement.removeAttribute('data-admin-theme')
+  }, [])
+
+  // Chuyển toast cũ (utils.toast) của các trang sang ToastHost của bộ quy chuẩn
+  useEffect(() => {
+    return onToast((m) => {
+      const text = String(m || '')
+      const bad = /^(⚠️|❌|🚨)|lỗi|không thể|thất bại/i.test(text)
+      staffToast(text, bad ? { tone: 'bad' } : {})
+    })
+  }, [])
+
+  // 401 từ bất kỳ API quản trị nào → về đăng nhập; 423 → khoá màn hình
+  useEffect(() => {
+    const onUnauthorized = () => {
+      if (statusRef.current !== 'ready' && statusRef.current !== 'locked') return
+      clearAdminToken()
+      setToken('')
+      setProfile(null)
+      setLoginNotice('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại')
+      setStatus('login')
+    }
+    const onLocked = () => {
+      if (statusRef.current === 'ready') setStatus('locked')
+    }
+    window.addEventListener(ADMIN_UNAUTHORIZED_EVENT, onUnauthorized)
+    window.addEventListener(ADMIN_LOCKED_EVENT, onLocked)
+    return () => {
+      window.removeEventListener(ADMIN_UNAUTHORIZED_EVENT, onUnauthorized)
+      window.removeEventListener(ADMIN_LOCKED_EVENT, onLocked)
+    }
+  }, [])
+
+  // ---------- Đường dẫn: mỗi trang một URL, nút quay lại hoạt động ----------
+  useEffect(() => {
+    const onPop = () => {
+      if (!isAdminLocation()) {
+        if (onExit) onExit()
+        return
+      }
+      setActiveTab(pageIdFromLocation())
+      setSearch(window.location.search)
+      setMenuOpen(false)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [onExit])
+
+  const navigate = useCallback((pageId, nextSearch = '') => {
+    const target = pagePath(pageId) + (nextSearch || '')
+    const current = window.location.pathname + window.location.search + window.location.hash
+    if (target !== current) window.history.pushState({ kchAdmin: pageId }, '', target)
+    setActiveTab(pageId)
+    setSearch(nextSearch || '')
+    setMenuOpen(false)
+    try {
+      window.scrollTo(0, 0)
+    } catch (e) {}
+  }, [])
+
+  const navigateLegacyTab = useCallback((tab) => navigate(LEGACY_TAB_TO_PAGE[tab] || pageById(tab).id), [navigate])
+
+  // ---------- Dữ liệu thật cho khung: sức khoẻ, chuông, số buổi ----------
+  useEffect(() => {
+    if (status !== 'ready') return
+    let alive = true
+
+    setHealth('pending')
+    adminFetch('/api/v1/admin/health')
+      .then((r) => r.json().then((d) => ({ ok: r.ok, d })).catch(() => ({ ok: false, d: {} })))
+      .then(({ ok, d }) => alive && setHealth(ok && d.ok ? 'ok' : 'bad'))
+      .catch(() => alive && setHealth('bad'))
+
+    adminFetch('/api/v1/admin/overview?range=today')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const n = d?.metrics?.totalSessions
+        if (alive) setTodaySessions(typeof n === 'number' && Number.isFinite(n) ? n : null)
+      })
+      .catch(() => alive && setTodaySessions(null))
+
+    const loadCounts = () =>
+      adminFetch('/api/v1/admin/todo-counts')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => alive && setCounts(d && d.ok ? d : null))
+        .catch(() => alive && setCounts(null))
+    loadCounts()
+    const h = setInterval(loadCounts, 5 * 60 * 1000)
 
     return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-      events.forEach((ev) => window.removeEventListener(ev, resetIdleTimer))
+      alive = false
+      clearInterval(h)
     }
-  }, [authed, isLocked, token])
+  }, [status])
 
-  // Trigger server lock
-  const handleTriggerLock = async () => {
-    if (!token) return
+  // ---------- Khoá, mở khoá, đăng xuất ----------
+  const handleLock = useCallback(async () => {
+    const t = readAdminToken()
+    if (!t) return
     try {
       await fetch(`${GATEWAY}/api/v1/admin/auth/lock`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${t}` },
       })
     } catch (e) {
       console.warn('Server lock error:', e)
     }
-    setIsLocked(true)
-    toast('Đã khoá màn hình quản trị an toàn 🔒')
-  }
+    setMenuOpen(false)
+    setStatus('locked')
+  }, [])
 
-  // Handle Login
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault()
-    if (!loginEmail.trim() || !loginPass) {
-      setLoginError('Vui lòng nhập email và mật khẩu')
-      return
+  const handleLogout = useCallback(async () => {
+    const t = readAdminToken()
+    if (t) {
+      try {
+        await fetch(`${GATEWAY}/api/v1/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${t}` },
+        })
+      } catch (e) {}
     }
-    setLoginBusy(true)
-    setLoginError('')
-
-    try {
-      const res = await fetch(`${GATEWAY}/api/v1/admin/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail.trim(), password: loginPass }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok && data.token) {
-        setToken(data.token)
-        setAuthed(true)
-        setIsLocked(false)
-        if (data.admin) {
-          setAdminProfile(data.admin)
-          try {
-            localStorage.setItem(ADMIN_PROFILE_KEY, JSON.stringify(data.admin))
-          } catch (e) {}
-        }
-        try {
-          localStorage.setItem(ADMIN_STORAGE_KEY, data.token)
-        } catch (e) {}
-        toast('Đăng nhập Quản trị viên thành công 👑')
-      } else {
-        setLoginError(data.error?.message || 'Email hoặc mật khẩu không chính xác')
-      }
-    } catch (e) {
-      setLoginError('Không kết nối được máy chủ')
-    } finally {
-      setLoginBusy(false)
-    }
-  }
-
-  // Handle Logout
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem(ADMIN_STORAGE_KEY)
-      localStorage.removeItem(ADMIN_PROFILE_KEY)
-    } catch (e) {}
+    clearAdminToken()
     setToken('')
-    setAuthed(false)
-    setIsLocked(false)
-    setLoginPass('')
-    toast('Đã đăng xuất khỏi cổng Quản trị')
-  }
+    setProfile(null)
+    setLoginNotice('')
+    setCounts(undefined)
+    setTodaySessions(null)
+    setStatus('login')
+    staffToast('Đã đăng xuất khỏi trang quản trị')
+  }, [])
 
-  // Toggle Theme
-  const toggleTheme = () => {
-    const next = theme === 'bear' ? 'blue' : 'bear'
-    setTheme(next)
-    toast(next === 'bear' ? 'Đã chuyển sang giao diện Bản Gấu (Ấm áp) 🐻' : 'Đã chuyển sang giao diện Xanh dương (Executive Blue) 🔷')
-  }
+  const handleLoggedIn = useCallback(
+    async (newToken) => {
+      saveAdminToken(newToken)
+      await verifySession()
+    },
+    [verifySession]
+  )
 
-  // If locked, render dedicated PIN Lock Screen
-  if (authed && isLocked) {
-    return (
-      <div className="stitch-admin-root" data-admin-theme={theme}>
-        <AdminLockScreen
-          token={token}
-          onUnlock={() => {
-            setIsLocked(false)
-            toast('Đã mở khoá phiên làm việc thành công! ✨')
-          }}
-          onLogout={handleLogout}
+  // Tự khoá khi không thao tác (theo cài đặt của tài khoản, mặc định 15 phút)
+  useEffect(() => {
+    if (status !== 'ready') return
+    const mins = Number(profile?.autoLockMins) > 0 ? Number(profile.autoLockMins) : 15
+    const reset = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+      idleTimerRef.current = setTimeout(() => {
+        handleLock()
+        staffToast('Đã tự khoá vì lâu không thao tác')
+      }, mins * 60 * 1000)
+    }
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart']
+    events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }))
+    reset()
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+      events.forEach((ev) => window.removeEventListener(ev, reset))
+    }
+  }, [status, profile, handleLock])
+
+  // Esc đóng ngăn kéo menu trên điện thoại
+  useEffect(() => {
+    if (!menuOpen) return
+    const k = (e) => e.key === 'Escape' && setMenuOpen(false)
+    document.addEventListener('keydown', k)
+    return () => document.removeEventListener('keydown', k)
+  }, [menuOpen])
+
+  // ---------- Nội dung từng trang ----------
+  const renderPage = () => {
+    if (!canSeePage(page, role)) {
+      return (
+        <EmptyState
+          title={page.devOnly ? 'Trang này chỉ có ở bản dành cho đội phát triển' : 'Trang này cần quyền cao hơn'}
+          description={page.devOnly ? 'Bản chạy thật không kèm công cụ nội bộ này.' : 'Tài khoản của bạn chưa được mở trang này. Nhờ quản trị cao nhất cấp quyền nếu cần.'}
+          actionText="Về Tổng quan"
+          onAction={() => navigate('overview')}
         />
-      </div>
+      )
+    }
+    if (page.kind === 'config') {
+      return (
+        <AdminConfigTab
+          token={token}
+          adminProfile={profile}
+          activeSubTab={page.sub}
+          onSubTabChange={(sub) => {
+            const p = ADMIN_PAGES.find((x) => x.kind === 'config' && x.sub === sub)
+            if (p) navigate(p.id)
+          }}
+          hideSubNav
+        />
+      )
+    }
+    if (page.kind === 'tools') {
+      return (
+        <AdminToolsTab
+          token={token}
+          adminProfile={profile}
+          activeSubTab={page.sub}
+          onSubTabChange={(sub) => {
+            const p = ADMIN_PAGES.find((x) => x.kind === 'tools' && x.sub === sub)
+            if (p) navigate(p.id)
+          }}
+          hideSubNav
+        />
+      )
+    }
+    return (
+      <>
+        {activeTab === 'overview' && <AdminOverviewTab token={token} onNavigateTab={navigateLegacyTab} />}
+        {activeTab === 'families' && <AdminFamiliesTab key={search || 'all'} token={token} />}
+        {activeTab === 'sessions' && <AdminSessionsTab token={token} onOpenPromptStudio={() => navigate('prompts')} />}
+        {activeTab === 'reports' && <AdminReportsTab token={token} />}
+        {activeTab === 'teachers' && <AdminTeachersTab token={token} />}
+        {activeTab === 'safety' && <AdminSafetyTab token={token} />}
+      </>
     )
   }
 
-  // If not authed, show Login Screen
-  if (!authed) {
-    return (
-      <div className="stitch-admin-root" data-admin-theme={theme} style={{ alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <div className="stitch-lock-card" style={{ maxWidth: '420px', width: '100%' }}>
-          <div className="bear-mascot-wrap" style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-            <BearMascot mood="greeting" size={90} />
+  let body
+  if (status === 'checking') {
+    body = <ShellChecking />
+  } else if (status === 'error') {
+    body = (
+      <div className="kadm-center">
+        <div className="kadm-auth-card" style={{ textAlign: 'center' }}>
+          <div className="kadm-auth-bear">
+            <BearMascot mood="nudge" size={72} />
           </div>
-
-          <h2 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: 800, textAlign: 'center', color: 'var(--adm-text)' }}>
-            Kèm Con Học · Cổng Quản Trị
-          </h2>
-          <p style={{ margin: '0 0 24px 0', fontSize: '13px', textAlign: 'center', color: 'var(--adm-sub)' }}>
-            Đăng nhập tài khoản quản trị để vận hành hệ thống
-          </p>
-
-          {loginError && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>
-              ⚠️ {loginError}
-            </div>
-          )}
-
-          <form onSubmit={handleLoginSubmit}>
-            <div className="stitch-form-group">
-              <label className="stitch-label">Email quản trị viên</label>
-              <input
-                type="email"
-                required
-                className="stitch-input"
-                placeholder="admin@kemconhoc.vn"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-              />
-            </div>
-
-            <div className="stitch-form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="stitch-label">Mật khẩu</label>
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  style={{ background: 'none', border: 'none', color: 'var(--adm-sub)', fontSize: '12px', cursor: 'pointer' }}
-                >
-                  {showPass ? 'Ẩn' : 'Hiện'}
-                </button>
-              </div>
-              <input
-                type={showPass ? 'text' : 'password'}
-                required
-                className="stitch-input"
-                placeholder="Nhập mật khẩu..."
-                value={loginPass}
-                onChange={(e) => setLoginPass(e.target.value)}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loginBusy}
-              className="stitch-btn-primary"
-              style={{ width: '100%', padding: '12px', marginTop: '16px', fontSize: '15px' }}
-            >
-              {loginBusy ? 'Đang xác thực...' : 'Đăng nhập Quản trị viên'}
-            </button>
-          </form>
-
-          <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--adm-border)' }}>
-            <button
-              type="button"
-              className="stitch-btn-secondary"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
-              onClick={toggleTheme}
-            >
-              {theme === 'bear' ? '🐻 Bản Gấu' : '🔷 Xanh dương'}
-            </button>
-            {onExit && (
-              <button
-                type="button"
-                onClick={onExit}
-                style={{ background: 'none', border: 'none', color: 'var(--adm-sub)', fontSize: '12px', cursor: 'pointer' }}
-              >
-                ← Quay lại App phụ huynh
-              </button>
-            )}
+          <h1 className="kadm-auth-title">Chưa kiểm tra được phiên</h1>
+          <p className="kadm-auth-sub">Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.</p>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button onClick={verifySession}>Thử lại</Button>
+            <Button variant="ghost" onClick={handleLogout}>
+              Đăng nhập lại
+            </Button>
           </div>
         </div>
       </div>
     )
+  } else if (status === 'login') {
+    body = <ShellLogin onLoggedIn={handleLoggedIn} onExit={onExit} notice={loginNotice} />
+  } else if (status === 'locked') {
+    body = <AdminLockScreen token={token || readAdminToken()} onUnlock={verifySession} onLogout={handleLogout} />
+  } else {
+    body = (
+      <div className="kadm-shell">
+        <ShellSidebar
+          pages={visiblePages(role)}
+          activeId={page.id}
+          onNavigate={(id) => navigate(id)}
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          health={health}
+          todaySessions={todaySessions}
+        />
+        <div className="kadm-main">
+          <ShellHeader
+            page={page}
+            role={role}
+            profile={profile}
+            counts={counts}
+            canSee={(id) => canSeePage(pageById(id), role)}
+            onNavigate={navigate}
+            onToggleMenu={() => setMenuOpen((v) => !v)}
+            menuOpen={menuOpen}
+            onLock={handleLock}
+            onLogout={handleLogout}
+            onExit={onExit}
+          />
+          <main className="kadm-content" id="kadm-content">
+            {renderPage()}
+          </main>
+        </div>
+      </div>
+    )
   }
-
-  // Authenticated Portal
-  const isSupport = adminProfile?.role === 'support'
 
   return (
-    <div className="stitch-admin-root" data-admin-theme={theme}>
-      {/* 256px Fixed Sidebar */}
-      <aside className={`stitch-sidebar ${showMobileNav ? 'mobile-open' : ''}`}>
-        <div className="stitch-sidebar-header">
-          <div className="stitch-brand-logo">
-            {theme === 'bear' ? '🐻' : '🔷'}
-          </div>
-          <div>
-            <h1 className="stitch-brand-title">Kèm Con Học</h1>
-            <span className="stitch-brand-badge">Admin</span>
-          </div>
-        </div>
-
-        {/* 7 Core Subsystems Navigation */}
-        <nav className="stitch-sidebar-nav">
-          <button
-            type="button"
-            className={`stitch-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('overview'); setShowMobileNav(false) }}
-          >
-            <span className="stitch-nav-icon"><BearOverviewIcon size={24} /></span>
-            <span>Tổng quan</span>
-          </button>
-
-          <button
-            type="button"
-            className={`stitch-nav-item ${activeTab === 'families' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('families'); setShowMobileNav(false) }}
-          >
-            <span className="stitch-nav-icon"><BearFamiliesIcon size={24} /></span>
-            <span>Gia đình & Học sinh</span>
-          </button>
-
-          <button
-            type="button"
-            className={`stitch-nav-item ${activeTab === 'sessions' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('sessions'); setShowMobileNav(false) }}
-          >
-            <span className="stitch-nav-icon"><BearSessionsIcon size={24} /></span>
-            <span>Nhật ký & AI</span>
-          </button>
-
-          <button
-            type="button"
-            className={`stitch-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('reports'); setShowMobileNav(false) }}
-          >
-            <span className="stitch-nav-icon"><BearReportsIcon size={24} /></span>
-            <span>Báo cáo & NPS</span>
-          </button>
-
-          <button
-            type="button"
-            className={`stitch-nav-item ${activeTab === 'teachers' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('teachers'); setShowMobileNav(false) }}
-          >
-            <span className="stitch-nav-icon"><BearTeachersIcon size={24} /></span>
-            <span>Giáo viên & Lớp</span>
-          </button>
-
-          <button
-            type="button"
-            className={`stitch-nav-item ${activeTab === 'safety' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('safety'); setShowMobileNav(false) }}
-          >
-            <span className="stitch-nav-icon" style={{ fontSize: 20 }}>🛡️</span>
-            <span>An toàn AI & Feedback</span>
-          </button>
-
-          {!isSupport && (
-            <div>
-              <button
-                type="button"
-                className={`stitch-nav-item ${activeTab === 'config' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('config')
-                  setShowMobileNav(false)
-                }}
-                style={{ justifyContent: 'space-between' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span className="stitch-nav-icon"><BearConfigIcon size={24} /></span>
-                  <span>Cấu hình AI & Hệ thống</span>
-                </div>
-                <span style={{ fontSize: '11px', opacity: 0.7 }}>
-                  {activeTab === 'config' ? '▾' : '▸'}
-                </span>
-              </button>
-
-              {activeTab === 'config' && (
-                <div className="stitch-nav-subgroup">
-                  {CONFIG_SUBTABS.map((sub) => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      className={`stitch-nav-subitem ${configSubTab === sub.id ? 'active' : ''}`}
-                      onClick={() => {
-                        setActiveTab('config')
-                        setConfigSubTab(sub.id)
-                        setShowMobileNav(false)
-                      }}
-                    >
-                      <span className="sub-icon">{sub.icon}</span>
-                      <span>{sub.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {!isSupport && (
-            <div>
-              <button
-                type="button"
-                className={`stitch-nav-item ${activeTab === 'tools' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('tools')
-                  setShowMobileNav(false)
-                }}
-                style={{ justifyContent: 'space-between' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span className="stitch-nav-icon"><BearToolsIcon size={24} /></span>
-                  <span>Công cụ nội bộ & SQL</span>
-                </div>
-                <span style={{ fontSize: '11px', opacity: 0.7 }}>
-                  {activeTab === 'tools' ? '▾' : '▸'}
-                </span>
-              </button>
-
-              {activeTab === 'tools' && (
-                <div className="stitch-nav-subgroup">
-                  {TOOLS_SUBTABS.map((sub) => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      className={`stitch-nav-subitem ${toolsSubTab === sub.id ? 'active' : ''}`}
-                      onClick={() => {
-                        setActiveTab('tools')
-                        setToolsSubTab(sub.id)
-                        setShowMobileNav(false)
-                      }}
-                    >
-                      <span className="sub-icon">{sub.icon}</span>
-                      <span>{sub.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </nav>
-
-        {/* Mascot Notice */}
-        <div className="stitch-bear-notice-card">
-          <div className="bear-mascot-wrap">
-            <BearMascot mood="happy" size={42} />
-          </div>
-          <div className="stitch-bear-notice-text">
-            Đồng hành cùng bé học mỗi ngày!
-          </div>
-        </div>
-
-        {/* Sidebar Footer */}
-        <div className="stitch-sidebar-footer">
-          <div className="stitch-ai-status-badge">
-            <span className="stitch-ai-dot" />
-            <span>AI Gateway: Hoạt động</span>
-          </div>
-
-          <div className="stitch-user-profile-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <div className="stitch-avatar-initial">
-                {(adminProfile.name || 'A')[0].toUpperCase()}
-              </div>
-              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--adm-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {adminProfile.name || 'Admin'}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--adm-sub)' }}>
-                  {adminProfile.role || 'superadmin'}
-                </div>
-              </div>
-            </div>
-
-            <div className="stitch-footer-actions">
-              <button
-                type="button"
-                className="stitch-btn-icon"
-                title="Khoá màn hình ngay"
-                onClick={handleTriggerLock}
-              >
-                🔒
-              </button>
-              <button
-                type="button"
-                className="stitch-btn-icon"
-                title="Đăng xuất"
-                onClick={handleLogout}
-              >
-                🚪
-              </button>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Layout Area */}
-      <main className="stitch-main-layout">
-        {/* 64px Header */}
-        <header className="stitch-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <button
-              type="button"
-              className="stitch-btn-icon"
-              style={{ display: 'none' }} // Mobile responsive toggle
-              onClick={() => setShowMobileNav(!showMobileNav)}
-            >
-              ☰
-            </button>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--adm-text)' }}>
-              {activeTab === 'overview' && 'Bảng điều khiển Tổng quan'}
-              {activeTab === 'families' && 'Quản lý Gia đình & Học sinh'}
-              {activeTab === 'sessions' && 'Nhật ký kèm học & Đánh giá AI'}
-              {activeTab === 'reports' && 'Báo cáo Sư phạm & Chỉ số NPS'}
-              {activeTab === 'teachers' && 'Duyệt Giáo viên & Lớp học'}
-              {activeTab === 'safety' && 'An toàn AI & Phản hồi Phụ huynh (Đợt 14)'}
-              {activeTab === 'config' && `Cấu hình AI & Hệ thống · ${CONFIG_SUBTABS.find((s) => s.id === configSubTab)?.label || ''}`}
-              {activeTab === 'tools' && `Công cụ nội bộ · ${TOOLS_SUBTABS.find((s) => s.id === toolsSubTab)?.label || 'D1 SQL Studio'}`}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Theme switcher */}
-            <button
-              type="button"
-              className="stitch-btn-secondary"
-              onClick={toggleTheme}
-              style={{ fontSize: '13px', padding: '6px 14px' }}
-              title="Đổi giao diện Bản Gấu / Xanh dương"
-            >
-              {theme === 'bear' ? '🐻 Bản Gấu' : '🔷 Xanh dương'}
-            </button>
-
-            {/* Manual lock button */}
-            <button
-              type="button"
-              className="stitch-btn-secondary"
-              onClick={handleTriggerLock}
-              style={{ fontSize: '13px', padding: '6px 12px' }}
-              title="Khoá an toàn"
-            >
-              🔒 Khoá
-            </button>
-
-            {onExit && (
-              <button
-                type="button"
-                className="stitch-btn-secondary"
-                onClick={onExit}
-                style={{ fontSize: '13px', padding: '6px 12px' }}
-              >
-                ← Ra App
-              </button>
-            )}
-          </div>
-        </header>
-
-        {/* Tab Content Display Area */}
-        <div className="stitch-content-area" style={{ padding: '24px 28px', flex: 1 }}>
-          {activeTab === 'overview' && (
-            <AdminOverviewTab
-              token={token}
-              onNavigateTab={(tab) => setActiveTab(tab)}
-            />
-          )}
-
-          {activeTab === 'families' && (
-            <AdminFamiliesTab token={token} />
-          )}
-
-          {activeTab === 'sessions' && (
-            <AdminSessionsTab
-              token={token}
-              onOpenPromptStudio={() => { setActiveTab('config'); setConfigSubTab('prompts') }}
-            />
-          )}
-
-          {activeTab === 'reports' && (
-            <AdminReportsTab token={token} />
-          )}
-
-          {activeTab === 'teachers' && (
-            <AdminTeachersTab token={token} />
-          )}
-
-          {activeTab === 'safety' && (
-            <AdminSafetyTab token={token} />
-          )}
-
-
-          {activeTab === 'config' && !isSupport && (
-            <AdminConfigTab
-              token={token}
-              adminProfile={adminProfile}
-              activeSubTab={configSubTab}
-              onSubTabChange={(sub) => setConfigSubTab(sub)}
-            />
-          )}
-
-          {activeTab === 'tools' && !isSupport && (
-            <AdminToolsTab
-              token={token}
-              adminProfile={adminProfile}
-              activeSubTab={toolsSubTab}
-              onSubTabChange={(sub) => setToolsSubTab(sub)}
-            />
-          )}
-        </div>
-      </main>
+    <div className="stitch-admin-root staff-root kadm-root" data-admin-theme="bear">
+      {body}
+      <ToastHost />
+      <ConfirmHost />
     </div>
   )
 }

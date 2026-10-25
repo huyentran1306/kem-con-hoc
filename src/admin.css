@@ -1102,3 +1102,570 @@
 }
 
 
+
+/* ============================================================
+   ĐỢT 15 · CHẶNG 2 · KHUNG ADMIN (thanh bên phẳng 3 nhóm, đầu trang, đăng nhập, khoá)
+   Nền kem, chữ nâu, mật ong; dùng biến của src/ui/staff/tokens.css
+   ============================================================ */
+.stitch-admin-root.kadm-root {
+  display: block;
+  overflow-x: clip; /* không tạo vùng cuộn riêng để thanh bên và đầu trang dính được */
+  background: var(--s-bg, #FFF8EC);
+  color: var(--s-text, #4B3621);
+  font-family: var(--s-font-body, 'Nunito', sans-serif);
+  font-size: 14px;
+}
+
+.kadm-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ---------- Thanh bên ---------- */
+.kadm-side {
+  width: 232px;
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: #FFFFFF;
+  border-right: 1px solid var(--s-line, #F0DDC2);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 10px 12px;
+  gap: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  z-index: 60;
+}
+.kadm-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 10px;
+}
+.kadm-brand-text b {
+  display: block;
+  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--s-text, #4B3621);
+}
+.kadm-brand-text small {
+  font-size: 11px;
+  color: var(--s-text-2, #84664A);
+  font-weight: 700;
+}
+.kadm-side-close {
+  display: none;
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--s-line, #F0DDC2);
+  background: #FFFFFF;
+  color: var(--s-text, #4B3621);
+  cursor: pointer;
+  font-size: 13px;
+}
+.kadm-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kadm-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kadm-sep {
+  font-size: 10px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--s-text-2, #84664A);
+  font-weight: 900;
+  padding: 10px 10px 3px;
+}
+.kadm-nv {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  color: #6E5236;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  line-height: 1.25;
+  transition: background-color 0.12s ease;
+}
+.kadm-nv:hover {
+  background: var(--s-bg, #FFF8EC);
+  color: var(--s-text, #4B3621);
+}
+.kadm-nv:focus-visible,
+.kadm-bell:focus-visible,
+.kadm-avatar:focus-visible,
+.kadm-menu-btn:focus-visible,
+.kadm-pop-item:focus-visible,
+.kadm-key:focus-visible,
+.kadm-link:focus-visible {
+  outline: 3px solid var(--s-accent, #F6A623);
+  outline-offset: 2px;
+}
+.kadm-nv.is-on {
+  background: var(--s-accent-tint, #FFF1D6);
+  color: var(--s-text, #4B3621);
+  font-weight: 800;
+  box-shadow: inset 4px 0 0 var(--s-accent, #F6A623);
+}
+.kadm-nv-icon {
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 15px;
+}
+.kadm-side-foot {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kadm-side-card {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 8px;
+  align-items: center;
+  background: var(--s-accent-tint, #FFF1D6);
+  border-radius: 14px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  color: var(--s-text, #4B3621);
+  line-height: 1.35;
+}
+.kadm-health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--s-line, #F0DDC2);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--s-text-2, #84664A);
+}
+.kadm-health-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #C9A47A;
+}
+.kadm-health-ok .kadm-health-dot { background: #10B981; box-shadow: 0 0 0 3px #D1FAE5; }
+.kadm-health-ok { color: var(--s-ok, #047857); }
+.kadm-health-bad .kadm-health-dot { background: #E11D48; box-shadow: 0 0 0 3px #FFE4E6; }
+.kadm-health-bad { color: var(--s-bad, #BE123C); }
+.kadm-health-pending .kadm-health-dot { animation: kadm-pulse 1.2s ease-in-out infinite; }
+@keyframes kadm-pulse { 50% { opacity: 0.35; } }
+
+/* ---------- Vùng chính và đầu trang ---------- */
+.kadm-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.kadm-hd {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 22px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--s-line, #F0DDC2);
+}
+.kadm-menu-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--s-line, #F0DDC2);
+  background: #FFFFFF;
+  color: var(--s-text, #4B3621);
+  font-size: 17px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.kadm-crumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--s-text-2, #84664A);
+  white-space: nowrap;
+  min-width: 0;
+}
+.kadm-crumb b {
+  color: var(--s-text, #4B3621);
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kadm-crumb-sep { opacity: 0.7; }
+.kadm-search {
+  flex: 1;
+  max-width: 360px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+  background: #FFFFFF;
+  border: 2px solid var(--s-line, #F0DDC2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.kadm-search:focus-within {
+  border-color: var(--s-accent, #F6A623);
+  box-shadow: 0 0 0 3px rgba(246, 166, 35, 0.18);
+}
+.kadm-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--s-text, #4B3621);
+  font: inherit;
+  font-weight: 600;
+}
+.kadm-search input::placeholder { color: #9C7B5A; }
+.kadm-clock {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--s-text-2, #84664A);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.kadm-pop-wrap { position: relative; flex-shrink: 0; }
+.kadm-bell,
+.kadm-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  cursor: pointer;
+  font-size: 14px;
+}
+.kadm-bell {
+  background: #FFFFFF;
+  border: 2px solid var(--s-line, #F0DDC2);
+}
+.kadm-bell em {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  font-style: normal;
+  font-size: 10px;
+  line-height: 16px;
+  min-width: 16px;
+  background: #E11D48;
+  color: #FFFFFF;
+  border-radius: 999px;
+  padding: 0 5px;
+  font-weight: 900;
+}
+.kadm-avatar {
+  background: #FFE2B3;
+  color: var(--s-accent-ink, #9A5B00);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px var(--s-line, #F0DDC2);
+  font-weight: 900;
+  font-family: var(--s-font-head, 'Mitr', sans-serif);
+}
+.kadm-avatar-static { cursor: default; flex-shrink: 0; }
+.kadm-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 120;
+  min-width: 260px;
+  max-width: calc(100vw - 24px);
+  background: #FFFFFF;
+  border: 1px solid var(--s-line, #F0DDC2);
+  border-radius: 16px;
+  box-shadow: 0 5px 0 var(--s-line, #F0DDC2), 0 16px 32px -12px rgba(75, 54, 33, 0.28);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kadm-pop-title {
+  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-size: 14px;
+  padding: 4px 8px 6px;
+}
+.kadm-pop-empty {
+  padding: 8px;
+  font-size: 12.5px;
+  color: var(--s-text-2, #84664A);
+}
+.kadm-pop-calm { display: flex; align-items: center; gap: 8px; }
+.kadm-pop-item,
+.kadm-pop-static {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--s-text, #4B3621);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+.kadm-pop-item { cursor: pointer; }
+.kadm-pop-item:hover { background: var(--s-accent-tint, #FFF1D6); }
+.kadm-pop-static small { color: var(--s-ok, #047857); font-weight: 800; font-size: 11px; }
+.kadm-pop-item-text { flex: 1; min-width: 0; }
+.kadm-pop-danger { color: var(--s-bad, #BE123C); }
+.kadm-count,
+.kadm-count-hot {
+  font-size: 11px;
+  min-width: 22px;
+  text-align: center;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.kadm-count { background: var(--s-bg, #FFF8EC); color: var(--s-text-2, #84664A); }
+.kadm-count-hot { background: #FFE4E6; color: var(--s-bad, #BE123C); }
+.kadm-account-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px 10px;
+  border-bottom: 1px solid var(--s-line, #F0DDC2);
+  margin-bottom: 4px;
+}
+.kadm-account-head b,
+.kadm-account-head small { display: block; }
+.kadm-account-head small { font-size: 11.5px; color: var(--s-text-2, #84664A); }
+.kadm-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px; }
+.kadm-role {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 10.5px;
+  font-weight: 900;
+  background: var(--s-accent-tint, #FFF1D6);
+  color: var(--s-accent-ink, #9A5B00);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.kadm-content {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 24px 40px;
+}
+.kadm-backdrop { display: none; }
+
+/* ---------- Dưới 1280px: thanh bên thu thành biểu tượng ---------- */
+@media (max-width: 1279px) and (min-width: 768px) {
+  .kadm-side {
+    width: 68px;
+    padding: 12px 8px;
+    align-items: center;
+  }
+  .kadm-brand { padding: 0 0 8px; justify-content: center; }
+  .kadm-brand-text,
+  .kadm-side .kadm-label,
+  .kadm-side-card { display: none; }
+  .kadm-sep {
+    padding: 0;
+    margin: 8px 6px 4px;
+    height: 1px;
+    width: 32px;
+    background: var(--s-line, #F0DDC2);
+  }
+  .kadm-sep-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .kadm-nv {
+    width: 46px;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+  }
+  .kadm-nv.is-on { box-shadow: inset 0 -3px 0 var(--s-accent, #F6A623); }
+  .kadm-nv-icon { font-size: 17px; }
+  .kadm-health { justify-content: center; padding: 8px 0; border-top: none; }
+}
+
+/* ---------- Điện thoại: ngăn kéo ---------- */
+@media (max-width: 767px) {
+  .kadm-side {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    width: min(280px, 86vw);
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    z-index: 200;
+    box-shadow: 8px 0 28px -12px rgba(75, 54, 33, 0.35);
+  }
+  .kadm-side.is-open { transform: none; }
+  .kadm-side-close { display: grid; place-items: center; }
+  .kadm-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(75, 54, 33, 0.28);
+    z-index: 190;
+  }
+  .kadm-menu-btn { display: grid; place-items: center; }
+  .kadm-hd { padding: 0 12px; gap: 8px; }
+  .kadm-crumb-group,
+  .kadm-crumb-sep,
+  .kadm-clock { display: none; }
+  .kadm-crumb { max-width: 34vw; }
+  .kadm-search { margin-left: 0; padding: 5px 10px; }
+  .kadm-content { padding: 14px 12px 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kadm-side { transition: none; }
+  .kadm-health-pending .kadm-health-dot { animation: none; }
+}
+
+/* ---------- Đăng nhập, chờ kiểm tra phiên, khoá PIN ---------- */
+.kadm-center {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background:
+    radial-gradient(circle at 18% 12%, #FFF1D6 0, transparent 42%),
+    radial-gradient(circle at 85% 90%, #FFEFD2 0, transparent 40%),
+    var(--s-bg, #FFF8EC);
+}
+.kadm-checking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--s-text-2, #84664A);
+  font-weight: 800;
+}
+.kadm-checking p { margin: 0; }
+.kadm-auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #FFFFFF;
+  border: 1px solid var(--s-line, #F0DDC2);
+  border-radius: var(--s-radius-card, 22px);
+  box-shadow: var(--s-shadow-card, 0 5px 0 #F0DDC2);
+  padding: 28px 26px 22px;
+}
+.kadm-auth-bear { display: flex; justify-content: center; margin-bottom: 10px; }
+.kadm-auth-title {
+  margin: 0 0 4px;
+  text-align: center;
+  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--s-text, #4B3621);
+}
+.kadm-auth-sub {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--s-text-2, #84664A);
+}
+.kadm-auth-form { display: flex; flex-direction: column; gap: 14px; }
+.kadm-pass-row { display: flex; gap: 8px; align-items: center; }
+.kadm-auth-foot {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--s-line, #F0DDC2);
+  display: flex;
+  justify-content: center;
+}
+.kadm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--s-accent-ink, #9A5B00);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.kadm-link:hover { text-decoration: underline; }
+.kadm-lock-card { text-align: center; max-width: 380px; }
+.kadm-pin-dots { display: flex; justify-content: center; gap: 14px; margin: 6px 0 16px; }
+.kadm-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--s-accent-deep, #C47F0E);
+  background: #FFFFFF;
+  transition: background-color 0.12s ease;
+}
+.kadm-pin-dot.is-filled { background: var(--s-accent, #F6A623); }
+.kadm-pin-visible {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--s-accent-ink, #9A5B00);
+  margin-bottom: 12px;
+}
+.kadm-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  gap: 12px;
+  justify-content: center;
+}
+.kadm-key {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid var(--s-line, #F0DDC2);
+  background: #FFFFFF;
+  box-shadow: 0 4px 0 var(--s-line, #F0DDC2);
+  color: var(--s-text, #4B3621);
+  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-size: 22px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.kadm-key:hover { background: var(--s-bg, #FFF8EC); }
+.kadm-key:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--s-line, #F0DDC2); }
+.kadm-key:disabled { opacity: 0.6; cursor: wait; }
+.kadm-key-action { background: var(--s-accent-tint, #FFF1D6); color: var(--s-accent-ink, #9A5B00); }

@@ -1,14 +1,14 @@
 /**
- * 🔒 MÀN HÌNH KHÓA PIN ADMIN (PROMPT 05 MỤC 3)
- * Mascot Gấu giữ khoá, câu: "Gấu đang giữ cửa. Nhập PIN để vào tiếp nhé"
- * Bàn phím số 3x4 nút tròn có viền đáy, gõ được phím vật lý, rung khi sai PIN,
+ * Màn hình khoá PIN của khung admin (Đợt 15 · Chặng 2: theo bộ quy chuẩn, nền kem, gấu)
+ * Gấu giữ cửa, bàn phím số 3x4 gõ được phím vật lý, rung khi sai PIN,
  * sau 5 lần sai tự động chuyển về đăng nhập email.
  */
 
 import React, { useState, useEffect } from 'react';
 import { GATEWAY } from './api';
 import { BearMascot } from './AdminMascot';
-import { Delete, Eye, EyeOff, Lock, LogOut } from 'lucide-react';
+import { Banner } from './ui/staff';
+import { Delete, Eye, EyeOff, LogOut } from 'lucide-react';
 
 export function AdminLockScreen({ onUnlock, onLogout, token }) {
   const [pin, setPin] = useState('');
@@ -93,98 +93,52 @@ export function AdminLockScreen({ onUnlock, onLogout, token }) {
   }
 
   return (
-    <div className="stitch-lock-overlay">
-      <div className={`stitch-lock-card ${shake ? 'stitch-shake' : ''}`}>
-        <div className="bear-mascot-wrap" style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-          <BearMascot mood="lock" size={96} />
+    <div className="kadm-center">
+      <div className={`kadm-auth-card kadm-lock-card ${shake ? 'stitch-shake' : ''}`}>
+        <div className="kadm-auth-bear">
+          <BearMascot mood="lock" size={92} />
         </div>
 
-        <h3 style={{ fontFamily: 'var(--adm-font-head)', fontSize: 20, color: 'var(--adm-text)', margin: '0 0 6px 0' }}>
-          Gấu đang giữ cửa
-        </h3>
-        <p style={{ fontSize: 13.5, color: 'var(--adm-sub)', margin: 0 }}>
-          Nhập mã PIN để tiếp tục vào bàn quản trị nhé
-        </p>
+        <h1 className="kadm-auth-title">Gấu đang giữ cửa</h1>
+        <p className="kadm-auth-sub">Nhập mã PIN để tiếp tục vào trang quản trị nhé</p>
 
         {/* Chấm tròn biểu thị độ dài PIN */}
-        <div className="stitch-pin-dots-row">
+        <div className="kadm-pin-dots" aria-label={`Đã nhập ${pin.length} số`}>
           {[0, 1, 2, 3].map((idx) => (
-            <div
-              key={idx}
-              className={`stitch-pin-dot ${idx < pin.length ? 'filled' : ''}`}
-            />
+            <span key={idx} className={`kadm-pin-dot ${idx < pin.length ? 'is-filled' : ''}`} />
           ))}
         </div>
 
-        {/* Chế độ hiển thị số đang gõ */}
-        {showPin && pin && (
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--adm-primary-text)', letterSpacing: 4, marginBottom: 12 }}>
-            {pin}
-          </div>
-        )}
+        {showPin && pin && <div className="kadm-pin-visible">{pin}</div>}
 
-        {/* Báo lỗi nếu có */}
-        {errorMsg && (
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--adm-danger)', marginBottom: 16, minHeight: 18 }}>
-            {errorMsg}
-          </div>
-        )}
+        {errorMsg && <Banner type="bad" message={errorMsg} style={{ margin: '0 0 14px 0', textAlign: 'left' }} />}
 
-        {/* Bàn phím số 3x4 dạng nút tròn có viền đáy */}
-        <div className="stitch-keypad-grid">
+        {/* Bàn phím số 3x4 */}
+        <div className="kadm-keypad" role="group" aria-label="Bàn phím số">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-            <button
-              key={digit}
-              type="button"
-              className="stitch-keypad-btn"
-              onClick={() => handleDigit(digit)}
-              disabled={busy}
-            >
+            <button key={digit} type="button" className="kadm-key" onClick={() => handleDigit(digit)} disabled={busy}>
               {digit}
             </button>
           ))}
           <button
             type="button"
-            className="stitch-keypad-btn action"
+            className="kadm-key kadm-key-action"
             onClick={() => setShowPin(!showPin)}
-            title="Hiện số đang gõ"
+            title={showPin ? 'Ẩn số đang gõ' : 'Hiện số đang gõ'}
+            aria-label={showPin ? 'Ẩn số đang gõ' : 'Hiện số đang gõ'}
           >
             {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
-          <button
-            type="button"
-            className="stitch-keypad-btn"
-            onClick={() => handleDigit('0')}
-            disabled={busy}
-          >
+          <button type="button" className="kadm-key" onClick={() => handleDigit('0')} disabled={busy}>
             0
           </button>
-          <button
-            type="button"
-            className="stitch-keypad-btn action"
-            onClick={handleBackspace}
-            title="Xoá một số"
-          >
+          <button type="button" className="kadm-key kadm-key-action" onClick={handleBackspace} title="Xoá một số" aria-label="Xoá một số">
             <Delete size={22} />
           </button>
         </div>
 
-        <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <button
-            type="button"
-            onClick={onLogout}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--adm-sub)',
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
+        <div className="kadm-auth-foot">
+          <button type="button" className="kadm-link" onClick={onLogout}>
             <LogOut size={14} /> Quên PIN? Đăng nhập lại
           </button>
         </div>
