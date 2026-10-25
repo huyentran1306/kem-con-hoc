@@ -29,6 +29,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 1,
         cau_hoi: 'Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt nào?',
+        ly_do_cho_me: 'Giúp con nhận diện dữ kiện số lượng ban đầu của đàn vịt trước khi thực hiện thao tác bớt đi.',
         dap_an_cho_me: 'Xác định số lượng ban đầu là 15 con vịt.',
         goi_y: {
           muc_1_do_vat: 'Lấy 15 que tính hoặc cúc áo xếp ra bàn để tượng trưng cho đàn vịt.',
@@ -38,6 +39,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 2,
         cau_hoi: 'Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con hả con?',
+        ly_do_cho_me: 'Dẫn dắt con hiểu từ khoá "bán bớt" tương ứng với phép toán trừ trong thực tế.',
         dap_an_cho_me: 'Bán bớt tức là làm phép trừ, bớt đi 6 con.',
         goi_y: {
           muc_1_do_vat: 'Tách 6 que tính ra khỏi 15 que tính ban đầu.',
@@ -47,6 +49,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 3,
         cau_hoi: 'Đếm lại số que tính còn lại trên bàn, hoặc viết phép tính để tìm số vịt còn lại nào!',
+        ly_do_cho_me: 'Khích lệ con tự thực hiện phép tính và kết luận số lượng còn lại.',
         dap_an_cho_me: 'Phép tính: 15 - 6 = 9 (con vịt). Đáp số: 9 con vịt.',
         goi_y: {
           muc_1_do_vat: 'Đếm từng que tính còn lại trước mặt con.',
@@ -67,6 +70,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 1,
         cau_hoi: 'Con hãy đọc to cả câu văn và xem mùa xuân thì cây cối có điều gì đặc biệt nhé?',
+        ly_do_cho_me: 'Kích hoạt ngữ cảnh tự nhiên mùa xuân để con hình dung từ ngữ phù hợp.',
         dap_an_cho_me: 'Cây cối mọc mầm non mới, người ta gọi là nảy lộc.',
         goi_y: {
           muc_1_do_vat: 'Nhìn vào mầm cây ngoài ban công hoặc chậu hoa trong nhà.',
@@ -76,6 +80,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 2,
         cau_hoi: "Từ 'nảy lộc' thì tiếng 'nảy' con đặt đầu lưỡi chạm vào đâu khi phát âm nào?",
+        ly_do_cho_me: 'Hướng dẫn con khẩu hình chuẩn của phụ âm N đầu lưỡi chạm vòm họng.',
         dap_an_cho_me: "Âm 'n' đầu lưỡi chạm vòm họng trên, âm 'l' uốn lưỡi.",
         goi_y: {
           muc_1_do_vat: 'Con soi gương hoặc sờ tay vào cánh mũi khi phát âm n-n-nảy.',
@@ -85,6 +90,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 3,
         cau_hoi: 'Bây giờ con hãy điền chữ cái đúng vào từng vị trí và đọc lại thật xuôi nhé!',
+        ly_do_cho_me: 'Khắc sâu trí nhớ chính tả bằng việc hoàn thành trọn vẹn câu văn.',
         dap_an_cho_me: "Điền lần lượt: 'nảy lộc' (n, l) và 'nở rộ' (n).",
         goi_y: {
           muc_1_do_vat: 'Viết thử ra bảng con trước khi điền vào sách.',
@@ -105,6 +111,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 1,
         cau_hoi: "Con hãy đọc câu đầu tiên: 'This is my cat.' và cho mẹ biết đây là con vật gì nào?",
+        ly_do_cho_me: 'Xác định chủ thể con vật số ít để làm nền tảng chọn đại từ sở hữu.',
         dap_an_cho_me: 'Đây là con mèo của mình (danh từ chỉ con vật số ít).',
         goi_y: {
           muc_1_do_vat: 'Chỉ vào bạn mèo bông hoặc con mèo quen thuộc.',
@@ -114,6 +121,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 2,
         cau_hoi: "Ở câu thứ hai, mình muốn nói 'Tên của NÓ là Mimi', thì từ nào mang nghĩa 'của nó' hả con?",
+        ly_do_cho_me: 'Phân biệt lỗi kinh điển giữa Its (sở hữu) và It\'s (It is viết tắt).',
         dap_an_cho_me: "Phân biệt 'Its' (của nó) với 'It\\'s' (viết tắt của It is = Nó là).",
         goi_y: {
           muc_1_do_vat: 'So sánh với: My name (tên của tôi), Your name (tên của bạn), Its name (tên của nó).',
@@ -123,6 +131,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 3,
         cau_hoi: "Bây giờ con tự tin khoanh tròn đáp án đúng nhất để hoàn thiện câu nào!",
+        ly_do_cho_me: 'Tự tin chọn đáp án chuẩn xác và đọc to trọn vẹn câu tiếng Anh.',
         dap_an_cho_me: "Đáp án đúng là A. Its. Câu hoàn chỉnh: 'This is my cat. Its name is Mimi.'",
         goi_y: {
           muc_1_do_vat: 'Đọc to cả câu với từ vừa chọn.',

@@ -255,6 +255,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       cac_bac: trial.cac_bac,
       steps: trial.cac_bac.map((b) => ({
         question: b.cau_hoi,
+        ly_do_cho_me: b.ly_do_cho_me || '',
         answerForParent: b.dap_an_cho_me,
         answer: b.dap_an_cho_me,
         hint: b.goi_y.muc_1_do_vat,
@@ -270,7 +271,14 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const book = child?.book || 'Kết nối tri thức'
   const classification = fastClassifyProblem(ocr, grade)
 
-  const sys = renderPrompt('p3_explain', {
+  const isPreviewOrDev =
+    typeof window !== 'undefined' &&
+    (window.location.hostname.includes('preview') ||
+     window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1');
+  const targetPromptId = isPreviewOrDev ? 'p3_explain_v2' : 'p3_explain';
+
+  const sys = renderPrompt(targetPromptId, {
     mon: classification.mon,
     lop: grade,
     sach: book,
@@ -344,6 +352,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     if (Array.isArray(data.cac_bac) && data.cac_bac.length > 0) {
       rawSteps = data.cac_bac.map((b, idx) => ({
         question: b.cau_hoi || `Bậc ${idx + 1}`,
+        ly_do_cho_me: b.ly_do_cho_me || '',
         answerForParent: b.dap_an_cho_me || '',
         answer: b.dap_an_cho_me || '',
         hint: b.goi_y?.muc_1_do_vat || (typeof b.goi_y === 'string' ? b.goi_y : ''),
@@ -353,6 +362,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     } else if (Array.isArray(data.steps) && data.steps.length > 0) {
       rawSteps = data.steps.map((s) => ({
         question: s.question || s.q || '',
+        ly_do_cho_me: s.ly_do_cho_me || '',
         answerForParent: s.answerForParent || s.answer || '',
         answer: s.answer || '',
         hint: s.hint || '',

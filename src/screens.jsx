@@ -5,7 +5,7 @@ import {
   ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CHAT_REPLIES, CALM_LINES,
   AVAILABLE_STICKERS, WAITING_QUIZZES,
 } from './data'
-import { Header, SpeakBtn, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
+import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
 import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken } from './api'
@@ -1633,9 +1633,10 @@ export function Scaffold() {
                 <span className="n">{i + 1}</span>
                 <b style={{ fontSize: 15 }}>{s.q || s.question}</b>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <SpeakBtn text={s.q || s.question} />
                 <span className="sub">Đọc cho {child.name} nghe</span>
+                <WhyChip reason={s.ly_do_cho_me} />
               </div>
               {stuck > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0' }}>

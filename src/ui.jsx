@@ -371,3 +371,104 @@ export function Stepper({ value, onChange, min = 1, max = 3, label }) {
     </div>
   )
 }
+
+/* ---------- 💡 Chip "Vì sao AI hỏi câu này?" (Prompt 14 Phần C) ---------- */
+export function WhyChip({ reason, onReport }) {
+  const [open, setOpen] = useState(false)
+  if (!reason || typeof reason !== 'string' || !reason.trim()) return null
+
+  return (
+    <div style={{ display: 'inline-block', position: 'relative' }}>
+      <button
+        type="button"
+        data-testid="why-chip"
+        className="why-chip-btn"
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen(prev => !prev)
+        }}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          padding: '3px 8px',
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 700,
+          background: 'var(--c-sun, #FEF3C7)',
+          color: 'var(--c-sun-text, #92400E)',
+          border: '1px solid #FCD34D',
+          cursor: 'pointer',
+        }}
+        aria-label="Vì sao AI hỏi câu này?"
+        title="Vì sao AI hỏi câu này?"
+      >
+        <span>💡 Vì sao</span>
+      </button>
+
+      {open && (
+        <div
+          className="why-chip-pop"
+          data-testid="why-popover"
+          style={{
+            marginTop: 6,
+            marginBottom: 6,
+            padding: '10px 12px',
+            borderRadius: 14,
+            background: 'var(--c-card-bg, #FFFFFF)',
+            border: '1.5px solid #FCD34D',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
+            fontSize: 13,
+            lineHeight: 1.5,
+            color: 'inherit',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <b style={{ color: '#92400E', fontSize: 12.5 }}>💡 Vì sao AI hỏi câu này?</b>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#999' }}
+            >
+              ✕
+            </button>
+          </div>
+          <p style={{ margin: '4px 0 8px 0', fontSize: 12.5 }}>{reason}</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            {onReport && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpen(false); onReport(); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 11.5,
+                  color: '#EF4444',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                Câu chưa hợp?
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 999,
+                background: '#F3F4F6',
+                border: '1px solid #D1D5DB',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

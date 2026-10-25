@@ -67,18 +67,21 @@ function generateMockLesson(item) {
         {
           bac: 1,
           cau_hoi: "Con hãy đọc to câu tiếng Anh và gạch chân từ khóa chính nhé!",
+          ly_do_cho_me: "Nhận diện từ khóa trọng tâm để nắm bắt ngữ cảnh bài tập.",
           dap_an_cho_me: "Nhận diện từ loại hoặc chủ ngữ của câu.",
           goi_y: { muc_1_do_vat: "Nhìn vào chủ ngữ đứng đầu câu.", muc_2_hinh_ve: "Nhớ lại bảng quy tắc ngữ pháp đã học." }
         },
         {
           bac: 2,
           cau_hoi: "Chủ ngữ này là số ít hay số nhiều con nhỉ?",
+          ly_do_cho_me: "Xác định số lượng để chia động từ hoặc chọn đại từ thích hợp.",
           dap_an_cho_me: "Xác định dạng số ít hoặc số nhiều để chia đúng.",
           goi_y: { muc_1_do_vat: "Có 1 hay nhiều đối tượng?", muc_2_hinh_ve: "Đối chiếu với đại từ tương ứng." }
         },
         {
           bac: 3,
           cau_hoi: "Bây giờ con hãy chọn từ chính xác để hoàn thành câu nhé!",
+          ly_do_cho_me: "Khích lệ con tự tin đưa ra quyết định dựa trên các bước phân tích trước.",
           dap_an_cho_me: "Đáp án hoàn chỉnh của bài.",
           goi_y: { muc_1_do_vat: "Kiểm tra lại toàn bộ câu.", muc_2_hinh_ve: "Đọc lại cả câu xem đã xuôi tai chưa." }
         }
@@ -94,18 +97,21 @@ function generateMockLesson(item) {
         {
           bac: 1,
           cau_hoi: "Con hãy đọc kỹ câu văn và xem từ ngữ nào cần điền hoặc phân tích nhé!",
+          ly_do_cho_me: "Kích hoạt khả năng đọc hiểu ngữ cảnh câu trước khi phân tích chính tả.",
           dap_an_cho_me: "Xác định ngữ cảnh và âm điệu của từ.",
           goi_y: { muc_1_do_vat: "Đọc thầm từng tiếng một.", muc_2_hinh_ve: "Nhớ lại nghĩa của từ trong cuộc sống." }
         },
         {
           bac: 2,
           cau_hoi: "Con thử phát âm từ này xem đầu lưỡi uốn hay thẳng nhé?",
+          ly_do_cho_me: "Học cách cảm nhận vị trí phát âm để không nhầm lẫn chữ viết.",
           dap_an_cho_me: "Phân biệt phát âm hoặc cấu trúc câu.",
           goi_y: { muc_1_do_vat: "Cảm nhận cách phát âm.", muc_2_hinh_ve: "So sánh với từ quen thuộc." }
         },
         {
           bac: 3,
           cau_hoi: "Bây giờ con hãy viết lại từ hoàn chỉnh vào vở nhé!",
+          ly_do_cho_me: "Củng cố trí nhớ cơ vận động tay khi tự viết lại từ đúng.",
           dap_an_cho_me: "Từ ngữ hoặc câu đúng chính tả.",
           goi_y: { muc_1_do_vat: "Kiểm tra dấu thanh.", muc_2_hinh_ve: "Đọc to câu hoàn chỉnh." }
         }
@@ -121,18 +127,21 @@ function generateMockLesson(item) {
       {
         bac: 1,
         cau_hoi: "Con đọc đề bài và cho mẹ biết đề bài cho biết gì và hỏi gì nào?",
+        ly_do_cho_me: "Giúp con phân định rạch ròi giữa giả thiết đã có và mục tiêu cần tính.",
         dap_an_cho_me: "Xác định dữ kiện đề bài cho và mục tiêu cần tìm.",
         goi_y: { muc_1_do_vat: "Gạch chân dưới các con số đã biết.", muc_2_hinh_ve: "Tóm tắt đề bài ra nháp." }
       },
       {
         bac: 2,
         cau_hoi: "Để tìm được kết quả bài toán, con cần làm phép tính gì trước?",
+        ly_do_cho_me: "Gợi mở tư duy logic lựa chọn phép tính phù hợp với mối quan hệ đại lượng.",
         dap_an_cho_me: "Thiết lập mối quan hệ giữa các đại lượng.",
         goi_y: { muc_1_do_vat: "Dùng que tính hoặc sơ đồ đoạn thẳng.", muc_2_hinh_ve: "Vẽ sơ đồ tương ứng với dữ kiện." }
       },
       {
         bac: 3,
         cau_hoi: "Bây giờ con hãy thực hiện phép tính cuối cùng nhé!",
+        ly_do_cho_me: "Để con tự tính toán và rèn tính cẩn thận kiểm tra kết quả.",
         dap_an_cho_me: "Thực hiện phép tính ra đáp án cuối cùng.",
         goi_y: { muc_1_do_vat: "Tính toán cẩn thận từng bước.", muc_2_hinh_ve: "Kiểm tra lại kết quả và ghi đáp số." }
       }
@@ -207,7 +216,10 @@ async function runEvaluations() {
     const leakCheck = checkAnswerLeakage(q.prompt, lessonData?.cac_bac || [], lessonData?.dap_an_cuoi_cho_me);
     const c4 = !leakCheck.leaked;
 
-    const allPassed = c1 && c2 && c3 && c4;
+    // 5. Có lý do cho mẹ (ly_do_cho_me) ở mọi bậc câu hỏi (Prompt 14 Chặng 1)
+    const c5 = Boolean(Array.isArray(lessonData?.cac_bac) && lessonData.cac_bac.length > 0 && lessonData.cac_bac.every(b => Boolean(b.ly_do_cho_me && String(b.ly_do_cho_me).trim().length > 0)));
+
+    const allPassed = c1 && c2 && c3 && c4 && c5;
     if (allPassed) allPassCount++;
 
     results.push({
@@ -219,6 +231,7 @@ async function runEvaluations() {
       c2_matched: c2,
       c3_steps: c3,
       c4_no_leak: c4,
+      c5_reason: c5,
       allPassed,
       leakReason: leakCheck.reason || null,
       mode: isLive ? 'live' : 'benchmark'
