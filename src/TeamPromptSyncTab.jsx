@@ -110,11 +110,8 @@ export default function TeamPromptSyncTab() {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged))
         setLastSyncTime(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
         toast('Đã đồng bộ prompts mới nhất từ Cloud D1 ☁️')
-      } else {
-        // Chưa có dữ liệu trên cloud -> ghi dữ liệu ban đầu lên
-        await dbKvSet(TEAM_PROMPTS_KV_KEY, prompts)
-        setLastSyncTime(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }))
       }
+      // Đợt 15: chưa có dữ liệu trên cloud thì KHÔNG tự ghi khi mở trang; chỉ ghi khi người dùng bấm lưu.
     } catch (err) {
       console.warn('Load cloud prompts failed, using local cache:', err)
     } finally {

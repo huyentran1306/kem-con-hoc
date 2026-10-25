@@ -1,5 +1,10 @@
-import { appConfirm } from './dialog'
-import { useState, useEffect, useMemo } from 'react'
+/**
+ * Đợt 15 · Phạm vi đề & ảnh
+ * Đầu trang kem, 4 thẻ cài đặt, từ khoá dạng Chip, mỗi luật một hàng (hành động chọn bằng nút),
+ * lời nhắn nền kem có biến tô vàng, cột xem trước giống bong bóng trong app, SaveBar khi có thay đổi.
+ * Tab: Cấu hình luật · Bàn thử · Nhật ký.
+ */
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   DEFAULT_SCOPE_RULES,
   getActiveScopeRules,
@@ -10,865 +15,600 @@ import {
   SAMPLE_SCOPE_CASES,
   SCOPE_RULES_KV_KEY,
 } from './scopeRules'
-import { dbKvGet, dbKvSet, getScopeEvents, getScopeStats } from './api'
-import { toast } from './utils'
+import { dbKvGet, dbKvSet, getScopeStats } from './api'
+import {
+  PageHeader,
+  Card,
+  Tabs,
+  Toggle,
+  Slider,
+  Chip,
+  Segmented,
+  Button,
+  Select,
+  Field,
+  Textarea,
+  KpiCard,
+  DataTable,
+  EmptyState,
+  SaveBar,
+  StatusPill,
+  staffToast,
+  staffConfirm,
+} from './ui/staff'
+import { fetchScopeStats, fmtShortTime } from './admin/aiPagesApi'
+import './admin/pages-ai.css'
 
 export const SCOPE_CATEGORIES_META = [
-  { id: 'nhay_cam', name: 'Ảnh nhạy cảm / riêng tư', desc: 'Có mặt người rõ, giấy tờ tuỳ thân, nội dung riêng tư', defaultAction: 'block' },
-  { id: 'khong_phai_bai_tap', name: 'Không phải bài tập', desc: 'Đồ chơi, lego, đồ vật trong nhà, phong cảnh, ảnh game', defaultAction: 'block' },
-  { id: 'anh_mo', name: 'Ảnh mờ / thiếu sáng', desc: 'Ảnh rung tay, không đọc rõ chữ hoặc mất góc', defaultAction: 'retake' },
-  { id: 'nhieu_bai', name: 'Nhiều bài trong ảnh', desc: 'Có từ 2 câu bài tập trở lên trong một trang chụp', defaultAction: 'pick_one' },
-  { id: 'ngoai_chuong_trinh', name: 'Ngoài chương trình', desc: 'Bài tập lớp 6 trở lên ngoài phạm vi tiểu học (lớp 1-5)', defaultAction: 'warn' },
-  { id: 'lech_lop', name: 'Lệch lớp so với hồ sơ', desc: 'Bài tập chênh từ 2 lớp trở lên so với lớp hiện tại của con', defaultAction: 'warn' },
-  { id: 'mon_chua_ho_tro', name: 'Môn chưa hỗ trợ', desc: 'Môn học ngoài Toán, Tiếng Việt, Tiếng Anh', defaultAction: 'warn' },
-  { id: 'lam_ho', name: 'Làm bài hộ / viết văn hộ', desc: 'Phụ huynh yêu cầu viết sẵn toàn bộ bài văn hoặc giải hộ hoàn chỉnh', defaultAction: 'redirect' },
-  { id: 'khong_lien_quan', name: 'Không liên quan bài tập', desc: 'Câu chat vu vơ hoặc chứa từ khoá gian lận/chặn', defaultAction: 'block' },
+  { id: 'nhay_cam', emoji: '🙈', name: 'Ảnh nhạy cảm, riêng tư', desc: 'mặt người rõ, giấy tờ tuỳ thân', defaultAction: 'block' },
+  { id: 'khong_phai_bai_tap', emoji: '🧸', name: 'Không phải bài tập', desc: 'đồ chơi, phong cảnh, ảnh game', defaultAction: 'block' },
+  { id: 'anh_mo', emoji: '🌫️', name: 'Ảnh mờ, thiếu sáng', desc: 'rung tay, mất góc', defaultAction: 'retake' },
+  { id: 'nhieu_bai', emoji: '📑', name: 'Nhiều bài trong ảnh', desc: 'từ 2 bài trở lên trong một lần chụp', defaultAction: 'pick_one' },
+  { id: 'ngoai_chuong_trinh', emoji: '🎓', name: 'Ngoài chương trình', desc: 'bài lớp 6 trở lên', defaultAction: 'warn' },
+  { id: 'lech_lop', emoji: '🪜', name: 'Lệch lớp so với hồ sơ', desc: 'chênh lớp so với lớp của con', defaultAction: 'warn' },
+  { id: 'mon_chua_ho_tro', emoji: '📘', name: 'Môn chưa hỗ trợ', desc: 'ngoài Toán, Tiếng Việt, Tiếng Anh', defaultAction: 'warn' },
+  { id: 'lam_ho', emoji: '✍️', name: 'Nhờ làm hộ', desc: 'viết sẵn bài văn, giải hộ trọn bài', defaultAction: 'redirect' },
+  { id: 'khong_lien_quan', emoji: '💬', name: 'Không liên quan bài tập', desc: 'câu chat vu vơ, từ khoá luôn chặn', defaultAction: 'block' },
 ]
 
-export function AdminScopeSection({ adminKey }) {
-  const [rules, setRules] = useState(getActiveScopeRules())
-  const [loading, setLoading] = useState(true)
+const ACTION_LABELS = {
+  block: 'Chặn',
+  retake: 'Chụp lại',
+  warn: 'Cảnh báo',
+  pick_one: 'Chọn bài',
+  redirect: 'Gợi ý thay',
+  allow: 'Cho qua',
+}
+const ACTION_SETS = {
+  nhay_cam: ['block', 'retake', 'warn'],
+  khong_phai_bai_tap: ['block', 'retake', 'warn'],
+  anh_mo: ['block', 'retake', 'warn'],
+  nhieu_bai: ['pick_one', 'retake', 'block'],
+  ngoai_chuong_trinh: ['warn', 'block'],
+  lech_lop: ['warn', 'block'],
+  mon_chua_ho_tro: ['warn', 'block'],
+  lam_ho: ['redirect', 'warn', 'block'],
+  khong_lien_quan: ['block', 'warn'],
+}
+const MSG_VARS = {
+  nhieu_bai: ['xung_ho', 'so_bai'],
+  ngoai_chuong_trinh: ['xung_ho', 'lop_doan'],
+  lech_lop: ['xung_ho', 'ten_con', 'lop_con', 'lop_doan'],
+}
+const VAR_LABELS = { xung_ho: 'xưng hô', so_bai: 'số bài', lop_doan: 'lớp đoán', lop_con: 'lớp của con', ten_con: 'tên con' }
+const PREVIEW_PARAMS = {
+  default: { xung_ho: 'Mẹ', ten_con: 'Na', lop_con: 2, lop_doan: 4, so_bai: 3 },
+  ngoai_chuong_trinh: { xung_ho: 'Mẹ', ten_con: 'Na', lop_con: 2, lop_doan: 8, so_bai: 1 },
+}
+const SOURCE_LABELS = { camera: 'Ảnh', photo: 'Ảnh', text: 'Gõ chữ', type: 'Gõ chữ', voice: 'Giọng nói' }
+const GRADE_OPTS = ['Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5']
+const WARN_CATS = ['lech_lop', 'ngoai_chuong_trinh', 'mon_chua_ho_tro']
+
+const catName = (id) => (id === 'bai_tap' ? 'Bài tập hợp lệ' : SCOPE_CATEGORIES_META.find((m) => m.id === id)?.name || id || '·')
+const actionTone = (a) => (a === 'block' ? 'error' : a === 'allow' ? 'dat' : 'review')
+const clone = (x) => JSON.parse(JSON.stringify(x))
+
+function normalizeRules(r) {
+  const base = { ...DEFAULT_SCOPE_RULES, ...(r || {}) }
+  return {
+    ...base,
+    actions: { ...DEFAULT_SCOPE_RULES.actions, ...(base.actions || {}) },
+    messages: { ...DEFAULT_SCOPE_RULES.messages, ...(base.messages || {}) },
+    blocked_keywords: Array.isArray(base.blocked_keywords) ? base.blocked_keywords : [],
+  }
+}
+
+/** Đếm số mục khác nhau giữa bản đang sửa và bản đã lưu */
+function countChanges(a, b) {
+  let n = 0
+  for (const k of ['enabled', 'grade_gap_warn', 'min_confidence_text_len', 'grade_min', 'grade_max']) if (a[k] !== b[k]) n++
+  if (JSON.stringify(a.blocked_keywords) !== JSON.stringify(b.blocked_keywords)) n++
+  for (const m of SCOPE_CATEGORIES_META) {
+    if ((a.actions || {})[m.id] !== (b.actions || {})[m.id]) n++
+    if ((a.messages || {})[m.id] !== (b.messages || {})[m.id]) n++
+  }
+  return n
+}
+
+function highlightMsg(src) {
+  const esc = String(src || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return esc.replace(/\{\{?\s*[a-z_]+\s*\}?\}/g, (m) => `<mark class="sk-var">${m}</mark>`) + '\n'
+}
+
+/** Ô lời nhắn: nền kem, biến {xung_ho} tô vàng, bấm nhãn biến để chèn vào chỗ con trỏ */
+function MessageEditor({ value, onChange, vars = ['xung_ho'], ariaLabel }) {
+  const taRef = useRef(null)
+  const preRef = useRef(null)
+  const insert = (v) => {
+    const t = taRef.current
+    const tag = `{${v}}`
+    if (!t) return onChange((value || '') + tag)
+    const s = t.selectionStart ?? value.length
+    const e = t.selectionEnd ?? value.length
+    onChange(value.slice(0, s) + tag + value.slice(e))
+    requestAnimationFrame(() => {
+      t.focus()
+      t.setSelectionRange(s + tag.length, s + tag.length)
+    })
+  }
+  return (
+    <div style={{ display: 'grid', gap: 6 }}>
+      <div className="aip-msg">
+        <pre ref={preRef} aria-hidden="true" dangerouslySetInnerHTML={{ __html: highlightMsg(value) }} />
+        <textarea
+          ref={taRef}
+          value={value}
+          rows={3}
+          spellCheck={false}
+          aria-label={ariaLabel}
+          onChange={(e) => onChange(e.target.value)}
+          onScroll={(e) => preRef.current && (preRef.current.scrollTop = e.currentTarget.scrollTop)}
+        />
+      </div>
+      <div className="aip-ps-vars">
+        {vars.map((v) => (
+          <button key={v} type="button" className="aip-var-btn" onClick={() => insert(v)} title={`Chèn ${VAR_LABELS[v] || v}`}>
+            {`{${v}}`}
+          </button>
+        ))}
+        <span className="aip-small aip-muted">bấm để chèn</span>
+      </div>
+    </div>
+  )
+}
+
+function Bubble({ text }) {
+  return (
+    <div className="aip-bubble-wrap">
+      <div className="aip-bubble-ava" aria-hidden="true">🐻</div>
+      <div className={`aip-bubble ${text ? '' : 'empty'}`}>{text || 'Chưa có lời nhắn, phụ huynh sẽ không thấy giải thích.'}</div>
+    </div>
+  )
+}
+
+export function AdminScopeSection() {
+  const [rules, setRules] = useState(() => normalizeRules(getActiveScopeRules()))
+  const [saved, setSaved] = useState(() => normalizeRules(getActiveScopeRules()))
   const [saving, setSaving] = useState(false)
+  const [tab, setTab] = useState('rules')
   const [newKeyword, setNewKeyword] = useState('')
-  const [activeTab, setActiveTab] = useState('rules') // 'rules' | 'testbench' | 'logs'
 
-  // Test bench state
-  const [selectedSample, setSelectedSample] = useState(SAMPLE_SCOPE_CASES[0])
+  // Bàn thử
+  const [sample, setSample] = useState(SAMPLE_SCOPE_CASES[0])
   const [testText, setTestText] = useState(SAMPLE_SCOPE_CASES[0].rawText)
-  const [testChildGrade, setTestChildGrade] = useState('Lớp 2')
+  const [testGrade, setTestGrade] = useState('Lớp 2')
   const [testResult, setTestResult] = useState(null)
+  const [batch, setBatch] = useState(null)
 
-  // Audit logs state
-  const [events, setEvents] = useState([])
-  const [stats, setStats] = useState({ byCategory: [], recentEvents: [] })
+  // Nhật ký
+  const [stats, setStats] = useState(null)
   const [loadingLogs, setLoadingLogs] = useState(false)
 
-  // Load rules from Cloudflare D1 KV on mount
   useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setLoading(true)
-      try {
-        const remote = await dbKvGet(SCOPE_RULES_KV_KEY)
-        if (!cancelled && remote && typeof remote === 'object' && remote.version) {
-          const merged = { ...DEFAULT_SCOPE_RULES, ...remote }
-          setActiveScopeRules(merged)
-          setRules(merged)
-        }
-      } catch (e) {
-        console.warn('Load scope rules from KV failed, using local cache:', e)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    load()
+    let off = false
+    dbKvGet(SCOPE_RULES_KV_KEY)
+      .then((remote) => {
+        if (off || !remote || typeof remote !== 'object' || !remote.version) return
+        const merged = normalizeRules(remote)
+        setActiveScopeRules(merged)
+        setRules(merged)
+        setSaved(clone(merged))
+      })
+      .catch(() => {})
     return () => {
-      cancelled = true
+      off = true
     }
   }, [])
-
-  // Load audit events when switching to logs tab
-  useEffect(() => {
-    if (activeTab === 'logs') {
-      loadLogs()
-    }
-  }, [activeTab])
 
   const loadLogs = async () => {
     setLoadingLogs(true)
     try {
-      const st = await getScopeStats()
-      setStats(st)
-      setEvents(st.recentEvents || [])
+      const fromApi = await fetchScopeStats(30)
+      if (fromApi && fromApi.ok) setStats({ byCategory: fromApi.byCategory || [], recentEvents: fromApi.recentEvents || [] })
+      else {
+        const st = await getScopeStats()
+        setStats({ byCategory: st?.byCategory || [], recentEvents: st?.recentEvents || [] })
+      }
     } catch (e) {
-      console.warn('Failed to load scope stats:', e)
+      setStats({ byCategory: [], recentEvents: [], failed: true })
     } finally {
       setLoadingLogs(false)
     }
   }
+  useEffect(() => {
+    if (tab === 'logs' && !stats && !loadingLogs) loadLogs()
+  }, [tab])
 
-  // Save rules to Cloudflare D1 KV & LocalStorage
-  const handleSave = async () => {
+  const changes = useMemo(() => countChanges(rules, saved), [rules, saved])
+  const dirty = changes > 0
+  const set = (patch) => setRules((r) => ({ ...r, ...patch }))
+  const setAction = (id, a) => setRules((r) => ({ ...r, actions: { ...r.actions, [id]: a } }))
+  const setMessage = (id, m) => setRules((r) => ({ ...r, messages: { ...r.messages, [id]: m } }))
+
+  const addKeyword = () => {
+    const kw = newKeyword.trim().toLowerCase()
+    if (!kw) return
+    if (rules.blocked_keywords.includes(kw)) {
+      staffToast('Từ khoá này đã có trong danh sách')
+      return
+    }
+    set({ blocked_keywords: [...rules.blocked_keywords, kw] })
+    setNewKeyword('')
+  }
+
+  const gmin = rules.grade_min || 1
+  const gmax = rules.grade_max || 5
+  const toggleGrade = (g) => {
+    if (g > gmax) return set({ grade_max: g })
+    if (g < gmin) return set({ grade_min: g })
+    if (g === gmax && g > gmin) return set({ grade_max: g - 1 })
+    if (g === gmin && g < gmax) return set({ grade_min: g + 1 })
+    staffToast('Khối hỗ trợ phải liền nhau: bỏ từ lớp đầu hoặc lớp cuối nhé')
+  }
+
+  const save = async () => {
     setSaving(true)
     try {
-      const payload = {
-        ...rules,
-        version: (rules.version || 1) + 1,
-        updated_at: new Date().toISOString(),
-        updated_by: adminKey ? 'Admin' : 'System',
-      }
-      setActiveScopeRules(payload)
-      setRules(payload)
-
+      const payload = { ...rules, version: (saved.version || rules.version || 1) + 1, updated_at: new Date().toISOString() }
       const ok = await dbKvSet(SCOPE_RULES_KV_KEY, payload)
       if (ok) {
-        toast(`✅ Đã lưu Luật phạm vi (v${payload.version}) lên Cloudflare D1 KV!`)
+        setActiveScopeRules(payload)
+        setRules(payload)
+        setSaved(clone(payload))
+        staffToast(`Đã lưu luật phạm vi v${payload.version}, áp dụng ngay cho lần chụp sau`)
       } else {
-        toast(`⚠️ Đã lưu cục bộ. Cloudflare KV chưa nhận phản hồi.`)
+        staffToast('Chưa lưu được lên máy chủ, thử lại sau nhé', { tone: 'bad' })
       }
-    } catch (e) {
-      toast(`❌ Lỗi khi lưu: ${e.message}`)
     } finally {
       setSaving(false)
     }
   }
 
-  const handleResetDefault = async () => {
-    if (await appConfirm('Khôi phục toàn bộ luật phạm vi và lời nhắn về mặc định ban đầu?', { okText: 'Khôi phục' })) {
-      setActiveScopeRules(DEFAULT_SCOPE_RULES)
-      setRules(DEFAULT_SCOPE_RULES)
-      toast('Đã khôi phục cài đặt gốc!')
-    }
-  }
-
-  const addBlockedKeyword = () => {
-    const kw = newKeyword.trim().toLowerCase()
-    if (!kw) return
-    if ((rules.blocked_keywords || []).includes(kw)) {
-      toast('Từ khoá này đã có trong danh sách!')
-      return
-    }
-    const updated = {
-      ...rules,
-      blocked_keywords: [...(rules.blocked_keywords || []), kw],
-    }
-    setRules(updated)
-    setNewKeyword('')
-  }
-
-  const removeBlockedKeyword = (kwToRemove) => {
-    const updated = {
-      ...rules,
-      blocked_keywords: (rules.blocked_keywords || []).filter((k) => k !== kwToRemove),
-    }
-    setRules(updated)
-  }
-
-  // Run Test bench simulation
-  const handleRunTest = (sampleObj = null) => {
-    const target = sampleObj || selectedSample
-    const textToTest = sampleObj ? sampleObj.rawText : testText
-    let res = null
-
-    if (sampleObj && sampleObj.mockAiJson) {
-      // Giả lập kết quả OCR Vision V2
-      res = parseOcrV2Result(sampleObj.mockAiJson, {
-        childGrade: testChildGrade,
-        childName: 'Bé Kem',
-        parentRole: 'Mẹ',
-        customRules: rules,
-      })
-    } else {
-      // Đánh giá văn bản
-      res = evaluateTextScope(textToTest, {
-        childGrade: testChildGrade,
-        childName: 'Bé Kem',
-        parentRole: 'Mẹ',
-        customRules: rules,
-      })
-    }
-
-    setTestResult({
-      ...res,
-      timestamp: new Date().toLocaleTimeString('vi-VN'),
+  const resetDefault = async () => {
+    const ok = await staffConfirm({
+      title: 'Đưa luật phạm vi về mặc định?',
+      message: 'Mọi hành động, lời nhắn và từ khoá sẽ trở về bản gốc. Bạn vẫn cần bấm Lưu luật để áp dụng.',
+      confirmText: 'Đưa về mặc định',
     })
+    if (ok) setRules(normalizeRules({ ...clone(DEFAULT_SCOPE_RULES), version: rules.version }))
   }
 
-  // Tính tỉ lệ Overridden
-  const totalWarnings = useMemo(() => {
-    return (stats.byCategory || [])
-      .filter((c) => ['lech_lop', 'ngoai_chuong_trinh', 'mon_chua_ho_tro'].includes(c.category))
-      .reduce((acc, cur) => acc + (cur.cnt || 0), 0)
+  const runOne = (s, asImage) => {
+    const opts = { childGrade: testGrade, childName: 'Na', parentRole: 'Mẹ', customRules: rules }
+    const res = asImage && s?.mockAiJson ? parseOcrV2Result(s.mockAiJson, opts) : evaluateTextScope(asImage ? s.rawText : testText, opts)
+    return res || { category: 'bai_tap', action: 'allow' }
+  }
+  const runTest = (asImage) => {
+    const res = runOne(sample, asImage)
+    setTestResult({ ...res, asImage, expected: asImage || testText === sample.rawText ? sample.expectedAction : null, at: new Date().toLocaleTimeString('vi-VN') })
+  }
+  const runAll = () => {
+    setBatch(
+      SAMPLE_SCOPE_CASES.map((s) => {
+        const r = runOne(s, true)
+        return { id: s.id, name: s.name, expected: s.expectedAction, action: r.action, category: r.category, ok: r.action === s.expectedAction }
+      })
+    )
+  }
+
+  const totals = useMemo(() => {
+    if (!stats) return null
+    const by = stats.byCategory || []
+    const total = by.reduce((a, c) => a + (Number(c.cnt) || 0), 0)
+    const warns = by.filter((c) => WARN_CATS.includes(c.category)).reduce((a, c) => a + (Number(c.cnt) || 0), 0)
+    const over = by.reduce((a, c) => a + (Number(c.overridden_cnt) || 0), 0)
+    return { total, warns, over, rate: warns > 0 ? Math.round((over / warns) * 100) : null }
   }, [stats])
 
-  const totalOverridden = useMemo(() => {
-    return (stats.byCategory || []).reduce((acc, cur) => acc + (cur.overridden_cnt || 0), 0)
-  }, [stats])
-
-  const overrideRate = totalWarnings > 0 ? Math.round((totalOverridden / totalWarnings) * 100) : 0
+  const events = stats?.recentEvents || []
 
   return (
-    <div style={{ background: '#FFFFFF', borderRadius: 16, border: '1px solid #E2E8F0', overflow: 'hidden', margin: '16px 0' }}>
-      {/* Header bar */}
-      <div style={{ background: 'linear-gradient(135deg, #0F172A, #1E293B)', padding: '16px 20px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 22 }}>🛡️</span>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Luật Phạm Vi Ảnh & Đề Bài (Scope Rules)</h3>
-            <span style={{ background: rules.enabled ? '#10B981' : '#64748B', color: '#fff', fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
-              {rules.enabled ? 'ĐANG BẬT' : 'ĐÃ TẮT'}
-            </span>
-            <span style={{ background: 'rgba(255,255,255,0.15)', color: '#E2E8F0', fontSize: 11, padding: '2px 8px', borderRadius: 999 }}>
-              v{rules.version || 1}
-            </span>
-          </div>
-          <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#94A3B8' }}>
-            Kiểm tra ảnh bài tập, đồ chơi, ảnh mờ, lệch lớp và chặn gian lận trước khi gọi AI soạn bài.
-          </p>
-        </div>
+    <div className="aip-root">
+      <PageHeader
+        title="Phạm vi đề & ảnh"
+        description="Chặn ảnh không phải bài tập, đề ngoài chương trình và nhờ làm hộ, trước khi gọi AI"
+        status={{ label: `${rules.enabled ? 'Đang bật' : 'Đang tắt'} · v${saved.version || 1}`, tone: rules.enabled ? 'ok' : 'warn' }}
+        actions={
+          <Button variant="ghost" onClick={resetDefault}>
+            Đưa về mặc định
+          </Button>
+        }
+      />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.12)', padding: 3, borderRadius: 8 }}>
-            <button
-              className="admin-btn sm"
-              style={{
-                background: activeTab === 'rules' ? '#FFFFFF' : 'transparent',
-                color: activeTab === 'rules' ? '#0F172A' : '#CBD5E1',
-                fontWeight: 700,
-                border: 'none',
-              }}
-              onClick={() => setActiveTab('rules')}
-            >
-              ⚙️ Cấu hình luật
-            </button>
-            <button
-              className="admin-btn sm"
-              style={{
-                background: activeTab === 'testbench' ? '#FFFFFF' : 'transparent',
-                color: activeTab === 'testbench' ? '#0F172A' : '#CBD5E1',
-                fontWeight: 700,
-                border: 'none',
-              }}
-              onClick={() => setActiveTab('testbench')}
-            >
-              🧪 Bàn thử (6 Mẫu)
-            </button>
-            <button
-              className="admin-btn sm"
-              style={{
-                background: activeTab === 'logs' ? '#FFFFFF' : 'transparent',
-                color: activeTab === 'logs' ? '#0F172A' : '#CBD5E1',
-                fontWeight: 700,
-                border: 'none',
-              }}
-              onClick={() => setActiveTab('logs')}
-            >
-              📊 Nhật ký ({events.length})
-            </button>
-          </div>
+      <Tabs
+        activeTab={tab}
+        onChange={setTab}
+        ariaLabel="Các mục phạm vi"
+        tabs={[
+          { id: 'rules', label: 'Cấu hình luật', icon: '⚙️' },
+          { id: 'bench', label: 'Bàn thử', icon: '🧪', count: `${SAMPLE_SCOPE_CASES.length} mẫu` },
+          { id: 'logs', label: 'Nhật ký', icon: '📊', count: stats ? events.length : null },
+        ]}
+      />
 
-          <button
-            className="admin-btn sm"
-            style={{ background: '#10B981', color: '#fff', fontWeight: 800, border: 'none' }}
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? '⏳ Đang lưu...' : '💾 Lưu Luật'}
-          </button>
-        </div>
-      </div>
-
-      {/* TAB 1: CẤU HÌNH LUẬT & TIN NHẮN */}
-      {activeTab === 'rules' && (
-        <div style={{ padding: 20 }}>
-          {/* Thông số cốt lõi */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 20 }}>
-            {/* Toggle enabled */}
-            <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1E293B' }}>Bật kiểm tra phạm vi</span>
-                <input
-                  type="checkbox"
-                  checked={rules.enabled}
-                  onChange={(e) => setRules({ ...rules, enabled: e.target.checked })}
-                  style={{ width: 18, height: 18, accentColor: '#10B981', cursor: 'pointer' }}
-                />
-              </label>
-              <span style={{ display: 'block', fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
-                Nếu tắt, mọi ảnh và đề đều đi thẳng vào AI soạn bài.
-              </span>
-            </div>
-
-            {/* Ngưỡng lệch lớp */}
-            <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1E293B' }}>Ngưỡng lệch lớp cảnh báo</span>
-                <span style={{ fontWeight: 800, color: '#0284C7', fontSize: 14 }}>
-                  ≥ {rules.grade_gap_warn + 1} lớp
-                </span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="1"
-                value={rules.grade_gap_warn}
-                onChange={(e) => setRules({ ...rules, grade_gap_warn: parseInt(e.target.value, 10) })}
-                style={{ width: '100%', marginTop: 8 }}
+      {tab === 'rules' && (
+        <>
+          <div className="aip-settings">
+            <Card className="aip-setting">
+              <h4>Bật kiểm tra</h4>
+              <Toggle checked={!!rules.enabled} onChange={(v) => set({ enabled: v })} label={rules.enabled ? 'Đang bật' : 'Đang tắt'} />
+              <p>Tắt thì mọi ảnh và đề đi thẳng vào AI</p>
+            </Card>
+            <Card className="aip-setting">
+              <h4>Lệch lớp cảnh báo</h4>
+              <Slider
+                label={<span className="big">≥ {(rules.grade_gap_warn ?? 1) + 1} lớp</span>}
+                format={() => ''}
+                min={2}
+                max={4}
+                value={(rules.grade_gap_warn ?? 1) + 1}
+                onChange={(v) => set({ grade_gap_warn: v - 1 })}
+                aria-label="Lệch lớp cảnh báo"
               />
-              <span style={{ display: 'block', fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
-                Mặc định: lệch từ 2 lớp trở lên mới cảnh báo (VD con lớp 2, bài lớp 4).
-              </span>
-            </div>
-
-            {/* Độ dài ký tự tối thiểu */}
-            <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1E293B' }}>Độ dài đề chữ tối thiểu</span>
-                <span style={{ fontWeight: 800, color: '#0284C7', fontSize: 14 }}>
-                  {rules.min_confidence_text_len || 12} ký tự
-                </span>
-              </div>
-              <input
-                type="range"
-                min="6"
-                max="30"
-                step="2"
+              <p>Con lớp 2 làm bài lớp {2 + (rules.grade_gap_warn ?? 1) + 1} thì cảnh báo</p>
+            </Card>
+            <Card className="aip-setting">
+              <h4>Đề tối thiểu</h4>
+              <Slider
+                label={<span className="big">{rules.min_confidence_text_len || 12} ký tự</span>}
+                format={() => ''}
+                min={5}
+                max={40}
                 value={rules.min_confidence_text_len || 12}
-                onChange={(e) => setRules({ ...rules, min_confidence_text_len: parseInt(e.target.value, 10) })}
-                style={{ width: '100%', marginTop: 8 }}
+                onChange={(v) => set({ min_confidence_text_len: v })}
+                aria-label="Đề tối thiểu"
               />
-              <span style={{ display: 'block', fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
-                Ngắn hơn số này và không có số sẽ coi là câu chat vu vơ.
-              </span>
-            </div>
-
-            {/* Phạm vi khối lớp */}
-            <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
-              <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1E293B', display: 'block', marginBottom: 6 }}>
-                Phạm vi khối lớp hỗ trợ
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, color: '#475569' }}>Lớp {rules.grade_min || 1} đến Lớp {rules.grade_max || 5}</span>
-                <span style={{ fontSize: 11, background: '#E0F2FE', color: '#0369A1', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
-                  Tiểu học
-                </span>
+              <p>Ngắn hơn và không có số: coi là trò chuyện</p>
+            </Card>
+            <Card className="aip-setting">
+              <h4>Khối hỗ trợ</h4>
+              <div className="aip-row">
+                {[1, 2, 3, 4, 5].map((g) => (
+                  <Chip key={g} selected={g >= gmin && g <= gmax} onClick={() => toggleGrade(g)}>
+                    {g === 1 ? 'Lớp 1' : g}
+                  </Chip>
+                ))}
               </div>
-              <span style={{ display: 'block', fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
-                Bài tập lớp 6 trở lên sẽ kích hoạt luật "Ngoài chương trình".
-              </span>
-            </div>
+              <p>Lớp {gmax + 1} trở lên: luật ngoài chương trình</p>
+            </Card>
           </div>
 
-          {/* Danh sách từ khoá chặn */}
-          <div style={{ background: '#FFF1F2', padding: 16, borderRadius: 12, border: '1px solid #FECDD3', marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#9F1239' }}>🚫 Từ khoá bị chặn (Blocked Keywords)</span>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#BE123C' }}>
-                  Nếu đề bài chứa các từ khoá này, app lập tức dừng và yêu cầu nhập lại đề bài hợp lệ.
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
+          <Card>
+            <div className="aip-row" style={{ marginBottom: 10 }}>
+              <h3 className="aip-h3">Từ khoá luôn chặn</h3>
+              <span className="aip-small aip-muted">đề chứa các cụm này thì dừng và nhờ nhập lại</span>
+            </div>
+            <div className="aip-row">
+              <span className="aip-kw-add">
                 <input
-                  type="text"
-                  placeholder="Thêm từ khoá chặn..."
                   value={newKeyword}
                   onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addBlockedKeyword()}
-                  style={{ padding: '6px 10px', fontSize: 13, borderRadius: 6, border: '1px solid #FDA4AF', width: 200 }}
+                  onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
+                  placeholder="＋ Thêm từ khoá…"
+                  aria-label="Thêm từ khoá luôn chặn"
                 />
-                <button
-                  className="admin-btn sm"
-                  style={{ background: '#E11D48', color: '#fff', border: 'none', fontWeight: 700 }}
-                  onClick={addBlockedKeyword}
-                >
-                  + Thêm
+                <button type="button" onClick={addKeyword} disabled={!newKeyword.trim()}>
+                  Thêm
                 </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {(rules.blocked_keywords || []).map((kw) => (
-                <span
-                  key={kw}
-                  style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #FDA4AF',
-                    color: '#9F1239',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    padding: '4px 10px',
-                    borderRadius: 999,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                  }}
-                >
+              </span>
+              {rules.blocked_keywords.map((kw) => (
+                <Chip key={kw} onRemove={() => set({ blocked_keywords: rules.blocked_keywords.filter((k) => k !== kw) })} removeLabel="Xoá từ khoá">
                   {kw}
-                  <button
-                    onClick={() => removeBlockedKeyword(kw)}
-                    style={{ background: 'none', border: 'none', color: '#E11D48', cursor: 'pointer', fontSize: 13, padding: 0 }}
-                    title="Xoá từ khoá"
-                  >
-                    ×
-                  </button>
-                </span>
+                </Chip>
               ))}
+              {rules.blocked_keywords.length === 0 && <span className="aip-small aip-muted">Chưa có từ khoá nào.</span>}
             </div>
-          </div>
+          </Card>
 
-          {/* Bảng Hành động & Lời nhắn */}
-          <div>
-            <h4 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
-              📋 Bảng Quy Tắc Hành Động & Lời Nhắn Thân Thiện ({SCOPE_CATEGORIES_META.length} Loại)
-            </h4>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: '#F1F5F9', borderBottom: '2px solid #CBD5E1', textAlign: 'left' }}>
-                    <th style={{ padding: '10px 12px', width: '22%' }}>Loại vi phạm & Mô tả</th>
-                    <th style={{ padding: '10px 12px', width: '15%' }}>Hành động</th>
-                    <th style={{ padding: '10px 12px', width: '38%' }}>Mẫu lời nhắn (Hỗ trợ biến)</th>
-                    <th style={{ padding: '10px 12px', width: '25%' }}>Xem trước phụ huynh</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {SCOPE_CATEGORIES_META.map((meta) => {
-                    const currentAction = rules.actions?.[meta.id] || meta.defaultAction
-                    const currentMessage = rules.messages?.[meta.id] || ''
-                    const previewText = formatScopeMessage(currentMessage, {
-                      so_bai: 3,
-                      lop_doan: 8,
-                      lop_con: 2,
-                      ten_con: 'Bé Kem',
-                      xung_ho: 'Mẹ',
-                    })
-
-                    return (
-                      <tr key={meta.id} style={{ borderBottom: '1px solid #E2E8F0', verticalAlign: 'top' }}>
-                        <td style={{ padding: '12px' }}>
-                          <span style={{ fontWeight: 800, color: '#0F172A', display: 'block' }}>{meta.name}</span>
-                          <span style={{ fontSize: 11.5, color: '#64748B' }}>{meta.desc}</span>
-                          <span style={{ display: 'inline-block', marginTop: 4, fontFamily: 'monospace', fontSize: 11, background: '#F1F5F9', padding: '1px 5px', borderRadius: 4, color: '#475569' }}>
-                            {meta.id}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          <select
-                            value={currentAction}
-                            onChange={(e) => {
-                              const updated = {
-                                ...rules,
-                                actions: { ...rules.actions, [meta.id]: e.target.value },
-                              }
-                              setRules(updated)
-                            }}
-                            style={{
-                              padding: '6px 8px',
-                              borderRadius: 6,
-                              border: '1px solid #CBD5E1',
-                              fontSize: 12.5,
-                              fontWeight: 700,
-                              background:
-                                currentAction === 'block'
-                                  ? '#FEE2E2'
-                                  : currentAction === 'warn'
-                                  ? '#FEF3C7'
-                                  : currentAction === 'pick_one'
-                                  ? '#E0F2FE'
-                                  : '#F0FDF4',
-                              color:
-                                currentAction === 'block'
-                                  ? '#991B1B'
-                                  : currentAction === 'warn'
-                                  ? '#92400E'
-                                  : currentAction === 'pick_one'
-                                  ? '#0369A1'
-                                  : '#166534',
-                            }}
-                          >
-                            <option value="block">🚫 block (Dừng)</option>
-                            <option value="retake">📷 retake (Chụp lại)</option>
-                            <option value="warn">⚠️ warn (Cảnh báo)</option>
-                            <option value="pick_one">📑 pick_one (Chọn bài)</option>
-                            <option value="redirect">💡 redirect (Làm hộ)</option>
-                            <option value="allow">✅ allow (Cho qua)</option>
-                          </select>
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          <textarea
-                            rows={3}
-                            value={currentMessage}
-                            onChange={(e) => {
-                              const updated = {
-                                ...rules,
-                                messages: { ...rules.messages, [meta.id]: e.target.value },
-                              }
-                              setRules(updated)
-                            }}
-                            style={{
-                              width: '100%',
-                              padding: '6px 8px',
-                              fontSize: 12,
-                              borderRadius: 6,
-                              border: '1px solid #CBD5E1',
-                              fontFamily: 'inherit',
-                              lineHeight: 1.4,
-                            }}
-                          />
-                          <span style={{ fontSize: 10.5, color: '#94A3B8' }}>
-                            Biến: {'{so_bai}'}, {'{lop_doan}'}, {'{lop_con}'}, {'{ten_con}'}, {'{xung_ho}'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 8, borderRadius: 8, fontSize: 11.5, color: '#334155', lineHeight: 1.4 }}>
-                            {previewText}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+          <Card>
+            <div className="aip-scope-head">
+              <span className="aip-label">Loại vi phạm</span>
+              <span className="aip-label">Hành động</span>
+              <span className="aip-label">Lời nhắn cho phụ huynh</span>
+              <span className="aip-label">Phụ huynh sẽ thấy</span>
             </div>
-
-            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                className="admin-btn sm"
-                style={{ background: '#F1F5F9', color: '#64748B', border: '1px solid #CBD5E1' }}
-                onClick={handleResetDefault}
-              >
-                🔄 Khôi phục về mặc định ban đầu
-              </button>
-              <button
-                className="admin-btn sm"
-                style={{ background: '#10B981', color: '#fff', fontWeight: 800, border: 'none', padding: '8px 16px' }}
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? '⏳ Đang lưu...' : '💾 Lưu toàn bộ thiết lập'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: BÀN THỬ (TEST BENCH VỚI 6 MẪU) */}
-      {activeTab === 'testbench' && (
-        <div style={{ padding: 20 }}>
-          <div style={{ marginBottom: 14 }}>
-            <h4 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
-              🧪 Bàn Thử Nghiệm Chuỗi Phân Loại (Test Bench)
-            </h4>
-            <p style={{ margin: 0, fontSize: 12.5, color: '#64748B' }}>
-              Bấm chọn 1 trong 6 bài tập mẫu chuẩn bị sẵn để kiểm tra tức thì hành động và lời nhắn sinh ra.
-            </p>
-          </div>
-
-          {/* 6 mẫu nhanh */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10, marginBottom: 16 }}>
-            {SAMPLE_SCOPE_CASES.map((sample) => {
-              const isSelected = selectedSample?.id === sample.id
+            {SCOPE_CATEGORIES_META.map((m) => {
+              const cur = rules.actions[m.id] || m.defaultAction
+              const opts = Array.from(new Set([...(ACTION_SETS[m.id] || ['block', 'warn']), cur]))
+              const msg = rules.messages[m.id] || ''
               return (
-                <div
-                  key={sample.id}
-                  onClick={() => {
-                    setSelectedSample(sample)
-                    setTestText(sample.rawText)
-                    handleRunTest(sample)
-                  }}
-                  style={{
-                    background: isSelected ? '#EFF6FF' : '#F8FAFC',
-                    border: isSelected ? '2px solid #3B82F6' : '1px solid #E2E8F0',
-                    padding: '10px 12px',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: isSelected ? '#1D4ED8' : '#0F172A' }}>
-                      {sample.name}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 10.5,
-                        fontWeight: 700,
-                        padding: '1px 6px',
-                        borderRadius: 4,
-                        background:
-                          sample.expectedAction === 'allow'
-                            ? '#DCFCE7'
-                            : sample.expectedAction === 'block'
-                            ? '#FEE2E2'
-                            : sample.expectedAction === 'pick_one'
-                            ? '#E0F2FE'
-                            : '#FEF3C7',
-                        color:
-                          sample.expectedAction === 'allow'
-                            ? '#166534'
-                            : sample.expectedAction === 'block'
-                            ? '#991B1B'
-                            : sample.expectedAction === 'pick_one'
-                            ? '#0369A1'
-                            : '#92400E',
-                      }}
-                    >
-                      {sample.expectedAction}
-                    </span>
+                <div key={m.id} className="aip-scope-row">
+                  <div className="aip-scope-name">
+                    <span className="aip-scope-emoji" aria-hidden="true">{m.emoji}</span>
+                    <div>
+                      <b>{m.name}</b>
+                      <small>{m.id === 'ngoai_chuong_trinh' ? `bài lớp ${gmax + 1} trở lên` : m.desc}</small>
+                    </div>
                   </div>
-                  <span style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
-                    {sample.description}
-                  </span>
+                  <div>
+                    <Segmented value={cur} onChange={(v) => setAction(m.id, v)} options={opts.map((o) => ({ value: o, label: ACTION_LABELS[o] || o }))} />
+                  </div>
+                  <MessageEditor value={msg} onChange={(v) => setMessage(m.id, v)} vars={MSG_VARS[m.id] || ['xung_ho']} ariaLabel={`Lời nhắn: ${m.name}`} />
+                  <Bubble text={formatScopeMessage(msg, PREVIEW_PARAMS[m.id] || PREVIEW_PARAMS.default)} />
                 </div>
               )
             })}
-          </div>
+          </Card>
 
-          {/* Khung tuỳ biến và kiểm thử */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {/* Input bên trái */}
-            <div style={{ background: '#F8FAFC', padding: 16, borderRadius: 12, border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#1E293B' }}>Nội dung kiểm thử</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, color: '#64748B' }}>Hồ sơ con:</span>
-                  <select
-                    value={testChildGrade}
-                    onChange={(e) => setTestChildGrade(e.target.value)}
-                    style={{ fontSize: 12, padding: '3px 6px', borderRadius: 4, border: '1px solid #CBD5E1' }}
-                  >
-                    <option value="Lớp 1">Lớp 1</option>
-                    <option value="Lớp 2">Lớp 2</option>
-                    <option value="Lớp 3">Lớp 3</option>
-                    <option value="Lớp 4">Lớp 4</option>
-                    <option value="Lớp 5">Lớp 5</option>
-                  </select>
-                </div>
-              </div>
+          <SaveBar
+            dirty={dirty}
+            busy={saving}
+            text={`Có ${changes} thay đổi chưa lưu · luật mới áp dụng ngay sau khi lưu`}
+            saveText="Lưu luật"
+            onSave={save}
+            onDiscard={() => setRules(clone(saved))}
+          />
+        </>
+      )}
 
-              {selectedSample?.imagePath && (
-                <div style={{ marginBottom: 10, textAlign: 'center', background: '#FFFFFF', padding: 8, borderRadius: 8, border: '1px dashed #CBD5E1' }}>
-                  <img
-                    src={selectedSample.imagePath}
-                    alt={selectedSample.name}
-                    style={{ maxHeight: 140, maxWidth: '100%', objectFit: 'contain' }}
-                  />
-                  <span style={{ display: 'block', fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                    Ảnh mẫu: {selectedSample.imagePath}
-                  </span>
-                </div>
-              )}
-
-              <textarea
-                rows={5}
-                value={testText}
-                onChange={(e) => setTestText(e.target.value)}
-                placeholder="Nhập hoặc dán đề bài muốn thử..."
-                style={{ width: '100%', padding: '8px 10px', fontSize: 12.5, borderRadius: 8, border: '1px solid #CBD5E1' }}
-              />
-
-              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+      {tab === 'bench' && (
+        <div className="aip-two">
+          <Card>
+            <div className="aip-row" style={{ marginBottom: 10 }}>
+              <h3 className="aip-h3">Mẫu thử</h3>
+              <span className="aip-small aip-muted">chạy ngay trên máy bạn với luật đang sửa, không gọi AI</span>
+              <span className="aip-spacer" />
+              <Button variant="secondary" size="sm" onClick={runAll}>
+                Chạy cả {SAMPLE_SCOPE_CASES.length} mẫu
+              </Button>
+            </div>
+            <div className="aip-samples">
+              {SAMPLE_SCOPE_CASES.map((s) => (
                 <button
-                  className="admin-btn sm"
-                  style={{ background: '#0284C7', color: '#fff', fontWeight: 800, border: 'none', flex: 1, padding: 8 }}
-                  onClick={() => handleRunTest(null)}
+                  key={s.id}
+                  type="button"
+                  className={`aip-sample ${sample?.id === s.id ? 'on' : ''}`}
+                  onClick={() => {
+                    setSample(s)
+                    setTestText(s.rawText)
+                    setTestResult(null)
+                  }}
                 >
-                  ⚡ Chạy Phân Loại Văn Bản
+                  {s.imagePath ? <img src={s.imagePath} alt="" /> : <span />}
+                  <span style={{ minWidth: 0 }}>
+                    <b style={{ display: 'block', fontSize: 13 }}>{s.name.replace(/^\d+\.\s*/, '')}</b>
+                    <span className="aip-small aip-muted">
+                      Kỳ vọng: {ACTION_LABELS[s.expectedAction] || s.expectedAction} · {s.description}
+                    </span>
+                  </span>
                 </button>
-                {selectedSample && (
-                  <button
-                    className="admin-btn sm"
-                    style={{ background: '#4F46E5', color: '#fff', fontWeight: 800, border: 'none', flex: 1, padding: 8 }}
-                    onClick={() => handleRunTest(selectedSample)}
-                  >
-                    📷 Giả Lập Vision AI (Mẫu)
-                  </button>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+              <Field label="Nội dung đề (sửa thoải mái)">
+                <Textarea rows={4} value={testText} onChange={(e) => setTestText(e.target.value)} />
+              </Field>
+              <div className="aip-row" style={{ alignItems: 'flex-end' }}>
+                <Field label="Hồ sơ con" style={{ minWidth: 140 }}>
+                  <Select value={testGrade} onChange={setTestGrade} options={GRADE_OPTS} ariaLabel="Lớp trong hồ sơ con" />
+                </Field>
+                <Button onClick={() => runTest(false)}>Chạy với đề chữ</Button>
+                {sample?.mockAiJson && (
+                  <Button variant="secondary" onClick={() => runTest(true)}>
+                    Chạy như ảnh mẫu
+                  </Button>
                 )}
               </div>
             </div>
+          </Card>
 
-            {/* Output kết quả bên phải */}
-            <div style={{ background: '#FFFFFF', padding: 16, borderRadius: 12, border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#1E293B' }}>Kết quả phân loại</span>
-                {testResult && (
-                  <span style={{ fontSize: 11, color: '#94A3B8' }}>{testResult.timestamp}</span>
-                )}
+          <div style={{ display: 'grid', gap: 14 }}>
+            <Card>
+              <div className="aip-row" style={{ marginBottom: 10 }}>
+                <h3 className="aip-h3">Kết quả</h3>
+                {testResult && <span className="aip-small aip-muted">{testResult.at}{testResult.asImage ? ' · như ảnh mẫu' : ' · đề chữ'}</span>}
               </div>
-
               {testResult ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
-                  {/* Badges */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <div style={{ background: '#F1F5F9', padding: '6px 12px', borderRadius: 8, flex: 1 }}>
-                      <span style={{ display: 'block', fontSize: 10.5, color: '#64748B' }}>Loại vi phạm:</span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{testResult.category}</span>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div className="aip-kv">
+                    <div>
+                      <span>Phân loại</span>
+                      <b>{catName(testResult.category)}</b>
                     </div>
-                    <div style={{ background: '#F1F5F9', padding: '6px 12px', borderRadius: 8, flex: 1 }}>
-                      <span style={{ display: 'block', fontSize: 10.5, color: '#64748B' }}>Hành động:</span>
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 800,
-                          color:
-                            testResult.action === 'block'
-                              ? '#DC2626'
-                              : testResult.action === 'warn'
-                              ? '#D97706'
-                              : '#16A34A',
-                        }}
-                      >
-                        {testResult.action}
-                      </span>
+                    <div>
+                      <span>Hành động</span>
+                      <StatusPill status={actionTone(testResult.action)} label={ACTION_LABELS[testResult.action] || testResult.action} />
                     </div>
-                    <div style={{ background: '#F1F5F9', padding: '6px 12px', borderRadius: 8, flex: 1 }}>
-                      <span style={{ display: 'block', fontSize: 10.5, color: '#64748B' }}>Độ tin cậy:</span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0284C7' }}>
-                        {Math.round((testResult.confidence || 0.9) * 100)}%
-                      </span>
+                    <div>
+                      <span>Độ tin cậy</span>
+                      <b>{typeof testResult.confidence === 'number' ? `${Math.round(testResult.confidence * 100)}%` : '·'}</b>
                     </div>
                   </div>
-
-                  {/* Lời nhắn gửi phụ huynh */}
-                  {testResult.message && (
-                    <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', padding: '10px 12px', borderRadius: 8 }}>
-                      <span style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#92400E', marginBottom: 2 }}>
-                        💬 Lời nhắn sẽ hiển thị cho phụ huynh:
-                      </span>
-                      <span style={{ fontSize: 12.5, color: '#78350F', lineHeight: 1.4 }}>
-                        {testResult.message}
-                      </span>
+                  {testResult.expected && (
+                    <div>
+                      {testResult.action === testResult.expected ? (
+                        <StatusPill status="dat" label="Đúng kỳ vọng của mẫu" />
+                      ) : (
+                        <StatusPill status="error" label={`Khác kỳ vọng (mẫu cần: ${ACTION_LABELS[testResult.expected] || testResult.expected})`} />
+                      )}
                     </div>
                   )}
-
-                  {/* Lý do & ghi chú */}
-                  <div style={{ fontSize: 12, color: '#475569' }}>
-                    <strong>Lý do phân loại:</strong> {testResult.reason || 'Được thông qua'}
+                  <div>
+                    <div className="aip-label" style={{ marginBottom: 6 }}>Phụ huynh sẽ thấy</div>
+                    <Bubble text={testResult.message || (testResult.action === 'allow' ? 'Cho qua, không hiện lời nhắn.' : '')} />
                   </div>
-
-                  {/* JSON Raw Output */}
-                  <div style={{ marginTop: 'auto' }}>
-                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748B', marginBottom: 4 }}>
-                      JSON chi tiết:
-                    </span>
-                    <pre style={{ background: '#0F172A', color: '#38BDF8', padding: 8, borderRadius: 6, fontSize: 11, margin: 0, overflowX: 'auto', maxHeight: 130 }}>
-                      {JSON.stringify(testResult, null, 2)}
-                    </pre>
+                  <div className="aip-small">
+                    <b>Lý do:</b> {testResult.reason || (testResult.action === 'allow' ? 'Đề hợp lệ' : '·')}
                   </div>
                 </div>
               ) : (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontSize: 13 }}>
-                  Bấm một mẫu bên trên hoặc bấm "Chạy Phân Loại" để xem kết quả.
-                </div>
+                <EmptyState title="Chưa chạy thử" description="Chọn một mẫu bên trái rồi bấm Chạy để xem app sẽ xử lý thế nào." style={{ boxShadow: 'none', border: 'none' }} />
               )}
-            </div>
+            </Card>
+            {batch && (
+              <Card>
+                <div className="aip-row" style={{ marginBottom: 8 }}>
+                  <h3 className="aip-h3">Cả {batch.length} mẫu</h3>
+                  <span className="aip-small aip-muted">
+                    {batch.filter((b) => b.ok).length}/{batch.length} đúng kỳ vọng
+                  </span>
+                </div>
+                <DataTable
+                  rowKey="id"
+                  data={batch}
+                  columns={[
+                    { key: 'name', title: 'Mẫu', render: (v) => v.replace(/^\d+\.\s*/, '') },
+                    { key: 'expected', title: 'Kỳ vọng', render: (v) => ACTION_LABELS[v] || v },
+                    { key: 'action', title: 'Kết quả', render: (v) => ACTION_LABELS[v] || v },
+                    { key: 'ok', title: '', render: (v) => <StatusPill status={v ? 'dat' : 'error'} label={v ? 'Đạt' : 'Lệch'} /> },
+                  ]}
+                />
+              </Card>
+            )}
           </div>
         </div>
       )}
 
-      {/* TAB 3: NHẬT KÝ SỰ KIỆN (AUDIT LOGS) */}
-      {activeTab === 'logs' && (
-        <div style={{ padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div>
-              <h4 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
-                📊 Nhật Ký Vi Phạm Phạm Vi (Scope Events)
-              </h4>
-              <span style={{ fontSize: 12, color: '#64748B' }}>
-                Ghi nhận các sự kiện vi phạm để tối ưu luật. Tuyệt đối không lưu ảnh hay đề nhạy cảm.
-              </span>
-            </div>
-            <button
-              className="admin-btn sm"
-              style={{ background: '#F1F5F9', color: '#475569' }}
-              onClick={loadLogs}
-              disabled={loadingLogs}
-            >
-              🔄 Tải lại
-            </button>
+      {tab === 'logs' && (
+        <>
+          <div className="aip-row">
+            <span className="aip-small aip-muted">30 ngày gần nhất · app không lưu ảnh hay nội dung đề, chỉ lưu loại vi phạm</span>
+            <span className="aip-spacer" />
+            <Button variant="secondary" size="sm" onClick={loadLogs} disabled={loadingLogs}>
+              {loadingLogs ? 'Đang tải…' : 'Tải lại'}
+            </Button>
           </div>
-
-          {/* Thống kê nhanh */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 12, borderRadius: 10 }}>
-              <span style={{ fontSize: 11.5, color: '#64748B' }}>Tổng vi phạm 30 ngày:</span>
-              <span style={{ display: 'block', fontSize: 20, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
-                {(stats.byCategory || []).reduce((acc, c) => acc + (c.cnt || 0), 0)}
-              </span>
-            </div>
-            <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', padding: 12, borderRadius: 10 }}>
-              <span style={{ fontSize: 11.5, color: '#92400E' }}>Tổng số lần cảnh báo:</span>
-              <span style={{ display: 'block', fontSize: 20, fontWeight: 800, color: '#B45309', marginTop: 2 }}>
-                {totalWarnings}
-              </span>
-            </div>
-            <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: 12, borderRadius: 10 }}>
-              <span style={{ fontSize: 11.5, color: '#1E40AF' }}>Tỉ lệ "Vẫn tiếp tục":</span>
-              <span style={{ display: 'block', fontSize: 20, fontWeight: 800, color: '#2563EB', marginTop: 2 }}>
-                {overrideRate}% ({totalOverridden} lần)
-              </span>
-            </div>
+          <div className="aip-kpis">
+            <KpiCard label="Lượt chặn & cảnh báo" value={totals ? totals.total.toLocaleString('vi-VN') : null} sub="trong 30 ngày" />
+            <KpiCard label="Lượt cảnh báo" value={totals ? totals.warns.toLocaleString('vi-VN') : null} sub="lệch lớp, ngoài chương trình, môn chưa hỗ trợ" />
+            <KpiCard
+              label="Phụ huynh vẫn tiếp tục"
+              value={totals && totals.rate !== null ? `${totals.rate}%` : null}
+              sub={totals ? `${totals.over} lần bỏ qua cảnh báo` : ''}
+              emptyText={totals ? 'Chưa có lượt cảnh báo nào' : 'Chưa có dữ liệu'}
+            />
           </div>
-
-          {/* Bảng sự kiện gần nhất */}
-          {events.length > 0 ? (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
-                <thead>
-                  <tr style={{ background: '#F1F5F9', borderBottom: '2px solid #CBD5E1', textAlign: 'left' }}>
-                    <th style={{ padding: '8px 10px' }}>Thời gian</th>
-                    <th style={{ padding: '8px 10px' }}>Nguồn</th>
-                    <th style={{ padding: '8px 10px' }}>Loại vi phạm</th>
-                    <th style={{ padding: '8px 10px' }}>Hành động</th>
-                    <th style={{ padding: '8px 10px' }}>Lý do</th>
-                    <th style={{ padding: '8px 10px' }}>Đoán / Con</th>
-                    <th style={{ padding: '8px 10px' }}>Vẫn tiếp tục?</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {events.map((ev) => (
-                    <tr key={ev.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
-                      <td style={{ padding: '8px 10px', color: '#64748B' }}>
-                        {new Date(ev.created_at).toLocaleString('vi-VN')}
-                      </td>
-                      <td style={{ padding: '8px 10px' }}>
-                        <span style={{ background: '#E0F2FE', color: '#0369A1', fontSize: 11, padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
-                          {ev.source || 'camera'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '8px 10px', fontWeight: 700, color: '#0F172A' }}>
-                        {ev.category}
-                      </td>
-                      <td style={{ padding: '8px 10px' }}>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            padding: '2px 6px',
-                            borderRadius: 4,
-                            background:
-                              ev.action === 'block'
-                                ? '#FEE2E2'
-                                : ev.action === 'warn'
-                                ? '#FEF3C7'
-                                : '#DCFCE7',
-                            color:
-                              ev.action === 'block'
-                                ? '#991B1B'
-                                : ev.action === 'warn'
-                                ? '#92400E'
-                                : '#166534',
-                          }}
-                        >
-                          {ev.action}
-                        </span>
-                      </td>
-                      <td style={{ padding: '8px 10px', color: '#475569' }}>
-                        {ev.reason || '—'}
-                      </td>
-                      <td style={{ padding: '8px 10px', color: '#475569' }}>
-                        {ev.grade_guess ? `Lớp ${ev.grade_guess}` : '—'} / {ev.child_grade ? `Lớp ${ev.child_grade}` : '—'}
-                      </td>
-                      <td style={{ padding: '8px 10px' }}>
-                        {ev.overridden ? (
-                          <span style={{ color: '#D97706', fontWeight: 800 }}>✓ Có (Bỏ qua)</span>
-                        ) : (
-                          <span style={{ color: '#64748B' }}>✕ Không</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: '#94A3B8' }}>
-              {loadingLogs ? 'Đang tải nhật ký từ D1...' : 'Chưa có sự kiện vi phạm phạm vi nào được ghi nhận.'}
-            </div>
-          )}
-        </div>
+          <Card>
+            {events.length === 0 ? (
+              <EmptyState
+                title={loadingLogs ? 'Đang tải nhật ký…' : stats?.failed ? 'Chưa đọc được nhật ký' : 'Chưa có lần chặn nào'}
+                description={
+                  loadingLogs
+                    ? 'Đợi một chút nhé.'
+                    : 'Khi app chặn hoặc cảnh báo một ảnh, một đề bài, sự kiện sẽ hiện ở đây kèm loại vi phạm và hành động.'
+                }
+                actionText={loadingLogs ? null : 'Tải lại'}
+                onAction={loadingLogs ? null : loadLogs}
+                style={{ boxShadow: 'none', border: 'none' }}
+              />
+            ) : (
+              <DataTable
+                rowKey="id"
+                data={events}
+                pageSize={15}
+                columns={[
+                  { key: 'created_at', title: 'Thời gian', render: (v) => fmtShortTime(typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : v) },
+                  { key: 'source', title: 'Nguồn', render: (v) => SOURCE_LABELS[v] || v || '·' },
+                  { key: 'category', title: 'Loại vi phạm', render: (v) => catName(v) },
+                  { key: 'action', title: 'Hành động', render: (v) => <StatusPill status={actionTone(v)} label={ACTION_LABELS[v] || v || '·'} /> },
+                  { key: 'reason', title: 'Lý do', render: (v) => v || '·' },
+                  { key: 'grade_guess', title: 'Lớp đoán / con', render: (v, r) => `${v ? `Lớp ${v}` : '·'} / ${r.child_grade ? `Lớp ${r.child_grade}` : '·'}` },
+                  { key: 'overridden', title: 'Vẫn tiếp tục', render: (v) => (v ? 'Có' : 'Không') },
+                ]}
+              />
+            )}
+          </Card>
+        </>
       )}
     </div>
   )

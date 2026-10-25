@@ -107,7 +107,7 @@ it('5. AdminSafetyTab được export đầy đủ và tích hợp vào Admin.js
   assert.ok(content.includes('export function AdminSafetyTab'), 'Phải export AdminSafetyTab')
   assert.ok(content.includes('guard_log'), 'Phải có bảng guard_log')
   assert.ok(content.includes('ai_feedback'), 'Phải có bảng ai_feedback')
-  assert.ok(content.includes('checkAnswerLeak'), 'Phải có công cụ test trực tiếp')
+  assert.ok(content.includes('checkAnswerLeak') || content.includes('/api/v1/safety/test-guard'), 'Phải có công cụ test trực tiếp')
 
   const adminContent = fs.readFileSync(path.resolve(__dirname, '../src/Admin.jsx'), 'utf8')
   assert.ok(adminContent.includes('AdminSafetyTab'), 'Admin.jsx phải import AdminSafetyTab')

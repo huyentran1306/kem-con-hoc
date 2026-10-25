@@ -1,631 +1,361 @@
 /**
- * 👨‍👩‍👧 TAB GIA ĐÌNH & HỌC SINH (PROMPT 05 MỤC 5)
- * Bảng số liệu thật từ D1, 4 ô tổng hợp, bộ lọc trạng thái (Đang học / Ít học / Ngủ đông),
- * Ngăn kéo chi tiết bên phải (Drawer), Xuất CSV UTF-8 with BOM, Ghi audit_log.
+ * 👪 GIA ĐÌNH & HỌC SINH · Đợt 15 chặng 3
+ * Danh sách gia đình và chỉ số 7 ngày tính từ D1 (GET /api/v1/admin/families-stats).
+ * Bấm một gia đình mở Drawer chi tiết (GET /api/v1/admin/family-detail?id=).
+ * Hỗ trợ ?q= trên URL để lọc sẵn. Không có số thật thì hiện "·".
  */
+import React, { useEffect, useMemo, useState } from 'react'
+import { PageHeader, KpiCard, Card, Button, Input, Select, DataTable, Drawer, StatusPill, Banner, EmptyState, staffToast } from './ui/staff'
+import { getJson, fmtDate, fmtAgo, fmtDateTime, fmtNum, gradeLabel, minutesLabel, parseDbTime, ratingInfo, readUrlQuery } from './admin/monitorShared'
+import './admin/pages-monitor.css'
 
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Users, Search, Filter, RotateCcw, Download, ChevronLeft, ChevronRight,
-  MoreVertical, Key, Edit3, Trash2, X, AlertCircle, ShieldAlert, Check
-} from 'lucide-react';
-import { toast } from './utils';
-import { adminFetch } from './adminApi';
-import { AdminPageLoading, AdminTableLoading } from './AdminMascot';
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'Mọi trạng thái' },
+  { value: 'active', label: 'Đang học (7 ngày)' },
+  { value: 'inactive', label: 'Ít học (8 đến 30 ngày)' },
+  { value: 'dormant', label: 'Ngủ đông (trên 30 ngày)' },
+  { value: 'never', label: 'Chưa có buổi học' },
+]
+const STATUS_PILL = {
+  active: { status: 'ok', label: 'Đang học' },
+  inactive: { status: 'warn', label: 'Ít học' },
+  dormant: { status: 'bad', label: 'Ngủ đông' },
+  never: { status: 'info', label: 'Chưa có buổi học' },
+  unknown: { status: 'info', label: 'Chưa rõ' },
+}
+const ROLE_LABEL = { owner: 'Chủ nhà', guardian: 'Người kèm con', viewer: 'Chỉ xem' }
 
-export function AdminFamiliesTab({ token }) {
-  const [families, setFamilies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [gradeFilter, setGradeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all'); // all | active | inactive | dormant
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState(new Set());
+/** Trạng thái dựa trên buổi học gần nhất (không dựa vào ngày tạo tài khoản). */
+function familyStatus(f) {
+  if (f.session_count === undefined) return 'unknown'
+  const d = parseDbTime(f.last_session_at)
+  if (!d) return 'never'
+  const days = (Date.now() - d.getTime()) / 86400000
+  if (days <= 7) return 'active'
+  if (days <= 30) return 'inactive'
+  return 'dormant'
+}
 
-  // Ngăn kéo chi tiết (Drawer)
-  const [drawerFamily, setDrawerFamily] = useState(null);
-  const [actionBusy, setActionBusy] = useState(false);
+function exportCsv(rows) {
+  if (!rows.length) {
+    staffToast('Không có gia đình nào để xuất', { tone: 'bad' })
+    return
+  }
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const head = ['Mã gia đình', 'Tên gia đình', 'Ngày tham gia', 'Thành viên', 'Số con', 'Số buổi học', 'Buổi gần nhất', 'Trạng thái']
+  const lines = rows.map((f) =>
+    [f.id, f.name, fmtDate(f.created_at), f.member_count ?? '', f.child_count ?? '', f.session_count ?? '', f.last_session_at ? fmtDateTime(f.last_session_at) : '', STATUS_PILL[familyStatus(f)].label]
+      .map(esc)
+      .join(',')
+  )
+  const blob = new Blob(['﻿' + [head.map(esc).join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `kem-con-hoc-gia-dinh-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+  staffToast(`Đã xuất ${rows.length} gia đình ra tệp CSV`)
+}
 
-  // Modal đổi tên
-  const [renameTarget, setRenameTarget] = useState(null);
-  const [newName, setNewName] = useState('');
-
-  // Modal xoá gia đình
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [confirmName, setConfirmName] = useState('');
-
-  // Modal reset mật khẩu
-  const [resetTarget, setResetTarget] = useState(null);
-  const [newPass, setNewPass] = useState('');
+function FamilyDrawer({ family, onClose }) {
+  const [detail, setDetail] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [missing, setMissing] = useState(false)
 
   useEffect(() => {
-    loadFamilies();
-  }, []);
-
-  async function loadFamilies() {
-    setLoading(true);
-    try {
-      const res = await adminFetch('/api/v1/admin/families');
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        setFamilies(data.families || []);
-      }
-    } catch {
-      toast('Lỗi tải danh sách gia đình', 'error');
-    } finally {
-      setLoading(false);
+    if (!family) return
+    let alive = true
+    setLoading(true)
+    setDetail(null)
+    setMissing(false)
+    getJson(`/api/v1/admin/family-detail?id=${encodeURIComponent(family.id)}`).then((r) => {
+      if (!alive) return
+      if (r.ok) setDetail(r.data)
+      else setMissing(true)
+      setLoading(false)
+    })
+    return () => {
+      alive = false
     }
-  }
+  }, [family?.id])
 
-
-  // Lọc dữ liệu
-  const filteredFamilies = useMemo(() => {
-    return families.filter((f) => {
-      const q = searchTerm.trim().toLowerCase();
-      const matchSearch = !q || (f.name && f.name.toLowerCase().includes(q)) || (f.id && f.id.toLowerCase().includes(q));
-      
-      // Trạng thái hoạt động dựa trên ngày tạo hoặc ngày dùng gần nhất
-      const safeDateStr = (f.created_at || '').replace(' ', 'T');
-      const createdTs = new Date(safeDateStr).getTime() || Date.now();
-      const daysAgo = Math.max(0, (Date.now() - createdTs) / (86400000));
-      let status = 'active';
-      if (daysAgo > 30) status = 'dormant';
-      else if (daysAgo > 7) status = 'inactive';
-
-      const matchStatus = statusFilter === 'all' || status === statusFilter;
-      return matchSearch && matchStatus;
-    });
-  }, [families, searchTerm, statusFilter]);
-
-
-  // Phân trang
-  const totalPages = Math.ceil(filteredFamilies.length / pageSize) || 1;
-  const paginatedFamilies = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredFamilies.slice(start, start + pageSize);
-  }, [filteredFamilies, currentPage, pageSize]);
-
-  // Chọn checkbox
-  function toggleSelectAll() {
-    if (selectedIds.size === paginatedFamilies.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(paginatedFamilies.map((f) => f.id)));
-    }
-  }
-
-  function toggleSelectRow(id) {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  }
-
-  // Xuất CSV chuẩn UTF-8 có BOM
-  function exportCSV() {
-    const targetRows = selectedIds.size > 0
-      ? filteredFamilies.filter((f) => selectedIds.has(f.id))
-      : filteredFamilies;
-
-    if (targetRows.length === 0) {
-      toast('Không có dữ liệu để xuất CSV');
-      return;
-    }
-
-    const headers = ['Mã gia đình', 'Tên gia đình', 'Ngày đăng ký'];
-    const rows = targetRows.map((f) => [
-      `"${f.id}"`,
-      `"${f.name || ''}"`,
-      `"${f.created_at || ''}"`,
-    ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `KemConHoc_GiaDinh_${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast(`Đã xuất CSV ${targetRows.length} gia đình ⭐`);
-  }
-
-  // Đổi tên gia đình
-  async function handleRenameSubmit(e) {
-    e.preventDefault();
-    if (!renameTarget || !newName.trim()) return;
-    setActionBusy(true);
-    try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family/name`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'x-admin-key': 'kem-con-hoc-admin-secret-2026',
-        },
-        body: JSON.stringify({ familyId: renameTarget.id, name: newName.trim() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        toast(`Đã đổi tên thành công: ${newName.trim()}`);
-        setRenameTarget(null);
-        loadFamilies();
-      } else {
-        toast(data.error?.message || 'Lỗi đổi tên');
-      }
-    } catch {
-      toast('Lỗi kết nối máy chủ');
-    } finally {
-      setActionBusy(false);
-    }
-  }
-
-  // Đặt lại mật khẩu
-  async function handleResetPassword(e) {
-    e.preventDefault();
-    if (!resetTarget || !newPass.trim() || newPass.length < 4) {
-      toast('Mật khẩu tối thiểu 4 ký tự');
-      return;
-    }
-    setActionBusy(true);
-    try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family/password`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'x-admin-key': 'kem-con-hoc-admin-secret-2026',
-        },
-        body: JSON.stringify({ familyId: resetTarget.id, newPassword: newPass.trim() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        toast(`Đã đặt lại mật khẩu cho "${resetTarget.name}" ⭐`);
-        setResetTarget(null);
-        setNewPass('');
-      } else {
-        toast(data.error?.message || 'Lỗi đặt lại mật khẩu');
-      }
-    } catch {
-      toast('Lỗi kết nối máy chủ');
-    } finally {
-      setActionBusy(false);
-    }
-  }
-
-  // Xoá gia đình
-  async function handleDeleteSubmit(e) {
-    e.preventDefault();
-    if (!deleteTarget || confirmName !== deleteTarget.name) {
-      toast('Tên xác nhận chưa khớp chính xác');
-      return;
-    }
-    setActionBusy(true);
-    try {
-      const res = await fetch(`https://ai-gateway-worker.trannth1306.workers.dev/api/v1/family`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'x-admin-key': 'kem-con-hoc-admin-secret-2026',
-        },
-        body: JSON.stringify({ familyId: deleteTarget.id, password: 'admin_override_secret' }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        toast(`Đã xoá gia đình "${deleteTarget.name}"`);
-        setDeleteTarget(null);
-        if (drawerFamily?.id === deleteTarget.id) setDrawerFamily(null);
-        loadFamilies();
-      } else {
-        toast(data.error?.message || 'Xoá gia đình thất bại');
-      }
-    } catch {
-      toast('Lỗi kết nối máy chủ');
-    } finally {
-      setActionBusy(false);
-    }
-  }
-
-  // 🐻 MÀN HÌNH LOADING GIA ĐÌNH TONE GẤU
-  if (loading && families.length === 0) {
-    return (
-      <AdminPageLoading
-        title="Đang nạp danh sách gia đình từ D1..."
-        subtitle="Bạn Gấu đang đồng bộ danh sách học sinh và phụ huynh 🍯"
-        minHeight="440px"
-      />
-    );
-  }
+  if (!family) return null
+  const members = detail?.members || []
+  const children = detail?.children || []
+  const sessions = detail?.sessions || []
+  const classes = detail?.classes || []
+  const totals = detail?.totals || {}
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* 1. TIÊU ĐỀ & 4 Ô TỔNG HỢP */}
-      <div>
-        <h1 className="stitch-page-title">👨‍👩‍👧 Gia đình & Học sinh</h1>
-        <p className="stitch-page-subtitle">
-          Quản lý tài khoản gia đình, thành viên kèm học, các con và tiến độ đồng bộ đám mây
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <div className="stitch-card" style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--adm-sub)' }}>TỔNG GIA ĐÌNH</div>
-          <div className="stitch-kpi-num">{families.length}</div>
-          <div style={{ fontSize: 12, color: 'var(--adm-sub)' }}>Dữ liệu lưu trữ D1 SQLite</div>
+    <Drawer open={Boolean(family)} title={family.name || 'Gia đình chưa đặt tên'} onClose={onClose} width={520}>
+      <div className="pm-section">
+        <div className="pm-muted">
+          Mã <span className="pm-code">{family.id}</span> · Tham gia {fmtDate(family.created_at)}
         </div>
-
-        <div className="stitch-card" style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--adm-sub)' }}>CHUỖI NGÀY TRUNG BÌNH</div>
-          <div className="stitch-kpi-num" style={{ color: 'var(--adm-primary-text)' }}>4.8 <span style={{ fontSize: 14 }}>ngày</span></div>
-          <div style={{ fontSize: 12, color: '#047857', fontWeight: 600 }}>Thói quen duy trì tốt</div>
-        </div>
-
-        <div className="stitch-card" style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--adm-sub)' }}>PHÚT KÈM / TUẦN</div>
-          <div className="stitch-kpi-num">65 <span style={{ fontSize: 14 }}>phút</span></div>
-          <div style={{ fontSize: 12, color: 'var(--adm-sub)' }}>~4 buổi học / tuần</div>
-        </div>
-
-        <div className="stitch-card" style={{ padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--adm-sub)' }}>MỞ APP TRONG 7 NGÀY</div>
-          <div className="stitch-kpi-num" style={{ color: '#047857' }}>78%</div>
-          <div style={{ fontSize: 12, color: '#047857', fontWeight: 600 }}>Tương tác cao</div>
-        </div>
-      </div>
-
-      {/* 2. BỘ LỌC & CÔNG CỤ */}
-      <div className="stitch-card" style={{ padding: 18 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
-          {/* Ô tìm kiếm */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 260 }}>
-            <div className="stitch-search-bar" style={{ width: '100%', maxWidth: 360 }}>
-              <Search size={16} color="var(--adm-sub)" />
-              <input
-                className="stitch-search-input"
-                placeholder="Tìm tên gia đình hoặc mã..."
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              />
-            </div>
-
-            {/* Lọc trạng thái */}
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '9px 12px',
-                borderRadius: 'var(--adm-input-radius)',
-                border: '2px solid var(--adm-border)',
-                background: 'var(--adm-bg)',
-                color: 'var(--adm-text)',
-                fontWeight: 700,
-                fontSize: 13,
-                outline: 'none',
-              }}
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="active">Đang hoạt động (7 ngày)</option>
-              <option value="inactive">Ít hoạt động (8-30 ngày)</option>
-              <option value="dormant">Ngủ đông (&gt;30 ngày)</option>
-            </select>
-
-            <button
-              type="button"
-              className="stitch-btn-secondary"
-              onClick={() => { setSearchTerm(''); setStatusFilter('all'); setCurrentPage(1); }}
-              title="Đặt lại bộ lọc"
-            >
-              <RotateCcw size={14} /> Đặt lại
-            </button>
+        <div className="pm-mini-grid">
+          <div className="pm-mini">
+            <div className="pm-mini-label">Tổng buổi học</div>
+            <div className="pm-mini-value">{detail ? fmtNum(totals.sessions) ?? '·' : fmtNum(family.session_count) ?? '·'}</div>
           </div>
-
-          {/* Nút xuất CSV */}
-          <button type="button" className="stitch-btn-primary" onClick={exportCSV}>
-            <Download size={15} /> Xuất CSV ({selectedIds.size > 0 ? `${selectedIds.size} đã chọn` : 'Tất cả'})
-          </button>
+          <div className="pm-mini">
+            <div className="pm-mini-label">Tổng phút kèm</div>
+            <div className="pm-mini-value">{totals.minutes != null ? fmtNum(totals.minutes) : '·'}</div>
+          </div>
         </div>
       </div>
 
-      {/* 3. BẢNG DỮ LIỆU GIA ĐÌNH */}
-      <div className="stitch-card" style={{ padding: 0 }}>
-        <div className="stitch-table-wrapper" style={{ border: 'none' }}>
-          <table className="stitch-table">
-            <thead>
-              <tr>
-                <th style={{ width: 44, textAlign: 'center' }}>
-                  <input
-                    type="checkbox"
-                    checked={paginatedFamilies.length > 0 && selectedIds.size === paginatedFamilies.length}
-                    onChange={toggleSelectAll}
-                  />
-                </th>
-                <th>Gia đình</th>
-                <th>Mã gia đình</th>
-                <th>Ngày tham gia</th>
-                <th>Trạng thái</th>
-                <th style={{ textAlign: 'right' }}>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <AdminTableLoading colSpan={6} text="Đang nạp danh sách gia đình từ D1..." />
-              ) : paginatedFamilies.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--adm-sub)' }}>
-                    Không tìm thấy gia đình phù hợp với bộ lọc.
-                  </td>
-                </tr>
-              ) : (
-                paginatedFamilies.map((f) => {
-                  const initial = (f.name || 'G')[0].toUpperCase();
-                  const isSelected = selectedIds.has(f.id);
+      {loading && <p className="pm-muted">Đang tải chi tiết gia đình…</p>}
+      {missing && !loading && <Banner type="warn" message="Chưa tải được chi tiết gia đình này. Thử mở lại sau ít phút." />}
+
+      {detail && (
+        <>
+          <section className="pm-section">
+            <h4 className="pm-section-title">Các con ({children.length})</h4>
+            {children.length === 0 ? (
+              <p className="pm-muted">Gia đình chưa thêm hồ sơ con.</p>
+            ) : (
+              <ul className="pm-list">
+                {children.map((c, i) => (
+                  <li className="pm-list-item" key={c.id || i}>
+                    <b>
+                      {c.emoji ? `${c.emoji} ` : ''}
+                      {c.name || 'Chưa đặt tên'}
+                    </b>
+                    <span className="pm-muted">{gradeLabel(c.grade) || '·'}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="pm-section">
+            <h4 className="pm-section-title">Thành viên ({members.length})</h4>
+            {members.length === 0 ? (
+              <p className="pm-muted">Chưa có thành viên.</p>
+            ) : (
+              <ul className="pm-list">
+                {members.map((mb) => (
+                  <li className="pm-list-item" key={mb.id}>
+                    <span>
+                      <b>{mb.display_name || 'Thành viên'}</b>
+                      {mb.relation && mb.relation !== 'owner' && <span className="pm-muted"> · {mb.relation}</span>}
+                      <span className="pm-muted" style={{ display: 'block' }}>
+                        Lần cuối mở app: {mb.last_seen_at ? fmtAgo(mb.last_seen_at) : '·'}
+                      </span>
+                    </span>
+                    <StatusPill status={mb.role === 'owner' ? 'ok' : 'info'} label={ROLE_LABEL[mb.role] || mb.role || '·'} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="pm-section">
+            <h4 className="pm-section-title">Lớp đã tham gia ({classes.length})</h4>
+            {classes.length === 0 ? (
+              <p className="pm-muted">Chưa liên kết với lớp nào của giáo viên.</p>
+            ) : (
+              <ul className="pm-list">
+                {classes.map((c) => (
+                  <li className="pm-list-item" key={c.link_id}>
+                    <span>
+                      <b>{c.class_name || 'Lớp'}</b>
+                      <span className="pm-muted" style={{ display: 'block' }}>
+                        {[c.teacher_name ? `Giáo viên: ${c.teacher_name}` : null, c.school_name, c.roster_name ? `tên trong lớp: ${c.roster_name}` : null]
+                          .filter(Boolean)
+                          .join(' · ') || '·'}
+                      </span>
+                    </span>
+                    <StatusPill status={c.status === 'active' ? 'ok' : c.status === 'pending' ? 'review' : 'info'} label={c.status === 'active' ? 'Đang học' : c.status === 'pending' ? 'Chờ cô duyệt' : c.status || '·'} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="pm-section">
+            <h4 className="pm-section-title">Buổi học gần nhất</h4>
+            {sessions.length === 0 ? (
+              <p className="pm-muted">Gia đình chưa có buổi học nào.</p>
+            ) : (
+              <ul className="pm-list">
+                {sessions.map((s) => {
+                  const r = ratingInfo(s)
                   return (
-                    <tr key={f.id} style={{ background: isSelected ? 'var(--adm-bg-sub)' : undefined }}>
-                      <td style={{ textAlign: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSelectRow(f.id)}
-                        />
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div className="stitch-avatar-initial" style={{ width: 36, height: 36 }}>{initial}</div>
-                          <div>
-                            <div style={{ fontWeight: 800, color: 'var(--adm-text)', fontSize: 14 }}>
-                              {f.name || 'Gia đình'}
-                            </div>
-                            <div style={{ fontSize: 12, color: 'var(--adm-sub)' }}>Tài khoản độc lập</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <code style={{ fontSize: 12, background: 'var(--adm-bg-sub)', padding: '2px 6px', borderRadius: 6 }}>
-                          {f.id}
-                        </code>
-                      </td>
-                      <td style={{ fontSize: 13, color: 'var(--adm-sub)' }}>
-                        {f.created_at ? new Date((f.created_at || '').replace(' ', 'T')).toLocaleDateString('vi-VN') : 'Mới đây'}
-                      </td>
+                    <li className="pm-list-item" key={s.id}>
+                      <span style={{ minWidth: 0 }}>
+                        <b>{[s.subject, gradeLabel(s.grade)].filter(Boolean).join(' · ') || 'Buổi học'}</b>
+                        <span className="pm-muted" style={{ display: 'block' }}>
+                          {fmtDateTime(s.started_at)}
+                          {s.child_name ? ` · ${s.child_name}` : ''} · {minutesLabel(s.duration_seconds)}
+                        </span>
+                        {s.problem_text && (
+                          <span className="pm-ellipsis pm-muted" title={s.problem_text}>
+                            {s.problem_text}
+                          </span>
+                        )}
+                      </span>
+                      <StatusPill status={r.status} label={r.label} />
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+    </Drawer>
+  )
+}
 
-                      <td>
-                        <span className="stitch-badge completed">Đang hoạt động</span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: 6 }}>
-                          <button
-                            type="button"
-                            className="stitch-btn-secondary"
-                            onClick={() => setDrawerFamily(f)}
-                            style={{ padding: '5px 12px', fontSize: 12.5 }}
-                          >
-                            Xem chi tiết
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+export function AdminFamiliesTab({ token }) {
+  const [families, setFamilies] = useState([])
+  const [summary, setSummary] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [search, setSearch] = useState(() => readUrlQuery('q'))
+  const [status, setStatus] = useState('all')
+  const [open, setOpen] = useState(null)
+
+  async function load() {
+    setLoading(true)
+    const r = await getJson('/api/v1/admin/families-stats')
+    if (r.ok) {
+      setFamilies(r.data.families || [])
+      setSummary(r.data.summary || null)
+      setError('')
+    } else {
+      const legacy = await getJson('/api/v1/admin/families')
+      if (legacy.ok) {
+        setFamilies(legacy.data.families || [])
+        setSummary(null)
+        setError('')
+      } else {
+        setError(legacy.data?.error?.message || 'Chưa tải được danh sách gia đình.')
+      }
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  // Theo dõi ?q= khi thanh tìm kiếm chung đổi URL
+  useEffect(() => {
+    const onNav = () => {
+      const q = readUrlQuery('q')
+      if (q) setSearch(q)
+    }
+    window.addEventListener('popstate', onNav)
+    window.addEventListener('hashchange', onNav)
+    return () => {
+      window.removeEventListener('popstate', onNav)
+      window.removeEventListener('hashchange', onNav)
+    }
+  }, [])
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return families.filter((f) => {
+      const okQ = !q || String(f.name || '').toLowerCase().includes(q) || String(f.id || '').toLowerCase().includes(q)
+      const okS = status === 'all' || familyStatus(f) === status
+      return okQ && okS
+    })
+  }, [families, search, status])
+
+  const hasStats = families.length > 0 && families[0].session_count !== undefined
+  const columns = [
+    {
+      key: 'name',
+      title: 'Gia đình',
+      render: (v, f) => (
+        <div>
+          <div className="pm-strong">{v || 'Chưa đặt tên'}</div>
+          <span className="pm-code">{f.id}</span>
         </div>
+      ),
+    },
+    { key: 'created_at', title: 'Tham gia', render: (v) => fmtDate(v) },
+    ...(hasStats
+      ? [
+          { key: 'member_count', title: 'Thành viên', align: 'right', render: (v) => fmtNum(v) ?? '·' },
+          { key: 'child_count', title: 'Số con', align: 'right', render: (v) => (Number(v) > 0 ? fmtNum(v) : '·') },
+          { key: 'session_count', title: 'Buổi học', align: 'right', render: (v) => fmtNum(v) ?? '·' },
+          { key: 'last_session_at', title: 'Buổi gần nhất', render: (v) => (v ? fmtAgo(v) : '·') },
+        ]
+      : []),
+    {
+      key: 'status',
+      title: 'Trạng thái',
+      render: (_, f) => {
+        const p = STATUS_PILL[familyStatus(f)]
+        return <StatusPill status={p.status} label={p.label} />
+      },
+    },
+  ]
 
-        {/* Phân trang 10/25/50 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '2px solid var(--adm-border)' }}>
-          <div style={{ fontSize: 13, color: 'var(--adm-sub)' }}>
-            Hiển thị <strong>{paginatedFamilies.length}</strong> / <strong>{filteredFamilies.length}</strong> gia đình
-          </div>
+  const s = summary || {}
+  return (
+    <div className="pm-page">
+      <PageHeader
+        title="Gia đình & học sinh"
+        description="Các gia đình đang dùng app, mức đều đặn trong 7 ngày và chi tiết từng nhà khi bấm vào."
+        actions={
+          <>
+            <Button variant="ghost" size="sm" onClick={load} disabled={loading}>
+              {loading ? 'Đang tải…' : 'Tải lại'}
+            </Button>
+            <Button size="sm" onClick={() => exportCsv(filtered)} disabled={!filtered.length}>
+              Xuất CSV
+            </Button>
+          </>
+        }
+      />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <select
-              value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-              style={{ padding: '4px 8px', borderRadius: 8, border: '1.5px solid var(--adm-border)', background: 'var(--adm-bg)', fontSize: 12.5 }}
-            >
-              <option value={10}>10 dòng / trang</option>
-              <option value={25}>25 dòng / trang</option>
-              <option value={50}>50 dòng / trang</option>
-            </select>
+      {error && <Banner type="bad" message={error} actionText="Thử lại" onAction={load} />}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                type="button"
-                className="stitch-btn-secondary"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                style={{ padding: '5px 8px' }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span style={{ fontSize: 13, fontWeight: 700, padding: '0 4px' }}>
-                {currentPage} / {totalPages}
-              </span>
-              <button
-                type="button"
-                className="stitch-btn-secondary"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                style={{ padding: '5px 8px' }}
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="pm-kpis">
+        <KpiCard label="Tổng gia đình" value={loading && !families.length ? null : fmtNum(s.totalFamilies ?? families.length)} emptyText={loading ? 'Đang tải…' : 'Chưa có dữ liệu'} sub={s.activeFamilies7d != null ? `${fmtNum(s.activeFamilies7d)} nhà có buổi học trong 7 ngày` : 'Tài khoản gia đình trên hệ thống'} />
+        <KpiCard label="Ngày học trung bình" value={s.avgStudyDays7d != null ? `${fmtNum(s.avgStudyDays7d, 1)} ngày` : null} emptyText="Chưa có buổi học trong 7 ngày" sub="Số ngày có học trong 7 ngày, mỗi nhà đang học" />
+        <KpiCard label="Phút kèm mỗi tuần" value={s.avgMinutesPerWeek != null ? `${fmtNum(s.avgMinutesPerWeek)} phút` : null} emptyText="Chưa đo được thời lượng" sub="Trung bình mỗi nhà đang học, 7 ngày qua" />
+        <KpiCard label="Mở app trong 7 ngày" value={s.openedApp7dPct != null ? `${s.openedApp7dPct}%` : null} emptyText="Chưa có dữ liệu" sub="Tỉ lệ gia đình có thành viên mở app" />
       </div>
 
-      {/* 4. NGĂN KÉO CHI TIẾT BÊN PHẢI (DRAWER) */}
-      {drawerFamily && (
-        <div className="stitch-drawer-backdrop" onClick={() => setDrawerFamily(null)}>
-          <div className="stitch-drawer-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="stitch-drawer-header">
-              <div>
-                <h3 style={{ fontFamily: 'var(--adm-font-head)', fontSize: 18, margin: 0 }}>
-                  Chi tiết {drawerFamily.name}
-                </h3>
-                <code style={{ fontSize: 12, color: 'var(--adm-sub)' }}>{drawerFamily.id}</code>
-              </div>
-              <button
-                type="button"
-                className="stitch-btn-icon"
-                onClick={() => setDrawerFamily(null)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="stitch-drawer-body">
-              {/* Thao tác quản trị */}
-              <div style={{ background: 'var(--adm-bg)', padding: 16, borderRadius: 18, border: '2px solid var(--adm-border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>Thao tác quản trị an toàn</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <button
-                    type="button"
-                    className="stitch-btn-secondary"
-                    onClick={() => { setRenameTarget(drawerFamily); setNewName(drawerFamily.name); }}
-                  >
-                    <Edit3 size={14} /> Đổi tên gia đình
-                  </button>
-                  <button
-                    type="button"
-                    className="stitch-btn-secondary"
-                    onClick={() => { setResetTarget(drawerFamily); setNewPass(''); }}
-                  >
-                    <Key size={14} /> Đặt lại mật khẩu
-                  </button>
-                  <button
-                    type="button"
-                    className="stitch-btn-secondary"
-                    style={{ color: '#DC2626', borderColor: '#FECACA' }}
-                    onClick={() => { setDeleteTarget(drawerFamily); setConfirmName(''); }}
-                  >
-                    <Trash2 size={14} /> Xoá toàn bộ dữ liệu
-                  </button>
-                </div>
-              </div>
-
-              {/* Thông tin thành viên & học sinh */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>Thành viên gia đình</h4>
-                <div style={{ padding: 12, background: 'var(--adm-card)', border: '1.5px solid var(--adm-border)', borderRadius: 14 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Chủ nhà (Owner)</div>
-                  <div style={{ fontSize: 12.5, color: 'var(--adm-sub)' }}>Toàn quyền cấu hình và kèm học</div>
-                </div>
-              </div>
-
-              {/* 10 buổi gần nhất */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>Lịch sử kèm học</h4>
-                <div style={{ padding: 14, background: 'var(--adm-bg)', borderRadius: 14, border: '1.5px solid var(--adm-border)', fontSize: 13, color: 'var(--adm-sub)' }}>
-                  Dữ liệu đồng bộ realtime với D1. Phụ huynh đang duy trì đều đặn.
-                </div>
-              </div>
-            </div>
+      <Card>
+        <div className="pm-toolbar" style={{ marginBottom: 12 }}>
+          <div className="pm-grow">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm tên hoặc mã gia đình…" prefix="🔍" aria-label="Tìm gia đình" />
           </div>
+          <Select value={status} onChange={setStatus} options={STATUS_OPTIONS} ariaLabel="Lọc theo trạng thái" style={{ minWidth: 220 }} />
+          {(search || status !== 'all') && (
+            <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setStatus('all') }}>
+              Bỏ lọc
+            </Button>
+          )}
+          <span className="pm-muted">
+            {fmtNum(filtered.length)} / {fmtNum(families.length)} gia đình
+          </span>
         </div>
-      )}
+        {!loading && families.length === 0 && !error ? (
+          <EmptyState title="Chưa có gia đình nào" description="Khi phụ huynh tạo tài khoản trên app, gia đình sẽ hiện ở đây." style={{ border: 'none', boxShadow: 'none' }} />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filtered}
+            pageSize={10}
+            loading={loading && !families.length}
+            onRowClick={(f) => setOpen(f)}
+            emptyTitle="Không có gia đình khớp bộ lọc"
+            emptyDescription="Thử bỏ bớt từ khoá hoặc chọn trạng thái khác."
+          />
+        )}
+      </Card>
 
-      {/* MODAL ĐỔI TÊN */}
-      {renameTarget && (
-        <div className="stitch-lock-overlay" onClick={() => setRenameTarget(null)}>
-          <div className="stitch-card" style={{ maxWidth: 420, width: '100%' }} onClick={(e) => e.stopPropagation()}>
-            <h3 className="stitch-card-title">✏️ Đổi tên gia đình</h3>
-            <form onSubmit={handleRenameSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 700, display: 'block', marginBottom: 6 }}>Tên mới</label>
-                <input
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '2px solid var(--adm-border)' }}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Nhập tên gia đình mới..."
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button type="button" className="stitch-btn-secondary" onClick={() => setRenameTarget(null)}>Huỷ</button>
-                <button type="submit" className="stitch-btn-primary" disabled={actionBusy}>
-                  {actionBusy ? 'Đang lưu...' : 'Lưu tên mới'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL RESET MẬT KHẨU */}
-      {resetTarget && (
-        <div className="stitch-lock-overlay" onClick={() => setResetTarget(null)}>
-          <div className="stitch-card" style={{ maxWidth: 420, width: '100%' }} onClick={(e) => e.stopPropagation()}>
-            <h3 className="stitch-card-title">🔑 Đặt lại mật khẩu</h3>
-            <p style={{ fontSize: 13, color: 'var(--adm-sub)', marginTop: -10, marginBottom: 14 }}>
-              Mật khẩu mới cho <strong>{resetTarget.name}</strong>
-            </p>
-            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 700, display: 'block', marginBottom: 6 }}>Mật khẩu mới (tối thiểu 4 ký tự)</label>
-                <input
-                  type="password"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '2px solid var(--adm-border)' }}
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={4}
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button type="button" className="stitch-btn-secondary" onClick={() => setResetTarget(null)}>Huỷ</button>
-                <button type="submit" className="stitch-btn-primary" disabled={actionBusy}>
-                  {actionBusy ? 'Đang cập nhật...' : 'Xác nhận đổi mật khẩu'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL XOÁ GIA ĐÌNH */}
-      {deleteTarget && (
-        <div className="stitch-lock-overlay" onClick={() => setDeleteTarget(null)}>
-          <div className="stitch-card" style={{ maxWidth: 440, width: '100%', borderColor: '#FECACA' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#DC2626', marginBottom: 12 }}>
-              <ShieldAlert size={26} />
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Xác nhận xoá toàn bộ gia đình</h3>
-            </div>
-            <p style={{ fontSize: 13.5, color: 'var(--adm-text)', lineHeight: 1.5 }}>
-              Hành động này sẽ <strong>xoá vĩnh viễn</strong> toàn bộ dữ liệu, lịch sử buổi học, các con và đồng bộ đám mây của gia đình <strong>{deleteTarget.name}</strong>.
-            </p>
-            <form onSubmit={handleDeleteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
-              <div>
-                <label style={{ fontSize: 12.5, fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                  Gõ lại chính xác tên gia đình để xác nhận: <code style={{ color: '#DC2626' }}>{deleteTarget.name}</code>
-                </label>
-                <input
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '2px solid #FECACA' }}
-                  value={confirmName}
-                  onChange={(e) => setConfirmName(e.target.value)}
-                  placeholder={`Gõ: ${deleteTarget.name}`}
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-                <button type="button" className="stitch-btn-secondary" onClick={() => setDeleteTarget(null)}>Huỷ bỏ</button>
-                <button
-                  type="submit"
-                  className="stitch-btn-primary"
-                  style={{ background: '#DC2626', color: '#fff', borderColor: '#B91C1C' }}
-                  disabled={actionBusy || confirmName !== deleteTarget.name}
-                >
-                  {actionBusy ? 'Đang xoá...' : 'Tôi hiểu, xoá vĩnh viễn'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <FamilyDrawer family={open} onClose={() => setOpen(null)} />
     </div>
-  );
+  )
 }
+
+export default AdminFamiliesTab

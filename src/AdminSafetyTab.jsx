@@ -1,50 +1,68 @@
 /**
- * src/AdminSafetyTab.jsx
- * 
- * Tab "An toàn AI" trong Admin Portal (Đợt 14 Phần C):
- * 1. Thống kê KPI an toàn 4 lớp
- * 2. Bảng nhật ký can thiệp guard_log
- * 3. Bảng phản hồi phụ huynh ai_feedback (kèm nút đóng xử lý)
- * 4. Hộp thử nghiệm nhanh bộ lọc Guard trực tiếp
+ * src/AdminSafetyTab.jsx — trang "An toàn AI & phản hồi" của admin (Đợt 15 · Chặng 3)
+ * 1. Chỉ số an toàn toàn hệ thống (7 ngày) từ /api/v1/admin/safety-summary; chưa có dữ liệu thì KpiCard hiện "·"
+ * 2. Nhật ký bộ chặn lộ đáp án (guard_log)
+ * 3. Phản hồi của phụ huynh (ai_feedback), có nút đóng
+ * 4. Bàn thử bộ chặn (không gọi AI, chỉ chạy bộ kiểm trên Worker)
  */
+import React, { useEffect, useState } from 'react'
+import { PageHeader, Card, Button, StatusPill, KpiCard, Tabs, DataTable, Field, Input, Textarea, Select, Banner, staffToast } from './ui/staff'
+import { adminJson, errMessage, fmtDateTime, fmtNumber } from './admin/systemShared'
+import './admin/pages-system.css'
 
-import { appAlert } from './dialog'
-import React, { useState, useEffect } from 'react'
-import { Card, Button, StatusPill, Kpi, Segmented, DataTable, EmptyState } from './ui/staff/index.jsx'
-import { getSafetySummary, getSafetyLog, closeAiFeedback, testGuardFilter } from './api.js'
+const REASON_LABELS = {
+  leak: { text: 'Lộ đáp án', tone: 'bad' },
+  too_hard: { text: 'Quá khó với tuổi', tone: 'warn' },
+  teacher_way: { text: 'Khác cách cô dạy', tone: 'info' },
+  wrong: { text: 'Sai kiến thức hoặc đề', tone: 'bad' },
+}
+const OUTCOME_LABELS = {
+  fallback: { text: 'Thay câu an toàn', tone: 'warn' },
+  regenerated: { text: 'Sinh lại', tone: 'ok' },
+  leaked: { text: 'Lọt tới con', tone: 'bad' },
+}
+const PROMPT_OPTIONS = [
+  { value: 'p3_explain', label: 'Giảng bài 3 bậc' },
+  { value: 'p14b_check_work', label: 'Chấm vở, không sửa hộ' },
+  { value: 'p14d_teach_back', label: 'Nghe con giảng lại' },
+]
 
 export function AdminSafetyTab({ token }) {
   const [loading, setLoading] = useState(true)
-  const [subTab, setSubTab] = useState('logs') // 'logs' | 'feedback' | 'test'
+  const [subTab, setSubTab] = useState('logs')
   const [summary, setSummary] = useState(null)
+  const [summaryErr, setSummaryErr] = useState(false)
   const [logs, setLogs] = useState([])
   const [feedbacks, setFeedbacks] = useState([])
+  const [logErr, setLogErr] = useState('')
 
-  // Test Tool state
   const [testPromptId, setTestPromptId] = useState('p3_explain')
-  const [testText, setTestText] = useState('Con lấy ba hộp mỗi hộp tám cây bút là mười chín cây.')
+  const [testText, setTestText] = useState('Con lấy ba hộp, mỗi hộp tám cây bút là mười chín cây.')
   const [testAnswer, setTestAnswer] = useState('19 cây bút')
-  const [testProblem, setTestProblem] = useState('Có ba hộp bút, mỗi hộp tám cây...')
+  const [testProblem, setTestProblem] = useState('Có ba hộp bút, mỗi hộp tám cây…')
   const [testResult, setTestResult] = useState(null)
   const [testing, setTesting] = useState(false)
 
   const loadData = async () => {
     setLoading(true)
-    try {
-      const [sumRes, logRes] = await Promise.all([
-        getSafetySummary(),
-        getSafetyLog({ limit: 100 }),
-      ])
-      if (sumRes?.ok) setSummary(sumRes)
-      if (logRes?.ok) {
-        setLogs(logRes.guard_logs || [])
-        setFeedbacks(logRes.feedbacks || [])
-      }
-    } catch (e) {
-      console.error('Lỗi tải dữ liệu An toàn AI:', e)
-    } finally {
-      setLoading(false)
+    const [s, l] = await Promise.all([adminJson('/api/v1/admin/safety-summary'), adminJson('/api/v1/safety/log?limit=100')])
+    if (s.ok) {
+      setSummary(s.data)
+      setSummaryErr(false)
+    } else {
+      setSummary(null)
+      setSummaryErr(true)
     }
+    if (l.ok) {
+      setLogs(l.data?.guard_logs || [])
+      setFeedbacks(l.data?.feedbacks || [])
+      setLogErr('')
+    } else {
+      setLogs([])
+      setFeedbacks([])
+      setLogErr(errMessage(l, 'Chưa tải được nhật ký'))
+    }
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -52,335 +70,167 @@ export function AdminSafetyTab({ token }) {
   }, [])
 
   const handleCloseFeedback = async (id) => {
-    try {
-      await closeAiFeedback(id)
-      setFeedbacks((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, status: 'closed', closed_by: 'admin' } : f))
-      )
-    } catch (e) {
-      appAlert('Không thể đóng phản hồi: ' + e.message, { title: 'Có lỗi' })
+    const r = await adminJson(`/api/v1/admin/ai-feedback/${encodeURIComponent(id)}/close`, { method: 'POST' })
+    if (!r.ok) {
+      staffToast(errMessage(r, 'Chưa đóng được phản hồi'), { tone: 'bad' })
+      return
     }
+    setFeedbacks((prev) => prev.map((f) => (f.id === id ? { ...f, status: 'closed', closed_by: 'admin' } : f)))
+    staffToast('Đã đóng phản hồi')
   }
 
   const handleRunTest = async () => {
     setTesting(true)
-    try {
-      const data = {
-        dap_an_cuoi_cho_me: testAnswer,
-        cau_hoi: testText,
-        cau_hoi_cho_con: { muc_1: testText },
-        cau_hoi_them: testText,
-      }
-      const context = {
-        problem_text: testProblem,
-      }
-      const res = await testGuardFilter({ promptId: testPromptId, data, context })
-      setTestResult(res?.result || null)
-    } catch (e) {
-      appAlert('Lỗi khi chạy thử: ' + e.message, { title: 'Có lỗi' })
-    } finally {
-      setTesting(false)
+    const data = { dap_an_cuoi_cho_me: testAnswer, cau_hoi: testText, cau_hoi_cho_con: { muc_1: testText }, cau_hoi_them: testText }
+    const r = await adminJson('/api/v1/safety/test-guard', { method: 'POST', body: { promptId: testPromptId, data, context: { problem_text: testProblem } } })
+    setTesting(false)
+    if (!r.ok) {
+      staffToast(errMessage(r, 'Chưa chạy thử được'), { tone: 'bad' })
+      return
     }
+    setTestResult(r.data?.result || null)
   }
 
-  const REASON_LABELS = {
-    leak: { text: 'Lộ đáp án', pill: 'danger' },
-    too_hard: { text: 'Quá khó với tuổi', pill: 'warning' },
-    teacher_way: { text: 'Khác cách cô dạy', pill: 'info' },
-    wrong: { text: 'Sai kiến thức/đề', pill: 'danger' },
-  }
+  const g = summary?.guard
+  const fb = summary?.feedback
+  const wc = summary?.workChecks
+  const safeRate = g && g.total > 0 ? `${(((g.total - g.leaked) / g.total) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%` : null
+  const openFeedbacks = feedbacks.filter((f) => f.status === 'open').length
+
+  const logColumns = [
+    { key: 'created_at', title: 'Thời gian', render: (v) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(v)}</span> },
+    { key: 'prompt_id', title: 'Prompt', render: (v) => <span className="sys-mono">{v || '·'}</span> },
+    { key: 'field', title: 'Trường', render: (v) => <span className="sys-mono">{v || '·'}</span> },
+    { key: 'before_text', title: 'Câu AI sinh (bị chặn)', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-bad)' }}>{v || '·'}</div> },
+    { key: 'after_text', title: 'Câu thay thế', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-ok)', fontWeight: 700 }}>{v || '·'}</div> },
+    { key: 'outcome', title: 'Kết quả', render: (v) => <StatusPill status={(OUTCOME_LABELS[v] || {}).tone || 'info'} label={(OUTCOME_LABELS[v] || {}).text || v || '·'} /> },
+  ]
+  const fbColumns = [
+    { key: 'created_at', title: 'Thời gian', render: (v) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(v)}</span> },
+    { key: 'reason', title: 'Lý do', render: (v) => <StatusPill status={(REASON_LABELS[v] || {}).tone || 'info'} label={(REASON_LABELS[v] || {}).text || v || '·'} /> },
+    { key: 'question_text', title: 'Câu hỏi bị báo', render: (v) => <div className="sys-cell-wrap" style={{ fontStyle: 'italic' }}>{v ? `“${v}”` : '·'}</div> },
+    { key: 'note', title: 'Ghi chú của phụ huynh', render: (v) => <div className="sys-cell-wrap">{v || '·'}</div> },
+    { key: 'status', title: 'Trạng thái', render: (v) => <StatusPill status={v === 'open' ? 'bad' : 'info'} label={v === 'open' ? 'Đang mở' : 'Đã đóng'} /> },
+    {
+      key: 'act',
+      title: '',
+      align: 'right',
+      render: (_, f) =>
+        f.status === 'open' ? (
+          <Button size="sm" variant="secondary" onClick={() => handleCloseFeedback(f.id)}>
+            ✓ Đóng
+          </Button>
+        ) : null,
+    },
+  ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* 1. KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
-        <Kpi
-          label="Tỷ lệ An toàn AI"
-          value={`${summary?.safe_rate_percent || 100}%`}
-          sub="Chặn tuyệt đối lộ đáp án"
-          style={{ background: '#F0FDF4', borderColor: '#BBF7D0' }}
-        />
-        <Kpi
-          label="Lượt can thiệp bảo vệ"
-          value={summary?.total_guard_interventions || 0}
-          sub={`${summary?.guard_events?.fallbacks || 0} fallback · ${summary?.guard_events?.regenerated || 0} regenerated`}
-          style={{ background: '#EFF6FF', borderColor: '#BFDBFE' }}
-        />
-        <Kpi
-          label="Phản hồi Phụ huynh mở"
-          value={summary?.feedback?.open || 0}
-          sub={`Tổng số: ${summary?.feedback?.total || 0} phản hồi`}
-          style={{ background: '#FFFBEB', borderColor: '#FDE68A' }}
-        />
-        <Kpi
-          label="Học sinh tự sửa bài"
-          value={summary?.work_checks?.self_fixed || 0}
-          sub="Phát hiện & sửa thành công"
-          style={{ background: '#FAF5FF', borderColor: '#E9D5FF' }}
-        />
+    <div className="sys-page">
+      <PageHeader
+        title="An toàn AI & phản hồi"
+        description="Bộ chặn lộ đáp án và phản hồi của phụ huynh về câu hỏi AI, toàn hệ thống."
+        actions={
+          <Button variant="ghost" onClick={loadData} disabled={loading}>
+            {loading ? 'Đang tải…' : 'Làm mới'}
+          </Button>
+        }
+      />
+
+      {summaryErr && <Banner type="warn" message="Chưa đọc được chỉ số an toàn từ máy chủ, các ô đang hiện ·" />}
+
+      <div className="sys-kpis">
+        <KpiCard label="Tỉ lệ câu an toàn" value={safeRate} sub="7 ngày qua, theo nhật ký bộ chặn" emptyText={g ? 'Chưa có câu nào qua bộ chặn' : 'Chưa có dữ liệu'} tone="ok" />
+        <KpiCard label="Lượt bộ chặn can thiệp" value={g ? fmtNumber(g.fallbacks + g.regenerated) : null} sub={g ? `${fmtNumber(g.fallbacks)} thay câu · ${fmtNumber(g.regenerated)} sinh lại` : ''} />
+        <KpiCard label="Phản hồi đang mở" value={fb ? fmtNumber(fb.open) : null} sub={fb ? `Tổng ${fmtNumber(fb.total)} phản hồi` : ''} tone={fb?.open ? 'warn' : 'default'} />
+        <KpiCard label="Con tự sửa bài" value={wc && wc.total > 0 ? fmtNumber(wc.selfFixed) : null} sub={wc ? `trên ${fmtNumber(wc.total)} lần chấm vở, 7 ngày` : ''} emptyText={wc ? 'Chưa có lần chấm vở nào' : 'Chưa có dữ liệu'} tone="ok" />
       </div>
 
-      {/* 2. Sub-tab navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Segmented
-          value={subTab}
-          onChange={setSubTab}
-          options={[
-            { value: 'logs', label: `🛡️ Nhật ký Guard (${logs.length})` },
-            { value: 'feedback', label: `🚩 Phụ huynh phản hồi (${feedbacks.length})` },
-            { value: 'test', label: '🧪 Thử nghiệm Bộ chặn Guard' },
-          ]}
-        />
-        <Button variant="ghost" size="small" onClick={loadData} busy={loading}>
-          🔄 Làm mới
-        </Button>
-      </div>
+      <Tabs
+        activeTab={subTab}
+        onChange={setSubTab}
+        ariaLabel="Mục an toàn AI"
+        tabs={[
+          { id: 'logs', label: 'Nhật ký bộ chặn', count: loading ? null : logs.length },
+          { id: 'feedback', label: 'Phụ huynh phản hồi', count: loading ? null : openFeedbacks || null },
+          { id: 'test', label: 'Thử bộ chặn' },
+        ]}
+      />
 
-      {/* 3. Sub-tab Content */}
+      {logErr && subTab !== 'test' && <Banner type="bad" message={logErr} actionText="Thử lại" onAction={loadData} />}
+
       {subTab === 'logs' && (
         <Card style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--c-line)', fontWeight: 800 }}>
-            Nhật ký các lần AI can thiệp thay thế câu rò rỉ đáp án (guard_log)
-          </div>
-          {logs.length === 0 ? (
-            <EmptyState
-              title="Chưa có sự kiện can thiệp"
-              description="Hệ thống chạy an toàn 100%, chưa phát hiện câu hỏi nào vi phạm bộ quy tắc."
-            />
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: '#F8FAFC', textAlign: 'left', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 14px' }}>Thời gian</th>
-                    <th style={{ padding: '10px 14px' }}>Prompt</th>
-                    <th style={{ padding: '10px 14px' }}>Trường bị bắt</th>
-                    <th style={{ padding: '10px 14px' }}>Câu AI sinh (Bị chặn)</th>
-                    <th style={{ padding: '10px 14px' }}>Câu an toàn thay thế</th>
-                    <th style={{ padding: '10px 14px' }}>Kết quả</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((l) => (
-                    <tr key={l.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--c-text-2)' }}>
-                        {new Date(l.created_at).toLocaleString('vi-VN')}
-                      </td>
-                      <td style={{ padding: '10px 14px', fontWeight: 700 }}>{l.prompt_id}</td>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12 }}>{l.field}</td>
-                      <td style={{ padding: '10px 14px', color: '#DC2626', maxWidth: 220 }}>{l.before_text}</td>
-                      <td style={{ padding: '10px 14px', color: '#16A34A', fontWeight: 600, maxWidth: 220 }}>
-                        {l.after_text}
-                      </td>
-                      <td style={{ padding: '10px 14px' }}>
-                        <span
-                          style={{
-                            padding: '3px 8px',
-                            borderRadius: 6,
-                            fontSize: 11.5,
-                            fontWeight: 800,
-                            background: l.outcome === 'fallback' ? '#FEF3C7' : '#DCFCE7',
-                            color: l.outcome === 'fallback' ? '#92400E' : '#166534',
-                          }}
-                        >
-                          {l.outcome}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            columns={logColumns}
+            data={logs}
+            loading={loading}
+            rowKey="id"
+            pageSize={20}
+            emptyTitle="Chưa có lần can thiệp nào"
+            emptyDescription="Khi AI sinh câu có thể lộ đáp án, bộ chặn thay câu và ghi lại ở đây."
+          />
         </Card>
       )}
 
       {subTab === 'feedback' && (
         <Card style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--c-line)', fontWeight: 800 }}>
-            Phản hồi từ phụ huynh khi gặp câu hỏi AI chưa hợp lý (ai_feedback)
-          </div>
-          {feedbacks.length === 0 ? (
-            <EmptyState
-              title="Chưa có phản hồi nào"
-              description="Phụ huynh hoàn toàn hài lòng với chất lượng câu hỏi sư phạm của AI."
-            />
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: '#F8FAFC', textAlign: 'left', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 14px' }}>Thời gian</th>
-                    <th style={{ padding: '10px 14px' }}>Lý do</th>
-                    <th style={{ padding: '10px 14px' }}>Câu hỏi bị báo</th>
-                    <th style={{ padding: '10px 14px' }}>Ghi chú phụ huynh</th>
-                    <th style={{ padding: '10px 14px' }}>Trạng thái</th>
-                    <th style={{ padding: '10px 14px' }}>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {feedbacks.map((f) => {
-                    const rMeta = REASON_LABELS[f.reason] || { text: f.reason, pill: 'default' }
-                    return (
-                      <tr key={f.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--c-text-2)' }}>
-                          {new Date(f.created_at).toLocaleString('vi-VN')}
-                        </td>
-                        <td style={{ padding: '10px 14px' }}>
-                          <span
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: 6,
-                              fontSize: 11.5,
-                              fontWeight: 700,
-                              background: '#F1F5F9',
-                              color: '#334155',
-                            }}
-                          >
-                            {rMeta.text}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 14px', fontStyle: 'italic', maxWidth: 220 }}>
-                          "{f.question_text}"
-                        </td>
-                        <td style={{ padding: '10px 14px', maxWidth: 200 }}>{f.note || '—'}</td>
-                        <td style={{ padding: '10px 14px' }}>
-                          <span
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: 6,
-                              fontSize: 11.5,
-                              fontWeight: 800,
-                              background: f.status === 'open' ? '#FEE2E2' : '#E2E8F0',
-                              color: f.status === 'open' ? '#991B1B' : '#475569',
-                            }}
-                          >
-                            {f.status === 'open' ? '🔴 Đang mở' : 'Đã đóng'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 14px' }}>
-                          {f.status === 'open' && (
-                            <Button
-                              variant="soft"
-                              size="small"
-                              onClick={() => handleCloseFeedback(f.id)}
-                            >
-                              ✓ Đóng
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            columns={fbColumns}
+            data={feedbacks}
+            loading={loading}
+            rowKey="id"
+            pageSize={20}
+            emptyTitle="Chưa có phản hồi nào"
+            emptyDescription="Phụ huynh bấm “Câu này chưa hợp” trong app thì phản hồi hiện ở đây."
+          />
         </Card>
       )}
 
       {subTab === 'test' && (
-        <Card style={{ padding: 20 }}>
-          <h4 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 800 }}>
-            🧪 Thử nghiệm Bộ chặn Guard trực tiếp (checkAnswerLeak)
-          </h4>
-          <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 16px' }}>
-            Nhập câu hỏi dự kiến và đáp án cấm để xem thuật toán số chữ tiếng Việt và bộ lọc có phát hiện rò rỉ hay không.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+        <Card>
+          <div className="sys-stack">
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                Chọn Prompt:
-              </label>
-              <select
-                value={testPromptId}
-                onChange={(e) => setTestPromptId(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--c-line)' }}
-              >
-                <option value="p3_explain">p3_explain (Giảng bài 3 bậc)</option>
-                <option value="p14b_check_work">p14b_check_work (Chấm vở không sửa hộ)</option>
-                <option value="p14d_teach_back">p14d_teach_back (Nghe con giảng lại)</option>
-              </select>
+              <h3 className="sys-card-title">Thử bộ chặn lộ đáp án</h3>
+              <p className="sys-card-desc">Nhập câu AI có thể sinh ra và đáp án cần giấu để xem bộ chặn có bắt được không. Không gọi AI.</p>
             </div>
-
+            <div className="sys-grid-2 sys-even">
+              <Field label="Prompt">
+                <Select ariaLabel="Prompt" value={testPromptId} onChange={setTestPromptId} options={PROMPT_OPTIONS} />
+              </Field>
+              <Field label="Đáp án cần giấu">
+                <Input value={testAnswer} onChange={(e) => setTestAnswer(e.target.value)} />
+              </Field>
+            </div>
+            <Field label="Đề bài" hint="Các số có trong đề được phép nhắc lại.">
+              <Input value={testProblem} onChange={(e) => setTestProblem(e.target.value)} />
+            </Field>
+            <Field label="Câu AI sinh cần kiểm">
+              <Textarea rows={3} value={testText} onChange={(e) => setTestText(e.target.value)} />
+            </Field>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                Đáp án cấm lộ (finalAnswer):
-              </label>
-              <input
-                type="text"
-                value={testAnswer}
-                onChange={(e) => setTestAnswer(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--c-line)' }}
-              />
+              <Button onClick={handleRunTest} disabled={testing}>
+                {testing ? 'Đang kiểm…' : 'Kiểm tra ngay'}
+              </Button>
             </div>
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-              Đề bài (problem_text - các số trong đề bài được phép nói):
-            </label>
-            <input
-              type="text"
-              value={testProblem}
-              onChange={(e) => setTestProblem(e.target.value)}
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--c-line)' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-              Nội dung câu AI sinh cần kiểm tra:
-            </label>
-            <textarea
-              rows={3}
-              value={testText}
-              onChange={(e) => setTestText(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1.5px solid var(--c-line)', fontFamily: 'inherit' }}
-            />
-          </div>
-
-          <Button variant="solid" onClick={handleRunTest} busy={testing}>
-            Kiểm tra vi phạm ngay ›
-          </Button>
-
-          {testResult && (
-            <div
-              style={{
-                marginTop: 18,
-                padding: 14,
-                borderRadius: 10,
-                background: testResult.leaked ? '#FEF2F2' : '#F0FDF4',
-                border: `1.5px solid ${testResult.leaked ? '#FCA5A5' : '#86EFAC'}`,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 20 }}>{testResult.leaked ? '🚨' : '✅'}</span>
-                <span
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 800,
-                    color: testResult.leaked ? '#DC2626' : '#16A34A',
-                  }}
-                >
-                  {testResult.leaked ? 'PHÁT HIỆN LỘ ĐÁP ÁN!' : 'AN TOÀN · KHÔNG LỘ ĐÁP ÁN'}
-                </span>
-              </div>
-              {testResult.leaked && (
-                <div style={{ fontSize: 13, color: '#991B1B' }}>
-                  <strong>Lý do chặn:</strong>
-                  <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
+            {testResult && (
+              <div className={`sys-test-result ${testResult.leaked ? 'sys-leak' : ''}`} role="status">
+                <b style={{ color: testResult.leaked ? 'var(--s-bad)' : 'var(--s-ok)' }}>
+                  {testResult.leaked ? '🚨 Phát hiện lộ đáp án' : '✅ An toàn, không lộ đáp án'}
+                </b>
+                {testResult.leaked && (testResult.leakReasons || []).length > 0 && (
+                  <ul className="sys-principles" style={{ marginTop: 6 }}>
                     {(testResult.leakReasons || []).map((r, i) => (
                       <li key={i}>{r}</li>
                     ))}
                   </ul>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </Card>
       )}
     </div>
   )
 }
+
+export default AdminSafetyTab

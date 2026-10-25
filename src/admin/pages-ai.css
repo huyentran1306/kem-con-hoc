@@ -1,0 +1,130 @@
+/* ============================================================
+   Đợt 15 · Trang AI & nội dung: Prompt Studio, Router sư phạm, Phạm vi đề & ảnh
+   Dùng token --s-* của bộ quy chuẩn (tokens.css). Nền kem, chữ nâu, mật ong.
+   ============================================================ */
+
+.aip-root { display: flex; flex-direction: column; gap: 14px; min-width: 0; width: 100%; color: var(--s-text); font-family: var(--s-font-body); }
+.aip-root * { box-sizing: border-box; }
+.aip-muted { color: var(--s-text-2); }
+.aip-small { font-size: 12px; }
+.aip-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.aip-spacer { flex: 1; }
+.aip-h3 { margin: 0; font-family: var(--s-font-head); font-size: 15px; font-weight: 600; color: var(--s-text); line-height: 1.3; }
+.aip-label { font-size: 11px; font-weight: 900; letter-spacing: .6px; text-transform: uppercase; color: var(--s-text-2); }
+.aip-card { background: var(--s-surface); border: 1px solid var(--s-line); border-radius: var(--s-radius-card); box-shadow: var(--s-shadow-card); padding: 16px 18px; min-width: 0; }
+.aip-card-tight { padding: 12px 14px; }
+.aip-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--s-accent-tint); color: var(--s-accent-ink); border: 1px solid #F6C56A; white-space: nowrap; }
+.aip-pill.ok { background: var(--s-ok-bg); color: var(--s-ok); border-color: var(--s-ok-border); }
+.aip-pill.bad { background: var(--s-bad-bg); color: var(--s-bad); border-color: var(--s-bad-border); }
+.aip-pill.plain { background: #FFFDF8; color: var(--s-text-2); border-color: var(--s-line); }
+.aip-linkbtn { background: none; border: none; padding: 0; color: var(--s-accent-ink); font: inherit; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.aip-linkbtn:hover { color: var(--s-text); }
+.aip-linkbtn:focus-visible, .aip-plist-item:focus-visible, .aip-sample:focus-visible { outline: 3px solid rgba(246, 166, 35, .55); outline-offset: 2px; }
+
+/* ---------- Prompt Studio: 3 cột ---------- */
+.aip-ps { container-type: inline-size; container-name: aipps; }
+.aip-ps-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@container aipps (min-width: 760px) {
+  .aip-ps-grid { grid-template-columns: 250px minmax(0, 1fr); }
+  .aip-ps-bench { grid-column: 2; }
+}
+@container aipps (min-width: 1120px) {
+  .aip-ps-grid { grid-template-columns: 250px minmax(0, 1fr) 320px; }
+  .aip-ps-bench { grid-column: 3; }
+  .aip-ps-side { position: sticky; top: 12px; }
+}
+.aip-ps-list { padding: 12px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 140px); overflow-y: auto; }
+.aip-plist-item { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; padding: 9px 11px; border-radius: 14px; border: 1.5px solid transparent; background: transparent; color: var(--s-text); cursor: pointer; font: inherit; }
+.aip-plist-item:hover { background: #FFFCF5; border-color: var(--s-line); }
+.aip-plist-item.on { background: var(--s-accent-tint); border-color: var(--s-accent); }
+.aip-plist-title { font-size: 13px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.aip-plist-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; color: var(--s-accent-ink); font-weight: 700; margin-right: 4px; }
+.aip-plist-meta { font-size: 11.5px; color: var(--s-text-2); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.aip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--s-accent); display: inline-block; }
+.aip-dot.bad { background: var(--s-bad); }
+.aip-ps-editor { display: flex; flex-direction: column; gap: 12px; }
+.aip-ps-edhead { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.aip-ps-edhead h2 { margin: 0; font-family: var(--s-font-head); font-size: 17px; font-weight: 600; line-height: 1.3; overflow-wrap: break-word; }
+.aip-ps-vars { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.aip-var-btn { font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 5px 9px; border-radius: 999px; border: 1.5px solid #F6C56A; background: #FFE7A8; color: #7A4A00; cursor: pointer; }
+.aip-var-btn:hover { background: #FFD97A; }
+.aip-ps-bench { display: flex; flex-direction: column; gap: 12px; }
+.aip-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12.5px; }
+.aip-checks li { display: flex; gap: 6px; align-items: flex-start; }
+.aip-checks .ok { color: var(--s-ok); font-weight: 900; }
+.aip-checks .bad { color: var(--s-bad); font-weight: 900; }
+.aip-output { max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin: 0; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--s-line); background: #FFFDF8; color: var(--s-text); font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.aip-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.aip-steps li { display: flex; gap: 8px; font-size: 13px; align-items: flex-start; }
+.aip-steps b { flex: 0 0 22px; height: 22px; border-radius: 50%; background: var(--s-accent-tint); color: var(--s-accent-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; }
+.aip-vers { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.aip-vers li { display: flex; gap: 8px; align-items: baseline; padding: 6px 4px; border-bottom: 1px dashed #F3E4CC; font-size: 12.5px; }
+.aip-vers li:last-child { border-bottom: none; }
+.aip-vers .v { font-weight: 900; min-width: 30px; }
+.aip-details summary { cursor: pointer; font-weight: 800; font-size: 12.5px; color: var(--s-accent-ink); }
+
+/* ---------- Router sư phạm ---------- */
+.aip-rules { display: grid; gap: 12px; }
+.aip-rule { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.aip-rule.off { opacity: .72; }
+.aip-rule.hit { outline: 3px solid var(--s-accent); outline-offset: 2px; }
+.aip-prio { width: 40px; height: 40px; border-radius: 14px; background: var(--s-accent-tint); color: var(--s-accent-ink); border: 1.5px solid #F6C56A; font-family: var(--s-font-head); font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.aip-prio-move { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; align-items: center; }
+.aip-icon-btn { width: 26px; height: 22px; border-radius: 8px; border: 1px solid var(--s-line); background: #FFFDF8; color: var(--s-text-2); cursor: pointer; font-size: 11px; line-height: 1; }
+.aip-icon-btn:disabled { opacity: .35; cursor: default; }
+.aip-icon-btn:not(:disabled):hover { background: var(--s-accent-tint); color: var(--s-text); }
+.aip-rule-title { margin: 0; font-family: var(--s-font-head); font-size: 15.5px; font-weight: 600; line-height: 1.35; }
+.aip-rule-method { font-size: 12.5px; color: var(--s-text-2); margin-top: 2px; }
+.aip-usage { margin-top: 10px; display: grid; gap: 5px; }
+.aip-bar { height: 8px; border-radius: 999px; background: #F6EBD9; overflow: hidden; }
+.aip-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--s-accent); }
+.aip-rule-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.aip-tester { display: grid; gap: 10px; }
+.aip-tester-row { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .aip-tester-row { grid-template-columns: minmax(0, 1fr) 150px auto; align-items: end; } }
+.aip-match { border-radius: 16px; padding: 12px 14px; background: var(--s-accent-tint); border: 1.5px solid #F6C56A; font-size: 13.5px; }
+.aip-match.none { background: #FFFDF8; border-color: var(--s-line); }
+
+/* ---------- Phạm vi đề & ảnh ---------- */
+.aip-settings { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.aip-setting h4 { margin: 0 0 6px; font-size: 13.5px; font-weight: 800; color: var(--s-text); }
+.aip-setting .big { font-family: var(--s-font-head); font-size: 20px; color: var(--s-text); }
+.aip-setting p { margin: 6px 0 0; font-size: 12px; color: var(--s-text-2); line-height: 1.4; }
+.aip-kw-add { display: inline-flex; align-items: center; gap: 4px; border: 1.5px dashed #E8C98F; border-radius: 999px; padding: 0 4px 0 10px; background: #FFFDF8; }
+.aip-kw-add input { border: none; outline: none; background: transparent; font: 700 12px var(--s-font-body); color: var(--s-text); width: 150px; padding: 5px 0; }
+.aip-kw-add input::placeholder { color: var(--s-text-2); }
+.aip-kw-add button { border: none; background: var(--s-accent); color: var(--s-on-accent); border-radius: 999px; font-weight: 900; padding: 3px 9px; cursor: pointer; font-size: 12px; }
+.aip-scope-head, .aip-scope-row { display: grid; gap: 14px; grid-template-columns: minmax(170px, 1.1fr) minmax(170px, auto) minmax(220px, 1.6fr) minmax(200px, 1.2fr); align-items: start; }
+.aip-scope-head { padding: 0 4px 8px; border-bottom: 1px solid var(--s-line); }
+.aip-scope-row { padding: 14px 4px; border-bottom: 1px solid #F6EBD9; }
+.aip-scope-row:last-child { border-bottom: none; }
+.aip-scope-name { display: flex; gap: 10px; align-items: flex-start; }
+.aip-scope-emoji { font-size: 22px; line-height: 1; }
+.aip-scope-name b { display: block; font-size: 13.5px; }
+.aip-scope-name small { display: block; font-size: 11.5px; color: var(--s-text-2); line-height: 1.35; margin-top: 2px; }
+@media (max-width: 1180px) {
+  .aip-scope-head { display: none; }
+  .aip-scope-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (max-width: 720px) { .aip-scope-row { grid-template-columns: minmax(0, 1fr); } }
+.aip-msg { position: relative; border: 2px solid var(--s-line); border-radius: 14px; background: #FFFDF8; }
+.aip-msg:focus-within { border-color: var(--s-accent); }
+.aip-msg pre, .aip-msg textarea { margin: 0; padding: 9px 11px; font: 13px/1.5 var(--s-font-body); white-space: pre-wrap; word-break: break-word; }
+.aip-msg pre { position: absolute; inset: 0; pointer-events: none; color: var(--s-text); overflow: hidden; }
+.aip-msg textarea { position: relative; display: block; width: 100%; min-height: 64px; border: none; outline: none; resize: vertical; background: transparent; color: transparent; caret-color: var(--s-text); }
+.aip-msg textarea::selection { background: rgba(246, 166, 35, .35); }
+.aip-bubble-wrap { display: flex; gap: 8px; align-items: flex-end; }
+.aip-bubble-ava { flex: 0 0 30px; height: 30px; border-radius: 50%; background: var(--s-accent-tint); border: 1.5px solid #F6C56A; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.aip-bubble { background: #FFF6E3; border: 1.5px solid #F6D8A0; border-radius: 16px 16px 16px 4px; padding: 9px 12px; font-size: 13px; line-height: 1.45; color: var(--s-text); box-shadow: 0 2px 0 #F3E1BF; }
+.aip-bubble.empty { color: var(--s-text-2); font-style: italic; }
+.aip-samples { display: grid; gap: 8px; }
+.aip-sample { text-align: left; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; border: 1.5px solid var(--s-line); background: #FFFDF8; cursor: pointer; font: inherit; color: var(--s-text); }
+.aip-sample.on { border-color: var(--s-accent); background: var(--s-accent-tint); }
+.aip-sample img { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; border: 1px solid var(--s-line); background: #fff; }
+.aip-two { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1100px) { .aip-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.aip-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.aip-kv > div { background: #FFFDF8; border: 1px solid var(--s-line); border-radius: 12px; padding: 8px 10px; }
+.aip-kv span { display: block; font-size: 11px; color: var(--s-text-2); font-weight: 700; }
+.aip-kv b { font-size: 13.5px; }
+.aip-kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
