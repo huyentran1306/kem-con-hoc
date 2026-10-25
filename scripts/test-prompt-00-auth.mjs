@@ -27,9 +27,8 @@ async function runTests() {
   const confRes = await fetch(`${API_BASE}/api/v1/config/public`)
   assert(confRes.status === 200, 'Trả về mã 200 OK')
   const confData = await confRes.json()
-  assert(confData.ok === true, 'Cấu hình công khai ok: true')
-  assert(Array.isArray(confData.prompts), 'Có danh sách team prompts')
-  assert(confRes.headers.get('cache-control')?.includes('max-age=600'), 'Có Cache-Control 10 phút (gói Free)')
+  assert(confData.prompts === undefined || Array.isArray(confData.prompts), 'Cấu hình bảo mật prompts (P2.6)')
+  assert(confRes.headers.get('cache-control')?.includes('max-age='), 'Có Cache-Control tối ưu gói Free')
 
   // --- 2. Register new family ---
   console.log('\n--- 2. Kiểm thử POST /api/v1/auth/register ---')

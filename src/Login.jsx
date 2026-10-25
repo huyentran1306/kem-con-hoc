@@ -2,6 +2,7 @@ import { useState, useContext } from 'react'
 import { AppCtx } from './ctx'
 import { familyLogin, familyRegister } from './api'
 import { getTheme } from './themes'
+import { TRIAL_SESSION } from './trialData.js'
 
 export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin = null, classJoinBanner = null }) {
   const { openAdmin, S } = useContext(AppCtx) || {}
@@ -183,6 +184,34 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
                 </button>
               </div>
             )}
+
+            <div style={{ marginTop: 14, borderTop: '1px dashed var(--line, #E2E8F0)', paddingTop: 14, textAlign: 'center' }}>
+              <button
+                type="button"
+                className="btn ghost trial-btn"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: 14,
+                  border: '2px dashed var(--c-warn-line, #F6A623)',
+                  background: 'var(--c-hint1-bg, #FFFBEB)',
+                  color: 'var(--c-text, #78350F)',
+                  fontWeight: 800,
+                  fontSize: 13.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                }}
+                onClick={() => onAuthed(TRIAL_SESSION)}
+              >
+                <span>✨ Dùng thử không cần tài khoản ➔</span>
+              </button>
+              <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #8A6A4A)', marginTop: 5 }}>
+                Khám phá gia đình mẫu 2 con, 3 bài soạn sẵn, không cần mạng
+              </div>
+            </div>
           </div>
         </div>
       </div>

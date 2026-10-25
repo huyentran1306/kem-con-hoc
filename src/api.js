@@ -5,6 +5,7 @@ import { PROBLEM } from './data.js'
 import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
 import { getWeekLabel } from './utils.js'
 import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
+import { isTrialActive, matchTrialLesson, PRELOADED_TRIAL_LESSONS, getTrialInitialState } from './trialData.js'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -92,6 +93,13 @@ export function extractJson(raw) {
    Hỗ trợ p1_ocr_v2 gộp phân loại phạm vi (bài tập, nhạy cảm, đồ chơi, ảnh mờ, nhiều bài)
    ============================================================ */
 export async function aiOcr(file, timeoutMs = 15000, context = {}) {
+  if (isTrialActive()) {
+    return {
+      text: PRELOADED_TRIAL_LESSONS[0].de_bai,
+      scopeResult: { action: 'allow', category: 'hop_le', confidence: 0.99 },
+      raw: PRELOADED_TRIAL_LESSONS[0].de_bai,
+    }
+  }
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
@@ -219,6 +227,7 @@ export async function aiAnalyzeToy(blobOrFile, timeoutMs = 12000) {
    ✂️ AI TRÍCH ĐỀ — lọc đúng đề bài từ text OCR lẫn mô tả
    ============================================================ */
 export async function aiExtractProblem(rawOcr) {
+  if (isTrialActive()) return rawOcr || PRELOADED_TRIAL_LESSONS[0].de_bai
   if (!rawOcr || !rawOcr.trim()) return null
   const sys = renderPrompt('p2_clean')
   return aiChat(sys, [], rawOcr)
@@ -237,6 +246,26 @@ export function fastClassifyProblem(deBai = '', lop = 'Lớp 2') {
    Hỗ trợ 4 bậc câu hỏi, mức 1 vật thật, mức 2 hình vẽ, bài anh em & 5p game
    ============================================================ */
 export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = false) {
+  if (isTrialActive()) {
+    const trial = matchTrialLesson(ocr)
+    return {
+      de_bai: trial.de_bai,
+      phuong_phap: trial.phuong_phap,
+      dang_bai: trial.dang_bai,
+      cac_bac: trial.cac_bac,
+      steps: trial.cac_bac.map((b) => ({
+        question: b.cau_hoi,
+        answerForParent: b.dap_an_cho_me,
+        answer: b.dap_an_cho_me,
+        hint: b.goi_y.muc_1_do_vat,
+        hintLevel1: b.goi_y.muc_1_do_vat,
+        hintLevel2: b.goi_y.muc_2_hinh_ve,
+        stuck: 0,
+      })),
+      dap_an_cuoi_cho_me: trial.dap_an_cuoi_cho_me,
+      finalAnswerForParent: trial.dap_an_cuoi_cho_me,
+    }
+  }
   const grade = child?.grade || 'Lớp 2'
   const book = child?.book || 'Kết nối tri thức'
   const classification = fastClassifyProblem(ocr, grade)
@@ -519,6 +548,13 @@ export async function familyLogout() {
    Có kiểm soát xung đột đồng thời (409 Conflict)
    ============================================================ */
 export async function cloudLoadState(famId) {
+  if (isTrialActive() || famId === 'fam_trial') {
+    return {
+      state: getTrialInitialState(),
+      ts: Date.now(),
+      serverTs: new Date().toISOString(),
+    }
+  }
   const token = getAuthToken()
   if (token) {
     try {
@@ -541,6 +577,9 @@ export async function cloudLoadState(famId) {
 }
 
 export async function cloudSaveState(famId, state, baseTs = null) {
+  if (isTrialActive() || famId === 'fam_trial') {
+    return { saved: true, ts: Date.now() }
+  }
   const token = getAuthToken()
   if (token) {
     try {

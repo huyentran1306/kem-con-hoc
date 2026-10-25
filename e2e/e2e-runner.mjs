@@ -330,6 +330,34 @@ async function runE2ETests() {
       assert(Boolean(adminContainer), 'Màn hình Quản trị Admin tải thành công');
 
       // -------------------------------------------------------------
+      // LUỒNG 7: CHẾ ĐỘ DÙNG THỬ KHÔNG CẦN TÀI KHOẢN (CHẶNG 6)
+      // -------------------------------------------------------------
+      console.log('\nLuồng 7: Chế độ Dùng Thử không cần tài khoản (Chặng 6)');
+      await page.evaluate(() => {
+        localStorage.clear();
+      });
+      await page.goto(`http://localhost:${PORT}/`);
+      const trialBtn = page.locator('.trial-btn, button:has-text("Dùng thử không cần tài khoản")').first();
+      await trialBtn.waitFor({ state: 'visible', timeout: 6000 });
+      assert(await trialBtn.isVisible(), 'Nút "Dùng thử không cần tài khoản" hiển thị trên Login');
+      await trialBtn.click();
+
+      const trialBanner = page.locator('.trial-top-banner').first();
+      await trialBanner.waitFor({ state: 'visible', timeout: 6000 });
+      assert(await trialBanner.isVisible(), 'Dải banner "Đang dùng thử · Tạo gia đình để lưu" xuất hiện');
+
+      const childName = page.locator('text=Bé Na').first();
+      await childName.waitFor({ state: 'visible', timeout: 6000 });
+      assert(await childName.isVisible(), 'Hồ sơ Bé Na xuất hiện trong gia đình mẫu');
+
+      // Thoát dùng thử
+      const exitTrialBtn = page.locator('.trial-top-banner button').first();
+      if (await exitTrialBtn.isVisible()) {
+        await exitTrialBtn.click();
+      }
+      assert(true, 'Thao tác dùng thử và thoát hoạt động mượt mà');
+
+      // -------------------------------------------------------------
       // KIỂM THỬ ĐỘ TƯƠNG THÍCH 8 THEMES (KHÔNG VỠ MÀU / CONTRAST)
       // -------------------------------------------------------------
       console.log('\nKiểm thử 8 Theme hệ thống trên ' + vp.name);

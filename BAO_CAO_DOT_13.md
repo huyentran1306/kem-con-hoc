@@ -245,6 +245,82 @@ Tài liệu theo dõi quá trình thực hiện 6 Chặng theo đúng quy địn
 - `npm run predeploy`: **PASS 100% (Build + Toàn bộ 15 suites kiểm thử + E2E)**
 - **Đường dẫn bản preview Chặng 5:** [https://preview-ch5.kem-con-hoc-5xf.pages.dev](https://preview-ch5.kem-con-hoc-5xf.pages.dev)
 
+---
+
+## CHẶNG 6: CHẾ ĐỘ DÙNG THỬ KHÔNG CẦN TÀI KHOẢN (OFFLINE DEMO MODE)
+
+### 1. Bảng đối chiếu yêu cầu Chặng 6
+
+| Mục yêu cầu | Trạng thái | Chi tiết triển khai |
+|---|---|---|
+| **Nút "Dùng thử không cần tài khoản"** | **HOÀN THÀNH 100%** | - `src/Login.jsx`: Bổ sung nút viền nét đứt màu cam ấm áp `✨ Dùng thử không cần tài khoản ➔` nổi bật ở cuối form đăng nhập.<br>- Click trực tiếp đưa người dùng vào gia đình mẫu mà không cần nhập tên hay mật khẩu. |
+| **Dữ liệu gia đình mẫu chỉ đọc** | **HOÀN THÀNH 100%** | - Module `src/trialData.js`: Định nghĩa `TRIAL_SESSION`, `getTrialInitialState()` với đầy đủ cấu trúc:<br>  + **2 con**: Bé Na (Lớp 3, Kết nối tri thức, emoji 🦄) & Bé Tít (Lớp 1, Cánh diều, emoji 🚀).<br>  + **Lọ kẹo có 3 viên**: 3 sticker chăm chỉ, siêng năng, kiên nhẫn tích luỹ.<br>  + **Báo cáo tuần**: 3 buổi học cùng Mẹ, 1 buổi cùng Bố, 2 lần góc bình yên, 3 bài tập gần đây.<br>  + **1 lớp học mẫu & Lời nhắc của cô**: Lớp 3A (Cô Hoàng Thị Mai) với lời nhắc hôm nay mang kéo an toàn, hồ dán môn Thủ công.<br>  + **3 bài soạn sẵn**: Bài 1 Toán lời văn Lớp 3 (đàn vịt 15 con); Bài 2 Tiếng Việt Lớp 1 (chính tả L/N nảy lộc); Bài 3 Tiếng Anh Lớp 3 (tính từ sở hữu Its). |
+| **Dải banner trên đầu & Tạo tài khoản / Thoát** | **HOÀN THÀNH 100%** | - `src/App.jsx`: Banner cam cố định `trial-top-banner`: `"✨ Đang dùng thử · Tạo gia đình để lưu"`.<br>- Nút `[Tạo gia đình]` / `[✕]` đưa người dùng quay lại màn hình Login sạch sẽ để đăng ký lưu dữ liệu lâu dài.<br>- Mọi thay đổi trong phiên dùng thử chỉ nằm trong RAM/state tạm thời của máy, không ghi đè dữ liệu thật. |
+| **Chống gọi AI & Chống ghi máy chủ (Offline 100%)** | **HOÀN THÀNH 100%** | - `src/api.js`: Hàm `isTrialActive()` phát hiện phiên dùng thử.<br>- `aiExplain`: Tự động đối chiếu đề bài và trả về bài soạn sẵn trong `PRELOADED_TRIAL_LESSONS` mà **tuyệt đối không gửi request `/chat`**.<br>- `aiOcr` & `aiExtractProblem`: Trả về đề mẫu chuẩn mà không gọi `/vision` hay AI.<br>- `cloudSaveState`: Tự động bypass, **không gửi bất kỳ request ghi D1 nào**.<br>- Chuyển đổi 8 theme, Góc hạ hoả, Thổi nến, Tự thiết kế đều hoạt động mượt mà offline khi bật chế độ máy bay trên sân khấu. |
+
+---
+
+### 2. Các file đã thay đổi trong Chặng 6
+
+1. `src/trialData.js`: Toàn bộ dữ liệu gia đình mẫu, 3 bài giảng sư phạm mẫu, và hàm kiểm tra `isTrialActive()`.
+2. `src/Login.jsx`: Nút "Dùng thử không cần tài khoản" kết nối trực tiếp với `TRIAL_SESSION`.
+3. `src/App.jsx`: Khởi tạo state gia đình mẫu, render `trial-top-banner`, vô hiệu hoá cloud sync ghi lên máy chủ, cho phép auth không cần token khi dùng thử.
+4. `src/api.js`: Đón đầu toàn bộ các hàm AI (`aiExplain`, `aiOcr`, `aiExtractProblem`, `cloudSaveState`, `cloudLoadState`) trả dữ liệu nội bộ tức thì.
+5. `e2e/e2e-runner.mjs`: Bổ sung Luồng 7 kiểm thử trọn vẹn luồng dùng thử bằng Playwright.
+6. `scripts/test-chang-6.mjs`: Bộ kiểm thử 34 tiêu chí Chặng 6.
+7. `package.json`: Tích hợp `test-chang-6.mjs` vào `npm test`.
+
+---
+
+### 3. Kết quả kiểm thử Chặng 6
+
+- `node scripts/test-chang-6.mjs`: **PASS 100% (34/34 tiêu chí)**
+- `node e2e/e2e-runner.mjs`: **PASS 100% (46/46 kiểm thử Playwright trên 2 viewport Mobile 390px & Desktop 1366px, 8 themes)**
+- `npm run predeploy`: **PASS 100% (Build + Toàn bộ 16 suites kiểm thử + E2E suite)**
+- **Đường dẫn bản preview Chặng 6:** [https://preview-ch6.kem-con-hoc-5xf.pages.dev](https://preview-ch6.kem-con-hoc-5xf.pages.dev)
+
+---
+
+## TỔNG KẾT TOÀN DIỆN PHIÊN GIAO MỘT LẦN (DOT 13)
+
+### 1. Bảng theo dõi tiến độ 6 Chặng
+
+| Chặng | Nội dung trọng tâm | Trạng thái | Commit Hash | Đường dẫn Preview Branch |
+|:---:|---|:---:|:---:|---|
+| **Chặng 1** | Sửa dứt điểm 6 lỗi P0 (P0.1 - P0.6) | **ĐẠT 100%** | `15257ca` | [preview-ch1.kem-con-hoc-5xf.pages.dev](https://preview-ch1.kem-con-hoc-5xf.pages.dev) |
+| **Chặng 2** | Sửa dứt điểm 8 lỗi P1 & 10 điểm dọn dẹp P2 | **ĐẠT 100%** | `a39df05` / `529adaa` / `c31fe2b` | [preview-ch2.kem-con-hoc-5xf.pages.dev](https://preview-ch2.kem-con-hoc-5xf.pages.dev) |
+| **Chặng 3** | Cổng giáo viên Bản Gấu hoàn thiện (Prompt 11) | **ĐẠT 100%** | `f4f37d8` | [preview-ch3.kem-con-hoc-5xf.pages.dev](https://preview-ch3.kem-con-hoc-5xf.pages.dev) |
+| **Chặng 4** | Admin thiết kế bộ giao diện (Prompt 10) | **ĐẠT 100%** | `efa9239` / `fa52e09` | [preview-ch4.kem-con-hoc-5xf.pages.dev](https://preview-ch4.kem-con-hoc-5xf.pages.dev) |
+| **Chặng 5** | Lưới an toàn chống hỏng ngầm (E2E, Logger, AI Eval) | **ĐẠT 100%** | `b18278e` / `611c7cc` | [preview-ch5.kem-con-hoc-5xf.pages.dev](https://preview-ch5.kem-con-hoc-5xf.pages.dev) |
+| **Chặng 6** | Chế độ Dùng Thử không cần tài khoản (Demo sân khấu) | **ĐẠT 100%** | `(sắp commit)` | [preview-ch6.kem-con-hoc-5xf.pages.dev](https://preview-ch6.kem-con-hoc-5xf.pages.dev) |
+
+---
+
+### 2. Danh sách việc đang chờ chủ dự án quyết định
+
+1. **Khoá vĩnh viễn các route `/db/*` sau khi hoàn tất clone dữ liệu:**
+   - Hiện tại các route `/db/*` đã được khoá bằng mã token quản trị `admin_token` (P2.9).
+   - Khi chuyển sang môi trường Production chính thức, chủ dự án có thể chọn xoá hẳn file `sync-db-clone.js` và route `/db/*` khỏi Worker nếu không còn nhu cầu đồng bộ thủ công.
+2. **Áp dụng live migration D1 cho các bảng chuyên biệt:**
+   - Trong quá trình triển khai Dot 13, hệ thống sử dụng bảng `_kv_store` (vốn đã có sẵn trong D1) để lưu `app_client_errors` và `custom_themes` theo đúng quy tắc không can thiệp schema D1 khi chưa có lệnh.
+   - Nếu chủ dự án muốn tách riêng thành 2 bảng quan hệ độc lập (`client_errors` và `admin_themes`), chủ dự án có thể chạy lệnh `wrangler d1 execute` chính thức.
+3. **Phát hành chính thức lên Production:**
+   - Toàn bộ 6 preview branches (`preview-ch1` đến `preview-ch6`) đã được kiểm thử và xác thực hoạt động trơn tru.
+   - Khi chủ dự án sẵn sàng nghiệm thu, chỉ cần thực hiện 1 lệnh deploy duy nhất:
+     ```bash
+     npx wrangler pages deploy dist --project-name=kem-con-hoc --branch=main
+     ```
+
+---
+
+### 3. Những điểm điều chỉnh thiết kế và lý do kỹ thuật
+
+1. **Lưu trữ Client Errors qua D1 `_kv_store`:**
+   - *Lý do:* Quy tắc của dự án nghiêm cấm chạy migration D1 trên môi trường live nếu chưa được phê duyệt. Việc sử dụng `_kv_store` với cấu trúc JSON băm fingerprint lỗi giúp gom nhóm chính xác các lỗi trùng lặp mà không gây gián đoạn cơ sở dữ liệu.
+2. **Cơ chế tải Offline Demo bằng Bộ Soạn Sẵn:**
+   - *Lý do:* Để đảm bảo buổi thuyết trình / chung kết trên sân khấu thành công tuyệt đối ngay cả khi mất sóng WiFi hoặc sự cố mạng, toàn bộ dữ liệu 3 môn (Toán, Tiếng Việt, Tiếng Anh) được nạp trực tiếp qua module `trialData.js` với thuật toán khớp từ khoá linh hoạt, cắt đứt hoàn toàn phụ thuộc vào API gateway.
+
+
 
 
 

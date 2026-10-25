@@ -15,6 +15,7 @@ import { useStudyTracker } from './useStudyTracker'
 import { CalmCornerModal } from './CalmCornerModal'
 import { ErrorBoundary } from './ErrorBoundary'
 import { initClientErrorLogging } from './clientErrors'
+import { getTrialInitialState, TRIAL_SESSION } from './trialData'
 
 initClientErrorLogging()
 
@@ -183,6 +184,9 @@ const initialState = () => ({
 
 function loadState(lsKey) {
   try {
+    if (lsKey && lsKey.includes('fam_trial')) {
+      return getTrialInitialState()
+    }
     const raw = localStorage.getItem(lsKey)
     const savedTheme = typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:theme') : null
     const savedMotion = typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:motion') : null
@@ -451,7 +455,7 @@ export default function App() {
       return
     }
 
-    if (!S.cloudSync) return
+    if (!S.cloudSync || session?.isTrial) return
     // Chỉ ghi cloud khi state thực sự thay đổi nội dung (P2.8)
     if (lastSavedHashRef.current === serialized) {
       return
@@ -572,17 +576,18 @@ export default function App() {
   const handleAuthed = (s) => {
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(s))
+      if (s?.isTrial) setAuthToken('trial_token')
     } catch (e) { }
-    const loaded = loadState(famLsKey(s.id))
+    const loaded = s?.isTrial ? getTrialInitialState() : loadState(famLsKey(s.id))
     setSession(s)
     setS(loaded)
-    hydratedRef.current = false
-    setHydrated(false)
+    hydratedRef.current = true
+    setHydrated(true)
     setStudy(null)
     setScreen(loaded.onboarded ? 'home' : 'onb')
 
     const pending = getPendingJoin()
-    if (pending) {
+    if (pending && !s?.isTrial) {
       clearPendingJoin()
       openSheet('familyClasses', { code: pending.code, joinType: pending.type })
     }
@@ -592,6 +597,7 @@ export default function App() {
     try {
       localStorage.removeItem(SESSION_KEY)
       removeAuthToken()
+      localStorage.removeItem('kem-con-hoc:fam:fam_trial')
     } catch (e) { }
     setSession(null)
     setStudy(null)
@@ -715,7 +721,7 @@ export default function App() {
     )
   }
 
-  const hasToken = typeof window !== 'undefined' ? Boolean(getAuthToken()) : true
+  const hasToken = typeof window !== 'undefined' ? Boolean(getAuthToken() || session?.isTrial) : true
   if (!session || (session && !hasToken)) {
     return (
       <AppCtx.Provider value={ctx}>
@@ -740,6 +746,67 @@ export default function App() {
     <AppCtx.Provider value={ctx}>
       <div className="stage">
         <div className="app">
+          {session?.isTrial && (
+            <div
+              className="trial-top-banner"
+              style={{
+                background: 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)',
+                color: '#FFFFFF',
+                padding: '7px 14px',
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
+                flexShrink: 0,
+                zIndex: 50,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <span style={{ fontSize: 14 }}>✨</span>
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Đang dùng thử · Tạo gia đình để lưu
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={logout}
+                  style={{
+                    background: '#FFFFFF',
+                    color: '#B45309',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '3px 10px',
+                    fontSize: 11.5,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  Tạo tài khoản
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  title="Thoát chế độ dùng thử"
+                  style={{
+                    background: 'rgba(255,255,255,0.25)',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '3px 8px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
           <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
           <div className="scroll" ref={scrollRef}>
             {study && study.running && (
