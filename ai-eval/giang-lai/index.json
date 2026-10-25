@@ -1,0 +1,199 @@
+[
+  {
+    "id": "tb_01",
+    "name": "3 hộp bút (Giải thích xuất sắc - Đầy đủ)",
+    "problem": "Có 3 hộp bút, mỗi hộp 8 cây. Mẹ cho bạn Na 5 cây bút. Hỏi còn lại bao nhiêu cây bút?",
+    "transcript": "Dạ thưa mẹ, bài này có 3 hộp bút, mỗi hộp có 8 cây, nên trước hết con phải tìm tổng số bút trong 3 hộp bằng phép nhân 3 nhân 8 bằng 24 cây. Sau đó mẹ cho bạn Na 5 cây bút, cho đi là ít đi nên con làm phép trừ lấy 24 trừ 5 bằng 19 cây ạ.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": true,
+      "muc_de_xuat": "self"
+    }
+  },
+  {
+    "id": "tb_02",
+    "name": "Đàn vịt (Chỉ nêu kết quả, chưa giải thích vì sao)",
+    "problem": "Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?",
+    "transcript": "Bác Ba có 15 con vịt, bác bán 6 con. Con lấy 15 trừ 6 bằng 9 con vịt ạ.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": false,
+      "muc_de_xuat": "hint"
+    }
+  },
+  {
+    "id": "tb_03",
+    "name": "Chia kẹo (Tự chủ hoàn toàn)",
+    "problem": "Có 28 cái kẹo chia đều cho 4 bạn. Hỏi mỗi bạn được mấy cái kẹo?",
+    "transcript": "Có 28 cái kẹo, chia đều cho 4 bạn nghĩa là chia thành 4 phần bằng nhau. Vì vậy con lấy 28 chia cho 4, con nhẩm bảng chia 4 được 7 cái kẹo cho mỗi bạn.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": true,
+      "muc_de_xuat": "self"
+    }
+  },
+  {
+    "id": "tb_04",
+    "name": "Chu vi chữ nhật (Quên giải thích phép cộng dài + rộng)",
+    "problem": "Một hình chữ nhật có chiều dài 12 cm, chiều rộng 8 cm. Tính chu vi.",
+    "transcript": "Chiều dài 12 chiều rộng 8, chu vi con tính ra 40 cm mẹ ơi.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": false,
+      "ket_qua": true,
+      "vi_sao": false,
+      "muc_de_xuat": "hint"
+    }
+  },
+  {
+    "id": "tb_05",
+    "name": "Bán gạo (Đầy đủ và rành mạch)",
+    "problem": "Có 80 kg gạo. Buổi sáng bán 35 kg, buổi chiều bán 25 kg. Hỏi còn lại bao nhiêu kg?",
+    "transcript": "Ban đầu có 80 kg gạo. Con tính tổng cả hai buổi bán được là 35 cộng 25 bằng 60 kg. Rồi con lấy 80 trừ đi 60 kg đã bán thì còn lại 20 kg gạo.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": true,
+      "muc_de_xuat": "self"
+    }
+  },
+  {
+    "id": "tb_06",
+    "name": "Mua vở (Chỉ nhớ phép nhân, quên rút về đơn vị)",
+    "problem": "Mua 5 quyển vở hết 40 000 đồng. Hỏi mua 8 quyển vở cùng loại hết bao nhiêu tiền?",
+    "transcript": "Mua 8 quyển hết 64 nghìn đồng mẹ ạ.",
+    "ground_truth": {
+      "du_kien": false,
+      "phep_tinh": false,
+      "ket_qua": true,
+      "vi_sao": false,
+      "muc_de_xuat": "guided"
+    }
+  },
+  {
+    "id": "tb_07",
+    "name": "Tìm x phép chia (Giải thích được quy tắc tìm số bị chia)",
+    "problem": "Tìm x biết: x : 4 = 16",
+    "transcript": "x ở đây là số bị chia chưa biết, muốn tìm số bị chia ta lấy thương nhân với số chia, nên con lấy 16 nhân với 4, kết quả x bằng 64.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": true,
+      "muc_de_xuat": "self"
+    }
+  },
+  {
+    "id": "tb_08",
+    "name": "Gấp khúc (Nêu phép tính nhưng chưa giải thích)",
+    "problem": "Đường gấp khúc gồm 3 đoạn dài: 12 cm, 15 cm và 20 cm. Tính độ dài.",
+    "transcript": "Ba đoạn là 12, 15 với 20. Con cộng ba đoạn lại 12 cộng 15 cộng 20 bằng 47 cm.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": false,
+      "muc_de_xuat": "hint"
+    }
+  },
+  {
+    "id": "tb_09",
+    "name": "Bé ấp úng (Cần mẹ hướng dẫn)",
+    "problem": "Một lớp có 36 học sinh. Số học sinh nữ bằng 1/3 cả lớp. Hỏi có bao nhiêu học sinh nam?",
+    "transcript": "Dạ... con thấy lớp có 36 bạn... rồi con không biết tìm số bạn nam như nào mẹ chỉ con với.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": false,
+      "ket_qua": false,
+      "vi_sao": false,
+      "muc_de_xuat": "guided"
+    }
+  },
+  {
+    "id": "tb_10",
+    "name": "Nhiều hơn (Giải thích từ khoá nhiều hơn)",
+    "problem": "Huy có 14 viên bi, Nam có nhiều hơn Huy 6 viên. Hỏi Nam có mấy viên bi?",
+    "transcript": "Huy có 14 viên, Nam nhiều hơn nghĩa là phải lấy số bi của Huy cộng thêm 6 viên nữa, 14 cộng 6 bằng 20 viên bi của Nam.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": true,
+      "muc_de_xuat": "self"
+    }
+  },
+  {
+    "id": "tb_11",
+    "name": "Thùng nước (Chưa giải thích từ khoá ít hơn)",
+    "problem": "Thùng to có 45 lít nước, thùng bé có ít hơn thùng to 15 lít. Hỏi thùng bé có bao nhiêu lít?",
+    "transcript": "Thùng to 45 lít, thùng bé ít hơn 15 lít. Con lấy 45 trừ 15 bằng 30 lít.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": false,
+      "muc_de_xuat": "hint"
+    }
+  },
+  {
+    "id": "tb_12",
+    "name": "Bẫy trích dẫn ảo giác 1 (Bé không hề nói 'cô dạy')",
+    "problem": "Tính giá trị biểu thức: (15 + 25) x 2",
+    "transcript": "Trong ngoặc tính trước 15 cộng 25 bằng 40, rồi nhân 2 bằng 80 ạ.",
+    "simulated_hallucination": "Con nói: 'cô giáo dạy trong ngoặc trước ngoài ngoặc sau'",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": false,
+      "hallucination_expected": true
+    }
+  },
+  {
+    "id": "tb_13",
+    "name": "Bẫy trích dẫn ảo giác 2 (Bé không hề nói số 54)",
+    "problem": "Tìm x biết: x x 6 = 48",
+    "transcript": "x bằng 48 chia 6, x bằng 8.",
+    "simulated_hallucination": "Con nói: 'con lấy 54 chia 6 bằng 9'",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": false,
+      "hallucination_expected": true
+    }
+  },
+  {
+    "id": "tb_14",
+    "name": "Đổi đơn vị khối lượng (Rành mạch)",
+    "problem": "Một xe chở 2 tấn 500 kg gạo. Hỏi xe đó chở bao nhiêu kg gạo?",
+    "transcript": "1 tấn là 1000 kg nên 2 tấn là 2000 kg. Sau đó cộng thêm 500 kg nữa là 2500 kg gạo ạ.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": true,
+      "muc_de_xuat": "self"
+    }
+  },
+  {
+    "id": "tb_15",
+    "name": "Vận tốc xe máy (Chưa giải thích công thức s chia t)",
+    "problem": "Một ô tô đi quãng đường 120 km trong 2,5 giờ. Tính vận tốc ô tô.",
+    "transcript": "Quãng đường 120 km, thời gian 2,5 giờ. Con lấy 120 chia 2,5 bằng 48 km/h.",
+    "ground_truth": {
+      "du_kien": true,
+      "phep_tinh": true,
+      "ket_qua": true,
+      "vi_sao": false,
+      "muc_de_xuat": "hint"
+    }
+  }
+]

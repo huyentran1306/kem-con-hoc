@@ -1,0 +1,299 @@
+[
+  {
+    "id": "vo_01",
+    "name": "3 hộp bút (cộng thay vì trừ)",
+    "grade": "Lớp 3",
+    "problem": "Có 3 hộp bút, mỗi hộp 8 cây. Mẹ cho bạn Na 5 cây bút. Hỏi còn lại bao nhiêu cây bút?",
+    "child_lines": [
+      "3 x 8 = 24 (cây)",
+      "24 + 5 = 29 (cây)",
+      "Đáp số: 29 cây bút"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "Nhầm phép tính cộng thay vì trừ"
+    }
+  },
+  {
+    "id": "vo_02",
+    "name": "Đàn gà (tính nhầm kết quả)",
+    "grade": "Lớp 2",
+    "problem": "Nhà Mai có 18 con gà, mẹ mua thêm 15 con nữa. Hỏi nhà Mai có tất cả bao nhiêu con gà?",
+    "child_lines": [
+      "18 + 15 = 32 (con)",
+      "Đáp số: 32 con gà"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "Sai phép tính cộng có nhớ"
+    }
+  },
+  {
+    "id": "vo_03",
+    "name": "Chia kẹo (đúng hoàn toàn)",
+    "grade": "Lớp 3",
+    "problem": "Có 28 cái kẹo chia đều cho 4 bạn. Hỏi mỗi bạn được mấy cái kẹo?",
+    "child_lines": [
+      "28 : 4 = 7 (cái)",
+      "Đáp số: 7 cái kẹo"
+    ],
+    "ground_truth": {
+      "dung_het": true,
+      "dong_sai_dau_tien": null,
+      "phan_loai_loi": null
+    }
+  },
+  {
+    "id": "vo_04",
+    "name": "Chu vi hình chữ nhật (quên nhân 2)",
+    "grade": "Lớp 3",
+    "problem": "Một hình chữ nhật có chiều dài 12 cm, chiều rộng 8 cm. Tính chu vi hình chữ nhật.",
+    "child_lines": [
+      "12 + 8 = 20 (cm)",
+      "Đáp số: 20 cm"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "Chưa hoàn thành công thức (dài + rộng) x 2"
+    }
+  },
+  {
+    "id": "vo_05",
+    "name": "Đổi đơn vị đo (đúng hoàn toàn)",
+    "grade": "Lớp 4",
+    "problem": "Một xe chở 2 tấn 500 kg gạo. Hỏi xe đó chở bao nhiêu kg gạo?",
+    "child_lines": [
+      "2 tấn = 2000 kg",
+      "2000 + 500 = 2500 (kg)",
+      "Đáp số: 2500 kg"
+    ],
+    "ground_truth": {
+      "dung_het": true,
+      "dong_sai_dau_tien": null,
+      "phan_loai_loi": null
+    }
+  },
+  {
+    "id": "vo_06",
+    "name": "Bán gạo (sai bước 2)",
+    "grade": "Lớp 3",
+    "problem": "Có 80 kg gạo. Buổi sáng bán 35 kg, buổi chiều bán 25 kg. Hỏi còn lại bao nhiêu kg?",
+    "child_lines": [
+      "35 + 25 = 60 (kg)",
+      "80 - 60 = 30 (kg)",
+      "Đáp số: 30 kg"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "Sai phép tính trừ tròn chục"
+    }
+  },
+  {
+    "id": "vo_07",
+    "name": "Mua sách vở (đúng hoàn toàn)",
+    "grade": "Lớp 4",
+    "problem": "Mua 5 quyển vở hết 40 000 đồng. Hỏi mua 8 quyển vở cùng loại hết bao nhiêu tiền?",
+    "child_lines": [
+      "40000 : 5 = 8000 (đồng)",
+      "8000 x 8 = 64000 (đồng)",
+      "Đáp số: 64000 đồng"
+    ],
+    "ground_truth": {
+      "dung_het": true,
+      "dong_sai_dau_tien": null,
+      "phan_loai_loi": null
+    }
+  },
+  {
+    "id": "vo_08",
+    "name": "Tìm x phép nhân (sai phép chia)",
+    "grade": "Lớp 3",
+    "problem": "Tìm x biết: x x 6 = 48",
+    "child_lines": [
+      "x = 48 : 6",
+      "x = 7"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "Sai bảng chia 6"
+    }
+  },
+  {
+    "id": "vo_09",
+    "name": "Phép cộng có ngoặc (đúng hoàn toàn)",
+    "grade": "Lớp 3",
+    "problem": "Tính giá trị biểu thức: (15 + 25) x 2",
+    "child_lines": [
+      "= 40 x 2",
+      "= 80"
+    ],
+    "ground_truth": {
+      "dung_het": true,
+      "dong_sai_dau_tien": null,
+      "phan_loai_loi": null
+    }
+  },
+  {
+    "id": "vo_10",
+    "name": "Số học sinh (nhầm tỉ số)",
+    "grade": "Lớp 4",
+    "problem": "Một lớp có 36 học sinh. Số học sinh nữ bằng 1/3 cả lớp. Hỏi có bao nhiêu học sinh nam?",
+    "child_lines": [
+      "36 : 3 = 12 (bạn)",
+      "36 - 12 = 25 (bạn)",
+      "Đáp số: 25 bạn nam"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "Sai phép tính trừ có nhớ"
+    }
+  },
+  {
+    "id": "vo_11",
+    "name": "Hình vuông diện tích (lấy cạnh nhân 2)",
+    "grade": "Lớp 3",
+    "problem": "Một hình vuông có cạnh dài 7 cm. Tính diện tích hình vuông.",
+    "child_lines": [
+      "7 x 2 = 14 (cm2)",
+      "Đáp số: 14 cm2"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "Nhầm công thức diện tích sang nhân đôi"
+    }
+  },
+  {
+    "id": "vo_12",
+    "name": "Đoạn thẳng gấp khúc (đúng hoàn toàn)",
+    "grade": "Lớp 2",
+    "problem": "Đường gấp khúc gồm 3 đoạn dài lần lượt: 12 cm, 15 cm và 20 cm. Tính độ dài đường gấp khúc.",
+    "child_lines": [
+      "12 + 15 + 20 = 47 (cm)",
+      "Đáp số: 47 cm"
+    ],
+    "ground_truth": {
+      "dung_het": true,
+      "dong_sai_dau_tien": null,
+      "phan_loai_loi": null
+    }
+  },
+  {
+    "id": "vo_13",
+    "name": "Mua bút chì (chia ngược)",
+    "grade": "Lớp 2",
+    "problem": "Có 15 cái bút chia đều vào 3 hộp. Hỏi mỗi hộp có mấy cái bút?",
+    "child_lines": [
+      "15 - 3 = 12 (cái)",
+      "Đáp số: 12 cái bút"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "Làm phép trừ thay vì chia đều"
+    }
+  },
+  {
+    "id": "vo_14",
+    "name": "Tìm x phép cộng (sai tính trừ)",
+    "grade": "Lớp 3",
+    "problem": "Tìm x biết: x + 135 = 450",
+    "child_lines": [
+      "x = 450 - 135",
+      "x = 325"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "Sai phép tính trừ có nhớ (ra 325 thay vì 315)"
+    }
+  },
+  {
+    "id": "vo_15",
+    "name": "Vận tốc quãng đường (đúng bước 1, sai bước 2)",
+    "grade": "Lớp 5",
+    "problem": "Một ô tô đi quãng đường 120 km trong 2,5 giờ. Tính vận tốc ô tô.",
+    "child_lines": [
+      "120 : 2,5 = 45 (km/h)",
+      "Đáp số: 45 km/h"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "Sai phép tính chia số thập phân"
+    }
+  },
+  {
+    "id": "vo_16",
+    "name": "Bài toán nhiều hơn (cộng nhầm số)",
+    "grade": "Lớp 2",
+    "problem": "Huy có 14 viên bi, Nam có nhiều hơn Huy 6 viên. Hỏi Nam có mấy viên bi?",
+    "child_lines": [
+      "14 + 6 = 19 (viên)",
+      "Đáp số: 19 viên bi"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "Sai phép tính cộng tròn chục"
+    }
+  },
+  {
+    "id": "vo_17",
+    "name": "Thùng nước (đúng hoàn toàn)",
+    "grade": "Lớp 3",
+    "problem": "Thùng to có 45 lít nước, thùng bé có ít hơn thùng to 15 lít. Hỏi thùng bé có bao nhiêu lít?",
+    "child_lines": [
+      "45 - 15 = 30 (lít)",
+      "Đáp số: 30 lít"
+    ],
+    "ground_truth": {
+      "dung_het": true,
+      "dong_sai_dau_tien": null,
+      "phan_loai_loi": null
+    }
+  },
+  {
+    "id": "vo_18",
+    "name": "Tìm x phép chia (nhân nhầm)",
+    "grade": "Lớp 3",
+    "problem": "Tìm x biết: x : 4 = 16",
+    "child_lines": [
+      "x = 16 x 4",
+      "x = 54"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "Sai bảng nhân (16 x 4 = 64)"
+    }
+  },
+  {
+    "id": "vo_19",
+    "name": "Ảnh chụp đồ chơi (từ chối nhận diện)",
+    "grade": "Khác",
+    "problem": "Ảnh chụp một con gấu bông và cái cốc trên bàn",
+    "child_lines": [],
+    "ground_truth": {
+      "doc_duoc": false,
+      "ly_do": "không phải bài làm"
+    }
+  },
+  {
+    "id": "vo_20",
+    "name": "Ảnh chụp selfie mặt người (từ chối nhận diện)",
+    "grade": "Khác",
+    "problem": "Ảnh selfie bé cười trước ống kính",
+    "child_lines": [],
+    "ground_truth": {
+      "doc_duoc": false,
+      "ly_do": "không phải bài làm"
+    }
+  }
+]
