@@ -8,12 +8,12 @@
 |---|---|---|---|---|
 | 0 | Sửa lỗi P0/P1 luồng phụ huynh | ✅ Xong (code + kiểm thử tự động) | `4286da6` | Chưa deploy* |
 | 1 | Bộ quy chuẩn giao diện `src/ui/staff/` | ✅ Xong | `b92f94f` | Chưa deploy* |
-| 2 | Khung admin (thanh bên 3 nhóm, đường dẫn riêng, chặn ở máy chủ) | 🔄 Đang làm | | |
-| 3 | Làm lại 17 trang admin | ⏳ Chưa làm | | |
-| 4 | Bỏ cổng cũ `/db/*` (dừng hỏi trước khi khoá) | ⏳ Chưa làm | | |
-| 5 | Cổng giáo viên | ⏳ Chưa làm | | |
-| 6 | Trang bố mẹ | ⏳ Chưa làm | | |
-| 7 | Kiểm thử & ảnh trước/sau | ⏳ Chưa làm | | |
+| 2 | Khung admin (thanh bên 3 nhóm, đường dẫn riêng, chặn ở máy chủ) | ✅ Xong | `38b796d` | Chưa deploy* |
+| 3 | Làm lại các trang admin | ✅ Xong (chưa chụp ảnh trên trình duyệt thật) | `60488f1` | Chưa deploy* |
+| 4 | Bỏ cổng cũ `/db/*` | ⏳ **Chưa làm**, để đợt sau | | |
+| 5 | Cổng giáo viên | ✅ Xong | `0ae6df5` | Chưa deploy* |
+| 6 | Trang bố mẹ | ✅ Xong (có ảnh `bao-cao-15/anh/chang6-*`) | `a671689` | Chưa deploy* |
+| 7 | Kiểm thử & ảnh trước/sau | 🔶 Một phần: kiểm thử tự động đạt; chưa chụp đủ mọi trang, chưa chạy axe | | |
 
 \* Phiên này **không deploy được** (wrangler trên máy chưa đăng nhập, push GitHub chưa có quyền). Các commit nằm ở `~/Coding/kem-con-hoc`, nhánh `main`, chưa push. Worker sửa trực tiếp ở `~/Coding/study-en/ai-gateway-worker` (không dùng git), bản gốc trước khi sửa lưu ở máy ảo: `check_work.before-p15.js`, `safety.before-p15.js`, `index.before-p15.js`.
 
@@ -63,6 +63,18 @@ Thêm vào `src/ui/staff/` (file mới `kit.jsx`, sửa `index.jsx`, `tokens.css
 ![Hộp xác nhận + thông báo có Hoàn tác](bao-cao-15/anh/chang1-hop-xac-nhan.png)
 
 ---
+
+## Chặng 2–6 (làm song song bởi 7 trợ lý, mình gom và kiểm)
+Chi tiết từng phần: `bao-cao-15/agents/*.md`. Đợt 16 (giao diện theo mùa): `BAO_CAO_DOT_16.md`, commit `66b74bd`.
+
+Worker: thêm 5 file mới `src/dot15_monitor.js`, `dot15_ai.js`, `dot15_system.js`, `dot15_teacher.js`, `dot16_seasons.js`, đã nối vào `src/v1_routes.js`; thêm `/api/v1/admin/me`, `/todo-counts`, `/health`; `/api/v1/config/public` trả thêm `seasons`. Bản trước khi sửa lưu ở máy ảo `~/scratch/worker-backup/`.
+
+Kiểm thử: tất cả bộ `npm test` chạy được trong máy ảo đều đạt (gồm mới: dot15-chang-0/2, dot16-seasons, dot16-themes). Bốn bộ cũ được cập nhật vì thiết kế đổi có chủ đích (11 bộ giao diện thay vì 8, sidebar giáo viên 220px, nhãn tab ngắn, KPI kết quả mới).
+
+## ⚠️ Điểm dừng cần chủ dự án quyết
+1. **Khoá chủ admin bị lộ.** Worker vẫn nhận mật khẩu/token `kem-con-hoc-admin-secret-2026`, `kem_admin_2026` và cả token `admin` → ai biết là vào được admin. App đã bỏ khoá này, worker giờ chỉ nhận khi biến `ALLOW_LEGACY_MASTER_SECRET="true"` (đang để `true` trong `wrangler.jsonc` để bạn không bị khoá ngoài). **Sau khi đăng nhập admin được bằng mật khẩu riêng, đổi thành `"false"` rồi deploy lại.**
+2. Chặng 4 (khoá `/db/*`) chưa làm.
+3. Kiểm lại ngày Tết 2027–2031 trong `src/seasons`.
 
 ## Việc chờ chủ dự án
 1. Push `main` và deploy (worker trước, app sau) — xem `VIEC_CAN_LAM_SAU_CLAUDE_2026-10-25.md`.
