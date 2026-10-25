@@ -103,4 +103,12 @@ Tài liệu theo dõi quá trình thực hiện 6 Chặng theo đúng quy địn
 - `node scripts/test-chang-2.mjs`: **PASS 100% (53/53 tests)**
 - `npm test`: **PASS 100% toàn bộ suite kiểm thử hệ thống**
 - `npm run build`: **PASS 100% (Bundle chính giảm 41% xuống 632 KB, code-splitting hoàn hảo)**
+- **Đường dẫn bản preview Chặng 2:** [https://preview-ch2.kem-con-hoc-5xf.pages.dev](https://preview-ch2.kem-con-hoc-5xf.pages.dev) (hoặc [https://b6a1db7f.kem-con-hoc-5xf.pages.dev](https://b6a1db7f.kem-con-hoc-5xf.pages.dev))
+
+---
+
+### 4. Việc chưa làm trong Chặng 2 và lý do
+
+- Toàn bộ 8 mục P1 (P1.1 -> P1.8) và 10 mục P2 (P2.1 -> P2.10) đã hoàn thành xuất sắc và vượt qua kiểm thử tự động 100%.
+- Không có lỗi nào bị tồn đọng. Sẵn sàng chuyển tiếp sang Chặng 3 (Cổng Giáo Viên).
 
