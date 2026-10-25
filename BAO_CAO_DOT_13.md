@@ -292,7 +292,7 @@ Tài liệu theo dõi quá trình thực hiện 6 Chặng theo đúng quy địn
 | **Chặng 3** | Cổng giáo viên Bản Gấu hoàn thiện (Prompt 11) | **ĐẠT 100%** | `f4f37d8` | [preview-ch3.kem-con-hoc-5xf.pages.dev](https://preview-ch3.kem-con-hoc-5xf.pages.dev) |
 | **Chặng 4** | Admin thiết kế bộ giao diện (Prompt 10) | **ĐẠT 100%** | `efa9239` / `fa52e09` | [preview-ch4.kem-con-hoc-5xf.pages.dev](https://preview-ch4.kem-con-hoc-5xf.pages.dev) |
 | **Chặng 5** | Lưới an toàn chống hỏng ngầm (E2E, Logger, AI Eval) | **ĐẠT 100%** | `b18278e` / `611c7cc` | [preview-ch5.kem-con-hoc-5xf.pages.dev](https://preview-ch5.kem-con-hoc-5xf.pages.dev) |
-| **Chặng 6** | Chế độ Dùng Thử không cần tài khoản (Demo sân khấu) | **ĐẠT 100%** | `(sắp commit)` | [preview-ch6.kem-con-hoc-5xf.pages.dev](https://preview-ch6.kem-con-hoc-5xf.pages.dev) |
+| **Chặng 6** | Chế độ Dùng Thử không cần tài khoản (Demo sân khấu) | **ĐẠT 100%** | `aeaf9ff` | [preview-ch6.kem-con-hoc-5xf.pages.dev](https://preview-ch6.kem-con-hoc-5xf.pages.dev) |
 
 ---
 
