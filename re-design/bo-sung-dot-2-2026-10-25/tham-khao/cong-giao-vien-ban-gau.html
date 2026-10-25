@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cổng giáo viên bản Gấu</title>
+<meta name="description" content="Bản vẽ giao diện đã chốt và thao tác từng màn cho 5 tính năng nâng cấp Kèm Con Học: giao diện theo sở thích, kiểm tra ảnh ngoài phạm vi, nhóm gia đình và Zalo, cổng giáo viên, admin bản Gấu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&family=Mitr:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F4F1; --paper: #FFFFFF; --ink: #1D1B26; --ink-2: #4A4758; --muted: #7C7889; --line: #E6E1DA;
+    --accent: #D6336C; --accent-soft: #FDE7EF; --green: #0F8A5F; --green-soft: #E2F5EC; --amber: #A55F00; --amber-soft: #FFF2D9;
+    --blue: #2563EB; --blue-soft: #E8F0FE; --violet: #6D4AE0; --violet-soft: #EEE9FF; --red: #B42318; --red-soft: #FDECEA;
+    --fc-edge: #8A7F99; --fc-box: #FFFFFF; --fc-box-line: #CFC6DA; --fc-text: #2E2840; --fc-start: #FFE1EC; --fc-start-line: #E0598E;
+    --fc-end: #D9F5EC; --fc-end-line: #18A58A; --fc-dec: #FFF6DB; --fc-dec-line: #E0A81F; --fc-note: #F3F0FF; --fc-note-line: #A78BFA; --fc-lbl: #6B5E80;
+    --sh: 0 1px 2px rgba(29, 27, 38, .05), 0 10px 30px -18px rgba(29, 27, 38, .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+      --accent: #FF6E9C; --accent-soft: #3A1E2B; --green: #4CD39A; --green-soft: #173327; --amber: #F5B451; --amber-soft: #3A2C14;
+      --blue: #7AA5FF; --blue-soft: #1D2A44; --violet: #A993FF; --violet-soft: #2A2342; --red: #FF8A7F; --red-soft: #3D1D1A;
+      --fc-edge: #9C93AE; --fc-box: #262431; --fc-box-line: #46415A; --fc-text: #EDEAF5; --fc-start: #3A1E2B; --fc-start-line: #FF6E9C;
+      --fc-end: #173327; --fc-end-line: #4CD39A; --fc-dec: #3A2C14; --fc-dec-line: #F5B451; --fc-note: #2A2342; --fc-note-line: #A993FF; --fc-lbl: #C9C5D6;
+      --sh: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15141B; --paper: #1E1D26; --ink: #F1EFF6; --ink-2: #C9C5D6; --muted: #9590A6; --line: #2E2C38;
+    --accent: #FF6E9C; --accent-soft: #3A1E2B; --green: #4CD39A; --green-soft: #173327; --amber: #F5B451; --amber-soft: #3A2C14;
+    --blue: #7AA5FF; --blue-soft: #1D2A44; --violet: #A993FF; --violet-soft: #2A2342; --red: #FF8A7F; --red-soft: #3D1D1A;
+    --fc-edge: #9C93AE; --fc-box: #262431; --fc-box-line: #46415A; --fc-text: #EDEAF5; --fc-start: #3A1E2B; --fc-start-line: #FF6E9C;
+    --fc-end: #173327; --fc-end-line: #4CD39A; --fc-dec: #3A2C14; --fc-dec-line: #F5B451; --fc-note: #2A2342; --fc-note-line: #A993FF; --fc-lbl: #C9C5D6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Be Vietnam Pro", system-ui, sans-serif; background: var(--bg); color: var(--ink-2); line-height: 1.6; font-size: 15.5px; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; }
+  b, strong { color: var(--ink); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .86em; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; color: var(--ink); }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 16px; }
+  header.hero { padding: 44px 0 22px; }
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .hero h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.6px; margin-top: 8px; }
+  .hero p { font-size: 17px; margin-top: 10px; max-width: 860px; }
+  nav.toc { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; text-decoration: none; font-size: 13.5px; font-weight: 700; color: var(--ink-2); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); }
+  section.feat { padding: 38px 0 8px; }
+  .sec-h .n { font-size: 12.5px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .sec-h h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 800; letter-spacing: -.4px; margin-top: 2px; }
+  .sec-h p { margin-top: 6px; max-width: 900px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; box-shadow: var(--sh); min-width: 0; }
+  .sub { font-size: 18px; font-weight: 800; color: var(--ink); margin: 26px 0 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 11.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .t-pink { background: var(--accent-soft); color: var(--accent); } .t-green { background: var(--green-soft); color: var(--green); } .t-amber { background: var(--amber-soft); color: var(--amber); }
+  .t-blue { background: var(--blue-soft); color: var(--blue); } .t-violet { background: var(--violet-soft); color: var(--violet); }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 22px 18px; align-items: start; }
+  .shot { display: grid; gap: 10px; min-width: 0; }
+  .shot .cap { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .shot h4 { font-size: 16.5px; margin-top: -4px; }
+  ol.ops { list-style: none; display: grid; gap: 7px; font-size: 14.2px; }
+  ol.ops li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+  ol.ops li .k { width: 20px; height: 20px; border-radius: 50%; background: #E11D48; color: #fff; display: grid; place-items: center; font: 800 11px "Nunito", sans-serif; margin-top: 2px; }
+  ol.ops li .k.s { background: var(--muted); }
+  .note { font-size: 13.5px; background: var(--amber-soft); color: var(--ink); border-radius: 12px; padding: 9px 12px; }
+  .note b { color: var(--amber); }
+  .state { font-size: 13.5px; background: var(--blue-soft); color: var(--ink); border-radius: 12px; padding: 9px 12px; }
+  .state b { color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+  tr:last-child td { border-bottom: 0; }
+  .tbl { overflow-x: auto; }
+  .flowbox { overflow-x: auto; }
+  .flowsvg { width: 100%; min-width: 760px; max-width: 1000px; display: block; margin: 0 auto; font-family: "Be Vietnam Pro", sans-serif; }
+  .fc-edge { fill: none; stroke: var(--fc-edge); stroke-width: 1.8; } .fc-edge.dash { stroke-dasharray: 6 5; }
+  .fc-head { fill: var(--fc-edge); }
+  .fc-proc { fill: var(--fc-box); stroke: var(--fc-box-line); stroke-width: 1.5; }
+  .fc-start { fill: var(--fc-start); stroke: var(--fc-start-line); stroke-width: 1.5; } .fc-end { fill: var(--fc-end); stroke: var(--fc-end-line); stroke-width: 1.5; }
+  .fc-dec { fill: var(--fc-dec); stroke: var(--fc-dec-line); stroke-width: 1.5; } .fc-note { fill: var(--fc-note); stroke: var(--fc-note-line); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .fc-t { font-size: 13.5px; fill: var(--fc-text); font-weight: 600; } .fc-t-dec { font-size: 13px; font-weight: 800; }
+  .fc-lblbg { fill: var(--paper); stroke: var(--line); } .fc-lbl { font-size: 11.5px; font-weight: 800; fill: var(--fc-lbl); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12.5px; margin-top: 10px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; border: 1.5px solid; }
+
+  /* ===== khung điện thoại chung ===== */
+  .ph { width: 300px; border-radius: 40px; background: #1C1A24; padding: 9px; box-shadow: 0 30px 50px -28px rgba(20, 15, 30, .6); position: relative; flex-shrink: 0; justify-self: center; }
+  .ph .scr { height: 610px; border-radius: 32px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .ph .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 96px; height: 26px; background: #1C1A24; border-radius: 999px; z-index: 9; }
+  .ph .sb { display: flex; justify-content: space-between; padding: 12px 22px 0; font: 800 12px "Nunito", sans-serif; }
+  .mk { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: #E11D48; color: #fff !important; font: 800 11px "Nunito", sans-serif; box-shadow: 0 0 0 2.5px #fff; flex-shrink: 0; vertical-align: middle; position: relative; z-index: 3; }
+  .mk.abs { position: absolute; }
+
+  /* ===== App phụ huynh: Kẹo Bông ===== */
+  .app { --bg: #FFF4F8; --card: #fff; --line: #F3D9E6; --ink: #4A3B5C; --ink2: #8A7B9A; --pink: #FF8FB8; --pinkd: #E0598E; --pinkt: #B83A70; --lav: #B9A3FF; --lavs: #EFE9FF; --lavt: #6A4FD0;
+    --mint: #7FD8C4; --mints: #E3F8F2; --mintt: #23735F; --yel: #FFD36E; --yels: #FFF6D6; --yelt: #8A5E00; --red: #C93A3A;
+    font-family: "Nunito", sans-serif; font-weight: 700; color: var(--ink); font-size: 12.5px; line-height: 1.45; }
+  .app .scr { background: var(--bg); }
+  .app h5 { font-family: "Baloo 2", cursive; font-size: 19px; line-height: 1.15; color: var(--ink); font-weight: 800; }
+  .app .top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+  .app .top .ib { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid var(--line); display: grid; place-items: center; font-weight: 900; font-size: 13px; }
+  .app .top h6 { font-family: "Baloo 2", cursive; font-size: 16px; flex: 1; font-weight: 800; }
+  .app .bd { flex: 1; padding: 6px 13px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .app .c { background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 10px 12px; box-shadow: 0 5px 0 var(--line); position: relative; }
+  .app .lb { font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 900; color: #B07A98; }
+  .app .bt { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 12px; font-weight: 900; font-size: 12.5px; color: #fff; background: linear-gradient(#FFA3C6, #FF7FAE); box-shadow: 0 4px 0 var(--pinkd); position: relative; }
+  .app .bt.g { background: #fff; color: var(--ink); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); }
+  .app .bt.l { background: linear-gradient(#C9B8FF, #B9A3FF); box-shadow: 0 4px 0 #8C72E8; }
+  .app .row { display: flex; gap: 8px; } .app .row > * { flex: 1; }
+  .app .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: #fff; border: 2px solid var(--line); font-size: 11px; font-weight: 800; }
+  .app .chip.on { background: var(--yels); border-color: var(--yel); }
+  .app .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .app .nav { display: flex; justify-content: space-around; padding: 7px 6px 16px; background: #fff; border-top: 2px solid var(--line); }
+  .app .nav div { text-align: center; font-size: 9.5px; color: var(--ink2); font-weight: 800; }
+  .app .nav div i { display: block; font-style: normal; font-size: 16px; }
+  .app .nav div.on { color: var(--pinkt); }
+  .app .li { display: flex; align-items: center; gap: 9px; padding: 8px 2px; border-bottom: 1.5px dashed var(--line); font-weight: 800; }
+  .app .li:last-child { border-bottom: 0; }
+  .app .li .e { width: 28px; height: 28px; border-radius: 10px; background: var(--yels); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+  .app .li .t { flex: 1; } .app .li small { display: block; font-weight: 700; color: var(--ink2); font-size: 10.5px; }
+  .app .face { font-family: "Baloo 2", cursive; font-weight: 800; letter-spacing: 2px; font-size: 15px; }
+  .app .dim { position: absolute; inset: 0; background: rgba(74, 59, 92, .35); z-index: 4; }
+  .app .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 14px 18px; z-index: 5; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -10px 30px -10px rgba(74, 59, 92, .35); }
+  .app .sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); align-self: center; }
+  .app .ip { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 7px 10px; font-weight: 700; color: var(--ink2); }
+  .app .ip.on { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 143, 184, .25); color: var(--ink); }
+  .app .dots { display: flex; gap: 8px; justify-content: center; }
+  .app .dots i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--pink); }
+  .app .dots i.f { background: var(--pink); }
+  .app .warnc { background: var(--yels); border-color: var(--yel); box-shadow: 0 5px 0 #F1D48A; }
+  .app .blockc { background: #FFF0F3; border-color: #FFC7D6; box-shadow: 0 5px 0 #FFD9E3; }
+  .app .okc { background: var(--mints); border-color: #BDEBDD; box-shadow: 0 5px 0 #CFF1E6; }
+  .app .lavc { background: var(--lavs); border-color: #D9CCFF; box-shadow: 0 5px 0 #E2D8FF; }
+  .app .thumb { height: 70px; border-radius: 14px; background: linear-gradient(135deg, #f3d3b5, #e7b38e); display: grid; place-items: center; font-size: 28px; }
+  .app .qr { width: 96px; height: 96px; border-radius: 12px; background:
+      conic-gradient(from 90deg at 30% 30%, #4A3B5C 0 25%, transparent 0 50%, #4A3B5C 0 75%, transparent 0) 0 0 / 16px 16px, #fff; border: 6px solid #fff; outline: 2px solid var(--line); margin: 0 auto; }
+  .app .bigcode { font-family: "Baloo 2", cursive; font-weight: 800; font-size: 30px; letter-spacing: 6px; text-align: center; color: var(--pinkt); }
+  .app .seg { display: flex; background: #fff; border: 2px solid var(--line); border-radius: 999px; padding: 3px; gap: 3px; }
+  .app .seg span { flex: 1; text-align: center; padding: 5px 4px; border-radius: 999px; font-weight: 900; font-size: 11px; color: var(--ink2); }
+  .app .seg span.on { background: var(--pink); color: #fff; }
+  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .tmini { border-radius: 14px; overflow: hidden; border: 2px solid var(--line); background: #fff; position: relative; }
+  .tmini .pv { height: 52px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .tmini .pv i { display: block; height: 10px; border-radius: 5px; }
+  .tmini .pv i.w { width: 60%; height: 7px; }
+  .tmini .nm { font-size: 10.5px; font-weight: 900; padding: 4px 7px 5px; }
+  .tmini.sel { border-color: var(--pinkd); box-shadow: 0 0 0 3px rgba(224, 89, 142, .25); }
+  .tmini .use { position: absolute; top: 4px; right: 4px; font-size: 8.5px; font-weight: 900; background: var(--pinkd); color: #fff; border-radius: 999px; padding: 1px 6px; }
+  .bear { --bg: #FFF8EC; --line: #F0DDC2; --ink: #4B3621; --ink2: #9C7B5A; --pink: #F6A623; --pinkd: #C47F0E; --pinkt: #9A5B00; --yels: #FFF1D6; --yel: #F6C56A; }
+  .bear .scr { background: var(--bg); }
+  .bear .bt { background: #F6A623; color: #4B3621; box-shadow: 0 4px 0 #C47F0E; }
+  .bear h5 { font-family: "Mitr", sans-serif; font-weight: 700; }
+  .bear .nav div.on { color: #9A5B00; }
+
+  /* ===== Cổng giáo viên: Bento Mềm ===== */
+  .tch { --bg: #F7F7FA; --card: #fff; --line: #E9EAF1; --ink: #15161E; --ink2: #6B6E80; --acc: #FF6B57; --acct: #C2412D; --acc2: #8A7CFF; --good: #22B07D; --goodt: #157A55; --warn: #F59E0B; --warnt: #9A5B00;
+    font-family: "Be Vietnam Pro", sans-serif; color: var(--ink); font-size: 12px; line-height: 1.45; font-weight: 500; }
+  .tch .scr { background: var(--bg); }
+  .tch .top { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+  .tch .top h6 { font-size: 15px; font-weight: 800; flex: 1; }
+  .tch .top .ib { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-weight: 800; }
+  .tch .bd { flex: 1; padding: 6px 13px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .tch .c { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 10px 12px; box-shadow: 0 8px 20px -16px rgba(21, 22, 30, .35); position: relative; }
+  .tch .lb { font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 800; color: var(--ink2); }
+  .tch .bt { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 12px; font-weight: 800; font-size: 12px; color: #fff; background: #15161E; position: relative; }
+  .tch .bt.o { background: var(--acc); } .tch .bt.g { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .tch .row { display: flex; gap: 7px; } .tch .row > * { flex: 1; }
+  .tch .ip { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; color: var(--ink2); }
+  .tch .ip.hl { border-color: var(--acc2); background: #F4F2FF; color: var(--ink); }
+  .tch .tabs { display: flex; gap: 4px; background: #EEEFF5; border-radius: 999px; padding: 3px; }
+  .tch .tabs span { flex: 1; text-align: center; padding: 5px; border-radius: 999px; font-weight: 700; color: var(--ink2); font-size: 11px; }
+  .tch .tabs span.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+  .tch .st { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .tch .st:last-child { border: 0; }
+  .tch .av { width: 26px; height: 26px; border-radius: 50%; background: #FFE7E2; color: var(--acct); display: grid; place-items: center; font-weight: 800; font-size: 11px; flex-shrink: 0; }
+  .tch .bdg { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  .b-ok { background: #E6F7EF; color: #157A55; } .b-warn { background: #FFF6E5; color: #9A5B00; } .b-no { background: #F1F2F6; color: #6B6E80; } .b-red { background: #FDECEA; color: #B42318; }
+  .tch .bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; gap: 2px; }
+  .tch .bar i { display: block; height: 100%; }
+  .tch .code { font-size: 18px; font-weight: 800; letter-spacing: 2px; white-space: nowrap; }
+  .tch .row.tight .bt { padding: 8px 4px; font-size: 11px; white-space: nowrap; }
+
+  /* ===== Admin: bản Gấu ===== */
+  .dk { width: 100%; min-width: 980px; border-radius: 16px; overflow: hidden; border: 1px solid #E9D9BF; background: #FFF8EC; box-shadow: 0 30px 50px -30px rgba(75, 54, 33, .45);
+    font-family: "Nunito", sans-serif; font-weight: 600; color: #4B3621; font-size: 12px; line-height: 1.45; }
+  .dk .bar0 { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #F3E6D0; }
+  .dk .bar0 i { width: 10px; height: 10px; border-radius: 50%; background: #E5C9A0; }
+  .dk .bar0 span { margin-left: 10px; font-size: 11px; color: #8A6A4A; background: #FFF8EC; border-radius: 6px; padding: 2px 10px; }
+  .dk .shell { display: grid; grid-template-columns: 196px 1fr; min-height: 560px; }
+  .dk .side { background: #FFFFFF; border-right: 1px solid #F0DDC2; padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .dk .brand { display: flex; align-items: center; gap: 8px; padding: 0 6px 12px; }
+  .dk .brand b { font-family: "Mitr", sans-serif; font-size: 15px; color: #4B3621; display: block; line-height: 1.1; }
+  .dk .brand small { font-size: 10px; color: #8A6A4A; }
+  .dk .nv { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 12px; color: #6E5236; font-weight: 700; position: relative; }
+  .dk .nv.on { background: #FFF1D6; color: #4B3621; font-weight: 800; box-shadow: inset 4px 0 0 #F6A623; }
+  .dk .nv .cnt { margin-left: auto; font-size: 9.5px; background: #FB7185; color: #fff; border-radius: 999px; padding: 0 6px; font-weight: 800; }
+  .dk .tip { margin-top: auto; background: #FFF1D6; border-radius: 16px; padding: 10px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; font-size: 11px; }
+  .dk .me { display: flex; align-items: center; gap: 8px; padding: 10px 6px 0; border-top: 1px solid #F0DDC2; margin-top: 8px; font-size: 11px; }
+  .dk .avt { width: 28px; height: 28px; border-radius: 50%; background: #FFE2B3; color: #9A5B00; display: grid; place-items: center; font-weight: 900; font-size: 11px; flex-shrink: 0; }
+  .dk .main { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; position: relative; }
+  .dk .hd { display: flex; align-items: center; gap: 10px; height: 54px; border-bottom: 1px solid #F0DDC2; margin: 0 -18px; padding: 0 18px; background: rgba(255, 255, 255, .6); }
+  .dk .srch { flex: 1; max-width: 360px; background: #fff; border: 2px solid #F0DDC2; border-radius: 999px; padding: 6px 12px; color: #9C7B5A; }
+  .dk .clk { font-size: 11px; color: #8A6A4A; margin-left: auto; }
+  .dk .bell { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid #F0DDC2; display: grid; place-items: center; position: relative; }
+  .dk .bell em { position: absolute; top: -4px; right: -4px; font-style: normal; font-size: 9px; background: #FB7185; color: #fff; border-radius: 999px; padding: 0 5px; font-weight: 800; }
+  .dk h3 { font-family: "Mitr", sans-serif; font-size: 22px; font-weight: 700; color: #4B3621; }
+  .dk .sub2 { color: #8A6A4A; font-size: 12px; }
+  .dk .c { background: #fff; border: 1px solid #F0DDC2; border-radius: 22px; padding: 12px 14px; box-shadow: 0 5px 0 #F0DDC2, 0 10px 24px -12px rgba(75, 54, 33, .18); min-width: 0; position: relative; }
+  .dk .lb { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 900; color: #8A6A4A; }
+  .dk .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .dk .kpi b { font-family: "Mitr", sans-serif; font-size: 24px; display: block; font-variant-numeric: tabular-nums; color: #4B3621; line-height: 1.2; margin-top: 2px; }
+  .dk .up { color: #047857; font-weight: 800; font-size: 11px; } .dk .dn { color: #BE123C; font-weight: 800; font-size: 11px; }
+  .dk .bt { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 13px; font-weight: 900; font-size: 11.5px; background: #F6A623; color: #4B3621; box-shadow: 0 3px 0 #C47F0E; position: relative; }
+  .dk .bt.g { background: #FFF1D6; color: #9A5B00; box-shadow: none; }
+  .dk .bt.r { background: #FFF1F2; color: #BE123C; box-shadow: none; }
+  .dk .segm { display: inline-flex; background: #fff; border: 2px solid #F0DDC2; border-radius: 999px; padding: 2px; }
+  .dk .segm span { padding: 3px 11px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #8A6A4A; }
+  .dk .segm span.on { background: #F6A623; color: #4B3621; }
+  .dk table { font-size: 11.5px; } .dk th { font-size: 9.5px; color: #8A6A4A; background: #FFF8EC; padding: 7px 9px; letter-spacing: 1px; }
+  .dk td { padding: 7px 9px; color: #5A4330; border-bottom: 1px solid #F6EBD9; }
+  .dk tr.bad td { background: #FFF1F2; }
+  .dk .pill { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+  .p-learn { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; } .p-done { background: #ECFDF5; color: #047857; border-color: #A7F3D0; }
+  .p-att { background: #FFF1D6; color: #9A5B00; border-color: #F6C56A; } .p-bad { background: #FFF1F2; color: #BE123C; border-color: #FECDD3; }
+  .dk .bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; border-bottom: 1px solid #F0DDC2; }
+  .dk .bars i { flex: 1; background: #FFD98A; border-radius: 5px 5px 0 0; display: block; }
+  .dk .bars i.pk { background: #F6A623; }
+  .dk .hx { display: flex; gap: 6px; font-size: 9px; color: #8A6A4A; } .dk .hx span { flex: 1; text-align: center; }
+  .dk .stack { display: flex; height: 14px; border-radius: 8px; overflow: hidden; gap: 2px; }
+  .dk .stack i { display: block; }
+  .dk .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: #fff; border-left: 1px solid #F0DDC2; box-shadow: -20px 0 40px -20px rgba(75, 54, 33, .35); padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; z-index: 4; overflow: hidden; }
+  .dk .ipt { background: #fff; border: 2px solid #F0DDC2; border-radius: 14px; padding: 7px 11px; color: #9C7B5A; }
+  .dk .ipt.on { border-color: #F6A623; box-shadow: 0 0 0 4px rgba(246, 166, 35, .2); color: #4B3621; }
+  .dk .tabs2 { display: flex; gap: 4px; flex-wrap: wrap; }
+  .dk .tabs2 span { padding: 5px 11px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #8A6A4A; background: #fff; border: 1px solid #F0DDC2; }
+  .dk .tabs2 span.on { background: #4B3621; color: #FFF8EC; border-color: #4B3621; }
+  .dk .tg { width: 30px; height: 17px; border-radius: 999px; background: #10B981; position: relative; display: inline-block; vertical-align: middle; }
+  .dk .tg::after { content: ""; position: absolute; right: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; }
+  .dk .tg.off { background: #E5D6C1; } .dk .tg.off::after { right: auto; left: 2px; }
+  .dk .savebar { position: absolute; left: 14px; right: 14px; bottom: 12px; background: #4B3621; color: #FFF8EC; border-radius: 16px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; font-size: 11.5px; }
+  .dk .savebar .bt { margin-left: auto; }
+  .dk .heat { display: grid; grid-template-columns: 30px repeat(8, 1fr); gap: 3px; font-size: 9px; color: #8A6A4A; }
+  .dk .heat i { display: block; height: 15px; border-radius: 4px; background: #F6A623; }
+  .dk .keypad { display: grid; grid-template-columns: repeat(3, 52px); gap: 9px; justify-content: center; }
+  .dk .keypad span { height: 44px; border-radius: 999px; background: #fff; border: 2px solid #F0DDC2; box-shadow: 0 3px 0 #F0DDC2; display: grid; place-items: center; font-family: "Mitr", sans-serif; font-size: 17px; color: #4B3621; }
+  .dk .pdots { display: flex; gap: 12px; justify-content: center; } .dk .pdots i { width: 15px; height: 15px; border-radius: 50%; border: 2.5px solid #F6A623; } .dk .pdots i.f { background: #F6A623; }
+  .dkwrap { overflow-x: auto; padding-bottom: 6px; min-width: 0; max-width: 100%; }
+  .grid2 > *, .grid3 > *, .shots > *, .flowbox { min-width: 0; }
+  .theme-btn { position: fixed; right: 16px; bottom: 16px; z-index: 30; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 700 13px "Be Vietnam Pro", sans-serif; box-shadow: var(--sh); cursor: pointer; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0 60px; }
+  @media (max-width: 860px) { .grid3, .grid2 { grid-template-columns: 1fr; } }
+  @media print { nav.toc, .theme-btn { display: none; } .card, .shot { break-inside: avoid; } }
+
+  main > section { min-width: 0; }
+  .dk .shell.tall { min-height: 640px; }
+  .dk .side .cls { background: #FFF8EC; border: 1px solid #F0DDC2; border-radius: 14px; padding: 7px 10px; margin: 2px 0 8px; font-size: 11px; }
+  .dk .side .cls b { display: block; font-family: "Mitr", sans-serif; font-size: 13px; }
+  .dk .side .sep { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; color: #9C7B5A; font-weight: 900; padding: 8px 10px 2px; }
+  .dk .role { font-size: 9.5px; font-weight: 900; background: #E0F0FF; color: #1D4ED8; border-radius: 999px; padding: 1px 7px; margin-left: 6px; }
+  .dk .g2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; } .dk .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .dk .clsh { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; }
+  .dk .chipk { display: inline-block; font-size: 10px; font-weight: 900; background: #FFF1D6; color: #9A5B00; border-radius: 999px; padding: 2px 9px; }
+  .dk .code { text-align: center; background: #FFF8EC; border: 2px dashed #F6C56A; border-radius: 16px; padding: 6px 16px; }
+  .dk .code small { display: block; font-size: 9px; letter-spacing: 1.2px; font-weight: 900; color: #9A5B00; }
+  .dk .code b { font-family: "Mitr", sans-serif; font-size: 22px; letter-spacing: 3px; color: #4B3621; }
+  .dk .tabk { display: flex; gap: 4px; border-bottom: 2px solid #F0DDC2; }
+  .dk .tabk span { padding: 8px 13px; font-weight: 800; color: #8A6A4A; border-radius: 12px 12px 0 0; display: flex; align-items: center; gap: 6px; }
+  .dk .tabk span.on { background: #fff; color: #4B3621; box-shadow: inset 0 -3px 0 #F6A623; }
+  .dk .tabk em { font-style: normal; font-size: 9.5px; background: #FFF1D6; color: #9A5B00; border-radius: 999px; padding: 0 6px; }
+  .dk .bar { height: 8px; border-radius: 6px; background: #F6EBD9; overflow: hidden; } .dk .bar i { display: block; height: 100%; background: #F6A623; border-radius: 6px; }
+  .dk .ccard { background: #fff; border: 1px solid #F0DDC2; border-radius: 22px; padding: 12px 14px; box-shadow: 0 5px 0 #F0DDC2; display: flex; flex-direction: column; gap: 7px; }
+  .dk .ccard h4 { font-family: "Mitr", sans-serif; font-size: 18px; }
+  .dk .ccard .meta { display: flex; justify-content: space-between; font-size: 11px; color: #8A6A4A; }
+  .dk .ccard.new { border: 2px dashed #E5C9A0; box-shadow: none; align-items: center; justify-content: center; text-align: center; color: #9A5B00; font-weight: 800; }
+  .dk .todo div { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px dashed #F0DDC2; font-size: 11.5px; }
+  .dk .todo div:last-child { border-bottom: 0; }
+  .dk .todo i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; background: #FFF1D6; display: grid; place-items: center; }
+  .dk .fld2 { display: grid; gap: 4px; } .dk .fld2 > span { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 900; color: #8A6A4A; }
+  .dk .ta { background: #fff; border: 2px solid #F0DDC2; border-radius: 14px; padding: 8px 11px; color: #4B3621; font-size: 12px; line-height: 1.5; }
+  .dk .ta.on { border-color: #F6A623; box-shadow: 0 0 0 4px rgba(246, 166, 35, .18); }
+  .dk .ta.lock { background: #FFF8EC; border-style: dashed; color: #6E5236; }
+  .dk .sugg { font-size: 10.5px; background: #E8F6E6; color: #3F7A3E; border-radius: 10px; padding: 5px 9px; }
+  .dk .lesson { display: grid; gap: 7px; }
+  .dk .lesson div { display: grid; grid-template-columns: 24px 1fr; gap: 8px; background: #FFF8EC; border-radius: 12px; padding: 7px 9px; font-size: 11.5px; }
+  .dk .lesson b.n { width: 22px; height: 22px; border-radius: 50%; background: #F6A623; display: grid; place-items: center; font-size: 11px; }
+  .dk .okline { font-size: 11px; font-weight: 800; color: #047857; background: #ECFDF5; border-radius: 10px; padding: 5px 9px; }
+  .dk .assist { display: grid; grid-template-columns: 46px 1fr; gap: 10px; background: #FFF1D6; border-radius: 18px; padding: 10px 12px; }
+  .dk .assist ol { padding-left: 16px; display: grid; gap: 3px; font-size: 11.5px; }
+  .dk .banner { display: flex; align-items: center; gap: 10px; background: #FFF1D6; border: 1px solid #F6C56A; border-radius: 16px; padding: 9px 12px; font-size: 12px; }
+  .dk .banner .bt { margin-left: 4px; }
+  .dk .tpl { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .dk .tpl div { background: #fff; border: 2px solid #F0DDC2; border-radius: 16px; padding: 8px 4px; text-align: center; font-weight: 800; font-size: 11px; box-shadow: 0 3px 0 #F0DDC2; }
+  .dk .tpl div i { font-style: normal; display: block; font-size: 20px; }
+  .dk .tpl div.on { border-color: #F6A623; background: #FFF8EC; box-shadow: 0 3px 0 #C47F0E; }
+  .dk .emph { background: #FFF1D6; border-bottom: 2px solid #F6A623; padding: 0 3px; border-radius: 3px; }
+  .dk .note2 { background: #fff; border: 1px solid #F0DDC2; border-radius: 14px; padding: 8px 11px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 11.5px; }
+  .dk .note2 small { color: #8A6A4A; grid-column: 1 / -1; }
+  .dk .radio { display: grid; gap: 6px; } .dk .radio div { display: flex; gap: 8px; align-items: center; font-size: 11.5px; background: #fff; border: 2px solid #F0DDC2; border-radius: 12px; padding: 7px 10px; }
+  .dk .radio div.on { border-color: #F6A623; background: #FFF8EC; }
+  .dk .radio i { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #C9A47A; display: block; flex-shrink: 0; } .dk .radio .on i { border-color: #F6A623; background: radial-gradient(#F6A623 45%, transparent 50%); }
+  /* điện thoại */
+  .tphones { display: flex; gap: 22px; flex-wrap: wrap; }
+  .tphones figure { width: 250px; }
+  .tphones figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.45; } .tphones figcaption b { color: var(--ink); display: block; font-size: 15px; }
+  .tp { width: 250px; height: 520px; border-radius: 38px; background: #0D0B1A; padding: 9px; box-shadow: 0 30px 50px -28px rgba(75, 54, 33, .55); }
+  .tp .sc { width: 100%; height: 100%; border-radius: 30px; overflow: hidden; background: #FFF8EC; color: #4B3621; font-family: "Nunito", sans-serif; font-weight: 600; font-size: 11px; display: flex; flex-direction: column; position: relative; }
+  .tp .st { display: flex; justify-content: space-between; padding: 10px 18px 4px; font-weight: 800; font-size: 10.5px; }
+  .tp .bd { flex: 1; padding: 6px 12px 10px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .tp .tt { display: flex; align-items: center; gap: 8px; } .tp .tt b { font-family: "Mitr", sans-serif; font-size: 15px; flex: 1; line-height: 1.15; }
+  .tp .ic { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2px solid #F0DDC2; display: grid; place-items: center; font-size: 11px; }
+  .tp .c { background: #fff; border: 1px solid #F0DDC2; border-radius: 16px; padding: 8px 10px; box-shadow: 0 4px 0 #F0DDC2; }
+  .tp .lb { font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; color: #8A6A4A; }
+  .tp .btn { text-align: center; padding: 9px; border-radius: 999px; background: #F6A623; color: #4B3621; font-weight: 900; box-shadow: 0 4px 0 #C47F0E; }
+  .tp .btn.g { background: #FFF1D6; color: #9A5B00; box-shadow: none; }
+  .tp .tb { display: flex; justify-content: space-around; background: #fff; border-top: 1px solid #F0DDC2; padding: 7px 4px 12px; font-size: 9px; font-weight: 800; color: #8A6A4A; }
+  .tp .tb span { text-align: center; } .tp .tb span i { font-style: normal; display: block; font-size: 15px; } .tp .tb span.on { color: #4B3621; } .tp .tb span.on i { background: #FFE7B8; border-radius: 10px; }
+  .tp .bar { height: 7px; border-radius: 5px; background: #F6EBD9; overflow: hidden; } .tp .bar i { display: block; height: 100%; background: #F6A623; }
+  .tp .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .tp .stat { text-align: center; } .tp .stat b { font-family: "Mitr", sans-serif; font-size: 17px; display: block; }
+  .tp .pill2 { font-size: 8.5px; font-weight: 900; padding: 1px 7px; border-radius: 999px; }
+  .tp .li { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #F0DDC2; }
+  .tp .ipt { background: #fff; border: 2px solid #F0DDC2; border-radius: 12px; padding: 7px 10px; color: #9C7B5A; }
+
+  /* phụ huynh, bộ Kẹo Bông */
+  .tp.pk .sc { background: #FFF4F8; color: #4A3B5C; }
+  .tp.pk .tt b, .tp.pk .h { font-family: "Baloo 2", cursive; font-weight: 800; }
+  .tp.pk .h { font-size: 19px; line-height: 1.05; color: #D2427D; }
+  .tp.pk .c { border: 2px solid #F3D9E6; box-shadow: 0 4px 0 #F3D9E6; border-radius: 18px; }
+  .tp.pk .lb { color: #776B82; }
+  .tp.pk .ic { border-color: #F3D9E6; }
+  .tp.pk .btn { background: linear-gradient(#FFC9DD, #FFA9CA); color: #4A2B45; box-shadow: 0 4px 0 #E0598E; }
+  .tp.pk .btn.g { background: #fff; color: #4A3B5C; border: 2px solid #F3D9E6; box-shadow: 0 3px 0 #F3D9E6; }
+  .tp.pk .ipt { border-color: #F3D9E6; color: #4A3B5C; }
+  .tp.pk .kid { display: flex; align-items: center; gap: 8px; background: #fff; border: 2px solid #F3D9E6; border-radius: 16px; padding: 7px 9px; }
+  .tp.pk .kid.on { border-color: #D2427D; box-shadow: 0 3px 0 #F3B5CD; }
+  .tp.pk .kid .av { width: 30px; height: 30px; border-radius: 50%; background: #FFE3EE; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+  .tp.pk .kid b { display: block; font-size: 12px; } .tp.pk .kid small { color: #776B82; }
+  .tp.pk .kid .tag { margin-left: auto; font-size: 8.5px; font-weight: 900; padding: 2px 7px; border-radius: 999px; background: #E3F8F2; color: #1E6E5A; }
+  .tp.pk .kid .chk { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: #D2427D; color: #fff; display: grid; place-items: center; font-size: 10px; }
+  .tp.pk .warn { background: #FFF6D6; border: 2px solid #FFD36E; border-radius: 16px; padding: 8px 10px; color: #6B4A00; }
+  .tp.pk .cb { display: flex; gap: 7px; align-items: flex-start; font-size: 10.5px; } .tp.pk .cb i { width: 15px; height: 15px; border-radius: 5px; background: #D2427D; color: #fff; font-style: normal; display: grid; place-items: center; font-size: 9px; flex-shrink: 0; }
+  .tp.pk .classcard { background: linear-gradient(135deg, #FFE3EE, #EDE4FF); border-radius: 18px; padding: 9px 11px; }
+  .tp.pk .classcard b { font-family: "Baloo 2", cursive; font-size: 16px; display: block; }
+  .tp.pk .grp { display: flex; align-items: center; gap: 7px; font-weight: 800; margin-top: 2px; }
+  .tp.pk .grp .av { width: 24px; height: 24px; border-radius: 50%; background: #FFE3EE; display: grid; place-items: center; }
+  .tp.pk .cls { display: flex; justify-content: space-between; align-items: center; gap: 6px; background: #fff; border: 2px solid #F3D9E6; border-radius: 14px; padding: 6px 9px; }
+  .tp.pk .cls small { display: block; color: #776B82; }
+  .tp.pk .p-ok { background: #E3F8F2; color: #1E6E5A; } .tp.pk .p-wait { background: #FFF6D6; color: #7A5300; } .tp.pk .p-no { background: #FFF1F2; color: #BE123C; }
+  .tp.pk .banner { background: #FFF6D6; border: 2px solid #FFD36E; border-radius: 14px; padding: 7px 10px; font-weight: 800; color: #6B4A00; }
+  .qr { width: 120px; height: 120px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 8px; border: 2px solid #F0DDC2; }
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cmp img { width: 100%; border-radius: 12px; border: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="bear" viewBox="0 0 64 64"><circle cx="15" cy="15" r="9" fill="#C98A4B"/><circle cx="49" cy="15" r="9" fill="#C98A4B"/><circle cx="15" cy="15" r="4.5" fill="#F3C9A0"/><circle cx="49" cy="15" r="4.5" fill="#F3C9A0"/><circle cx="32" cy="35" r="23" fill="#D99A5B"/><ellipse cx="32" cy="43" rx="10.5" ry="8" fill="#F6DDBF"/><circle cx="23.5" cy="31" r="2.7" fill="#3B2A1A"/><circle cx="40.5" cy="31" r="2.7" fill="#3B2A1A"/><ellipse cx="32" cy="39.5" rx="3.3" ry="2.5" fill="#3B2A1A"/><path d="M28 45 q4 3.2 8 0" stroke="#3B2A1A" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="18" cy="39" r="3.2" fill="#F4A7A0" opacity=".65"/><circle cx="46" cy="39" r="3.2" fill="#F4A7A0" opacity=".65"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="#F6A623" stroke="#9A5B00" stroke-width="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#9A5B00" stroke-width="1.8"/></symbol>
+</defs></svg>
+<header class="hero"><div class="wrap">
+  <div class="sec-h"><div class="n">Kèm Con Học · Cổng giáo viên · bản vẽ cho prompt 11 (phần A và C)</div><h2>Cổng giáo viên cùng phong cách với admin bản Gấu</h2>
+  <p>Bản live hiện dùng xanh dương kiểu Bento nên lạc tông với admin. Bản mới dùng chung bộ màu mật ong và kem, chữ Mitr cho tiêu đề và Nunito cho nội dung, thanh bên trái, thẻ có đáy, gấu làm trợ lý. Khác admin ở nhãn "Giáo viên", ô chọn lớp trên thanh bên và các mục của cô. 7 màn máy tính và 4 màn điện thoại.</p></div>
+</div></header>
+<nav class="toc"><div class="wrap"><a href="#t1">1 Lớp của cô</a><a href="#t2">2 Bài tập</a><a href="#t3">3 Soạn bài</a><a href="#t4">4 Kết quả</a><a href="#t5">5 Học sinh</a><a href="#t6">6 Thông báo</a><a href="#t7">7 Cài đặt của cô</a><a href="#mb">Điện thoại</a><a href="#vaolop">Vào lớp bằng link</a></div></nav>
+<main class="wrap" style="display:grid;gap:28px;padding-top:22px">
+  <section id="t1"><div class="sec-h"><div class="n">Màn 1</div><h2>Lớp của cô</h2><p>Trang đầu sau khi đăng nhập: số liệu chính, thẻ từng lớp có tiến độ, ô "Việc cần cô xem".</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv on">🏫 Lớp của cô</div><div class="nv">📝 Bài tập & Soạn bài</div><div class="nv">👧 Học sinh<span class="cnt">2</span></div><div class="nv">📌 Thông báo & Nhắc việc</div><div class="nv">📊 Kết quả</div><div class="nv">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div style="display:flex;align-items:end;gap:12px"><div><h3>Chào cô Hạnh 👋</h3><div class="sub2">Năm học 2026-2027 · Trường Kim Đồng</div></div><span class="bt" style="margin-left:auto">＋ Tạo lớp mới</span></div>
+    <div class="kpis"><div class="c kpi"><span class="lb">Lớp đang dạy</span><b>2</b><span class="sub2">3A, 3B</span></div><div class="c kpi"><span class="lb">Học sinh đã kết nối</span><b>56/60</b><span class="up">+4 tuần này</span></div><div class="c kpi"><span class="lb">Bài đang mở</span><b>3</b><span class="sub2">hạn gần nhất: mai</span></div><div class="c kpi"><span class="lb">Hoàn thành tuần</span><b>82%</b><span class="up">+9 điểm</span></div></div>
+    <div class="g2">
+      <div class="g3" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="ccard"><span class="chipk" style="align-self:start">Khối 3</span><h4>Lớp 3A</h4><div class="meta"><span>Mã ND9QR7</span><span>28/30 HS</span></div><div class="bar"><i style="width:79%"></i></div><div class="meta"><span>2 bài đang mở</span><span>79% hoàn thành</span></div><span class="bt" style="align-self:start">Vào lớp ›</span></div>
+        <div class="ccard"><span class="chipk" style="align-self:start">Khối 3</span><h4>Lớp 3B</h4><div class="meta"><span>Mã KX4M7P</span><span>28/30 HS</span></div><div class="bar"><i style="width:86%"></i></div><div class="meta"><span>1 bài đang mở</span><span>86% hoàn thành</span></div><span class="bt" style="align-self:start">Vào lớp ›</span></div>
+        <div class="ccard new">＋<br>Tạo lớp mới<br><small style="font-weight:600">khối, năm học, cách vào lớp</small></div>
+      </div>
+      <div class="c todo"><span class="lb">Việc cần cô xem</span>
+        <div><i>👧</i><span><b>2 phụ huynh chờ duyệt</b> vào lớp 3A</span><span class="bt g">Duyệt</span></div>
+        <div><i>📊</i><span><b>Bài 3 lớp 3A:</b> 9 bạn vướng ở bậc 2</span><span class="bt g">Xem</span></div>
+        <div><i>📌</i><span><b>Nhắc mặc đồng phục mai:</b> 19/28 nhà đã nhắc con</span><span class="bt g">Xem</span></div>
+        <div><i>🐻</i><span><b>Trợ lý gợi ý</b> cách giảng lại "cho đi là bớt" cho ngày mai</span><span class="bt g">Đọc</span></div></div>
+    </div>
+  </section>
+</div></div></div></section>
+  <section id="t2"><div class="sec-h"><div class="n">Màn 2</div><h2>Lớp 3A · Bài tập và Soạn bài</h2><p>Thay cho màn trong ảnh bạn gửi: đầu lớp có mã lớp chung, Gửi qua Zalo; 5 tab; bảng bài tập có thanh hoàn thành và "bậc hay vướng".</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/lop/3a</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv">🏫 Lớp của cô</div><div class="nv on">📝 Bài tập & Soạn bài</div><div class="nv">👧 Học sinh<span class="cnt">2</span></div><div class="nv">📌 Thông báo & Nhắc việc</div><div class="nv">📊 Kết quả</div><div class="nv">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div class="c clsh"><div><span class="chipk">Khối 3 · 2026-2027</span><h3 style="margin-top:4px">Lớp 3A</h3><div class="sub2">Kim Đồng · 28/30 học sinh đã kết nối · 2 chờ duyệt</div></div>
+      <div class="code"><small>MÃ LỚP CHUNG</small><b>ND9QR7</b></div><div style="display:grid;gap:6px"><span class="bt">↗ Gửi qua Zalo</span><span class="bt g">⧉ Sao chép mã</span></div></div>
+    <div class="tabk"><span class="on">📝 Bài tập & Soạn bài</span><span class="">👧 Học sinh<em>28</em></span><span class="">📌 Thông báo & Nhắc việc<em>1</em></span><span class="">📊 Kết quả</span><span class="">⚙️ Cài đặt lớp</span></div>
+    <div style="display:flex;align-items:end;gap:12px"><div><h3 style="font-size:18px">Bài tập đã giao</h3><div class="sub2">Soạn bài kèm "Cách cô dạy" để AI gợi mở đúng phương pháp</div></div><span class="bt" style="margin-left:auto">＋ Soạn bài mới</span></div>
+    <div class="c" style="padding:4px 6px"><table><thead><tr><th>Bài</th><th>Hạn</th><th>Trạng thái</th><th style="width:170px">Hoàn thành</th><th>Bậc hay vướng</th><th></th></tr></thead><tbody>
+      <tr><td><b>Bài 3 · Toán lời văn 2 bước</b><br><span class="sub2">2 câu · theo cách cô dạy: sơ đồ đoạn thẳng</span></td><td>Mai, T2 27/10</td><td><span class="pill p-learn">Đang mở</span></td><td><div class="bar"><i style="width:79%"></i></div><span class="sub2">22/28 · 79%</span></td><td>Bậc 2 · 9 bạn</td><td><span class="bt g">Kết quả ›</span></td></tr>
+      <tr><td><b>Chính tả d/gi/r</b><br><span class="sub2">1 đoạn · đọc cho con viết</span></td><td>T4 29/10</td><td><span class="pill p-learn">Đang mở</span></td><td><div class="bar"><i style="width:35%"></i></div><span class="sub2">10/28 · 35%</span></td><td>chưa đủ dữ liệu</td><td><span class="bt g">Kết quả ›</span></td></tr>
+      <tr><td><b>Bảng nhân 4</b><br><span class="sub2">5 câu</span></td><td>T6 24/10</td><td><span class="pill p-done">Đã đóng</span></td><td><div class="bar"><i style="width:96%"></i></div><span class="sub2">27/28 · 96%</span></td><td>Câu 4 · 3 bạn</td><td><span class="bt g">Kết quả ›</span></td></tr>
+      <tr><td><b>Tìm x (nháp)</b><br><span class="sub2">bài giảng AI chờ cô duyệt</span></td><td>-</td><td><span class="pill p-att">Nháp</span></td><td><span class="sub2">chưa giao</span></td><td>-</td><td><span class="bt">Duyệt ›</span></td></tr>
+    </tbody></table></div>
+  </section>
+</div></div></div></section>
+  <section id="t3"><div class="sec-h"><div class="n">Màn 3</div><h2>Soạn bài và duyệt bài giảng AI</h2><p>Trái: đề, cách cô dạy (gợi ý từ cài đặt), đáp án khoá. Phải: xem trước 4 bậc, kiểm tra không lộ đáp án và đúng cách cô dạy.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/lop/3a/bai/moi</span></div>
+<div class="shell tall">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv">🏫 Lớp của cô</div><div class="nv on">📝 Bài tập & Soạn bài</div><div class="nv">👧 Học sinh<span class="cnt">2</span></div><div class="nv">📌 Thông báo & Nhắc việc</div><div class="nv">📊 Kết quả</div><div class="nv">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div style="display:flex;align-items:center;gap:10px"><span class="bt g">‹ Bài tập</span><div><h3 style="font-size:18px">Soạn bài mới · Lớp 3A</h3><div class="sub2">AI soạn bài giảng theo cách cô dạy; cô duyệt xong mới giao. Cả lớp dùng chung một bài giảng.</div></div></div>
+    <div class="g2" style="grid-template-columns:1fr 1fr">
+      <div class="c" style="display:grid;gap:9px">
+        <div class="fld2"><span>Tên bài</span><div class="ta">Bài 3 · Toán lời văn 2 bước</div></div>
+        <div class="fld2"><span>Câu 1 · đề bài</span><div class="ta">Có 3 hộp bút, mỗi hộp 8 cây. Mẹ cho bạn Na 5 cây. Hỏi còn lại bao nhiêu cây bút?</div><span class="sub2">Dạng bài tự nhận: <b>Toán lời văn 2 bước</b> · lớp 3 ✓</span></div>
+        <div class="fld2"><span>Cách cô dạy (AI làm theo)</span><div class="ta on">Vẽ sơ đồ đoạn thẳng cho 3 hộp. Chưa dùng phép nhân, cho con cộng 8 + 8 + 8. Nhấn mạnh "cho đi là bớt".</div><div class="sugg">💡 Gợi ý từ cài đặt của cô: "Toán lời văn 2 bước · sơ đồ đoạn thẳng" (dùng 4 lần)</div></div>
+        <div class="fld2"><span>Đáp án của cô (chỉ phụ huynh thấy, không gửi AI)</span><div class="ta lock">🔒 8 + 8 + 8 = 24 · 24 - 5 = 19 · Đáp số: 19 cây bút</div></div>
+        <div class="fld2"><span>Hạn</span><div class="segm"><span class="on">Mai</span><span>2 ngày</span><span>Chọn ngày</span></div></div>
+      </div>
+      <div class="c" style="display:grid;gap:9px;align-content:start">
+        <span class="lb">Xem trước bài giảng AI · theo cách cô Hạnh dạy</span>
+        <div class="lesson"><div><b class="n">1</b><span>"Đề cho biết những gì? Con vẽ 3 đoạn thẳng cho 3 hộp nhé."</span></div><div><b class="n">2</b><span>"Mỗi đoạn là 8 cây. Con cộng 3 đoạn lại xem có tất cả bao nhiêu?"</span></div><div><b class="n">3</b><span>"Mẹ cho bạn Na 5 cây thì số bút nhiều lên hay bớt đi?"</span></div><div><b class="n">4</b><span>"Con viết phép tính và câu trả lời."</span></div></div>
+        <div class="okline">✓ Không bậc nào lộ đáp án · ✓ Không dùng phép nhân · ✓ Có sơ đồ đoạn thẳng</div>
+        <div style="display:flex;gap:8px"><span class="bt g">↻ Soạn lại</span><span class="bt g">✎ Sửa bậc</span><span class="bt" style="margin-left:auto">✓ Duyệt bài giảng</span></div>
+      </div>
+    </div>
+    <div class="savebar" style="position:static"><svg viewBox="0 0 64 64" style="width:26px;height:26px"><use href="#bear"/></svg><span>Câu 1 đã duyệt · Câu 2 chưa soạn. Giao bài khi đủ các câu đã duyệt.</span><span class="bt">Giao cho 28 gia đình</span></div>
+  </section>
+</div></div></div></section>
+  <section id="t4"><div class="sec-h"><div class="n">Màn 4</div><h2>Kết quả bài</h2><p>4 số liệu, bậc hay vướng, trợ lý gấu gợi ý cách giảng lại (chỉ dùng số liệu tổng hợp), danh sách theo trạng thái.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/lop/3a/ket-qua/bai-3</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv">🏫 Lớp của cô</div><div class="nv">📝 Bài tập & Soạn bài</div><div class="nv">👧 Học sinh<span class="cnt">2</span></div><div class="nv">📌 Thông báo & Nhắc việc</div><div class="nv on">📊 Kết quả</div><div class="nv">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div style="display:flex;align-items:end;gap:12px"><div><h3 style="font-size:18px">Kết quả · Bài 3 · Toán lời văn 2 bước</h3><div class="sub2">Hạn mai T2 27/10 · cập nhật khi phụ huynh xong bài</div></div><span class="segm" style="margin-left:auto"><span class="on">Câu 1</span><span>Câu 2</span></span></div>
+    <div class="kpis"><div class="c kpi"><span class="lb">Hoàn thành</span><b>22/28</b><span class="sub2">79%</span></div><div class="c kpi"><span class="lb">Tự làm được</span><b>12</b><span class="up">55%</span></div><div class="c kpi"><span class="lb">Cần gợi ý</span><b>7</b><span class="sub2">32%</span></div><div class="c kpi"><span class="lb">Mẹ dẫn nhiều</span><b>3</b><span class="dn">14%</span></div></div>
+    <div class="g2">
+      <div class="c" style="display:grid;gap:8px"><span class="lb">Bậc hay vướng nhất (đếm số lần "con bí")</span>
+        <div style="display:grid;grid-template-columns:150px 1fr 40px;gap:8px;align-items:center;font-size:11.5px"><span>1 · Đề cho biết gì</span><div class="bar"><i style="width:15%"></i></div><b>2</b><span><b>2 · Tìm tổng số bút</b></span><div class="bar"><i style="width:30%"></i></div><b>4</b><span style="color:#BE123C"><b>3 · Cho đi là bớt</b></span><div class="bar"><i style="width:75%;background:#FB7185"></i></div><b>9</b><span>4 · Viết phép tính</span><div class="bar"><i style="width:20%"></i></div><b>3</b></div>
+        <div class="assist"><svg viewBox="0 0 64 64" style="width:44px;height:44px"><use href="#bear"/></svg><div><span class="lb">Trợ lý gợi ý cho cô (chỉ dùng số liệu tổng hợp)</span><ol><li>Cả lớp vướng ở bậc "cho đi là bớt": nhiều bạn cộng thêm 5.</li><li>Mai thử cho cả lớp đóng vai: 1 bạn cho bạn kia 5 que tính, hỏi ai còn ít hơn.</li><li>Nên hỏi thăm 3 bạn mẹ dẫn nhiều: HS-07, HS-15, HS-22.</li></ol></div></div>
+      </div>
+      <div class="c" style="padding:4px 6px"><table><thead><tr><th>Học sinh</th><th>Trạng thái</th><th>Mức</th></tr></thead><tbody>
+        <tr><td>Nguyễn Minh Anh</td><td><span class="pill p-done">Đã làm</span></td><td>😄 Tự làm</td></tr>
+        <tr><td>Trần Bảo Nam</td><td><span class="pill p-done">Đã làm</span></td><td>🙂 Cần gợi ý</td></tr>
+        <tr class="bad"><td>Lê Gia Hân</td><td><span class="pill p-att">Cần gợi ý nhiều</span></td><td>😅 Mẹ dẫn</td></tr>
+        <tr><td>Phạm Tuấn Kiệt</td><td><span class="pill p-done">Đã làm</span></td><td>😄 Tự làm</td></tr>
+        <tr><td>Võ Khánh Linh</td><td><span class="pill p-learn">Đang làm</span></td><td>-</td></tr>
+        <tr><td>Đỗ Quang Huy</td><td><span class="pill p-bad">Chưa làm</span></td><td>-</td></tr></tbody></table>
+        <div class="sub2" style="padding:6px 8px">Cô chỉ thấy trạng thái và mức tự đánh giá. Không thấy bài làm, ảnh, chat với AI.</div></div>
+    </div>
+  </section>
+</div></div></div></section>
+  <section id="t5"><div class="sec-h"><div class="n">Màn 5</div><h2>Học sinh</h2><p>Dải nhắc duyệt, lọc theo trạng thái, dán danh sách lớp, in mã riêng.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/lop/3a/hoc-sinh</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv">🏫 Lớp của cô</div><div class="nv">📝 Bài tập & Soạn bài</div><div class="nv on">👧 Học sinh<span class="cnt">2</span></div><div class="nv">📌 Thông báo & Nhắc việc</div><div class="nv">📊 Kết quả</div><div class="nv">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div class="tabk"><span class="">📝 Bài tập & Soạn bài</span><span class="on">👧 Học sinh<em>28</em></span><span class="">📌 Thông báo & Nhắc việc<em>1</em></span><span class="">📊 Kết quả</span><span class="">⚙️ Cài đặt lớp</span></div>
+    <div class="banner"><span style="font-size:18px">👧</span><span><b>2 phụ huynh xin vào lớp</b> bằng mã lớp chung. Kiểm tra tên rồi duyệt.</span><span style="margin-left:auto"></span><span class="bt">Duyệt cả 2</span></div>
+    <div style="display:flex;gap:8px;align-items:center"><h3 style="font-size:18px">Danh sách lớp · 30 học sinh</h3><span class="bt g" style="margin-left:auto">⇪ Dán danh sách lớp</span><span class="bt g">🖨 In mã riêng</span><span class="segm"><span class="on">Tất cả</span><span>Chờ duyệt 2</span><span>Chưa kết nối 2</span></span></div>
+    <div class="c" style="padding:4px 6px"><table><thead><tr><th>Tên trong danh sách</th><th>Trạng thái</th><th>Mã riêng</th><th>Người kết nối</th><th>Ngày</th><th></th></tr></thead><tbody>
+      <tr><td><b>Nguyễn Minh Anh</b></td><td><span class="pill p-done">Đã kết nối</span></td><td>KMT-4RX</td><td>Mẹ · đã đồng ý cả con</td><td>20/10</td><td></td></tr>
+      <tr><td><b>Trần Bảo Nam</b></td><td><span class="pill p-done">Đã kết nối</span></td><td>PQ7-H2N</td><td>Bố · đã đồng ý cả con</td><td>21/10</td><td></td></tr>
+      <tr class="bad"><td><b>Lê Gia Hân</b></td><td><span class="pill p-att">Chờ duyệt</span></td><td>mã lớp chung</td><td>Mẹ · "Hân, con chị Lan"</td><td>26/10</td><td><span class="bt">Duyệt</span> <span class="bt r">Từ chối</span></td></tr>
+      <tr class="bad"><td><b>Phạm Tuấn Kiệt</b></td><td><span class="pill p-att">Chờ duyệt</span></td><td>mã lớp chung</td><td>Bố</td><td>26/10</td><td><span class="bt">Duyệt</span> <span class="bt r">Từ chối</span></td></tr>
+      <tr><td><b>Võ Khánh Linh</b></td><td><span class="pill p-learn">Đã gửi mã</span></td><td>ZB3-8KD</td><td>-</td><td>-</td><td><span class="bt g">Gửi lại</span></td></tr>
+      <tr><td><b>Đỗ Quang Huy</b></td><td><span class="pill p-bad">Chưa kết nối</span></td><td>W9C-4TS</td><td>-</td><td>-</td><td><span class="bt g">Gửi mã</span></td></tr>
+    </tbody></table></div>
+  </section>
+</div></div></div></section>
+  <section id="t6"><div class="sec-h"><div class="n">Màn 6</div><h2>Thông báo và Nhắc việc</h2><p>Mục 4b "Cô nhắc" theo cùng phong cách: 6 mẫu, chỗ tô để sửa, theo dõi đã đọc và đã nhắc con.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/lop/3a/thong-bao</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv">🏫 Lớp của cô</div><div class="nv">📝 Bài tập & Soạn bài</div><div class="nv">👧 Học sinh<span class="cnt">2</span></div><div class="nv on">📌 Thông báo & Nhắc việc</div><div class="nv">📊 Kết quả</div><div class="nv">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div class="tabk"><span class="">📝 Bài tập & Soạn bài</span><span class="">👧 Học sinh<em>28</em></span><span class="on">📌 Thông báo & Nhắc việc<em>1</em></span><span class="">📊 Kết quả</span><span class="">⚙️ Cài đặt lớp</span></div>
+    <div class="g2" style="grid-template-columns:1.1fr 1fr">
+      <div class="c" style="display:grid;gap:9px"><div style="display:flex;align-items:center;gap:8px"><span class="lb">Gửi phụ huynh</span><span class="segm" style="margin-left:auto"><span>Thông báo</span><span class="on">Nhắc việc</span></span></div>
+        <div class="tpl"><div class="on"><i>👕</i>Đồng phục</div><div><i>🎒</i>Mang theo</div><div><i>📄</i>Nộp</div><div><i>📝</i>Kiểm tra</div><div><i>🏖️</i>Nghỉ học</div><div><i>⏰</i>Đổi giờ</div></div>
+        <div class="fld2"><span>Lời nhắc (chạm chỗ tô để sửa)</span><div class="ta on">Mai <span class="emph">thứ hai</span>, các con mặc đồng phục <span class="emph">thể dục</span> và mang <span class="emph">vở Toán</span> nhé.</div></div>
+        <div class="fld2"><span>Cho ngày</span><div class="segm"><span class="on">Mai · T2 27/10</span><span>Ngày kia</span><span>Chọn ngày</span></div></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span class="tg"></span> Gắn với bài: <b>Bài 3 · Toán lời văn</b></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="sub2">Hôm nay đã gửi 1/3 lời nhắc</span><span class="bt" style="margin-left:auto">Gửi cho 28 gia đình</span></div></div>
+      <div class="c" style="display:grid;gap:8px;align-content:start"><span class="lb">Đã gửi</span>
+        <div class="note2"><b>👕 Đồng phục T2 27/10</b><span class="pill p-learn">Nhắc việc</span><small>24 đã đọc · 19 đã nhắc con · 28 gia đình</small><div class="bar" style="grid-column:1/-1"><i style="width:68%"></i></div></div>
+        <div class="note2"><b>📝 Kiểm tra Toán T6 31/10</b><span class="pill p-learn">Nhắc việc</span><small>Hiện cho phụ huynh từ trưa T5 30/10</small></div>
+        <div class="note2"><b>Họp phụ huynh đầu năm</b><span class="pill p-done">Thông báo · ghim</span><small>27/28 đã đọc · cần xác nhận</small></div>
+        <div class="sub2">Thông báo là một chiều: phụ huynh chỉ bấm "Đã đọc", "Đã nhắc con" hoặc báo nội dung không phù hợp.</div></div>
+    </div>
+  </section>
+</div></div></div></section>
+  <section id="t7"><div class="sec-h"><div class="n">Màn 7</div><h2>Cài đặt của cô</h2><p>Cách cô dạy đã lưu theo dạng bài, mặc định cho lớp mới, hồ sơ.</p></div><div class="dkwrap"><div class="dk"><div class="bar0"><i></i><i></i><i></i><span>kem-con-hoc-5xf.pages.dev/teacher/cai-dat</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><svg style="width:34px;height:34px" viewBox="0 0 64 64"><use href="#bear"/></svg><div><b>Kèm Con Học</b><small>Cổng Giáo Viên</small></div></div>
+    <div class="cls">Lớp đang xem<b>Lớp 3A · Kim Đồng</b><span style="color:#8A6A4A">28/30 học sinh · đổi lớp ▾</span></div>
+    <div class="nv">🏫 Lớp của cô</div><div class="nv">📝 Bài tập & Soạn bài</div><div class="nv">👧 Học sinh<span class="cnt">2</span></div><div class="nv">📌 Thông báo & Nhắc việc</div><div class="nv">📊 Kết quả</div><div class="nv on">⚙️ Cài đặt của cô</div>
+    <div class="tip"><svg viewBox="0 0 64 64"><use href="#bear"/></svg><span>Gấu nhắc: cô chỉ thấy trạng thái làm bài, không thấy ảnh hay chat của gia đình.</span></div>
+    <div class="me"><span class="avt">H</span><div><b>Cô Hạnh</b><span class="role">Giáo viên</span><br><span style="color:#8A6A4A">Trường Kim Đồng</span></div></div>
+  </aside>
+  <section class="main">
+    <div class="hd"><span class="srch">🔍 Tìm học sinh, bài tập…</span><span class="clk">CN 26/10 · 15:20</span><span class="bell">🔔<em>3</em></span></div>
+
+    <div><h3>Cài đặt của cô</h3><div class="sub2">Áp dụng cho mọi lớp của cô. Mỗi lớp có thể chỉnh riêng ở tab Cài đặt lớp.</div></div>
+    <div class="g2" style="grid-template-columns:1fr 1fr">
+      <div class="c" style="display:grid;gap:8px;align-content:start"><div style="display:flex;align-items:center"><span class="lb">Cách cô dạy đã lưu · AI tự gợi ý khi soạn cùng dạng bài</span><span class="bt g" style="margin-left:auto">＋ Thêm</span></div>
+        <div class="note2"><b>Toán lời văn 2 bước</b><span class="bt g">Sửa</span><small>Vẽ sơ đồ đoạn thẳng; chưa dùng phép nhân; nhấn mạnh "cho đi là bớt". Dùng 4 lần.</small></div>
+        <div class="note2"><b>Chính tả d/gi/r</b><span class="bt g">Sửa</span><small>Đọc chậm 2 lần; cho con tự tìm từ cùng âm trước khi viết.</small></div>
+        <div class="note2"><b>Tìm x</b><span class="bt g">Sửa</span><small>Dùng cân thăng bằng: hai bên phải bằng nhau.</small></div></div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <div class="c" style="display:grid;gap:8px"><span class="lb">Mặc định cho lớp mới</span>
+          <div class="radio"><div class="on"><i></i><span><b>Mã lớp chung + cô duyệt</b> · phụ huynh nhập mã, cô bấm duyệt</span></div><div><i></i><span><b>Chỉ mã riêng</b> · mỗi học sinh một mã, vào ngay</span></div></div>
+          <div class="fld" style="display:flex;justify-content:space-between;font-size:11.5px"><span>Hạn bài mặc định</span><span class="segm"><span>1 ngày</span><span class="on">2 ngày</span><span>1 tuần</span></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px"><span>Cho phụ huynh xem đáp án của cô</span><span class="tg"></span></div></div>
+        <div class="c" style="display:grid;gap:6px"><span class="lb">Hồ sơ</span><div style="font-size:12px"><b>Cô Hạnh</b> · Trường Kim Đồng · Hà Nội · Khối 3</div><div class="sub2">Tài khoản đã được admin duyệt ngày 18/10. Không chia sẻ mật khẩu cho người khác.</div><span class="bt g" style="justify-self:start">Đổi mật khẩu</span></div>
+      </div>
+    </div>
+  </section>
+</div></div></div></section>
+  <section id="mb"><div class="sec-h"><div class="n">Điện thoại</div><h2>Trên điện thoại của cô</h2><p>Thanh bên chuyển thành thanh tab dưới 5 mục; thẻ, nút, màu giữ nguyên.</p></div><div class="tphones"><figure><div class="tp"><div class="sc"><div class="st"><span>08:10</span><span>●●● ▮</span></div><div class="bd" style="justify-content:center;gap:10px">
+  <div style="text-align:center"><svg viewBox="0 0 64 64" style="width:74px;height:74px"><use href="#bear"/></svg><div style="font-family:Mitr;font-size:20px;margin-top:2px">Cổng Giáo Viên</div><div style="color:#8A6A4A">Kèm Con Học · cô giao bài, phụ huynh kèm con</div></div>
+  <div class="ipt">✉ co.hanh@truonghoc.vn</div><div class="ipt">•••••••••</div><div class="btn">Đăng nhập</div>
+  <div class="c" style="background:#FFF1D6;border-color:#F6C56A;box-shadow:none"><b>⏳ Tài khoản đang chờ duyệt</b><br><span style="color:#6E5236">Thường trong 24 giờ. Cô đăng nhập lại để xem kết quả.</span></div>
+  <div style="text-align:center;color:#8A6A4A;font-weight:800">Chưa có tài khoản? <u>Đăng ký giáo viên</u></div></div></div></div><figcaption><b>Đăng nhập</b>Gấu chào; trạng thái chờ duyệt hiện ngay trên màn.</figcaption></figure><figure><div class="tp"><div class="sc"><div class="st"><span>15:20</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Lớp 3A</b><span class="ic">↗</span></div>
+  <div class="c" style="text-align:center"><span class="lb">Mã lớp chung</span><div style="font-family:Mitr;font-size:24px;letter-spacing:4px">ND9QR7</div><div class="row2" style="margin-top:4px"><span class="btn" style="padding:6px">↗ Zalo</span><span class="btn g" style="padding:6px">⧉ Sao chép</span></div></div>
+  <div style="flex:1;display:grid;place-items:center;text-align:center;gap:6px;padding:4px 10px"><div><svg viewBox="0 0 64 64" style="width:70px;height:70px"><use href="#bear"/></svg><div style="font-family:Mitr;font-size:15px">Chưa có bài tập nào</div><div style="color:#8A6A4A">Cô soạn bài kèm "cách cô dạy", AI sẽ gợi mở đúng phương pháp cho phụ huynh.</div></div></div>
+  <div class="btn">＋ Soạn bài đầu tiên</div></div><div class="tb"><span class=""><i>🏫</i>Lớp</span><span class="on"><i>📝</i>Bài tập</span><span class=""><i>📌</i>Nhắc việc</span><span class=""><i>📊</i>Kết quả</span><span class=""><i>⚙️</i>Cô</span></div></div></div><figcaption><b>Lớp chưa có bài</b>Thay màn trống xanh dương hiện tại bằng gấu và một nút làm tiếp.</figcaption></figure><figure><div class="tp"><div class="sc"><div class="st"><span>20:40</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Kết quả · Bài 3</b><span class="ic">⋯</span></div>
+  <div class="row2"><div class="c stat"><b>22/28</b><span class="lb">hoàn thành</span></div><div class="c stat"><b>12</b><span class="lb">tự làm</span></div></div>
+  <div class="c"><span class="lb">Bậc hay vướng</span><div class="li"><span>3 · Cho đi là bớt</span><b style="color:#BE123C">9 bạn</b></div><div class="bar"><i style="width:75%;background:#FB7185"></i></div></div>
+  <div class="c" style="background:#FFF1D6;box-shadow:none;display:flex;gap:8px"><svg viewBox="0 0 64 64" style="width:34px;height:34px;flex-shrink:0"><use href="#bear"/></svg><span>Mai thử đóng vai: 1 bạn cho bạn kia 5 que tính, hỏi ai còn ít hơn.</span></div>
+  <div class="c"><div class="li"><span>Nguyễn Minh Anh</span><span class="pill2" style="background:#ECFDF5;color:#047857">Đã làm</span></div><div class="li"><span>Lê Gia Hân</span><span class="pill2" style="background:#FFF1D6;color:#9A5B00">Cần gợi ý</span></div><div class="li" style="border:0"><span>Đỗ Quang Huy</span><span class="pill2" style="background:#FFF1F2;color:#BE123C">Chưa làm</span></div></div>
+  </div><div class="tb"><span class=""><i>🏫</i>Lớp</span><span class=""><i>📝</i>Bài tập</span><span class=""><i>📌</i>Nhắc việc</span><span class="on"><i>📊</i>Kết quả</span><span class=""><i>⚙️</i>Cô</span></div></div></div><figcaption><b>Kết quả trên điện thoại</b>Số liệu chính, bậc hay vướng, gợi ý của trợ lý.</figcaption></figure><figure><div class="tp"><div class="sc"><div class="st"><span>15:18</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Nhắc việc · 3A</b><span class="ic">⋯</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;text-align:center;font-weight:800;font-size:9.5px">
+   <div class="c" style="padding:5px;border-color:#F6A623;background:#FFF8EC">👕<br>Đồng phục</div><div class="c" style="padding:5px">🎒<br>Mang theo</div><div class="c" style="padding:5px">📄<br>Nộp</div><div class="c" style="padding:5px">📝<br>Kiểm tra</div><div class="c" style="padding:5px">🏖️<br>Nghỉ học</div><div class="c" style="padding:5px">⏰<br>Đổi giờ</div></div>
+  <div class="c" style="border:2px solid #F6A623">Mai <b style="background:#FFF1D6">thứ hai</b>, các con mặc đồng phục <b style="background:#FFF1D6">thể dục</b> và mang <b style="background:#FFF1D6">vở Toán</b> nhé.</div>
+  <div class="row2"><span class="btn" style="padding:6px">Mai · T2</span><span class="btn g" style="padding:6px">Chọn ngày</span></div>
+  <div style="flex:1"></div><div style="text-align:center;color:#8A6A4A">Hôm nay đã gửi 1/3 lời nhắc</div><div class="btn">Gửi cho 28 gia đình</div></div><div class="tb"><span class=""><i>🏫</i>Lớp</span><span class=""><i>📝</i>Bài tập</span><span class="on"><i>📌</i>Nhắc việc</span><span class=""><i>📊</i>Kết quả</span><span class=""><i>⚙️</i>Cô</span></div></div></div><figcaption><b>Gửi nhắc việc</b>6 mẫu nhanh, sửa chỗ tô, chọn ngày.</figcaption></figure></div></section>
+  <section id="vaolop"><div class="sec-h"><div class="n">Prompt 11 · phần C</div><h2>Phụ huynh vào lớp bằng link, nhà nhiều con</h2><p>Cô gửi link thay vì chỉ gửi mã. Mẹ bấm là vào thẳng màn vào lớp, chọn đúng con, có cảnh báo khi chọn lệch khối, không tạo trùng khi bố mẹ cùng bấm. Màn của phụ huynh vẽ theo bộ Kẹo Bông (mặc định); các bộ khác dùng linh kiện riêng của bộ.</p></div><div class="tphones"><figure><div class="tp"><div class="sc"><div class="st"><span>15:30</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Mời phụ huynh vào lớp 3A</b></div>
+  <div class="c"><span class="lb">Link vào lớp</span><div style="font-weight:800;word-break:break-all">kem-con-hoc-5xf.pages.dev/vao-lop/ND9QR7</div></div>
+  <svg class="qr" viewBox="-1 -1 27 27" shape-rendering="crispEdges"><g fill="#4B3621"><rect x="0" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="0" y="7" width="1" height="1"/><rect x="0" y="8" width="1" height="1"/><rect x="0" y="10" width="1" height="1"/><rect x="0" y="12" width="1" height="1"/><rect x="0" y="13" width="1" height="1"/><rect x="0" y="15" width="1" height="1"/><rect x="0" y="16" width="1" height="1"/><rect x="0" y="17" width="1" height="1"/><rect x="0" y="18" width="1" height="1"/><rect x="0" y="19" width="1" height="1"/><rect x="0" y="20" width="1" height="1"/><rect x="0" y="21" width="1" height="1"/><rect x="0" y="22" width="1" height="1"/><rect x="0" y="23" width="1" height="1"/><rect x="0" y="24" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="1" y="7" width="1" height="1"/><rect x="1" y="8" width="1" height="1"/><rect x="1" y="10" width="1" height="1"/><rect x="1" y="11" width="1" height="1"/><rect x="1" y="15" width="1" height="1"/><rect x="1" y="17" width="1" height="1"/><rect x="1" y="18" width="1" height="1"/><rect x="1" y="19" width="1" height="1"/><rect x="1" y="20" width="1" height="1"/><rect x="1" y="21" width="1" height="1"/><rect x="1" y="22" width="1" height="1"/><rect x="1" y="23" width="1" height="1"/><rect x="1" y="24" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="2" y="8" width="1" height="1"/><rect x="2" y="9" width="1" height="1"/><rect x="2" y="10" width="1" height="1"/><rect x="2" y="11" width="1" height="1"/><rect x="2" y="13" width="1" height="1"/><rect x="2" y="16" width="1" height="1"/><rect x="2" y="18" width="1" height="1"/><rect x="2" y="19" width="1" height="1"/><rect x="2" y="20" width="1" height="1"/><rect x="2" y="21" width="1" height="1"/><rect x="2" y="22" width="1" height="1"/><rect x="2" y="23" width="1" height="1"/><rect x="2" y="24" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="3" y="7" width="1" height="1"/><rect x="3" y="8" width="1" height="1"/><rect x="3" y="9" width="1" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="3" y="12" width="1" height="1"/><rect x="3" y="15" width="1" height="1"/><rect x="3" y="18" width="1" height="1"/><rect x="3" y="19" width="1" height="1"/><rect x="3" y="20" width="1" height="1"/><rect x="3" y="21" width="1" height="1"/><rect x="3" y="22" width="1" height="1"/><rect x="3" y="23" width="1" height="1"/><rect x="3" y="24" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="4" y="7" width="1" height="1"/><rect x="4" y="12" width="1" height="1"/><rect x="4" y="14" width="1" height="1"/><rect x="4" y="15" width="1" height="1"/><rect x="4" y="17" width="1" height="1"/><rect x="4" y="18" width="1" height="1"/><rect x="4" y="19" width="1" height="1"/><rect x="4" y="20" width="1" height="1"/><rect x="4" y="21" width="1" height="1"/><rect x="4" y="22" width="1" height="1"/><rect x="4" y="23" width="1" height="1"/><rect x="4" y="24" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="5" y="4" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="5" y="8" width="1" height="1"/><rect x="5" y="13" width="1" height="1"/><rect x="5" y="18" width="1" height="1"/><rect x="5" y="19" width="1" height="1"/><rect x="5" y="20" width="1" height="1"/><rect x="5" y="21" width="1" height="1"/><rect x="5" y="22" width="1" height="1"/><rect x="5" y="23" width="1" height="1"/><rect x="5" y="24" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="6" y="11" width="1" height="1"/><rect x="6" y="16" width="1" height="1"/><rect x="6" y="17" width="1" height="1"/><rect x="6" y="18" width="1" height="1"/><rect x="6" y="19" width="1" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="6" y="21" width="1" height="1"/><rect x="6" y="22" width="1" height="1"/><rect x="6" y="23" width="1" height="1"/><rect x="6" y="24" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/><rect x="7" y="8" width="1" height="1"/><rect x="7" y="9" width="1" height="1"/><rect x="7" y="11" width="1" height="1"/><rect x="7" y="12" width="1" height="1"/><rect x="7" y="17" width="1" height="1"/><rect x="7" y="18" width="1" height="1"/><rect x="7" y="19" width="1" height="1"/><rect x="7" y="22" width="1" height="1"/><rect x="7" y="23" width="1" height="1"/><rect x="7" y="24" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="8" y="13" width="1" height="1"/><rect x="8" y="18" width="1" height="1"/><rect x="8" y="19" width="1" height="1"/><rect x="8" y="20" width="1" height="1"/><rect x="8" y="22" width="1" height="1"/><rect x="8" y="23" width="1" height="1"/><rect x="8" y="24" width="1" height="1"/><rect x="9" y="0" width="1" height="1"/><rect x="9" y="1" width="1" height="1"/><rect x="9" y="2" width="1" height="1"/><rect x="9" y="3" width="1" height="1"/><rect x="9" y="4" width="1" height="1"/><rect x="9" y="5" width="1" height="1"/><rect x="9" y="6" width="1" height="1"/><rect x="9" y="7" width="1" height="1"/><rect x="9" y="10" width="1" height="1"/><rect x="9" y="11" width="1" height="1"/><rect x="9" y="12" width="1" height="1"/><rect x="9" y="13" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/><rect x="9" y="19" width="1" height="1"/><rect x="9" y="20" width="1" height="1"/><rect x="9" y="21" width="1" height="1"/><rect x="9" y="22" width="1" height="1"/><rect x="9" y="24" width="1" height="1"/><rect x="10" y="0" width="1" height="1"/><rect x="10" y="3" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/><rect x="10" y="11" width="1" height="1"/><rect x="10" y="12" width="1" height="1"/><rect x="10" y="16" width="1" height="1"/><rect x="10" y="17" width="1" height="1"/><rect x="10" y="24" width="1" height="1"/><rect x="11" y="1" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/><rect x="11" y="4" width="1" height="1"/><rect x="11" y="5" width="1" height="1"/><rect x="11" y="8" width="1" height="1"/><rect x="11" y="12" width="1" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="11" y="16" width="1" height="1"/><rect x="11" y="23" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="12" y="9" width="1" height="1"/><rect x="12" y="10" width="1" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="12" y="15" width="1" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="12" y="22" width="1" height="1"/><rect x="12" y="24" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="13" y="5" width="1" height="1"/><rect x="13" y="8" width="1" height="1"/><rect x="13" y="9" width="1" height="1"/><rect x="13" y="10" width="1" height="1"/><rect x="13" y="11" width="1" height="1"/><rect x="13" y="13" width="1" height="1"/><rect x="13" y="14" width="1" height="1"/><rect x="13" y="15" width="1" height="1"/><rect x="13" y="17" width="1" height="1"/><rect x="13" y="21" width="1" height="1"/><rect x="14" y="1" width="1" height="1"/><rect x="14" y="2" width="1" height="1"/><rect x="14" y="3" width="1" height="1"/><rect x="14" y="4" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="14" y="14" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/><rect x="14" y="17" width="1" height="1"/><rect x="14" y="23" width="1" height="1"/><rect x="15" y="10" width="1" height="1"/><rect x="15" y="14" width="1" height="1"/><rect x="15" y="15" width="1" height="1"/><rect x="15" y="16" width="1" height="1"/><rect x="15" y="17" width="1" height="1"/><rect x="15" y="18" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="15" y="23" width="1" height="1"/><rect x="16" y="1" width="1" height="1"/><rect x="16" y="4" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="16" y="10" width="1" height="1"/><rect x="16" y="11" width="1" height="1"/><rect x="16" y="13" width="1" height="1"/><rect x="16" y="14" width="1" height="1"/><rect x="16" y="15" width="1" height="1"/><rect x="16" y="17" width="1" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="16" y="20" width="1" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="16" y="24" width="1" height="1"/><rect x="17" y="3" width="1" height="1"/><rect x="17" y="4" width="1" height="1"/><rect x="17" y="5" width="1" height="1"/><rect x="17" y="7" width="1" height="1"/><rect x="17" y="8" width="1" height="1"/><rect x="17" y="9" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/><rect x="17" y="13" width="1" height="1"/><rect x="17" y="17" width="1" height="1"/><rect x="17" y="18" width="1" height="1"/><rect x="17" y="20" width="1" height="1"/><rect x="17" y="21" width="1" height="1"/><rect x="18" y="0" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/><rect x="18" y="2" width="1" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="18" y="4" width="1" height="1"/><rect x="18" y="5" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="18" y="7" width="1" height="1"/><rect x="18" y="9" width="1" height="1"/><rect x="18" y="12" width="1" height="1"/><rect x="18" y="15" width="1" height="1"/><rect x="18" y="16" width="1" height="1"/><rect x="18" y="18" width="1" height="1"/><rect x="18" y="19" width="1" height="1"/><rect x="18" y="20" width="1" height="1"/><rect x="18" y="21" width="1" height="1"/><rect x="18" y="22" width="1" height="1"/><rect x="18" y="23" width="1" height="1"/><rect x="18" y="24" width="1" height="1"/><rect x="19" y="0" width="1" height="1"/><rect x="19" y="1" width="1" height="1"/><rect x="19" y="2" width="1" height="1"/><rect x="19" y="3" width="1" height="1"/><rect x="19" y="4" width="1" height="1"/><rect x="19" y="5" width="1" height="1"/><rect x="19" y="6" width="1" height="1"/><rect x="19" y="8" width="1" height="1"/><rect x="19" y="10" width="1" height="1"/><rect x="19" y="11" width="1" height="1"/><rect x="19" y="12" width="1" height="1"/><rect x="19" y="13" width="1" height="1"/><rect x="19" y="14" width="1" height="1"/><rect x="19" y="17" width="1" height="1"/><rect x="19" y="20" width="1" height="1"/><rect x="19" y="22" width="1" height="1"/><rect x="20" y="0" width="1" height="1"/><rect x="20" y="1" width="1" height="1"/><rect x="20" y="2" width="1" height="1"/><rect x="20" y="3" width="1" height="1"/><rect x="20" y="4" width="1" height="1"/><rect x="20" y="5" width="1" height="1"/><rect x="20" y="6" width="1" height="1"/><rect x="20" y="7" width="1" height="1"/><rect x="20" y="11" width="1" height="1"/><rect x="20" y="15" width="1" height="1"/><rect x="20" y="16" width="1" height="1"/><rect x="20" y="17" width="1" height="1"/><rect x="20" y="18" width="1" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="20" y="21" width="1" height="1"/><rect x="20" y="22" width="1" height="1"/><rect x="20" y="23" width="1" height="1"/><rect x="21" y="0" width="1" height="1"/><rect x="21" y="1" width="1" height="1"/><rect x="21" y="2" width="1" height="1"/><rect x="21" y="3" width="1" height="1"/><rect x="21" y="4" width="1" height="1"/><rect x="21" y="5" width="1" height="1"/><rect x="21" y="6" width="1" height="1"/><rect x="21" y="9" width="1" height="1"/><rect x="21" y="10" width="1" height="1"/><rect x="21" y="11" width="1" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="21" y="14" width="1" height="1"/><rect x="21" y="15" width="1" height="1"/><rect x="21" y="19" width="1" height="1"/><rect x="21" y="21" width="1" height="1"/><rect x="21" y="22" width="1" height="1"/><rect x="21" y="23" width="1" height="1"/><rect x="21" y="24" width="1" height="1"/><rect x="22" y="0" width="1" height="1"/><rect x="22" y="1" width="1" height="1"/><rect x="22" y="2" width="1" height="1"/><rect x="22" y="3" width="1" height="1"/><rect x="22" y="4" width="1" height="1"/><rect x="22" y="5" width="1" height="1"/><rect x="22" y="6" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="22" y="11" width="1" height="1"/><rect x="22" y="12" width="1" height="1"/><rect x="22" y="13" width="1" height="1"/><rect x="22" y="14" width="1" height="1"/><rect x="22" y="15" width="1" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="22" y="17" width="1" height="1"/><rect x="22" y="18" width="1" height="1"/><rect x="23" y="0" width="1" height="1"/><rect x="23" y="1" width="1" height="1"/><rect x="23" y="2" width="1" height="1"/><rect x="23" y="3" width="1" height="1"/><rect x="23" y="4" width="1" height="1"/><rect x="23" y="5" width="1" height="1"/><rect x="23" y="6" width="1" height="1"/><rect x="23" y="7" width="1" height="1"/><rect x="23" y="8" width="1" height="1"/><rect x="23" y="10" width="1" height="1"/><rect x="23" y="13" width="1" height="1"/><rect x="23" y="19" width="1" height="1"/><rect x="24" y="0" width="1" height="1"/><rect x="24" y="1" width="1" height="1"/><rect x="24" y="2" width="1" height="1"/><rect x="24" y="3" width="1" height="1"/><rect x="24" y="4" width="1" height="1"/><rect x="24" y="5" width="1" height="1"/><rect x="24" y="6" width="1" height="1"/><rect x="24" y="11" width="1" height="1"/><rect x="24" y="12" width="1" height="1"/><rect x="24" y="13" width="1" height="1"/><rect x="24" y="14" width="1" height="1"/><rect x="24" y="15" width="1" height="1"/><rect x="24" y="22" width="1" height="1"/></g><g fill="#fff"><rect x="1" y="1" width="5" height="5"/><rect x="19" y="1" width="5" height="5"/><rect x="1" y="19" width="5" height="5"/></g><g fill="#4B3621"><rect x="2" y="2" width="3" height="3"/><rect x="20" y="2" width="3" height="3"/><rect x="2" y="20" width="3" height="3"/></g></svg>
+  <div style="text-align:center;color:#8A6A4A">In hoặc chiếu mã QR trong buổi họp phụ huynh</div>
+  <div class="c" style="background:#FFF8EC;box-shadow:none;font-size:10.5px">"Phụ huynh lớp 3A bấm link để kết nối con vào lớp trên Kèm Con Học: …"</div>
+  <div style="flex:1"></div><div class="row2"><span class="btn">↗ Gửi qua Zalo</span><span class="btn g">⧉ Sao chép</span></div></div><div class="tb"><span class="on"><i>🏫</i>Lớp</span><span class=""><i>📝</i>Bài tập</span><span class=""><i>📌</i>Nhắc việc</span><span class=""><i>📊</i>Kết quả</span><span class=""><i>⚙️</i>Cô</span></div></div></div><figcaption><b>Cô gửi link và mã QR</b>Gửi qua Zalo kèm câu mẫu; in hoặc chiếu QR trong buổi họp.</figcaption></figure><figure><div class="tp pk"><div class="sc"><div class="st"><span>20:02</span><span>●●● ▮</span></div><div class="bd" style="justify-content:center">
+  <div class="banner">🏫 Đăng nhập để vào <b>Lớp 3A của cô Hạnh</b></div>
+  <div style="text-align:center;margin:6px 0"><div class="h" style="font-size:24px">Kèm Con Học</div><div style="color:#776B82">Đăng nhập xong, mình quay lại đúng màn vào lớp nhé</div></div>
+  <div class="ipt">Nhà Mít</div><div class="ipt">••••••••</div><div class="btn">Vào nhà mình</div><div class="btn g">Tạo gia đình mới</div></div></div></div><figcaption><b>Mẹ bấm link, chưa đăng nhập</b>Đăng nhập xong quay lại đúng màn vào lớp, mã điền sẵn.</figcaption></figure><figure><div class="tp pk"><div class="sc"><div class="st"><span>20:03</span><span>●●● ▮</span></div><div class="bd" style="gap:6px">
+  <div class="tt"><span class="ic">‹</span><b>Vào lớp</b></div>
+  <div class="classcard"><b>Lớp 3A · cô Hạnh</b><span style="color:#776B82">Kim Đồng · khối 3 · mã ND9QR7</span></div>
+  <span class="lb">Con nào học lớp này?</span>
+  <div class="kid on"><span class="av">🧒</span><div><b>Mít</b><small>Lớp 3</small></div><span class="tag">Hợp khối 3</span><span class="chk" style="margin-left:6px">✓</span></div>
+  <div class="kid"><span class="av">👶</span><div><b>Bon</b><small>Lớp 1</small></div></div>
+  <div style="text-align:right;color:#9E4F77;font-weight:800;font-size:10.5px">＋ Thêm con</div>
+  <span class="lb">Tên của con trong danh sách lớp</span><div class="ipt">Nguyễn Minh Anh</div>
+  <div class="cb"><i>✓</i><span>Tôi đồng ý cho cô xem trạng thái làm bài của con</span></div><div class="cb"><i>✓</i><span>Con đã được giải thích và đồng ý</span></div>
+  <div style="flex:1"></div><div class="btn">Gửi cô duyệt</div></div></div></div><figcaption><b>Chọn con</b>Nhà 2 con: chọn bằng thẻ; con hợp khối có nhãn; thêm con ngay tại màn.</figcaption></figure><figure><div class="tp pk"><div class="sc"><div class="st"><span>20:03</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Vào lớp</b></div>
+  <div class="classcard"><span class="lb">Trường Kim Đồng · 2026-2027</span><b>Lớp 3A · cô Hạnh</b><span style="color:#776B82">Khối 3</span></div>
+  <div class="kid"><span class="av">🧒</span><div><b>Mít</b><small>Lớp 3</small></div><span class="tag">Hợp khối 3</span></div>
+  <div class="kid on"><span class="av">👶</span><div><b>Bon</b><small>Lớp 1</small></div><span class="chk">✓</span></div>
+  <div class="warn"><b>⚠️ Bon đang ghi lớp 1, lớp này là khối 3.</b><br>Đúng con chưa mẹ?</div>
+  <div class="btn g">Chọn lại Mít</div><div class="btn" style="background:#fff;color:#9E4F77;box-shadow:none;border:2px dashed #F3B5CD">Đúng, vẫn chọn Bon</div>
+  <div style="flex:1"></div></div></div></div><figcaption><b>Cảnh báo lệch khối</b>Chọn Bon lớp 1 vào lớp khối 3 thì phải xác nhận.</figcaption></figure><figure><div class="tp pk"><div class="sc"><div class="st"><span>20:04</span><span>●●● ▮</span></div><div class="bd" style="justify-content:center;text-align:center">
+  <div style="font-size:44px">📨</div><div class="h">Đã gửi cô Hạnh duyệt</div><div style="color:#776B82">Cô duyệt xong, bài cô giao sẽ hiện ở màn chính của Mít.</div>
+  <div class="c" style="text-align:left"><b>Nhà còn con khác học lớp 3A không?</b><br><span style="color:#776B82">Ví dụ anh chị em sinh đôi cùng lớp</span></div>
+  <div class="btn g">＋ Chọn thêm con</div><div class="btn">Xong</div></div></div></div><figcaption><b>Đã gửi, còn con khác?</b>Sinh đôi cùng lớp: chọn thêm con ngay.</figcaption></figure><figure><div class="tp pk"><div class="sc"><div class="st"><span>20:30</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Lớp học của con</b></div>
+  <div class="grp"><span class="av">🧒</span>Mít · Lớp 3</div>
+  <div class="cls"><div><b>Lớp 3A · cô Hạnh</b><small>Kim Đồng</small></div><span class="pill2 p-ok">Đã kết nối</span></div>
+  <div class="cls"><div><b>Tiếng Anh 3 · cô Lan</b><small>đổi con · còn 20 giờ</small></div><span class="pill2 p-wait">Chờ duyệt</span></div>
+  <div class="grp"><span class="av">👶</span>Bon · Lớp 1</div>
+  <div class="cls"><div><b>Lớp 1B · cô Mai</b><small>Kim Đồng</small></div><span class="pill2 p-ok">Đã kết nối</span></div>
+  <div class="cls"><div><b>Lớp 2C · cô Thu</b><small>"Con không có trong danh sách lớp"</small></div><span class="pill2 p-no">Bị từ chối</span></div>
+  <div style="flex:1"></div><div class="btn">＋ Vào lớp bằng mã hoặc link</div></div></div></div><figcaption><b>Lớp học của con</b>Nhóm theo từng con; trạng thái; đổi con trong 24 giờ.</figcaption></figure><figure><div class="tp pk"><div class="sc"><div class="st"><span>21:10</span><span>●●● ▮</span></div><div class="bd">
+  <div class="tt"><span class="ic">‹</span><b>Vào lớp</b></div>
+  <div class="classcard"><b>Lớp 3A · cô Hạnh</b><span style="color:#776B82">Khối 3 · mã ND9QR7</span></div>
+  <div class="kid" style="opacity:.6"><span class="av">🧒</span><div><b>Mít</b><small>Lớp 3</small></div><span class="pill2 p-ok" style="margin-left:auto">Đã ở lớp này</span></div>
+  <div class="c"><b>Mẹ đã kết nối Mít vào lớp này</b><br><span style="color:#776B82">lúc 20:05 hôm nay · không cần làm lại</span></div>
+  <div class="kid"><span class="av">👶</span><div><b>Bon</b><small>Lớp 1</small></div></div>
+  <div style="flex:1"></div><div class="btn g">Về màn chính</div></div></div></div><figcaption><b>Bố mở cùng link</b>Không tạo trùng: thấy mẹ đã kết nối Mít lúc nào.</figcaption></figure></div></section>
+</main>
+<footer>Bản vẽ ngày 25/10/2026 · Kèm Con Học</footer>
+</body>
+</html>
