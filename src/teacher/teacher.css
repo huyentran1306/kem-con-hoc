@@ -1,0 +1,130 @@
+/* Đợt 15 · Chặng 5: bố cục đáp ứng cho cổng giáo viên.
+   Chỉ dùng màu của bộ quy chuẩn (mật ong, nâu); không có màu tím. */
+
+.tp-root { font-family: var(--s-font-body); }
+.tp-root .sk-kpi-label { font-size: 12px; letter-spacing: .6px; }
+
+/* ---------- Hàng tiêu đề + nút hành động ---------- */
+.tp-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.tp-head > :first-child { min-width: 0; flex: 1; }
+.tp-head h2, .tp-head h3 { margin: 0; color: var(--s-text); }
+.tp-head p { margin: 2px 0 0; font-size: 13px; color: var(--s-text-2); }
+.tp-head-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+
+/* ---------- Lưới thẻ chỉ số ---------- */
+.tp-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.tp-kpi-grid.tp-kpi-sm { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+
+/* ---------- Đầu lớp ---------- */
+.tp-class-banner { background: #fff; border-radius: 22px; padding: 20px 24px; border: 1px solid var(--s-line);
+  box-shadow: 0 5px 0 var(--s-line), 0 10px 24px -12px rgba(75, 54, 33, .16);
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 16px; }
+.tp-class-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tp-class-title h2 { font-family: var(--s-font-head); font-size: 24px; font-weight: 700; color: var(--s-text); margin: 4px 0; }
+.tp-class-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tp-code { display: flex; flex-direction: column; text-align: center; background: var(--s-bg); padding: 6px 14px; border-radius: 14px; border: 2px dashed var(--s-accent); }
+.tp-code small { font-size: 12px; color: var(--s-text-2); font-weight: 800; letter-spacing: .4px; }
+.tp-code b { font-size: 22px; font-weight: 800; color: var(--s-text); letter-spacing: .08em; }
+.tp-code-inline { display: none; }
+.tp-pill-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.tp-pill-btn.tp-soft { background: var(--s-accent-tint); color: var(--s-accent-ink); border: 1px solid #F6C56A; }
+.tp-pill-btn.tp-main { background: var(--s-accent); color: var(--s-text); border: none; box-shadow: 0 3px 0 var(--s-accent-deep); }
+
+/* ---------- Thanh tab của lớp: mờ mép phải ---------- */
+.tp-tabs-wrap { position: relative; margin-bottom: 20px; }
+.tp-tabs-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 9px; width: 36px; pointer-events: none;
+  background: linear-gradient(to right, rgba(255, 248, 236, 0), var(--s-bg) 85%); opacity: 0; transition: opacity .15s; }
+.tp-tabs-wrap.tp-more::after { opacity: 1; }
+.tp-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--s-line); padding-bottom: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tp-tabs::-webkit-scrollbar { display: none; }
+.tp-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 7px 15px; border-radius: 999px; border: 1px solid var(--s-line);
+  background: #fff; color: var(--s-text-2); font-size: 13.5px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: inherit; }
+.tp-tab.tp-on { background: var(--s-text); color: var(--s-bg); border-color: var(--s-text); }
+.tp-tab-count { font-size: 12px; background: var(--s-accent-tint); color: var(--s-accent-ink); border-radius: 999px; padding: 0 7px; }
+.tp-tab.tp-on .tp-tab-count { background: var(--s-accent); color: var(--s-text); }
+
+/* ---------- Thẻ bài tập ---------- */
+.tp-asg-card { background: #fff; border-radius: 18px; padding: 16px; border: 1px solid var(--s-line); box-shadow: 0 4px 0 var(--s-line);
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tp-asg-card > :first-child { flex: 1; min-width: 0; }
+.tp-asg-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* ---------- Danh sách học sinh: bảng trên máy tính, thẻ trên điện thoại ---------- */
+.tp-st-cards { display: none; flex-direction: column; gap: 10px; }
+.tp-st-card { background: #fff; border: 1px solid var(--s-line); border-radius: 18px; padding: 12px 14px; box-shadow: 0 3px 0 var(--s-line); display: grid; gap: 8px; }
+.tp-st-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tp-st-card-top b { font-size: 15px; color: var(--s-text); }
+.tp-st-card-meta { font-size: 12.5px; color: var(--s-text-2); }
+.tp-st-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tp-st-card-actions > * { min-height: 44px; }
+
+/* ---------- Kết quả ---------- */
+.tp-res-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 20px; align-items: start; }
+.tp-steps { display: grid; grid-template-columns: minmax(90px, 160px) 1fr 44px; gap: 8px 10px; align-items: center; font-size: 13px; color: var(--s-text); }
+.tp-steps .tp-bar { height: 12px; border-radius: 999px; background: var(--s-bg); border: 1px solid var(--s-line); overflow: hidden; }
+.tp-steps .tp-bar i { display: block; height: 100%; background: #FFD98A; border-radius: 999px; }
+.tp-steps .tp-top i { background: var(--s-accent); }
+.tp-steps .tp-top { font-weight: 800; }
+.tp-steps b { text-align: right; font-variant-numeric: tabular-nums; }
+.tp-lb { font-size: 12px; font-weight: 900; letter-spacing: .6px; text-transform: uppercase; color: var(--s-text-2); }
+.tp-assist { display: grid; grid-template-columns: 46px 1fr; gap: 10px; background: var(--s-accent-tint); border: 1px solid #F6C56A; border-radius: 18px; padding: 12px 14px; }
+.tp-assist ol { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; color: var(--s-text); line-height: 1.5; }
+.tp-assist small { display: block; margin-top: 6px; font-size: 12px; color: var(--s-text-2); }
+
+/* ---------- Thông báo & nhắc việc ---------- */
+.tp-rem-grid { display: grid; grid-template-columns: minmax(300px, 460px) 1fr; gap: 20px; align-items: start; }
+.tp-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--s-line); background: #fff; color: var(--s-text); font-family: inherit; }
+.tp-chip.tp-on { border: 1.5px solid var(--s-accent); background: var(--s-accent-tint); color: var(--s-accent-ink); }
+.tp-stat3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--s-bg); padding: 10px 12px; border-radius: 12px; text-align: center; }
+.tp-stat3 b { display: block; font-size: 18px; color: var(--s-text); font-variant-numeric: tabular-nums; }
+.tp-stat3 span { font-size: 12px; color: var(--s-text-2); }
+
+/* ---------- Biểu mẫu nhiều cột ---------- */
+.tp-form-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.tp-form-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+.tp-form-11 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ---------- Thanh tab dưới (điện thoại) ---------- */
+.tp-bottom-tab { flex: 1; min-width: 0; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: none; border: none; cursor: pointer; padding: 4px 2px; font-family: inherit; }
+.tp-bottom-tab span:last-child { font-size: 12px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+@media (max-width: 899px) {
+  .tp-res-grid, .tp-rem-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 639px) {
+  .tp-head { flex-direction: column; align-items: stretch; }
+  .tp-head-actions { width: 100%; }
+  .tp-head-actions > * { flex: 1 1 100%; width: 100%; min-height: 44px; }
+
+  .tp-kpi-grid, .tp-kpi-grid.tp-kpi-sm { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .tp-kpi-grid .sk-kpi, .tp-kpi-grid > * { padding: 10px 12px !important; min-width: 0; }
+  .tp-kpi-grid .sk-kpi-value { font-size: 22px; }
+
+  .tp-class-banner { padding: 12px 14px; gap: 10px; border-radius: 18px; margin-bottom: 14px; }
+  .tp-class-banner .tp-hide-sm { display: none; }
+  .tp-class-title h2 { font-size: 20px; margin: 0; }
+  .tp-code-inline { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; color: var(--s-text);
+    background: var(--s-bg); border: 1.5px dashed var(--s-accent); border-radius: 999px; padding: 2px 10px; letter-spacing: .06em; }
+  .tp-class-actions { width: 100%; gap: 8px; }
+  .tp-class-actions .tp-code { display: none; }
+  .tp-class-actions .tp-pill-btn { min-height: 44px; padding: 6px 12px; flex: 1; }
+
+  .tp-asg-card { flex-direction: column; align-items: stretch; }
+  .tp-asg-actions { width: 100%; }
+  .tp-asg-actions > * { flex: 1; min-height: 44px; }
+
+  .tp-st-table { display: none; }
+  .tp-st-cards { display: flex; }
+
+  .tp-form-2, .tp-form-3, .tp-form-11 { grid-template-columns: 1fr; }
+  .tp-steps { grid-template-columns: minmax(80px, 120px) 1fr 36px; font-size: 12.5px; }
+}
+
+/* Segmented của bộ quy chuẩn dùng chữ 11.5px: trong cổng giáo viên nâng lên 13px, vùng bấm cao hơn */
+.tp-seg button { font-size: 13px !important; min-height: 38px; padding: 6px 14px !important; white-space: nowrap; }
+@media (max-width: 639px) {
+  .tp-head-actions.tp-seg > * { width: auto; flex: 0 0 auto; min-height: 0; }
+}

@@ -16,6 +16,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Users, Check, X, ShieldAlert, LogOut, ArrowRight, Bell, AlertTriangle, RefreshCw, Plus, CheckCircle, Clock } from 'lucide-react';
 import { toast } from './utils';
 import { fetchClassPreview, joinFamilyClass, changeClassChild, leaveFamilyClass, normalizeClassInfo, teacherLabel, GATEWAY } from './api';
+import { formatClassName, formatTeacherName } from './teacher/format.js';
 
 const API_BASE = GATEWAY;
 
@@ -244,13 +245,13 @@ export function FamilyClassSheet({
   }
 
   async function handleLeave(classStudentId, className) {
-    const ok = await appConfirm('Con sẽ không còn nhận bài tập từ lớp này nữa.', { title: `Rời Lớp ${className}?`, okText: 'Rời lớp', danger: true });
+    const ok = await appConfirm('Con sẽ không còn nhận bài tập từ lớp này nữa.', { title: `Rời ${formatClassName(className) || 'lớp này'}?`, okText: 'Rời lớp', danger: true });
     if (!ok) return;
 
     try {
       const res = await leaveFamilyClass({ token, classStudentId, deleteResults: false });
       if (res.ok) {
-        toast(`Đã rời Lớp ${className}`, 'info');
+        toast(`Đã rời ${formatClassName(className) || 'lớp'}`, 'info');
         loadClasses();
       } else {
         toast(res.error?.message || 'Lỗi rời lớp', 'error');
@@ -379,7 +380,7 @@ export function FamilyClassSheet({
                               <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                                   <strong style={{ fontSize: 15, color: '#4B3621' }}>
-                                    Lớp {cls.class_name} · {teacherLabel(cls.teacher_name)}
+                                    {formatClassName(cls.class_name)} · {formatTeacherName(cls.teacher_name, { lower: true })}
                                   </strong>
                                 </div>
                                 <div style={{ fontSize: 12, color: '#8A6A4A' }}>
@@ -465,7 +466,7 @@ export function FamilyClassSheet({
             <div style={styles.successBox}>
               <div style={{ fontSize: 52, marginBottom: 8 }}>📨</div>
               <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: '#4B3621', margin: '0 0 6px 0' }}>
-                {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi ${teacherLabel(joinSuccess.teacherName)} duyệt`}
+                {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi ${formatTeacherName(joinSuccess.teacherName, { lower: true })} duyệt`}
               </h3>
               <p style={{ fontSize: 13, color: '#8A6A4A', maxWidth: 320, margin: '0 auto 16px auto' }}>
                 Cô duyệt xong, bài cô giao sẽ hiện ở màn chính của <strong>{joinSuccess.childName}</strong>.
@@ -474,7 +475,7 @@ export function FamilyClassSheet({
               {/* Sinh đôi / con khác trong nhà prompt */}
               <div style={styles.siblingPromptCard}>
                 <div style={{ fontWeight: 800, color: '#4B3621', fontSize: 13, marginBottom: 4 }}>
-                  Nhà còn con khác học Lớp {joinSuccess.className} không?
+                  Nhà còn con khác học {formatClassName(joinSuccess.className) || 'lớp này'} không?
                 </div>
                 <div style={{ fontSize: 12, color: '#8A6A4A', marginBottom: 12 }}>
                   Ví dụ anh chị em sinh đôi hoặc học chung lớp
@@ -539,12 +540,12 @@ export function FamilyClassSheet({
                 <div style={styles.classPreviewCard}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <span style={styles.previewTag}>Khối {classPreview.grade} · {classPreview.school_year || '2026-2027'}</span>
+                      <span style={styles.previewTag}>{[classPreview.grade ? `Khối ${classPreview.grade}` : '', classPreview.school_year].filter(Boolean).join(' · ') || 'Lớp học'}</span>
                       <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '4px 0 2px 0' }}>
-                        Lớp {classPreview.name} · {teacherLabel(classPreview.teacher_name)}
+                        {formatClassName(classPreview.name)} · {formatTeacherName(classPreview.teacher_name, { lower: true })}
                       </h4>
                       <p style={{ fontSize: 12, color: '#8A6A4A', margin: 0 }}>
-                        {classPreview.school_name} · Mã: <strong>{classPreview.join_code || code}</strong>
+                        {classPreview.school_name ? `${classPreview.school_name} · ` : ''}Mã: <strong>{classPreview.join_code || code}</strong>
                       </p>
                     </div>
                     <button
@@ -778,7 +779,7 @@ export function FamilyClassSheet({
           <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 32, marginBottom: 4 }}>🔄</div>
             <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '0 0 6px 0' }}>
-              Đổi con cho Lớp {changingClassStudent.class_name}
+              Đổi con cho {formatClassName(changingClassStudent.class_name) || 'lớp này'}
             </h4>
             <p style={{ fontSize: 12.5, color: '#8A6A4A', margin: '0 0 14px 0' }}>
               Mẹ có thể chuyển lớp này sang con khác trong nhà trong 24 giờ đầu khi chưa nộp bài nào.

@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import './tokens.css';
 import { Pagination } from './kit.jsx';
+import { formatClassName, formatTeacherName, teacherInitial } from '../../teacher/format.js';
 
 /* ============================================================
    1. BEAR MASCOT SVG (3 Trạng thái: greeting, nudge, happy)
@@ -725,15 +726,34 @@ export function AssistantCard({ title = 'Gấu trợ lý', message, actionText, 
 
 /* ============================================================
    15. CLASS SWITCHER DROPDOWN
+   Đợt 15 · Chặng 5: tên lớp qua formatClassName (không còn "Lớp Lớp 3A"),
+   chữ tối thiểu 12px, bấm ra ngoài thì đóng.
    ============================================================ */
 export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAddClass }) {
   const [open, setOpen] = useState(false);
-  const activeClass = classes.find((c) => c.id === activeClassId) || classes[0];
+  const rootRef = React.useRef(null);
+  const activeClass = classes.find((c) => c.id === activeClassId) || null;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDoc = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={rootRef} style={{ position: 'relative' }}>
       <button
         type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
         onClick={() => setOpen(!open)}
         style={{
           width: '100%',
@@ -741,6 +761,7 @@ export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAd
           alignItems: 'center',
           gap: 8,
           padding: '8px 10px',
+          minHeight: 44,
           borderRadius: 14,
           backgroundColor: 'var(--s-bg)',
           border: '1px solid var(--s-line)',
@@ -750,20 +771,21 @@ export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAd
           cursor: 'pointer',
         }}
       >
-        <span style={{ fontSize: 16 }}>🏫</span>
+        <span style={{ fontSize: 16 }} aria-hidden="true">🏫</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--s-text-2)', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--s-text-2)' }}>
             Lớp đang xem
           </div>
-          <strong style={{ fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
-            {activeClass ? `Lớp ${activeClass.name}` : 'Chọn lớp'}
+          <strong style={{ fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+            {activeClass ? formatClassName(activeClass.name) : 'Chọn lớp'}
           </strong>
         </div>
-        <span style={{ fontSize: 10, color: 'var(--s-text-2)' }}>{open ? '▲' : '▼'}</span>
+        <span style={{ fontSize: 12, color: 'var(--s-text-2)' }} aria-hidden="true">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
         <div
+          role="listbox"
           style={{
             position: 'absolute',
             top: 'calc(100% + 4px)',
@@ -778,35 +800,46 @@ export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAd
             display: 'flex',
             flexDirection: 'column',
             gap: 4,
+            maxHeight: 320,
+            overflowY: 'auto',
           }}
         >
-          {classes.map((cls) => (
-            <button
-              key={cls.id}
-              type="button"
-              onClick={() => { onSelectClass(cls.id); setOpen(false); }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 8px',
-                borderRadius: 10,
-                border: 'none',
-                backgroundColor: cls.id === activeClassId ? 'var(--s-accent-tint)' : 'transparent',
-                color: 'var(--s-text)',
-                fontWeight: cls.id === activeClassId ? 800 : 600,
-                fontSize: 12,
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              <span>{cls.id === activeClassId ? '✓' : '•'}</span>
-              <span>Lớp {cls.name}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--s-text-2)' }}>
-                Khối {cls.grade}
-              </span>
-            </button>
-          ))}
+          {classes.map((cls) => {
+            const on = cls.id === activeClassId;
+            return (
+              <button
+                key={cls.id}
+                type="button"
+                role="option"
+                aria-selected={on}
+                onClick={() => { onSelectClass(cls.id); setOpen(false); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 8px',
+                  minHeight: 40,
+                  borderRadius: 10,
+                  border: 'none',
+                  backgroundColor: on ? 'var(--s-accent-tint)' : 'transparent',
+                  color: 'var(--s-text)',
+                  fontWeight: on ? 800 : 600,
+                  fontSize: 13.5,
+                  fontFamily: 'var(--s-font-body)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <span aria-hidden="true">{on ? '✓' : '•'}</span>
+                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formatClassName(cls.name)}</span>
+                {cls.grade ? (
+                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--s-text-2)', whiteSpace: 'nowrap' }}>
+                    Khối {cls.grade}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
 
           {onAddClass && (
             <button
@@ -816,7 +849,8 @@ export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAd
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '6px 8px',
+                padding: '8px 8px',
+                minHeight: 40,
                 borderRadius: 10,
                 borderTop: '1px solid var(--s-line)',
                 borderLeft: 'none',
@@ -825,12 +859,13 @@ export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAd
                 backgroundColor: 'transparent',
                 color: 'var(--s-accent-ink)',
                 fontWeight: 800,
-                fontSize: 11.5,
+                fontSize: 13,
+                fontFamily: 'var(--s-font-body)',
                 cursor: 'pointer',
                 marginTop: 2,
               }}
             >
-              <span>＋</span> Tạo lớp mới
+              <span aria-hidden="true">＋</span> Tạo lớp mới
             </button>
           )}
         </div>
@@ -840,7 +875,9 @@ export function ClassSwitcher({ classes = [], activeClassId, onSelectClass, onAd
 }
 
 /* ============================================================
-   16. SIDE NAVIGATION (196px Desktop)
+   16. SIDE NAVIGATION (220px Desktop)
+   Đợt 15 · Chặng 5: rộng 220px, chữ menu 14px, ô "Quyền riêng tư" ngay dưới menu,
+   chân thanh bên dùng formatTeacherName (không còn "Cô Cô Lan").
    ============================================================ */
 export function SideNav({
   items = [],
@@ -856,28 +893,35 @@ export function SideNav({
 }) {
   return (
     <aside
+      aria-label="Thanh bên cổng giáo viên"
       style={{
-        width: 196,
+        width: 220,
         flexShrink: 0,
         backgroundColor: '#FFFFFF',
         borderRight: '1px solid var(--s-line)',
         padding: '14px 10px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 6,
+        gap: 8,
         height: '100vh',
         position: 'sticky',
         top: 0,
+        overflowY: 'auto',
+        boxSizing: 'border-box',
       }}
     >
       {/* Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px 8px 6px' }}>
-        <BearMascot mood="greeting" size={32} />
-        <div>
-          <b style={{ fontFamily: 'var(--s-font-head)', fontSize: 14, color: 'var(--s-text)', display: 'block', lineHeight: 1.1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px 6px 6px' }}>
+        <BearMascot mood="greeting" size={34} />
+        <div style={{ minWidth: 0 }}>
+          <b style={{ fontFamily: 'var(--s-font-head)', fontSize: 15, color: 'var(--s-text)', display: 'block', lineHeight: 1.15 }}>
             Cổng Giáo Viên
           </b>
-          {schoolName ? <small style={{ fontSize: 10, color: 'var(--s-text-2)' }}>Tiểu học {schoolName}</small> : null}
+          {schoolName ? (
+            <small style={{ fontSize: 12, color: 'var(--s-text-2)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {schoolName}
+            </small>
+          ) : null}
         </div>
       </div>
 
@@ -892,25 +936,27 @@ export function SideNav({
       )}
 
       {/* Navigation Items */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 6 }}>
+      <nav aria-label="Menu cổng giáo viên" style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}>
         {items.map((item) => {
           const isSel = item.id === activeItem;
           return (
             <button
               key={item.id}
               type="button"
+              aria-current={isSel ? 'page' : undefined}
               onClick={() => onSelect(item.id)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '7px 10px',
+                gap: 9,
+                padding: '8px 10px',
+                minHeight: 42,
                 borderRadius: 12,
                 border: 'none',
                 backgroundColor: isSel ? 'var(--s-accent-tint)' : 'transparent',
                 color: isSel ? 'var(--s-text)' : 'var(--s-text-2)',
                 fontWeight: isSel ? 800 : 700,
-                fontSize: 12.5,
+                fontSize: 14,
                 fontFamily: 'var(--s-font-body)',
                 boxShadow: isSel ? 'inset 4px 0 0 var(--s-accent)' : 'none',
                 cursor: 'pointer',
@@ -918,19 +964,21 @@ export function SideNav({
                 transition: 'all 0.15s ease',
               }}
             >
-              <span style={{ fontSize: 15, display: 'inline-flex', alignItems: 'center' }}>{item.icon}</span>
-              <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontSize: 15, display: 'inline-flex', alignItems: 'center' }} aria-hidden="true">{item.icon}</span>
+              <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {item.label}
               </span>
               {item.badge !== undefined && item.badge > 0 && (
                 <span
+                  aria-label={`${item.badge} việc chờ`}
                   style={{
-                    fontSize: 9.5,
+                    fontSize: 12,
                     fontWeight: 900,
-                    backgroundColor: '#FB7185',
+                    backgroundColor: 'var(--s-bad)',
                     color: '#FFFFFF',
                     borderRadius: 999,
-                    padding: '0 6px',
+                    padding: '0 7px',
+                    lineHeight: '18px',
                   }}
                 >
                   {item.badge}
@@ -939,74 +987,83 @@ export function SideNav({
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      {/* Gấu nhắc (Privacy tip) */}
+      {/* Gấu nhắc quyền riêng tư: ngay dưới menu */}
       <div
         style={{
-          marginTop: 'auto',
+          marginTop: 6,
           backgroundColor: 'var(--s-accent-tint)',
           borderRadius: 14,
-          padding: '8px 10px',
+          padding: '10px 10px',
           display: 'grid',
-          gridTemplateColumns: '26px 1fr',
-          gap: 6,
+          gridTemplateColumns: '28px 1fr',
+          gap: 8,
           alignItems: 'center',
-          fontSize: 10.5,
+          fontSize: 12.5,
+          lineHeight: 1.4,
           color: 'var(--s-text)',
         }}
       >
-        <BearMascot mood="nudge" size={24} />
+        <BearMascot mood="nudge" size={26} />
         <div>
-          <b>Quyền riêng tư</b>: Chỉ xem trạng thái bài, không thấy ảnh gia đình.
+          <b>Quyền riêng tư</b>: cô chỉ xem trạng thái bài, không thấy ảnh hay trò chuyện của gia đình.
         </div>
       </div>
 
       {/* Teacher Profile & Logout */}
       <div
         style={{
+          marginTop: 'auto',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          paddingTop: 8,
+          paddingTop: 10,
           borderTop: '1px solid var(--s-line)',
-          fontSize: 11,
+          fontSize: 13,
         }}
       >
         <div
+          aria-hidden="true"
           style={{
-            width: 28,
-            height: 28,
+            width: 32,
+            height: 32,
             borderRadius: '50%',
             backgroundColor: 'var(--s-accent-tint)',
             color: 'var(--s-accent-ink)',
             display: 'grid',
             placeItems: 'center',
             fontWeight: 900,
-            fontSize: 11,
+            fontSize: 13,
             flexShrink: 0,
           }}
         >
-          {teacherName?.[0] || 'C'}
+          {teacherInitial(teacherName)}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <strong style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--s-text)' }}>
-            {teacherName ? `Cô ${teacherName}` : 'Cô giáo'}
+            {formatTeacherName(teacherName)}
           </strong>
-          <span style={{ fontSize: 9.5, color: 'var(--s-ok)', fontWeight: 800 }}>Giáo viên</span>
+          <span style={{ fontSize: 12, color: 'var(--s-ok)', fontWeight: 800 }}>Giáo viên</span>
         </div>
         {onLogout && (
           <button
             type="button"
             onClick={onLogout}
             title="Đăng xuất"
+            aria-label="Đăng xuất"
             style={{
               background: 'none',
-              border: 'none',
+              border: '1px solid var(--s-line)',
+              borderRadius: 999,
               color: 'var(--s-text-2)',
-              fontSize: 13,
+              fontSize: 14,
               cursor: 'pointer',
-              padding: 2,
+              width: 36,
+              height: 36,
+              display: 'grid',
+              placeItems: 'center',
+              flexShrink: 0,
             }}
           >
             ↪
@@ -1019,10 +1076,13 @@ export function SideNav({
 
 /* ============================================================
    17. STAFF SHELL (Desktop & Mobile layout)
+   Đợt 15 · Chặng 5: thanh tab dưới dùng `mobileItems` (5 nhãn ngắn một dòng,
+   mục cuối là "Cô"), chữ tối thiểu 12px, vùng bấm từ 44px.
    ============================================================ */
 export function StaffShell({
   children,
   items = [],
+  mobileItems = null,
   activeItem,
   onSelect,
   classes = [],
@@ -1035,8 +1095,9 @@ export function StaffShell({
   searchValue = '',
   onSearchChange,
   unreadCount = 0,
+  className = '',
 }) {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 1024 : false));
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
@@ -1045,8 +1106,10 @@ export function StaffShell({
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const bottomItems = (mobileItems && mobileItems.length ? mobileItems : items).slice(0, 5);
+
   return (
-    <div className="staff-root" style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--s-bg)' }}>
+    <div className={`staff-root ${className}`} style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--s-bg)' }}>
       {/* Desktop Sidebar (>= 1024px) */}
       {!isMobile && (
         <SideNav
@@ -1064,7 +1127,7 @@ export function StaffShell({
       )}
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: isMobile ? 65 : 20 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: isMobile ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : 20 }}>
         {/* Top Header */}
         <header
           style={{
@@ -1072,8 +1135,8 @@ export function StaffShell({
             display: 'flex',
             alignItems: 'center',
             gap: 12,
-            padding: '0 18px',
-            backgroundColor: 'rgba(255, 255, 255, 0.75)',
+            padding: isMobile ? '0 12px' : '0 18px',
+            backgroundColor: 'rgba(255, 255, 255, 0.85)',
             backdropFilter: 'blur(8px)',
             borderBottom: '1px solid var(--s-line)',
             position: 'sticky',
@@ -1082,24 +1145,26 @@ export function StaffShell({
           }}
         >
           {isMobile ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
               <BearMascot mood="greeting" size={26} />
-              <strong style={{ fontFamily: 'var(--s-font-head)', fontSize: 14, color: 'var(--s-text)' }}>
+              <strong style={{ fontFamily: 'var(--s-font-head)', fontSize: 15, color: 'var(--s-text)', whiteSpace: 'nowrap' }}>
                 Cổng Giáo Viên
               </strong>
             </div>
           ) : (
             <div style={{ flex: 1, maxWidth: 360, position: 'relative' }}>
               <input
+                aria-label="Tìm học sinh hoặc bài tập"
                 style={{
                   width: '100%',
-                  padding: '6px 14px',
+                  padding: '7px 14px',
                   borderRadius: 999,
                   border: '2px solid var(--s-line)',
                   backgroundColor: '#FFFFFF',
-                  fontSize: 12.5,
+                  fontSize: 13,
                   outline: 'none',
                   color: 'var(--s-text)',
+                  boxSizing: 'border-box',
                 }}
                 placeholder="Tìm học sinh hoặc bài tập..."
                 value={searchValue}
@@ -1109,13 +1174,15 @@ export function StaffShell({
           )}
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 11.5, color: 'var(--s-text-2)', fontWeight: 700 }}>
+            <span style={{ fontSize: 12, color: 'var(--s-text-2)', fontWeight: 700 }}>
               {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
             </span>
             <div
+              aria-label={unreadCount > 0 ? `${unreadCount} việc chờ cô xem` : 'Không có việc chờ'}
+              role="img"
               style={{
-                width: 32,
-                height: 32,
+                width: 34,
+                height: 34,
                 borderRadius: '50%',
                 backgroundColor: '#FFFFFF',
                 border: '2px solid var(--s-line)',
@@ -1130,13 +1197,14 @@ export function StaffShell({
                 <span
                   style={{
                     position: 'absolute',
-                    top: -3,
-                    right: -3,
-                    fontSize: 9,
-                    backgroundColor: '#FB7185',
+                    top: -5,
+                    right: -6,
+                    fontSize: 12,
+                    lineHeight: '16px',
+                    backgroundColor: 'var(--s-bad)',
                     color: '#FFFFFF',
                     borderRadius: 999,
-                    padding: '0 4px',
+                    padding: '0 5px',
                     fontWeight: 900,
                   }}
                 >
@@ -1156,45 +1224,41 @@ export function StaffShell({
       {/* Mobile Bottom Tab Bar (< 1024px) */}
       {isMobile && (
         <nav
+          aria-label="Thanh tab cổng giáo viên"
           style={{
             position: 'fixed',
             bottom: 0,
             left: 0,
             right: 0,
-            height: 56,
+            minHeight: 60,
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             backgroundColor: '#FFFFFF',
             borderTop: '1px solid var(--s-line)',
             display: 'flex',
             justifyContent: 'space-around',
-            alignItems: 'center',
+            alignItems: 'stretch',
             zIndex: 100,
             boxShadow: '0 -4px 12px rgba(75, 54, 33, 0.08)',
           }}
         >
-          {items.slice(0, 5).map((item) => {
+          {bottomItems.map((item) => {
             const isSel = item.id === activeItem;
             return (
               <button
                 key={item.id}
                 type="button"
+                className="tp-bottom-tab"
+                aria-current={isSel ? 'page' : undefined}
+                aria-label={item.label}
                 onClick={() => onSelect(item.id)}
                 style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 2,
-                  background: 'none',
-                  border: 'none',
                   color: isSel ? 'var(--s-accent-ink)' : 'var(--s-text-2)',
                   fontWeight: isSel ? 900 : 700,
-                  fontSize: 10,
-                  cursor: 'pointer',
-                  padding: '4px 0',
+                  boxShadow: isSel ? 'inset 0 3px 0 var(--s-accent)' : 'none',
                 }}
               >
-                <span style={{ fontSize: 18, display: 'inline-flex', alignItems: 'center' }}>{item.icon}</span>
-                <span>{item.label}</span>
+                <span style={{ fontSize: 18, display: 'inline-flex', alignItems: 'center' }} aria-hidden="true">{item.icon}</span>
+                <span>{item.shortLabel || item.label}</span>
               </button>
             );
           })}

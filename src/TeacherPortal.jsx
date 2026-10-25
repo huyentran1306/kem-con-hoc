@@ -17,19 +17,19 @@ import { QrCodeModal } from './qrCode.jsx';
 import {
   BearMascot, Card, Button, StatusPill, Kpi, Tabs, DataTable,
   Segmented, Toggle, Field, TextArea, EmptyState, Banner, SaveBar,
-  AssistantCard, StaffShell, SideNav, ClassSwitcher
+  AssistantCard, StaffShell, SideNav, ClassSwitcher, Select, KpiCard
 } from './ui/staff';
 import { BearClassIcon, BearStudentsIcon, BearSettingsIcon, BearBookIcon, BearBellIcon, BearQrIcon, BearResultsIcon } from './TeacherBearIcons.jsx';
 import './ui/staff/tokens.css';
+import './teacher/teacher.css';
+import { formatClassName, formatTeacherName, rosterNameOf } from './teacher/format.js';
+import { ClassTabs, StepChart, BearAssistant, TPill, buildAssistantTips, useStepStats, stepRowsFrom } from './teacher/parts.jsx';
 
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
 const TEACHER_TOKEN_KEY = 'kem-con-hoc:teacher:token';
 
-export function formatClassName(name) {
-  if (!name) return '';
-  const s = String(name).trim();
-  return /^lớp\s+/i.test(s) ? s : `Lớp ${s}`;
-}
+// Giữ tên xuất cũ để chỗ khác lỡ import vẫn chạy; hàm thật nằm ở src/teacher/format.js
+export { formatClassName };
 
 export default function TeacherPortal({ onExit }) {
   const [token, setToken] = useState(() => localStorage.getItem(TEACHER_TOKEN_KEY) || '');
@@ -51,6 +51,7 @@ export default function TeacherPortal({ onExit }) {
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [showCreateClassModal, setShowCreateClassModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [navNonce, setNavNonce] = useState(0);
 
   // Load teacher profile & classes
   useEffect(() => {
@@ -146,16 +147,21 @@ export default function TeacherPortal({ onExit }) {
   const totalActiveAssignments = classes.reduce((acc, c) => acc + (c.published_assignments_count || 0), 0);
   const totalPendingStudents = classes.reduce((acc, c) => acc + (c.pending_students_count || 0), 0);
 
+  // Nhãn ngắn để không bị cắt ở thanh bên 220px và thanh tab dưới điện thoại
   const navItems = [
-    { id: 'classes', label: 'Lớp của cô', icon: <BearClassIcon size={22} /> },
-    { id: 'assignments', label: 'Bài tập & Soạn bài', icon: <BearBookIcon size={22} /> },
-    { id: 'students', label: 'Học sinh', icon: <BearStudentsIcon size={22} />, badge: totalPendingStudents },
-    { id: 'announcements', label: 'Thông báo & Nhắc việc', icon: <BearBellIcon size={22} /> },
-    { id: 'results', label: 'Kết quả', icon: <BearResultsIcon size={22} /> },
-    { id: 'settings', label: 'Cài đặt của cô', icon: <BearSettingsIcon size={22} /> },
+    { id: 'classes', label: 'Lớp của cô', shortLabel: 'Lớp', icon: <BearClassIcon size={22} /> },
+    { id: 'assignments', label: 'Bài tập', shortLabel: 'Bài tập', icon: <BearBookIcon size={22} /> },
+    { id: 'students', label: 'Học sinh', shortLabel: 'Học sinh', icon: <BearStudentsIcon size={22} />, badge: totalPendingStudents },
+    { id: 'announcements', label: 'Thông báo', shortLabel: 'Thông báo', icon: <BearBellIcon size={22} /> },
+    { id: 'results', label: 'Kết quả', shortLabel: 'Kết quả', icon: <BearResultsIcon size={22} /> },
+    { id: 'settings', label: 'Cài đặt của cô', shortLabel: 'Cô', icon: <BearSettingsIcon size={22} /> },
   ];
+  // Điện thoại: 5 mục một dòng, mục cuối "Cô" là cài đặt của cô và đăng xuất
+  const mobileNavItems = ['classes', 'assignments', 'students', 'announcements', 'settings']
+    .map((id) => navItems.find((n) => n.id === id));
 
   function handleNavSelect(itemId) {
+    setNavNonce((n) => n + 1);
     setCurrentNav(itemId);
     if (itemId === 'classes') {
       setSelectedClassId(null);
@@ -206,6 +212,11 @@ export default function TeacherPortal({ onExit }) {
         token={token}
         classId={selectedClassId}
         initialTab={activeTab}
+        navNonce={navNonce}
+        summary={classes.find((c) => c.id === selectedClassId) || null}
+        onTabChange={(t) => {
+          if (['assignments', 'students', 'announcements', 'results'].includes(t)) setCurrentNav(t);
+        }}
         onBack={() => {
           setSelectedClassId(null);
           setCurrentNav('classes');
@@ -216,7 +227,9 @@ export default function TeacherPortal({ onExit }) {
 
   return (
     <StaffShell
+      className="tp-root"
       items={navItems}
+      mobileItems={mobileNavItems}
       activeItem={currentNav}
       onSelect={handleNavSelect}
       classes={classes}
@@ -248,6 +261,23 @@ export default function TeacherPortal({ onExit }) {
     </StaffShell>
   );
 }
+
+const DUE_OPTIONS = [
+  { value: 1, label: 'Hôm sau (1 ngày)' },
+  { value: 2, label: 'Sau 2 ngày' },
+  { value: 7, label: 'Cuối tuần (7 ngày)' },
+];
+const SHARE_ANSWER_OPTIONS = [
+  { value: 1, label: 'Có, bố mẹ giữ nút để xem' },
+  { value: 0, label: 'Không gửi đáp án' },
+];
+const SUBJECT_OPTIONS = ['Toán', 'Tiếng Việt', 'Tiếng Anh'];
+const PROBLEM_TYPE_OPTIONS = [
+  { value: 'word_problem_multistep', label: 'Toán lời văn' },
+  { value: 'arithmetic', label: 'Phép tính, bảng nhân chia' },
+  { value: 'geometry', label: 'Hình học' },
+  { value: 'vietnamese', label: 'Tiếng Việt' },
+];
 
 // ---------------------------------------------------------------------------
 // 1. TEACHER AUTH (LOGIN & REGISTER)
@@ -370,13 +400,12 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={styles.label}>Khối đang dạy</label>
-                  <select style={styles.input} value={grades} onChange={(e) => setGrades(e.target.value)}>
-                    <option value="Khối 1">Khối 1</option>
-                    <option value="Khối 2">Khối 2</option>
-                    <option value="Khối 3">Khối 3</option>
-                    <option value="Khối 4">Khối 4</option>
-                    <option value="Khối 5">Khối 5</option>
-                  </select>
+                  <Select
+                    ariaLabel="Khối đang dạy"
+                    value={grades}
+                    onChange={(v) => setGrades(v)}
+                    options={['Khối 1', 'Khối 2', 'Khối 3', 'Khối 4', 'Khối 5']}
+                  />
                 </div>
                 <div>
                   <label style={styles.label}>Số điện thoại</label>
@@ -417,7 +446,7 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
           </div>
 
           {mode === 'register' && (
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#475569', cursor: 'pointer', marginTop: 4 }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'var(--s-text-2, #8A6A4A)', cursor: 'pointer', marginTop: 4 }}>
               <input
                 type="checkbox"
                 checked={consent}
@@ -486,7 +515,7 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 12 }}>
-          <a href="/" style={{ fontSize: 13, color: '#94A3B8', textDecoration: 'none' }}>
+          <a href="/" style={{ fontSize: 13, color: 'var(--s-text-2, #8A6A4A)', textDecoration: 'none' }}>
             ← Quay lại giao diện Phụ huynh
           </a>
         </div>
@@ -619,7 +648,7 @@ function TeacherStatusNotice({ teacher, token, onLogout, onRefresh }) {
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#DC2626' }}>Tài khoản đang bị tạm khoá</h2>
-            <p style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: 'var(--s-text-2, #8A6A4A)', marginBottom: 20 }}>
               Vui lòng liên hệ ban quản trị để được hỗ trợ mở lại tài khoản.
             </p>
             <button style={styles.secondaryBtn} onClick={onLogout}>Đăng xuất</button>
@@ -688,26 +717,28 @@ function TeacherClassesList({
 
   return (
     <div>
-      <div style={styles.pageHeader}>
+      <div className="tp-head">
         <div>
           <h2 style={styles.sectionHeading}>Danh sách lớp học của cô</h2>
           <p style={styles.sectionSub}>Quản lý học sinh, giao bài tập và đồng hành cùng phụ huynh</p>
         </div>
-        <Button variant="primary" onClick={handleCreate}>
-          <Plus size={18} /> Tạo lớp mới
-        </Button>
+        <div className="tp-head-actions">
+          <Button variant="primary" onClick={handleCreate}>
+            <Plus size={18} /> Tạo lớp mới
+          </Button>
+        </div>
       </div>
 
-      {/* 4 Thẻ KPI Tổng quan của Cô */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
-        <Kpi label="Tổng số lớp học" value={classes.length} sub="Đang phụ trách" />
-        <Kpi label="Tổng số học sinh" value={totalStudents} sub="Đang kết nối" />
-        <Kpi label="Bài tập đang mở" value={totalActiveAssignments} sub="Học sinh đang làm" />
-        <Kpi
-          label="Việc cần cô xem"
-          value={totalPendingStudents}
-          sub={totalPendingStudents > 0 ? "Chờ cô duyệt" : "Đã hoàn thành"}
-          style={{ borderColor: totalPendingStudents > 0 ? 'var(--s-warn)' : 'var(--s-line)' }}
+      {/* 4 Thẻ KPI Tổng quan của Cô: lưới 2x2 trên điện thoại */}
+      <div className="tp-kpi-grid">
+        <KpiCard label="Số lớp" value={loading ? null : classes.length} sub="Đang phụ trách" />
+        <KpiCard label="Học sinh" value={loading ? null : totalStudents} sub="Đã kết nối" />
+        <KpiCard label="Bài đang mở" value={loading ? null : totalActiveAssignments} sub="Phụ huynh đang kèm" />
+        <KpiCard
+          label="Việc cần xem"
+          value={loading ? null : totalPendingStudents}
+          sub={totalPendingStudents > 0 ? 'Chờ cô duyệt' : 'Không có việc tồn'}
+          tone={totalPendingStudents > 0 ? 'warn' : 'default'}
         />
       </div>
 
@@ -753,7 +784,7 @@ function TeacherClassesList({
                       Có {c.pending_students_count} phụ huynh xin kết nối vào {formatClassName(c.name)}
                     </div>
                     <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>
-                      Khối {c.grade} · Cần cô xác nhận danh sách lớp
+                      {c.grade ? `Khối ${c.grade} · ` : ''}Cần cô xác nhận danh sách lớp
                     </span>
                   </div>
                 </div>
@@ -794,11 +825,11 @@ function TeacherClassesList({
             <div key={c.id} style={styles.classCard} onClick={() => onSelectClass(c.id)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
-                  <span style={styles.gradeBadge}>Khối {c.grade} · {c.school_year}</span>
+                  <span style={styles.gradeBadge}>{[c.grade ? `Khối ${c.grade}` : '', c.school_year].filter(Boolean).join(' · ') || 'Lớp học'}</span>
                   <h3 style={styles.className}>{formatClassName(c.name)}</h3>
                 </div>
                 <div style={styles.joinCodeBox} title="Mã lớp chung">
-                  <span style={{ fontSize: 10, color: '#84664A', fontWeight: 800 }}>MÃ LỚP</span>
+                  <span style={{ fontSize: 12, color: '#84664A', fontWeight: 800 }}>Mã lớp</span>
                   <span style={{ fontSize: 16, fontWeight: 800, color: '#4B3621', letterSpacing: '0.05em' }}>{c.join_code}</span>
                 </div>
               </div>
@@ -911,7 +942,7 @@ function CreateClassModal({ token, teacher, onClose, onCreated }) {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        toast(`Đã tạo lớp ${name} thành công`, 'success');
+        toast(`Đã tạo ${formatClassName(name)} thành công`, 'success');
         onCreated();
       } else {
         toast(data.error?.message || 'Lỗi tạo lớp', 'error');
@@ -943,16 +974,15 @@ function CreateClassModal({ token, teacher, onClose, onCreated }) {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="tp-form-11">
             <div>
               <label style={styles.label}>Khối</label>
-              <select style={styles.input} value={grade} onChange={(e) => setGrade(Number(e.target.value))}>
-                <option value={1}>Khối 1</option>
-                <option value={2}>Khối 2</option>
-                <option value={3}>Khối 3</option>
-                <option value={4}>Khối 4</option>
-                <option value={5}>Khối 5</option>
-              </select>
+              <Select
+                ariaLabel="Khối"
+                value={grade}
+                onChange={(v) => setGrade(Number(v))}
+                options={[1, 2, 3, 4, 5].map((g) => ({ value: g, label: `Khối ${g}` }))}
+              />
             </div>
             <div>
               <label style={styles.label}>Năm học</label>
@@ -962,27 +992,35 @@ function CreateClassModal({ token, teacher, onClose, onCreated }) {
 
           <div>
             <label style={styles.label}>Cách thức kết nối học sinh</label>
-            <select style={styles.input} value={joinMode} onChange={(e) => setJoinMode(e.target.value)}>
-              <option value="code_and_claim">Mã lớp chung + Mã học sinh riêng (Khuyên dùng)</option>
-              <option value="claim_only">Chỉ nhận mã riêng (Bảo mật tuyệt đối, chỉ học sinh có tên)</option>
-            </select>
+            <Select
+              ariaLabel="Cách thức kết nối học sinh"
+              value={joinMode}
+              onChange={(v) => setJoinMode(v)}
+              options={[
+                { value: 'code_and_claim', label: 'Mã lớp chung và mã riêng từng em (khuyên dùng)' },
+                { value: 'claim_only', label: 'Chỉ mã riêng (chỉ học sinh có tên trong danh sách)' },
+              ]}
+            />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="tp-form-11">
             <div>
               <label style={styles.label}>Hạn nộp bài mặc định</label>
-              <select style={styles.input} value={defaultDueDays} onChange={(e) => setDefaultDueDays(Number(e.target.value))}>
-                <option value={1}>Hôm sau (1 ngày)</option>
-                <option value={2}>Sau 2 ngày</option>
-                <option value={7}>Cuối tuần (7 ngày)</option>
-              </select>
+              <Select
+                ariaLabel="Hạn nộp bài mặc định"
+                value={defaultDueDays}
+                onChange={(v) => setDefaultDueDays(Number(v))}
+                options={DUE_OPTIONS}
+              />
             </div>
             <div>
               <label style={styles.label}>Gửi đáp án cho phụ huynh</label>
-              <select style={styles.input} value={shareTeacherAnswer} onChange={(e) => setShareTeacherAnswer(Number(e.target.value))}>
-                <option value={1}>Có (bố mẹ giữ 1.5s để xem)</option>
-                <option value={0}>Không gửi đáp án</option>
-              </select>
+              <Select
+                ariaLabel="Gửi đáp án cho phụ huynh"
+                value={shareTeacherAnswer}
+                onChange={(v) => setShareTeacherAnswer(Number(v))}
+                options={SHARE_ANSWER_OPTIONS}
+              />
             </div>
           </div>
 
@@ -1003,16 +1041,21 @@ function CreateClassModal({ token, teacher, onClose, onCreated }) {
 // ---------------------------------------------------------------------------
 // 4. TEACHER CLASS DETAIL (ROSTER, ASSIGNMENTS, ANNOUNCEMENTS, SETTINGS)
 // ---------------------------------------------------------------------------
-function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments' }) {
+function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments', navNonce = 0, onTabChange, summary = null }) {
   const [cls, setCls] = useState(null);
-  const [tab, setTab] = useState(initialTab); // 'assignments' | 'students' | 'announcements' | 'results' | 'settings'
+  const [tab, setTabState] = useState(initialTab); // 'assignments' | 'students' | 'announcements' | 'results' | 'settings'
   const [loading, setLoading] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
   const [selectedResultAsgId, setSelectedResultAsgId] = useState(null);
 
+  function setTab(t) {
+    setTabState(t);
+    if (onTabChange) onTabChange(t);
+  }
+
   useEffect(() => {
-    if (initialTab) setTab(initialTab);
-  }, [initialTab]);
+    if (initialTab) setTabState(initialTab);
+  }, [initialTab, navNonce]);
 
   useEffect(() => {
     loadClassData();
@@ -1026,7 +1069,8 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setCls(data.class);
+        // Máy chủ trả lớp không kèm số đếm: ghép số học sinh, số chờ duyệt từ danh sách lớp
+        setCls({ ...(summary || {}), ...data.class });
       }
     } catch {
       toast('Lỗi tải thông tin lớp', 'error');
@@ -1040,52 +1084,64 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
   }
 
   const joinLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/vao-lop/${cls.join_code}`;
+  const className = formatClassName(cls.name);
+  const metaLine = [cls.grade ? `Khối ${cls.grade}` : '', cls.school_year].filter(Boolean).join(' · ');
+
+  function shareZalo() {
+    const text = `Phụ huynh ${className} bấm link để kết nối con vào lớp trên Kèm Con Học: ${joinLink}`;
+    if (navigator.share) {
+      navigator.share({ title: className, text, url: joinLink }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      toast('Đã sao chép tin nhắn gửi phụ huynh qua Zalo', 'success');
+    }
+  }
+
+  const pending = Number(cls.pending_students_count) || 0;
+  const classTabs = [
+    { id: 'assignments', label: 'Bài tập', icon: <BearBookIcon size={20} /> },
+    { id: 'students', label: 'Học sinh', icon: <BearStudentsIcon size={20} />, count: pending > 0 ? `${pending} chờ` : null },
+    { id: 'announcements', label: 'Thông báo', icon: <BearBellIcon size={20} /> },
+    { id: 'results', label: 'Kết quả', icon: <BearResultsIcon size={20} /> },
+    { id: 'settings', label: 'Cài đặt lớp', icon: <BearSettingsIcon size={20} /> },
+  ];
 
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 12 }}>
         <button style={styles.backBtn} onClick={onBack}>
           <ArrowLeft size={16} /> Quay lại danh sách lớp
         </button>
       </div>
 
-      {/* Class Banner Card */}
-      <div style={styles.classBanner}>
-        <div>
-          <span style={styles.gradeBadge}>Khối {cls.grade} · {cls.school_year || '2026-2027'}</span>
-          <h2 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '4px 0' }}>
-            {formatClassName(cls.name)}
-          </h2>
-          <p style={{ fontSize: 13, color: 'var(--s-text-2, #84664A)', margin: 0 }}>{cls.school_name}</p>
+      {/* Đầu lớp: trên điện thoại tên lớp và mã cùng một hàng, hai nút nhỏ có biểu tượng */}
+      <div className="tp-class-banner">
+        <div style={{ minWidth: 0 }}>
+          {metaLine && <span className="tp-hide-sm" style={styles.gradeBadge}>{metaLine}</span>}
+          <div className="tp-class-title">
+            <h2>{className}</h2>
+            <span className="tp-code-inline" aria-label={`Mã lớp ${cls.join_code}`}>Mã {cls.join_code}</span>
+          </div>
+          {cls.school_name && (
+            <p className="tp-hide-sm" style={{ fontSize: 13, color: 'var(--s-text-2, #84664A)', margin: 0 }}>{cls.school_name}</p>
+          )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <div style={styles.joinCodeBoxLarge}>
-            <span style={{ fontSize: 10, color: '#84664A', fontWeight: 800, letterSpacing: '0.5px' }}>MÃ LỚP CHUNG</span>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#4B3621', letterSpacing: '0.08em' }}>{cls.join_code}</span>
+        <div className="tp-class-actions">
+          <div className="tp-code">
+            <small>Mã lớp chung</small>
+            <b>{cls.join_code}</b>
           </div>
           <button
             type="button"
-            style={styles.qrBtn}
+            className="tp-pill-btn tp-soft"
             onClick={() => setShowQrModal(true)}
             title="In hoặc chiếu mã QR trong buổi họp phụ huynh"
           >
             <BearQrIcon size={20} /> Mã QR
           </button>
-          <button
-            type="button"
-            style={styles.shareZaloBtn}
-            onClick={() => {
-              const text = `Phụ huynh lớp ${cls.name} bấm link để kết nối con vào lớp trên Kèm Con Học: ${joinLink}`;
-              if (navigator.share) {
-                navigator.share({ title: `Lớp ${cls.name}`, text, url: joinLink });
-              } else {
-                navigator.clipboard.writeText(text);
-                toast('Đã copy tin nhắn gửi phụ huynh Zalo', 'success');
-              }
-            }}
-          >
-            <Share2 size={16} /> ↗ Gửi qua Zalo
+          <button type="button" className="tp-pill-btn tp-main" onClick={shareZalo}>
+            <Share2 size={16} /> Gửi qua Zalo
           </button>
         </div>
       </div>
@@ -1093,45 +1149,21 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
       {showQrModal && (
         <QrCodeModal
           url={joinLink}
-          title={`Mã QR Lớp ${cls.name}`}
-          sub={`Trường ${cls.school_name || ''} · Khối ${cls.grade} · Chiếu hoặc in trong buổi họp`}
+          title={`Mã QR ${className}`}
+          sub={[cls.school_name, cls.grade ? `Khối ${cls.grade}` : '', 'Chiếu hoặc in trong buổi họp'].filter(Boolean).join(' · ')}
           onClose={() => setShowQrModal(false)}
         />
       )}
 
-      {/* Class Navigation Tabs (5 Tabs chuẩn Bản Gấu) */}
-      <div style={styles.tabsRow}>
-        <button
-          style={{ ...styles.tabBtn, ...(tab === 'assignments' ? styles.tabBtnActive : {}) }}
-          onClick={() => { setTab('assignments'); setSelectedResultAsgId(null); }}
-        >
-          <BearBookIcon size={20} /> Bài tập & Soạn bài
-        </button>
-        <button
-          style={{ ...styles.tabBtn, ...(tab === 'students' ? styles.tabBtnActive : {}) }}
-          onClick={() => { setTab('students'); setSelectedResultAsgId(null); }}
-        >
-          <BearStudentsIcon size={20} /> Danh sách học sinh {cls.pending_students_count > 0 && `(${cls.pending_students_count} chờ)`}
-        </button>
-        <button
-          style={{ ...styles.tabBtn, ...(tab === 'announcements' ? styles.tabBtnActive : {}) }}
-          onClick={() => { setTab('announcements'); setSelectedResultAsgId(null); }}
-        >
-          <BearBellIcon size={20} /> Thông báo & Nhắc việc
-        </button>
-        <button
-          style={{ ...styles.tabBtn, ...(tab === 'results' ? styles.tabBtnActive : {}) }}
-          onClick={() => setTab('results')}
-        >
-          <BearResultsIcon size={20} /> Kết quả
-        </button>
-        <button
-          style={{ ...styles.tabBtn, ...(tab === 'settings' ? styles.tabBtnActive : {}) }}
-          onClick={() => { setTab('settings'); setSelectedResultAsgId(null); }}
-        >
-          <BearSettingsIcon size={20} /> Cài đặt lớp
-        </button>
-      </div>
+      {/* Thanh tab của lớp: lớp mờ mép phải, tự cuộn tab đang chọn vào giữa */}
+      <ClassTabs
+        tabs={classTabs}
+        active={tab}
+        onChange={(id) => {
+          if (id !== 'results') setSelectedResultAsgId(null);
+          setTab(id);
+        }}
+      />
 
       {/* Tab Panels */}
       {tab === 'assignments' && (
@@ -1146,7 +1178,7 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
         />
       )}
       {tab === 'students' && <TeacherStudentsTab token={token} classId={classId} cls={cls} />}
-      {tab === 'announcements' && <TeacherAnnouncementsTab token={token} classId={classId} />}
+      {tab === 'announcements' && <TeacherAnnouncementsTab token={token} classId={classId} cls={cls} />}
       {tab === 'results' && (
         <TeacherResultsTab
           token={token}
@@ -1155,7 +1187,6 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
           initialAssignmentId={selectedResultAsgId}
           onBackToAssignments={() => {
             setSelectedResultAsgId(null);
-            setTab('assignments');
           }}
         />
       )}
@@ -1167,7 +1198,7 @@ function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments'
 // ---------------------------------------------------------------------------
 // 5. ASSIGNMENTS TAB & AI PREVIEW GENERATION
 // ---------------------------------------------------------------------------
-function TeacherAssignmentsTab({ token, classId, cls }) {
+function TeacherAssignmentsTab({ token, classId, cls, onSelectResult }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -1206,18 +1237,20 @@ function TeacherAssignmentsTab({ token, classId, cls }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className="tp-head">
         <div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Bài tập đã giao</h3>
-          <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>Soạn bài kèm "Cách cô dạy" để AI gợi mở đúng phương pháp</p>
+          <h3 style={{ fontSize: 18, fontWeight: 700 }}>Bài tập đã giao</h3>
+          <p>Soạn bài kèm "Cách cô dạy" để Gấu gợi mở đúng phương pháp của cô</p>
         </div>
-        <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
-          <Plus size={16} /> Soạn bài mới
-        </button>
+        <div className="tp-head-actions">
+          <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
+            <Plus size={16} /> Soạn bài mới
+          </button>
+        </div>
       </div>
 
       {loading ? (
-        <p style={{ color: '#64748B' }}>Đang tải bài tập...</p>
+        <p style={{ color: 'var(--s-text-2)' }}>Đang tải bài tập...</p>
       ) : assignments.length === 0 ? (
         <EmptyState
           title="Chưa có bài tập nào"
@@ -1228,23 +1261,29 @@ function TeacherAssignmentsTab({ token, classId, cls }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {assignments.map((a) => (
-            <div key={a.id} style={styles.assignmentCard}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div key={a.id} className="tp-asg-card">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={a.status === 'published' ? styles.statusBadgeActive : styles.statusBadgeDraft}>
                     {a.status === 'published' ? 'Đang mở' : a.status === 'closed' ? 'Đã đóng' : 'Bản nháp'}
                   </span>
-                  <span style={{ fontSize: 12, color: '#64748B' }}>Môn {a.subject}</span>
+                  {a.subject && <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>Môn {a.subject}</span>}
                 </div>
-                <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0', color: '#1E293B' }}>{a.title}</h4>
-                <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
+                <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--s-text)' }}>{a.title}</h4>
+                <p style={{ fontSize: 12.5, color: 'var(--s-text-2)', margin: 0 }}>
                   <Calendar size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                   Hạn nộp: {a.due_at ? new Date(a.due_at).toLocaleDateString('vi-VN') : 'Chưa đặt hạn'} · {a.item_count || 0} câu hỏi
                 </p>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button style={styles.secondaryBtn} onClick={() => setSelectedAsgId(a.id)}>
+              <div className="tp-asg-actions">
+                <button
+                  style={styles.secondaryBtn}
+                  onClick={() => {
+                    if (a.status !== 'draft' && onSelectResult) onSelectResult(a.id);
+                    else setSelectedAsgId(a.id);
+                  }}
+                >
                   {a.status === 'draft' ? 'Duyệt bài giảng' : 'Xem kết quả làm bài'}
                 </button>
               </div>
@@ -1361,7 +1400,7 @@ function CreateAssignmentModal({ token, classId, cls, onClose, onCreated }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10 }}>
+          <div className="tp-form-3">
             <div>
               <label style={styles.label}>Tiêu đề bài tập *</label>
               <input
@@ -1374,25 +1413,17 @@ function CreateAssignmentModal({ token, classId, cls, onClose, onCreated }) {
             </div>
             <div>
               <label style={styles.label}>Môn</label>
-              <select style={styles.input} value={subject} onChange={(e) => setSubject(e.target.value)}>
-                <option value="Toán">Toán</option>
-                <option value="Tiếng Việt">Tiếng Việt</option>
-                <option value="Tiếng Anh">Tiếng Anh</option>
-              </select>
+              <Select ariaLabel="Môn" value={subject} onChange={(v) => setSubject(v)} options={SUBJECT_OPTIONS} />
             </div>
             <div>
               <label style={styles.label}>Hạn nộp</label>
-              <select style={styles.input} value={dueDays} onChange={(e) => setDueDays(Number(e.target.value))}>
-                <option value={1}>Sau 1 ngày</option>
-                <option value={2}>Sau 2 ngày</option>
-                <option value={7}>Cuối tuần (7 ngày)</option>
-              </select>
+              <Select ariaLabel="Hạn nộp" value={dueDays} onChange={(v) => setDueDays(Number(v))} options={DUE_OPTIONS} />
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: 14 }}>
+          <div style={{ borderTop: '1px solid var(--s-line)', paddingTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#1E293B' }}>Danh sách câu hỏi</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--s-text)' }}>Danh sách câu hỏi</span>
               <button type="button" style={styles.secondarySmallBtn} onClick={addItem}>
                 <Plus size={14} /> Thêm câu
               </button>
@@ -1430,7 +1461,7 @@ function CreateAssignmentModal({ token, classId, cls, onClose, onCreated }) {
                   </div>
 
                   <div>
-                    <label style={{ ...styles.label, color: '#64748B' }}>
+                    <label style={{ ...styles.label, color: 'var(--s-text-2)' }}>
                       Đáp án của cô (chỉ hiện cho phụ huynh, AI không bao giờ gửi cho con)
                     </label>
                     <input
@@ -1476,11 +1507,10 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
   const [selectedAsgId, setSelectedAsgId] = useState(initialAssignmentId || null);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [latestResults, setLatestResults] = useState(null);
 
   useEffect(() => {
-    if (initialAssignmentId) {
-      setSelectedAsgId(initialAssignmentId);
-    }
+    setSelectedAsgId(initialAssignmentId || null);
   }, [initialAssignmentId]);
 
   useEffect(() => {
@@ -1504,6 +1534,20 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
     }
   }
 
+  const published = assignments.filter((a) => a.status === 'published' || a.status === 'closed');
+  const latest = published[0] || null;
+  const stepStats = useStepStats(API_BASE, token, selectedAsgId ? null : latest?.id);
+
+  useEffect(() => {
+    if (selectedAsgId || !latest) { setLatestResults(null); return; }
+    let alive = true;
+    fetch(`${API_BASE}/api/v1/teacher/assignments/${latest.id}/results`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json().then((d) => (r.ok && d.ok ? d : null)))
+      .catch(() => null)
+      .then((d) => { if (alive) setLatestResults(d); });
+    return () => { alive = false; };
+  }, [latest?.id, selectedAsgId]);
+
   if (selectedAsgId) {
     return (
       <AssignmentResultsView
@@ -1518,39 +1562,55 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
   }
 
   if (loading) {
-    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang phân tích kết quả học tập...</p>;
+    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang tải kết quả học tập...</p>;
   }
-
-  const published = assignments.filter((a) => a.status === 'published' || a.status === 'closed');
 
   if (published.length === 0) {
     return (
       <EmptyState
         title="Chưa có kết quả làm bài"
-        description="Lớp chưa có bài tập nào được xuất bản hoặc học sinh chưa làm bài. Cô hãy xuất bản bài tập để xem thống kê nhé!"
+        description="Lớp chưa có bài tập nào được giao. Cô giao bài xong, kết quả và bậc hay vướng sẽ hiện ở đây."
       />
     );
   }
 
+  const tips = latestResults
+    ? buildAssistantTips({
+        items: latestResults.items,
+        students: latestResults.students,
+        steps: stepRowsFrom(stepStats.data),
+        totalStudents: latestResults.totalStudents,
+      })
+    : [];
+
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px 0', color: 'var(--s-text)' }}>
-          Kết quả học tập theo bài giao
-        </h3>
-        <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: 0 }}>
-          Chọn một bài tập dưới đây để xem báo cáo chi tiết, phân bố tự làm và nhận xét của trợ lý sư phạm.
-        </p>
+      <div className="tp-head">
+        <div>
+          <h3 style={{ fontSize: 18, fontWeight: 800 }}>Kết quả học tập của {formatClassName(cls?.name) || 'lớp'}</h3>
+          <p>Bậc hay vướng và gợi ý của trợ lý tính theo bài giao gần nhất. Chọn một bài để xem chi tiết.</p>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+      <div className="tp-res-grid">
+        <Card style={{ display: 'grid', gap: 12 }}>
+          <StepChart
+            title={`Bậc hay vướng · ${latest.title}`}
+            steps={stepRowsFrom(stepStats.data)}
+            caption={stepStats.data ? 'Đếm số lần con bấm "Con chưa nghĩ ra" ở từng bậc.' : null}
+          />
+        </Card>
+        <BearAssistant tips={tips} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
         {published.map((a) => (
           <Card key={a.id} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--s-accent-ink)' }}>{a.subject || 'Toán'}</span>
-              <StatusPill variant={a.status === 'published' ? 'success' : 'default'}>
-                {a.status === 'published' ? 'Đang giao' : 'Đã đóng'}
-              </StatusPill>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--s-accent-ink)' }}>{a.subject || 'Toán'}</span>
+              <TPill variant={a.status === 'published' ? 'info' : 'default'}>
+                {a.status === 'published' ? 'Đang mở' : 'Đã đóng'}
+              </TPill>
             </div>
             <h4 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--s-text)' }}>{a.title}</h4>
             <div style={{ fontSize: 13, color: 'var(--s-text-2)' }}>
@@ -1558,7 +1618,7 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
             </div>
             <Button
               variant="primary"
-              style={{ marginTop: 'auto' }}
+              style={{ marginTop: 'auto', minHeight: 44 }}
               onClick={() => setSelectedAsgId(a.id)}
             >
               <BarChart3 size={15} /> Xem kết quả chi tiết
@@ -1570,15 +1630,16 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
   );
 }
 
-// Xem kết quả làm bài của cả lớp (Prompt 11 - Staff Bản Gấu)
+// Xem kết quả làm bài của cả lớp (bản vẽ Màn 4: 4 số liệu, bậc hay vướng, trợ lý gấu, danh sách)
 function AssignmentResultsView({ token, assignmentId, onBack }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [insight, setInsight] = useState(null);
-  const [loadingInsight, setLoadingInsight] = useState(false);
+  const [question, setQuestion] = useState('all');
+  const stepStats = useStepStats(API_BASE, token, assignmentId);
 
   useEffect(() => {
     loadResults();
+    setQuestion('all');
   }, [assignmentId]);
 
   async function loadResults() {
@@ -1598,170 +1659,151 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
     }
   }
 
-  async function handleGetInsight() {
-    try {
-      setLoadingInsight(true);
-      const res = await fetch(`${API_BASE}/api/v1/teacher/assignments/${assignmentId}/insight`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const d = await res.json();
-      if (res.ok && d.ok) {
-        setInsight(d.insight);
-      }
-    } catch {
-      toast('Lỗi lấy nhận xét AI', 'error');
-    } finally {
-      setLoadingInsight(false);
-    }
+  if (loading) {
+    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang tải kết quả...</p>;
+  }
+  if (!data) {
+    return (
+      <div>
+        <Button variant="secondary" onClick={onBack} style={{ gap: 6, marginBottom: 14 }}>
+          <ArrowLeft size={16} /> Quay lại danh sách bài
+        </Button>
+        <EmptyState title="Chưa mở được kết quả" description="Cô thử tải lại sau ít phút nhé." mood="nudge" />
+      </div>
+    );
   }
 
-  if (loading || !data) {
-    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang phân tích kết quả...</p>;
-  }
+  const items = data.items || [];
+  const students = data.students || [];
+  const submittedCount = students.filter((s) => (Number(s.completed_items) || 0) > 0).length;
+  const totalStudents = Number(data.totalStudents) || students.length || 0;
+  const totalDone = items.reduce((acc, it) => acc + (Number(it.done_count) || 0), 0);
+  const totalSelf = items.reduce((acc, it) => acc + (Number(it.self_count) || 0), 0);
+  const totalHint = items.reduce((acc, it) => acc + (Number(it.hint_count) || 0), 0);
+  const totalGuided = items.reduce((acc, it) => acc + (Number(it.guided_count) || 0), 0);
+  const rated = totalSelf + totalHint + totalGuided;
+  const pct = (n) => (rated > 0 ? `${Math.round((n / rated) * 100)}%` : '');
+  const hasData = totalDone > 0 || rated > 0;
 
-  const submittedCount = data.students?.filter((s) => (s.completed_items || 0) > 0).length || 0;
-  const totalStudents = data.totalStudents || data.students?.length || 0;
-  const totalDone = data.items?.reduce((acc, it) => acc + (it.done_count || 0), 0) || 0;
-  const totalSelf = data.items?.reduce((acc, it) => acc + (it.self_count || 0), 0) || 0;
-  const selfRate = totalDone > 0 ? Math.round((totalSelf / totalDone) * 100) : 0;
-  const avgStuckAll = data.items?.length
-    ? (data.items.reduce((acc, it) => acc + (Number(it.avg_stuck) || 0), 0) / data.items.length)
-    : 0;
-
-  let mostStuckQuestion = 'Không có';
-  let maxGuided = -1;
-  data.items?.forEach((it) => {
-    if ((it.guided_count || 0) > maxGuided && (it.guided_count || 0) > 0) {
-      maxGuided = it.guided_count;
-      mostStuckQuestion = `Câu ${it.position}`;
-    }
-  });
+  const chartRows = stepRowsFrom(stepStats.data, question === 'all' ? null : question);
+  const tips = buildAssistantTips({ items, students, steps: stepRowsFrom(stepStats.data), totalStudents });
+  const questionOptions = [{ value: 'all', label: 'Cả bài' }, ...items.map((it) => ({ value: it.position, label: `Câu ${it.position}` }))];
 
   return (
     <div>
       <div style={{ marginBottom: 14 }}>
-        <Button variant="secondary" onClick={onBack} style={{ gap: 6 }}>
-          <ArrowLeft size={16} /> Quay lại danh sách bài tập
+        <Button variant="secondary" onClick={onBack} style={{ gap: 6, minHeight: 40 }}>
+          <ArrowLeft size={16} /> Quay lại danh sách bài
         </Button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+      <div className="tp-head">
         <div>
-          <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--s-text)' }}>{data.title}</h3>
-          <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: 0 }}>Tổng số học sinh trong lớp: {totalStudents} em</p>
+          <h3 style={{ fontSize: 20, fontWeight: 700 }}>Kết quả · {data.title}</h3>
+          <p>Lớp có {totalStudents} học sinh · cập nhật khi phụ huynh kèm con làm xong bài</p>
         </div>
-        <Button variant="primary" onClick={handleGetInsight} disabled={loadingInsight} style={{ gap: 6 }}>
-          <Sparkles size={16} /> {loadingInsight ? 'AI đang phân tích...' : 'Nhận xét của trợ lý AI'}
-        </Button>
+        {items.length > 1 && (
+          <div className="tp-head-actions tp-seg" style={{ overflowX: 'auto' }}>
+            <Segmented options={questionOptions} value={question} onChange={setQuestion} />
+          </div>
+        )}
       </div>
 
-      {/* 4 KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <Kpi label="Sĩ số nộp bài" value={`${submittedCount} / ${totalStudents}`} hint="Đã hoàn thành" />
-        <Kpi label="Tỉ lệ tự chủ" value={`${selfRate}%`} hint="Tự giải không cần gợi ý" />
-        <Kpi label="Số lần bí TB" value={`${avgStuckAll.toFixed(1)} lần`} hint="Mức độ trợ giúp" />
-        <Kpi label="Điểm vướng nhất" value={mostStuckQuestion} hint={maxGuided > 0 ? `${maxGuided} em cần hướng dẫn` : 'Lớp làm bài tốt'} />
+      {/* 4 số liệu chính: chưa có dữ liệu thì hiện "·" */}
+      <div className="tp-kpi-grid tp-kpi-sm">
+        <KpiCard label="Hoàn thành" value={totalStudents > 0 ? `${submittedCount}/${totalStudents}` : null} sub={totalStudents > 0 ? `${Math.round((submittedCount / totalStudents) * 100)}%` : ''} />
+        <KpiCard label="Tự làm được" value={hasData ? totalSelf : null} sub={pct(totalSelf)} tone="ok" />
+        <KpiCard label="Cần gợi ý" value={hasData ? totalHint : null} sub={pct(totalHint)} tone="warn" />
+        <KpiCard label="Mẹ dẫn nhiều" value={hasData ? totalGuided : null} sub={pct(totalGuided)} tone="bad" />
       </div>
 
-      {/* AI Pedagogical Insight Box (p8_class_insight) */}
-      {insight && (
-        <div style={{ marginBottom: 20 }}>
-          <AssistantCard
-            title="Gấu trợ lý · Phân tích sư phạm"
-            icon={<Sparkles size={20} color="var(--s-accent-ink, #9A5B00)" />}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontSize: 13.5, color: 'var(--s-text)', lineHeight: 1.6 }}>
-                <strong style={{ color: 'var(--s-accent-ink)' }}>📍 Chỗ cả lớp vướng:</strong> {insight.commonStuckPoint}
-              </div>
-              <div style={{ fontSize: 13.5, color: 'var(--s-text)', lineHeight: 1.6 }}>
-                <strong style={{ color: 'var(--s-accent-ink)' }}>💡 Gợi ý tiết dạy ngày mai:</strong> {insight.tomorrowTeachingTip}
-              </div>
-              {insight.studentsNeedingFollowupCodes?.length > 0 && (
-                <div style={{ fontSize: 13.5, color: 'var(--s-text)', lineHeight: 1.6 }}>
-                  <strong style={{ color: 'var(--s-accent-ink)' }}>❤️ Học sinh cần quan tâm:</strong>{' '}
-                  {insight.studentsNeedingFollowupCodes.join(', ')}
-                </div>
-              )}
-            </div>
-          </AssistantCard>
-        </div>
-      )}
+      <div className="tp-res-grid">
+        <Card style={{ display: 'grid', gap: 12 }}>
+          <StepChart
+            title={question === 'all' ? 'Bậc hay vướng nhất (đếm số lần con bí)' : `Bậc hay vướng · Câu ${question}`}
+            steps={chartRows}
+          />
+          <BearAssistant tips={tips} />
+        </Card>
 
-      {/* Per-item Breakdown & Step distribution chart */}
-      <h4 style={{ fontSize: 15, fontWeight: 700, marginTop: 20, marginBottom: 10, color: 'var(--s-text)' }}>
-        Thống kê theo câu hỏi & Biểu đồ phân bố bậc
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--s-line)', backgroundColor: 'var(--s-bg)' }}>
+                  <th style={{ padding: '10px 14px', fontWeight: 800, color: 'var(--s-text)' }}>Học sinh</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 800, color: 'var(--s-text)' }}>Trạng thái</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 800, color: 'var(--s-text)' }}>Mức</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.length === 0 ? (
+                  <tr><td colSpan={3} style={{ padding: '14px', color: 'var(--s-text-2)' }}>Lớp chưa có học sinh nào kết nối.</td></tr>
+                ) : students.map((s) => (
+                  <tr key={s.student_id} style={{ borderBottom: '1px solid var(--s-line)' }}>
+                    <td style={{ padding: '10px 14px', color: 'var(--s-text)' }}><strong>{rosterNameOf(s) || 'Chưa có tên'}</strong></td>
+                    <td style={{ padding: '10px 14px' }}>
+                      {(Number(s.completed_items) || 0) > 0
+                        ? <TPill variant="success">Đã làm {s.completed_items} câu</TPill>
+                        : <TPill variant="default">Chưa làm</TPill>}
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      {s.teach_back_rating === 'self' && <TPill variant="success">Tự làm</TPill>}
+                      {s.teach_back_rating === 'hint' && <TPill variant="warning">Cần gợi ý</TPill>}
+                      {s.teach_back_rating === 'guided' && <TPill variant="danger">Mẹ dẫn</TPill>}
+                      {!s.teach_back_rating && <span style={{ color: 'var(--s-text-2)' }}>·</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--s-text-2)', padding: '8px 14px' }}>
+            Cô chỉ thấy trạng thái và mức tự đánh giá. Không thấy bài làm, ảnh hay trò chuyện với AI.
+          </div>
+        </Card>
+      </div>
+
+      {/* Thống kê theo từng câu */}
+      <h4 style={{ fontSize: 15, fontWeight: 700, marginTop: 4, marginBottom: 10, color: 'var(--s-text)' }}>
+        Thống kê theo từng câu
       </h4>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-        {data.items?.map((it) => {
-          const totalAttempts = (it.self_count || 0) + (it.hint_count || 0) + (it.guided_count || 0);
+        {items.length === 0 && <EmptyState title="Bài chưa có câu hỏi" description="Cô thêm câu hỏi cho bài để xem thống kê." />}
+        {items.map((it) => {
+          const totalAttempts = (Number(it.self_count) || 0) + (Number(it.hint_count) || 0) + (Number(it.guided_count) || 0);
           const selfPct = totalAttempts > 0 ? Math.round(((it.self_count || 0) / totalAttempts) * 100) : 0;
           const hintPct = totalAttempts > 0 ? Math.round(((it.hint_count || 0) / totalAttempts) * 100) : 0;
           const guidedPct = totalAttempts > 0 ? Math.max(0, 100 - selfPct - hintPct) : 0;
 
           return (
             <Card key={it.item_id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, gap: 8 }}>
                 <span style={{ fontWeight: 800, color: 'var(--s-accent-ink)' }}>Câu {it.position}</span>
-                <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>Đã làm: {it.done_count || 0} em</span>
+                <span style={{ fontSize: 12.5, color: 'var(--s-text-2)' }}>Đã làm: {it.done_count || 0} em</span>
               </div>
               <p style={{ fontSize: 13.5, color: 'var(--s-text)', margin: '0 0 10px 0' }}>{it.problem_text}</p>
 
-              {/* Stacked Progress Bar */}
-              <div style={{ height: 10, borderRadius: 999, overflow: 'hidden', display: 'flex', backgroundColor: 'var(--s-line)', marginBottom: 10 }}>
-                {selfPct > 0 && <div style={{ width: `${selfPct}%`, backgroundColor: '#10B981' }} title={`Tự làm: ${selfPct}%`} />}
-                {hintPct > 0 && <div style={{ width: `${hintPct}%`, backgroundColor: '#F59E0B' }} title={`Cần gợi ý: ${hintPct}%`} />}
-                {guidedPct > 0 && <div style={{ width: `${guidedPct}%`, backgroundColor: '#F43F5E' }} title={`Hướng dẫn sâu: ${guidedPct}%`} />}
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <StatusPill variant="success">Tự làm được: {it.self_count || 0} ({selfPct}%)</StatusPill>
-                <StatusPill variant="warning">Cần gợi ý: {it.hint_count || 0} ({hintPct}%)</StatusPill>
-                <StatusPill variant="danger">Hướng dẫn nhiều: {it.guided_count || 0} ({guidedPct}%)</StatusPill>
-              </div>
+              {totalAttempts > 0 ? (
+                <>
+                  <div style={{ height: 10, borderRadius: 999, overflow: 'hidden', display: 'flex', backgroundColor: 'var(--s-line)', marginBottom: 10 }}>
+                    {selfPct > 0 && <div style={{ width: `${selfPct}%`, backgroundColor: 'var(--s-ok)' }} title={`Tự làm: ${selfPct}%`} />}
+                    {hintPct > 0 && <div style={{ width: `${hintPct}%`, backgroundColor: 'var(--s-accent)' }} title={`Cần gợi ý: ${hintPct}%`} />}
+                    {guidedPct > 0 && <div style={{ width: `${guidedPct}%`, backgroundColor: 'var(--s-bad)' }} title={`Mẹ dẫn nhiều: ${guidedPct}%`} />}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <TPill variant="success">Tự làm được: {it.self_count || 0} ({selfPct}%)</TPill>
+                    <TPill variant="warning">Cần gợi ý: {it.hint_count || 0} ({hintPct}%)</TPill>
+                    <TPill variant="danger">Mẹ dẫn nhiều: {it.guided_count || 0} ({guidedPct}%)</TPill>
+                  </div>
+                </>
+              ) : (
+                <span style={{ fontSize: 12.5, color: 'var(--s-text-2)' }}>Chưa có lượt làm nào cho câu này.</span>
+              )}
             </Card>
           );
         })}
       </div>
-
-      {/* Student List Progress Table */}
-      <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10, color: 'var(--s-text)' }}>
-        Danh sách làm bài của học sinh
-      </h4>
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--s-line)', backgroundColor: 'var(--s-bg)' }}>
-              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Tên học sinh</th>
-              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Số câu đã làm</th>
-              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Mức tự làm</th>
-              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.students?.map((s) => (
-              <tr key={s.student_id} style={{ borderBottom: '1px solid var(--s-line)' }}>
-                <td style={{ padding: '10px 14px', color: 'var(--s-text)' }}><strong>{s.roster_name}</strong></td>
-                <td style={{ padding: '10px 14px', color: 'var(--s-text-2)' }}>{s.completed_items || 0} câu</td>
-                <td style={{ padding: '10px 14px' }}>
-                  {s.teach_back_rating === 'self' && <StatusPill variant="success">Tự giải</StatusPill>}
-                  {s.teach_back_rating === 'hint' && <StatusPill variant="warning">Cần gợi ý</StatusPill>}
-                  {s.teach_back_rating === 'guided' && <StatusPill variant="info">Mẹ kèm kỹ</StatusPill>}
-                  {!s.teach_back_rating && <span style={{ color: 'var(--s-text-2)' }}>-</span>}
-                </td>
-                <td style={{ padding: '10px 14px' }}>
-                  {s.completed_items > 0 ? (
-                    <StatusPill variant="success">Đã hoàn thành</StatusPill>
-                  ) : (
-                    <StatusPill variant="default">Chưa làm</StatusPill>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
     </div>
   );
 }
@@ -1793,6 +1835,14 @@ function TeacherStudentsTab({ token, classId, cls }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function copyClaimLink(s) {
+    const name = rosterNameOf(s) || 'con';
+    const claimLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/vao-lop/m/${s.claimCode}`;
+    const text = `Phụ huynh bé ${name} bấm link để kết nối vào ${formatClassName(cls?.name) || 'lớp'} trên Kèm Con Học: ${claimLink}`;
+    if (navigator.clipboard) navigator.clipboard.writeText(text);
+    toast(`Đã sao chép link riêng của bé ${name}`, 'success');
   }
 
   async function handleApprove(studentId) {
@@ -1833,18 +1883,20 @@ function TeacherStudentsTab({ token, classId, cls }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className="tp-head">
         <div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Danh sách học sinh ({students.length})</h3>
-          <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>Mỗi học sinh có mã riêng XXX-XXX để phụ huynh kết nối ngay</p>
+          <h3 style={{ fontSize: 18, fontWeight: 700 }}>Danh sách học sinh ({students.length})</h3>
+          <p>Mỗi học sinh có mã riêng dạng XXX-XXX để phụ huynh kết nối ngay</p>
         </div>
-        <button style={styles.primaryBtn} onClick={() => setShowRosterModal(true)}>
-          <Plus size={16} /> Dán danh sách học sinh
-        </button>
+        <div className="tp-head-actions">
+          <button style={styles.primaryBtn} onClick={() => setShowRosterModal(true)}>
+            <Plus size={16} /> Dán danh sách học sinh
+          </button>
+        </div>
       </div>
 
       {loading ? (
-        <p style={{ color: '#64748B' }}>Đang tải danh sách học sinh...</p>
+        <p style={{ color: 'var(--s-text-2)' }}>Đang tải danh sách học sinh...</p>
       ) : students.length === 0 ? (
         <EmptyState
           title="Chưa có học sinh nào"
@@ -1853,7 +1905,38 @@ function TeacherStudentsTab({ token, classId, cls }) {
           onAction={() => setShowRosterModal(true)}
         />
       ) : (
-        <div style={styles.tableCard}>
+        <>
+        {/* Điện thoại (< 640px): danh sách thẻ */}
+        <div className="tp-st-cards">
+          {students.map((s) => {
+            const name = rosterNameOf(s) || 'Chưa có tên';
+            return (
+              <div key={s.id} className="tp-st-card">
+                <div className="tp-st-card-top">
+                  <b>{name}</b>
+                  <StudentStatus status={s.status} />
+                </div>
+                <div className="tp-st-card-meta">
+                  {s.claimCode ? <>Mã riêng <span style={styles.codePill}>{s.claimCode}</span></> : 'Vào bằng mã lớp chung'}
+                  {s.childChangedAt ? ' · Phụ huynh đã đổi con' : ''}
+                </div>
+                {s.status === 'pending' && (
+                  <div className="tp-st-card-actions">
+                    <Button variant="primary" onClick={() => handleApprove(s.id)}>Duyệt</Button>
+                    <Button variant="danger" onClick={() => handleReject(s.id)}>Từ chối</Button>
+                  </div>
+                )}
+                {s.status === 'invited' && s.claimCode && (
+                  <Button variant="secondary" style={{ minHeight: 44 }} onClick={() => copyClaimLink(s)}>
+                    <Copy size={14} /> Sao chép link riêng
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="tp-st-table" style={styles.tableCard}>
           <table style={styles.table}>
             <thead>
               <tr>
@@ -1869,7 +1952,7 @@ function TeacherStudentsTab({ token, classId, cls }) {
                 <tr key={s.id}>
                   <td style={styles.td}>{idx + 1}</td>
                   <td style={styles.td}>
-                    <strong>{s.rosterName}</strong>
+                    <strong>{rosterNameOf(s) || 'Chưa có tên'}</strong>
                     {s.childChangedAt && (
                       <span style={styles.childChangedBadge} title={`Đổi lúc ${new Date(s.childChangedAt).toLocaleString('vi-VN')}`}>
                         Phụ huynh đã đổi con
@@ -1884,27 +1967,17 @@ function TeacherStudentsTab({ token, classId, cls }) {
                     )}
                   </td>
                   <td style={styles.td}>
-                    {s.status === 'active' && <span style={styles.statusBadgeActive}>Đã kết nối</span>}
-                    {s.status === 'pending' && <span style={styles.statusBadgePending}>Chờ cô duyệt</span>}
-                    {s.status === 'invited' && <span style={styles.statusBadgeDraft}>Đã gửi mã</span>}
-                    {s.status === 'rejected' && <span style={styles.statusBadgeRejected}>Đã từ chối</span>}
+                    <StudentStatus status={s.status} />
                   </td>
                   <td style={styles.td}>
                     {s.status === 'pending' && (
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button style={styles.approveBtn} onClick={() => handleApprove(s.id)}>Duyệt</button>
-                        <button style={styles.rejectBtn} onClick={() => handleReject(s.id)}>Từ chối</button>
+                        <Button size="sm" variant="primary" onClick={() => handleApprove(s.id)}>Duyệt</Button>
+                        <Button size="sm" variant="danger" onClick={() => handleReject(s.id)}>Từ chối</Button>
                       </div>
                     )}
                     {s.status === 'invited' && s.claimCode && (
-                      <button
-                        style={styles.copyBtn}
-                        onClick={() => {
-                          const claimLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/vao-lop/m/${s.claimCode}`;
-                          navigator.clipboard.writeText(`Phụ huynh bé ${s.rosterName} bấm link để kết nối vào lớp trên Kèm Con Học: ${claimLink}`);
-                          toast(`Đã sao chép link riêng của bé ${s.rosterName}`, 'success');
-                        }}
-                      >
+                      <button style={styles.copyBtn} onClick={() => copyClaimLink(s)}>
                         <Copy size={12} /> Link riêng
                       </button>
                     )}
@@ -1914,6 +1987,7 @@ function TeacherStudentsTab({ token, classId, cls }) {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {showRosterModal && (
@@ -1926,6 +2000,14 @@ function TeacherStudentsTab({ token, classId, cls }) {
       )}
     </div>
   );
+}
+
+function StudentStatus({ status }) {
+  if (status === 'active') return <span style={styles.statusBadgeActive}>Đã kết nối</span>;
+  if (status === 'pending') return <span style={styles.statusBadgePending}>Chờ cô duyệt</span>;
+  if (status === 'invited') return <span style={styles.statusBadgeDraft}>Đã gửi mã</span>;
+  if (status === 'rejected') return <span style={styles.statusBadgeRejected}>Đã từ chối</span>;
+  return null;
 }
 
 // Modal Dán danh sách học sinh
@@ -2013,19 +2095,19 @@ function RosterModal({ token, classId, onClose, onAdded }) {
 // ---------------------------------------------------------------------------
 // 7. ANNOUNCEMENTS & REMINDERS TAB (PROMPT 04 MỤC 4b)
 // ---------------------------------------------------------------------------
-function TeacherAnnouncementsTab({ token, classId }) {
+function TeacherAnnouncementsTab({ token, classId, cls }) {
   const [seg, setSeg] = useState('announcements'); // 'announcements' | 'reminders'
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Standard Announcement state
+  // Thông báo thường
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [pinned, setPinned] = useState(false);
   const [requireAck, setRequireAck] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
-  // Reminders state (Prompt 04 mục 4b)
+  // Nhắc việc có ngày
   const quickDates = getQuickReminderDates();
   const [selectedTemplate, setSelectedTemplate] = useState(REMINDER_TEMPLATES[0].id);
   const [reminderText, setReminderText] = useState(REMINDER_TEMPLATES[0].template);
@@ -2033,14 +2115,12 @@ function TeacherAnnouncementsTab({ token, classId }) {
   const [attachAssignment, setAttachAssignment] = useState(false);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   const [classAssignments, setClassAssignments] = useState([]);
-  const [remindersList, setRemindersList] = useState(() => {
-    try {
-      const stored = localStorage.getItem('kem-con-hoc:teacher-reminders');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [sending, setSending] = useState(false);
+
+  // Danh sách gia đình đã đọc / đã nhắc con của một thông báo
+  const [openReadsId, setOpenReadsId] = useState(null);
+  const [readsData, setReadsData] = useState([]);
+  const [readsLoading, setReadsLoading] = useState(false);
 
   useEffect(() => {
     loadAnnouncements();
@@ -2097,29 +2177,30 @@ function TeacherAnnouncementsTab({ token, classId }) {
         setBody('');
         setShowCreate(false);
         loadAnnouncements();
+      } else {
+        toast(d.error?.message || 'Chưa gửi được thông báo', 'error');
       }
     } catch {
       toast('Lỗi gửi thông báo', 'error');
     }
   }
 
-  // Đếm số lời nhắc đã gửi hôm nay
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const remindersSentToday = remindersList.filter((r) => r.created_at?.startsWith(todayStr)).length;
+  const reminders = announcements.filter((a) => a.kind === 'reminder');
+  const infoAnnouncements = announcements.filter((a) => a.kind !== 'reminder');
+  const remindersForDate = reminders.filter((r) => r.remind_for === selectedDate).length;
+  const reachedLimit = remindersForDate >= MAX_REMINDERS_PER_DAY;
+  const familyCount = Number(cls?.active_students_count);
+  const hasFamilyCount = Number.isFinite(familyCount) && familyCount > 0;
 
   const handleSelectTemplate = (tpl) => {
     setSelectedTemplate(tpl.id);
     setReminderText(tpl.template);
   };
 
-  const [viewingReadsAnn, setViewingReadsAnn] = useState(null);
-  const [readsData, setReadsData] = useState([]);
-  const [readsLoading, setReadsLoading] = useState(false);
-
   const handleSendReminder = async (e) => {
     e.preventDefault();
-    if (!reminderText.trim()) return;
-
+    if (!reminderText.trim() || reachedLimit || sending) return;
+    setSending(true);
     try {
       const res = await fetch(`${API_BASE}/api/v1/teacher/classes/${classId}/announcements`, {
         method: 'POST',
@@ -2140,27 +2221,29 @@ function TeacherAnnouncementsTab({ token, classId }) {
       const d = await res.json().catch(() => ({}));
 
       if (res.ok && d.ok) {
-        toast('Đã gửi lời nhắc việc cho phụ huynh lớp! 🔔', 'success');
+        toast('Đã gửi lời nhắc cho phụ huynh lớp', 'success');
         loadAnnouncements();
       } else {
-        toast(d.error?.message || d.error || 'Gộp vào một lời nhắc nhé cô', 'error');
+        toast(d.error?.message || 'Gộp vào một lời nhắc nhé cô', 'error');
       }
     } catch {
       toast('Lỗi kết nối khi gửi lời nhắc', 'error');
+    } finally {
+      setSending(false);
     }
   };
 
-  const handleOpenReads = async (ann) => {
-    setViewingReadsAnn(ann);
+  const toggleReads = async (ann) => {
+    if (openReadsId === ann.id) { setOpenReadsId(null); return; }
+    setOpenReadsId(ann.id);
+    setReadsData([]);
     setReadsLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/v1/teacher/announcements/${ann.id}/reads`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await res.json().catch(() => ({}));
-      if (res.ok && d.ok) {
-        setReadsData(d.reads || []);
-      }
+      if (res.ok && d.ok) setReadsData(d.reads || []);
     } catch {
       toast('Lỗi tải danh sách đã đọc', 'error');
     } finally {
@@ -2168,60 +2251,65 @@ function TeacherAnnouncementsTab({ token, classId }) {
     }
   };
 
+  const fmtTime = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
+  const fmtDate = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN');
+  };
+
+  function ReadsList({ ann }) {
+    if (openReadsId !== ann.id) return null;
+    if (readsLoading) return <p style={{ fontSize: 12.5, color: 'var(--s-text-2)', margin: '8px 0 0' }}>Đang tải...</p>;
+    if (readsData.length === 0) return <p style={{ fontSize: 12.5, color: 'var(--s-text-2)', margin: '8px 0 0' }}>Chưa có gia đình nào mở thông báo này.</p>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+        {readsData.map((r) => (
+          <div key={r.family_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 13, padding: '6px 10px', background: 'var(--s-bg)', borderRadius: 10, border: '1px solid var(--s-line)' }}>
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.family_name || 'Gia đình trong lớp'}</span>
+            {r.done_at ? <TPill variant="success">Đã nhắc con {fmtTime(r.done_at)}</TPill> : <TPill variant="warning">Đã đọc</TPill>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* Segment Selector: Thông báo vs Nhắc việc */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <button
-          type="button"
-          style={{
-            padding: '8px 16px',
-            borderRadius: 8,
-            fontSize: 13.5,
-            fontWeight: 700,
-            cursor: 'pointer',
-            border: '1.5px solid #CBD5E1',
-            background: seg === 'announcements' ? 'var(--s-accent, #9B6916)' : '#FFFFFF',
-            color: seg === 'announcements' ? '#FFFFFF' : '#334155',
-          }}
-          onClick={() => setSeg('announcements')}
-        >
-          📢 Thông báo lớp
-        </button>
-        <button
-          type="button"
-          style={{
-            padding: '8px 16px',
-            borderRadius: 8,
-            fontSize: 13.5,
-            fontWeight: 700,
-            cursor: 'pointer',
-            border: '1.5px solid #CBD5E1',
-            background: seg === 'reminders' ? '#D6336C' : '#FFFFFF',
-            color: seg === 'reminders' ? '#FFFFFF' : '#334155',
-          }}
-          onClick={() => setSeg('reminders')}
-        >
-          ⏰ Nhắc việc
-        </button>
+      {/* Chọn Thông báo hoặc Nhắc việc */}
+      <div className="tp-seg" style={{ marginBottom: 16 }}>
+        <Segmented
+          options={[
+            { value: 'announcements', label: '📢 Thông báo lớp' },
+            { value: 'reminders', label: '⏰ Nhắc việc' },
+          ]}
+          value={seg}
+          onChange={setSeg}
+        />
       </div>
 
-      {/* SEGMENT 1: THÔNG BÁO TIÊU CHUẨN */}
+      {/* THÔNG BÁO */}
       {seg === 'announcements' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div className="tp-head">
             <div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Thông báo một chiều</h3>
-              <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>Gửi nhắc nhở ôn bài, lịch thi và theo dõi phụ huynh đã đọc</p>
+              <h3 style={{ fontSize: 18, fontWeight: 700 }}>Thông báo một chiều</h3>
+              <p>Gửi lịch thi, nhắc ôn bài và xem gia đình nào đã đọc, đã nhắc con</p>
             </div>
-            <button style={styles.primaryBtn} onClick={() => setShowCreate(!showCreate)}>
-              <Plus size={16} /> Soạn thông báo mới
-            </button>
+            <div className="tp-head-actions">
+              <button style={styles.primaryBtn} onClick={() => setShowCreate(!showCreate)}>
+                <Plus size={16} /> Soạn thông báo mới
+              </button>
+            </div>
           </div>
 
           {showCreate && (
             <form onSubmit={handleCreate} style={{ ...styles.card, marginBottom: 20 }}>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: 16 }}>Soạn thông báo mới</h4>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: 16, color: 'var(--s-text)' }}>Soạn thông báo mới</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input
                   style={styles.input}
@@ -2237,17 +2325,11 @@ function TeacherAnnouncementsTab({ token, classId }) {
                   onChange={(e) => setBody(e.target.value)}
                   required
                 />
-                <div style={{ display: 'flex', gap: 16 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                    <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} />
-                    Ghim đầu lớp
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                    <input type="checkbox" checked={requireAck} onChange={(e) => setRequireAck(e.target.checked)} />
-                    Yêu cầu phụ huynh bấm "Đã đọc"
-                  </label>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  <Toggle checked={pinned} onChange={setPinned} label="Ghim đầu lớp" />
+                  <Toggle checked={requireAck} onChange={setRequireAck} label='Cần phụ huynh bấm "Đã đọc"' />
                 </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
                   <button type="submit" style={styles.primaryBtn}>Gửi thông báo</button>
                   <button type="button" style={styles.secondaryBtn} onClick={() => setShowCreate(false)}>Huỷ</button>
                 </div>
@@ -2256,29 +2338,33 @@ function TeacherAnnouncementsTab({ token, classId }) {
           )}
 
           {loading ? (
-            <p style={{ color: '#64748B' }}>Đang tải thông báo...</p>
-          ) : announcements.length === 0 ? (
+            <p style={{ color: 'var(--s-text-2)' }}>Đang tải thông báo...</p>
+          ) : infoAnnouncements.length === 0 ? (
             <EmptyState
               title="Chưa có thông báo nào"
-              description="Chưa có thông báo nào được gửi tới phụ huynh lớp này."
+              description="Cô bấm Soạn thông báo mới để gửi tới phụ huynh lớp này."
             />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {announcements.map((an) => (
-                <div key={an.id} style={styles.assignmentCard}>
+              {infoAnnouncements.map((an) => (
+                <div key={an.id} className="tp-asg-card" style={{ alignItems: 'stretch' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      {an.pinned === 1 && <span style={styles.pinnedBadge}>Đã ghim</span>}
-                      {an.require_ack === 1 && <span style={styles.ackBadge}>Cần xác nhận</span>}
-                      <span style={{ fontSize: 12, color: '#64748B' }}>
-                        {new Date(an.created_at).toLocaleDateString('vi-VN')}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                      {Number(an.pinned) === 1 && <span style={styles.pinnedBadge}>Đã ghim</span>}
+                      {Number(an.require_ack) === 1 && <span style={styles.ackBadge}>Cần bấm Đã đọc</span>}
+                      <span style={{ fontSize: 12.5, color: 'var(--s-text-2)' }}>{fmtDate(an.created_at)}</span>
+                    </div>
+                    <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--s-text)' }}>{an.title}</h4>
+                    <p style={{ fontSize: 14, color: 'var(--s-text)', margin: '0 0 8px 0', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{an.body}</p>
+                    <div style={{ fontSize: 12.5, color: 'var(--s-text-2)', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span>
+                        Đã đọc: <strong>{Number(an.read_count) || 0}</strong> gia đình · <strong>{Math.max(Number(an.done_count) || 0, Number(an.ack_count) || 0)}</strong> gia đình đã nhắc con
                       </span>
+                      <button type="button" style={styles.linkBtn} onClick={() => toggleReads(an)}>
+                        {openReadsId === an.id ? 'Ẩn danh sách' : 'Xem từng gia đình'}
+                      </button>
                     </div>
-                    <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0' }}>{an.title}</h4>
-                    <p style={{ fontSize: 14, color: '#475569', margin: '0 0 8px 0', lineHeight: 1.5 }}>{an.body}</p>
-                    <div style={{ fontSize: 12, color: '#64748B' }}>
-                      Đã đọc: <strong>{an.read_count || 0}</strong> gia đình · Đã xác nhận: <strong>{an.ack_count || 0}</strong> gia đình
-                    </div>
+                    <ReadsList ann={an} />
                   </div>
                 </div>
               ))}
@@ -2287,83 +2373,61 @@ function TeacherAnnouncementsTab({ token, classId }) {
         </div>
       )}
 
-      {/* SEGMENT 2: NHẮC VIỆC (PROMPT 04 MỤC 4b) */}
+      {/* NHẮC VIỆC */}
       {seg === 'reminders' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 480px) 1fr', gap: 20 }}>
-          {/* Form Soạn Nhắc Việc */}
+        <div className="tp-rem-grid">
           <div style={{ ...styles.card, padding: 18 }}>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: 16, fontWeight: 700, color: '#1E293B' }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 700, color: 'var(--s-text)' }}>
               Cô soạn nhắc việc
             </h4>
-            <p style={{ fontSize: 12.5, color: '#64748B', margin: '0 0 14px 0' }}>
-              Thẻ nổi trên màn chính của mẹ từ trưa hôm trước tới trưa ngày áp dụng. Mẹ bấm "Đã nhắc con" là xong.
+            <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: '0 0 14px 0', lineHeight: 1.5 }}>
+              Thẻ hiện trên màn chính của mẹ từ trưa hôm trước tới trưa ngày áp dụng. Mẹ bấm "Đã nhắc con" là xong.
             </p>
 
-            {/* 6 mẫu nhanh */}
             <div style={{ marginBottom: 12 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
-                Mẫu soạn nhanh (chọn mẫu):
+              <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--s-text-2)', display: 'block', marginBottom: 6 }}>
+                Mẫu soạn nhanh
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {REMINDER_TEMPLATES.map((tpl) => (
                   <button
                     key={tpl.id}
                     type="button"
+                    className={`tp-chip ${selectedTemplate === tpl.id ? 'tp-on' : ''}`}
+                    aria-pressed={selectedTemplate === tpl.id}
                     onClick={() => handleSelectTemplate(tpl)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '5px 10px',
-                      borderRadius: 8,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      border: selectedTemplate === tpl.id ? '1.5px solid #D6336C' : '1px solid #E2E8F0',
-                      background: selectedTemplate === tpl.id ? '#FDF2F8' : '#F8FAFC',
-                      color: selectedTemplate === tpl.id ? '#BE185D' : '#334155',
-                    }}
                   >
-                    <span>{tpl.icon}</span>
+                    <span aria-hidden="true">{tpl.icon}</span>
                     <span>{tpl.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Hộp soạn lời nhắc */}
             <div style={{ marginBottom: 12 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
-                Lời nhắc (chạm để chỉnh sửa):
-              </span>
+              <label style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--s-text-2)', display: 'block', marginBottom: 6 }} htmlFor="tp-reminder-text">
+                Lời nhắc (sửa chỗ trong ngoặc nhọn)
+              </label>
               <textarea
-                style={{ ...styles.input, minHeight: 70, fontSize: 13.5, lineHeight: 1.5 }}
+                id="tp-reminder-text"
+                style={{ ...styles.input, minHeight: 70, fontSize: 14, lineHeight: 1.5 }}
                 value={reminderText}
                 onChange={(e) => setReminderText(e.target.value)}
               />
             </div>
 
-            {/* Chọn ngày áp dụng */}
             <div style={{ marginBottom: 14 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
-                Áp dụng cho ngày:
+              <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--s-text-2)', display: 'block', marginBottom: 6 }}>
+                Áp dụng cho ngày
               </span>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {quickDates.map((qd) => (
                   <button
                     key={qd.date}
                     type="button"
+                    className={`tp-chip ${selectedDate === qd.date ? 'tp-on' : ''}`}
+                    aria-pressed={selectedDate === qd.date}
                     onClick={() => setSelectedDate(qd.date)}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: 6,
-                      fontSize: 12.5,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      border: selectedDate === qd.date ? '1.5px solid #4F46E5' : '1px solid #E2E8F0',
-                      background: selectedDate === qd.date ? '#EEF2FF' : '#FFFFFF',
-                      color: selectedDate === qd.date ? '#4338CA' : '#475569',
-                    }}
                   >
                     {qd.label}
                   </button>
@@ -2371,159 +2435,76 @@ function TeacherAnnouncementsTab({ token, classId }) {
               </div>
             </div>
 
-            {/* Gắn với bài đã giao */}
-            <div style={{ marginBottom: 16, padding: '10px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={attachAssignment}
-                  onChange={(e) => setAttachAssignment(e.target.checked)}
-                />
-                <span>Gắn với bài đã giao</span>
-              </label>
-
+            <div style={{ marginBottom: 16, padding: '10px 12px', background: 'var(--s-bg)', borderRadius: 12, border: '1px solid var(--s-line)' }}>
+              <Toggle checked={attachAssignment} onChange={setAttachAssignment} label="Gắn với bài đã giao" />
               {attachAssignment && (
                 <div style={{ marginTop: 8 }}>
-                  <select
-                    style={{ ...styles.input, fontSize: 12.5 }}
-                    value={selectedAssignmentId}
-                    onChange={(e) => setSelectedAssignmentId(e.target.value)}
-                  >
-                    {classAssignments.length === 0 ? (
-                      <option value="">(Chưa có bài tập nào)</option>
-                    ) : (
-                      classAssignments.map((asg) => (
-                        <option key={asg.id} value={asg.id}>
-                          {asg.title} ({asg.subject || 'Toán'})
-                        </option>
-                      ))
-                    )}
-                  </select>
+                  {classAssignments.length === 0 ? (
+                    <span style={{ fontSize: 13, color: 'var(--s-text-2)' }}>Lớp chưa có bài tập nào.</span>
+                  ) : (
+                    <Select
+                      ariaLabel="Bài đã giao"
+                      value={selectedAssignmentId}
+                      onChange={(v) => setSelectedAssignmentId(v)}
+                      options={classAssignments.map((asg) => ({ value: asg.id, label: `${asg.title} (${asg.subject || 'Toán'})` }))}
+                    />
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Giới hạn Quota */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, fontSize: 12 }}>
-              <span style={{ color: remindersSentToday >= MAX_REMINDERS_PER_DAY ? '#DC2626' : '#64748B', fontWeight: 700 }}>
-                Hôm nay đã gửi {remindersSentToday}/{MAX_REMINDERS_PER_DAY} lời nhắc
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, fontSize: 12.5, gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ color: reachedLimit ? 'var(--s-bad)' : 'var(--s-text-2)', fontWeight: 800 }}>
+                Ngày này đã có {remindersForDate}/{MAX_REMINDERS_PER_DAY} lời nhắc
               </span>
-              <span style={{ color: '#94A3B8' }}>Tối đa 3 lời nhắc/ngày</span>
+              <span style={{ color: 'var(--s-text-2)' }}>Tối đa {MAX_REMINDERS_PER_DAY} lời nhắc mỗi ngày</span>
             </div>
 
-            {/* Nút gửi */}
             <button
               type="button"
               onClick={handleSendReminder}
-              disabled={remindersSentToday >= MAX_REMINDERS_PER_DAY}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                borderRadius: 8,
-                background: remindersSentToday >= MAX_REMINDERS_PER_DAY ? '#94A3B8' : '#D6336C',
-                color: '#FFFFFF',
-                fontWeight: 800,
-                fontSize: 14,
-                border: 'none',
-                cursor: remindersSentToday >= MAX_REMINDERS_PER_DAY ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
+              disabled={reachedLimit || sending}
+              style={{ ...styles.primaryBtn, width: '100%', minHeight: 44, opacity: reachedLimit || sending ? 0.6 : 1, cursor: reachedLimit || sending ? 'not-allowed' : 'pointer' }}
             >
               <Send size={16} />
-              <span>Gửi cho 28 gia đình</span>
+              <span>{sending ? 'Đang gửi...' : hasFamilyCount ? `Gửi cho ${familyCount} gia đình` : 'Gửi cho cả lớp'}</span>
             </button>
           </div>
 
-          {/* Cột Theo Dõi Lời Nhắc Đã Gửi */}
           <div>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 700, color: '#1E293B' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 700, color: 'var(--s-text)' }}>
               Theo dõi tình trạng nhắc con
             </h4>
 
-            {remindersList.length === 0 ? (
+            {loading ? (
+              <p style={{ color: 'var(--s-text-2)' }}>Đang tải lời nhắc...</p>
+            ) : reminders.length === 0 ? (
               <EmptyState
                 title="Chưa có lời nhắc việc"
-                description="Chưa có lời nhắc việc nào được gửi gần đây."
+                description="Lời nhắc cô gửi sẽ hiện ở đây kèm số gia đình đã đọc và đã nhắc con."
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {remindersList.map((rem) => (
-                  <div key={rem.id} style={{ ...styles.card, padding: 16, borderLeft: '4px solid #D6336C' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                      <div>
-                        <b style={{ fontSize: 14.5, color: '#0F172A', display: 'block' }}>{rem.message}</b>
-                        <span style={{ fontSize: 12, color: '#64748B' }}>
-                          📅 Áp dụng: {rem.target_date} {rem.assignment_id ? '· Có kèm bài tập' : ''}
-                        </span>
-                      </div>
+                {reminders.map((rem) => (
+                  <div key={rem.id} style={{ ...styles.card, padding: 16, borderLeft: '4px solid var(--s-accent)' }}>
+                    <b style={{ fontSize: 14.5, color: 'var(--s-text)', display: 'block', lineHeight: 1.45 }}>{rem.body}</b>
+                    <span style={{ fontSize: 12.5, color: 'var(--s-text-2)' }}>
+                      📅 Áp dụng: {rem.remind_for ? fmtDate(rem.remind_for) : 'chưa đặt ngày'}{rem.assignment_id ? ' · Có kèm bài tập' : ''}
+                    </span>
+
+                    <div className="tp-stat3" style={{ margin: '10px 0' }}>
+                      <div><b>{Number(rem.read_count) || 0}</b><span>đã đọc</span></div>
+                      <div><b style={{ color: 'var(--s-ok)' }}>{Number(rem.done_count) || 0}</b><span>đã nhắc con</span></div>
+                      <div><b>{hasFamilyCount ? familyCount : '·'}</b><span>{hasFamilyCount ? 'gia đình' : 'chưa có dữ liệu'}</span></div>
                     </div>
 
-                    {/* 3 chỉ số theo dõi */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, background: '#F8FAFC', padding: '10px 12px', borderRadius: 8, marginBottom: 12, textAlign: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>{rem.read_count || 24}</div>
-                        <div style={{ fontSize: 11, color: '#64748B' }}>đã đọc</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: '#16A34A' }}>{rem.done_count || 19}</div>
-                        <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 700 }}>đã nhắc con</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: '#4F46E5' }}>{rem.total_count || 28}</div>
-                        <div style={{ fontSize: 11, color: '#64748B' }}>gia đình</div>
-                      </div>
-                    </div>
+                    <button type="button" style={styles.linkBtn} onClick={() => toggleReads(rem)}>
+                      {openReadsId === rem.id ? 'Ẩn danh sách' : 'Xem từng gia đình'}
+                    </button>
+                    <ReadsList ann={rem} />
 
-                    {/* Danh sách học sinh theo lớp */}
-                    <div>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6 }}>
-                        Chi tiết theo gia đình trong lớp:
-                      </span>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {(rem.students || [
-                          { name: 'Nguyễn Minh Anh (Mít)', status: 'done', time: '19:05' },
-                          { name: 'Trần Bảo Nam', status: 'done', time: '18:40' },
-                          { name: 'Lê Gia Hân', status: 'read' },
-                          { name: 'Phạm Tuấn Kiệt', status: 'read' },
-                          { name: 'Võ Khánh Linh', status: 'unread' },
-                        ]).map((st, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              fontSize: 12.5,
-                              padding: '4px 8px',
-                              background: '#FFFFFF',
-                              borderRadius: 6,
-                              border: '1px solid #F1F5F9',
-                            }}
-                          >
-                            <span>{st.name}</span>
-                            {st.status === 'done' ? (
-                              <span style={{ color: '#16A34A', fontWeight: 700, background: '#DCFCE7', padding: '2px 8px', borderRadius: 999 }}>
-                                ✓ Đã nhắc con {st.time}
-                              </span>
-                            ) : st.status === 'read' ? (
-                              <span style={{ color: '#9A5B00', fontWeight: 700, background: '#FFF1D6', border: '1px solid #F6C56A', padding: '2px 8px', borderRadius: 999 }}>
-                                Đã đọc
-                              </span>
-                            ) : (
-                              <span style={{ color: '#94A3B8', fontWeight: 600, background: '#F1F5F9', padding: '2px 8px', borderRadius: 999 }}>
-                                Chưa đọc
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <p style={{ fontSize: 11, color: '#94A3B8', margin: '10px 0 0 0', fontStyle: 'italic' }}>
-                      Cô chỉ thấy trạng thái đọc và đã nhắc. Không thấy dữ liệu học, ảnh hay chat của gia đình.
+                    <p style={{ fontSize: 12, color: 'var(--s-text-2)', margin: '10px 0 0 0' }}>
+                      Cô chỉ thấy trạng thái đọc và đã nhắc. Không thấy dữ liệu học, ảnh hay trò chuyện của gia đình.
                     </p>
                   </div>
                 ))}
@@ -2542,7 +2523,7 @@ function TeacherAnnouncementsTab({ token, classId }) {
 function TeacherClassSettingsTab({ token, classId, cls, onUpdated }) {
   const [joinMode, setJoinMode] = useState(cls.join_mode || 'code_and_claim');
   const [defaultDueDays, setDefaultDueDays] = useState(cls.default_due_days || 1);
-  const [shareTeacherAnswer, setShareTeacherAnswer] = useState(cls.share_teacher_answer || 1);
+  const [shareTeacherAnswer, setShareTeacherAnswer] = useState(cls.share_teacher_answer === 0 || cls.share_teacher_answer === '0' ? 0 : 1);
   const [saving, setSaving] = useState(false);
 
   async function handleSaveSettings() {
@@ -2587,34 +2568,32 @@ function TeacherClassSettingsTab({ token, classId, cls, onUpdated }) {
   return (
     <div style={{ maxWidth: 600 }}>
       <div style={styles.card}>
-        <h4 style={{ margin: '0 0 16px 0', fontSize: 16 }}>Cài đặt lớp học</h4>
+        <h4 style={{ margin: '0 0 16px 0', fontSize: 16, color: 'var(--s-text)' }}>Cài đặt {formatClassName(cls.name) || 'lớp học'}</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label style={styles.label}>Cách thức kết nối học sinh</label>
-            <select style={styles.input} value={joinMode} onChange={(e) => setJoinMode(e.target.value)}>
-              <option value="code_and_claim">Mã lớp chung + Mã học sinh riêng</option>
-              <option value="claim_only">Chỉ mã riêng (tắt mã chung)</option>
-            </select>
+            <Select
+              ariaLabel="Cách thức kết nối học sinh"
+              value={joinMode}
+              onChange={(v) => setJoinMode(v)}
+              options={[
+                { value: 'code_and_claim', label: 'Mã lớp chung và mã riêng từng em' },
+                { value: 'claim_only', label: 'Chỉ mã riêng (tắt mã chung)' },
+              ]}
+            />
           </div>
 
           <div>
             <label style={styles.label}>Hạn nộp bài mặc định khi tạo bài tập</label>
-            <select style={styles.input} value={defaultDueDays} onChange={(e) => setDefaultDueDays(Number(e.target.value))}>
-              <option value={1}>Sau 1 ngày</option>
-              <option value={2}>Sau 2 ngày</option>
-              <option value={7}>Sau 7 ngày</option>
-            </select>
+            <Select ariaLabel="Hạn nộp bài mặc định" value={Number(defaultDueDays)} onChange={(v) => setDefaultDueDays(Number(v))} options={DUE_OPTIONS} />
           </div>
 
           <div>
             <label style={styles.label}>Gửi đáp án của cô cho phụ huynh</label>
-            <select style={styles.input} value={shareTeacherAnswer} onChange={(e) => setShareTeacherAnswer(Number(e.target.value))}>
-              <option value={1}>Cho phép phụ huynh xem (giữ 1.5s)</option>
-              <option value={0}>Không hiển thị đáp án</option>
-            </select>
+            <Select ariaLabel="Gửi đáp án của cô cho phụ huynh" value={Number(shareTeacherAnswer)} onChange={(v) => setShareTeacherAnswer(Number(v))} options={SHARE_ANSWER_OPTIONS} />
           </div>
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
             <button style={styles.primaryBtn} onClick={handleSaveSettings} disabled={saving}>
               {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
             </button>
@@ -2700,33 +2679,38 @@ function TeacherSettingsScreen({ token, teacher, onUpdateSuccess, onLogout }) {
     }
   }
 
+  const accountRows = [
+    ['Họ tên', formatTeacherName(teacher.display_name)],
+    ['Trường', teacher.school_name],
+    ['Tỉnh, thành phố', teacher.province],
+    ['Email', teacher.email],
+    ['Số điện thoại', teacher.phone],
+    ['Khối dạy', formatGrades(teacher.grades)],
+  ].filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '');
+
   return (
     <div style={{ maxWidth: 720 }}>
       <h2 style={styles.sectionHeading}>Cài đặt của cô</h2>
-      <p style={styles.sectionSub}>Thư viện phương pháp dạy học & thông tin tài khoản</p>
+      <p style={{ ...styles.sectionSub, marginBottom: 16 }}>Thư viện cách cô dạy và thông tin tài khoản</p>
 
       {/* Thư viện "Cách cô dạy" */}
       <div style={{ ...styles.card, marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <Sparkles size={18} color="#F6A623" />
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Thư viện "Cách cô dạy" (Dùng lại khi soạn bài)</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--s-text)' }}>Thư viện "Cách cô dạy" (dùng lại khi soạn bài)</h3>
         </div>
 
         <form onSubmit={handleAddNote} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+          <div className="tp-form-2">
             <input
               style={styles.input}
+              aria-label="Tên phương pháp"
               placeholder="Tên phương pháp: ví dụ Sơ đồ đoạn thẳng toán 2 bước"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               required
             />
-            <select style={styles.input} value={newType} onChange={(e) => setNewType(e.target.value)}>
-              <option value="word_problem_multistep">Toán lời văn</option>
-              <option value="arithmetic">Phép tính / Bảng nhân chia</option>
-              <option value="geometry">Hình học</option>
-              <option value="vietnamese">Tiếng Việt</option>
-            </select>
+            <Select ariaLabel="Dạng bài" value={newType} onChange={(v) => setNewType(v)} options={PROBLEM_TYPE_OPTIONS} />
           </div>
           <div>
             <textarea
@@ -2737,21 +2721,29 @@ function TeacherSettingsScreen({ token, teacher, onUpdateSuccess, onLogout }) {
               maxLength={300}
               required
             />
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>{newNote.length}/300 ký tự</span>
+            <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>{newNote.length}/300 ký tự</span>
           </div>
-          <button type="submit" disabled={addingNote} style={styles.primaryBtn}>
+          <button type="submit" disabled={addingNote} style={{ ...styles.primaryBtn, alignSelf: 'flex-start', minHeight: 44 }}>
             <Plus size={14} /> Thêm vào thư viện
           </button>
         </form>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {methodNotes.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: 0 }}>Thư viện chưa có cách dạy nào. Cô thêm một cách để dùng lại khi soạn bài.</p>
+          )}
           {methodNotes.map((n) => (
             <div key={n.id} style={styles.noteItem}>
-              <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: 14, color: '#1E293B' }}>{n.title}</strong>
-                <p style={{ fontSize: 13, color: '#475569', margin: '2px 0 0 0' }}>{n.note}</p>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <strong style={{ fontSize: 14, color: 'var(--s-text)' }}>{n.title}</strong>
+                {(PROBLEM_TYPE_OPTIONS.find((o) => o.value === (n.problem_type || n.problemType)) || null) && (
+                  <span style={{ ...styles.statusBadgeDraft, marginLeft: 6 }}>
+                    {PROBLEM_TYPE_OPTIONS.find((o) => o.value === (n.problem_type || n.problemType)).label}
+                  </span>
+                )}
+                <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: '2px 0 0 0' }}>{n.note}</p>
               </div>
-              <button style={{ ...styles.iconBtn, color: '#DC2626' }} onClick={() => handleDeleteNote(n.id)}>
+              <button style={{ ...styles.iconBtn, color: 'var(--s-bad)', flexShrink: 0 }} aria-label={`Xoá ${n.title}`} onClick={() => handleDeleteNote(n.id)}>
                 <X size={14} />
               </button>
             </div>
@@ -2759,20 +2751,43 @@ function TeacherSettingsScreen({ token, teacher, onUpdateSuccess, onLogout }) {
         </div>
       </div>
 
-      {/* Hồ sơ giáo viên */}
+      {/* Hồ sơ giáo viên: dòng nào trống thì ẩn */}
       <div style={styles.card}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 700 }}>Thông tin tài khoản</h3>
-        <p style={{ fontSize: 14, color: '#475569', margin: '4px 0' }}><strong>Họ tên:</strong> {teacher.display_name}</p>
-        <p style={{ fontSize: 14, color: '#475569', margin: '4px 0' }}><strong>Trường:</strong> {teacher.school_name}</p>
-        <p style={{ fontSize: 14, color: '#475569', margin: '4px 0' }}><strong>Email:</strong> {teacher.email}</p>
-        <p style={{ fontSize: 14, color: '#475569', margin: '4px 0' }}><strong>Khối dạy:</strong> {teacher.grades}</p>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 700, color: 'var(--s-text)' }}>Thông tin tài khoản</h3>
+        {accountRows.map(([k, v]) => (
+          <p key={k} style={{ fontSize: 14, color: 'var(--s-text)', margin: '6px 0', overflowWrap: 'anywhere' }}>
+            <strong style={{ color: 'var(--s-text-2)' }}>{k}:</strong> {v}
+          </p>
+        ))}
 
         <div style={{ marginTop: 16 }}>
-          <button style={styles.secondaryBtn} onClick={onLogout}>Đăng xuất khỏi hệ thống</button>
+          <button style={{ ...styles.secondaryBtn, minHeight: 44 }} onClick={onLogout}>
+            <LogOut size={16} /> Đăng xuất
+          </button>
         </div>
       </div>
     </div>
   );
+}
+
+// Khối dạy có thể lưu dạng chuỗi "Khối 3", số 3, hoặc mảng JSON [3,4]
+function formatGrades(g) {
+  if (g === null || g === undefined) return '';
+  let v = g;
+  if (typeof v === 'string') {
+    const t = v.trim();
+    if (!t) return '';
+    if (t.startsWith('[')) {
+      try { v = JSON.parse(t); } catch { return t; }
+    } else {
+      return /^\d+$/.test(t) ? `Khối ${t}` : t;
+    }
+  }
+  if (Array.isArray(v)) {
+    const list = v.map((x) => String(x).replace(/^khối\s*/i, '').trim()).filter(Boolean);
+    return list.length ? `Khối ${list.join(', ')}` : '';
+  }
+  return typeof v === 'number' ? `Khối ${v}` : String(v);
 }
 
 // ---------------------------------------------------------------------------
@@ -2862,7 +2877,7 @@ const styles = {
   },
   gradeBadge: {
     display: 'inline-block',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#9A5B00',
     backgroundColor: '#FFF1D6',
@@ -3121,7 +3136,7 @@ const styles = {
     alignItems: 'center',
   },
   statusBadgeActive: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#047857',
     backgroundColor: '#ECFDF5',
@@ -3130,7 +3145,7 @@ const styles = {
     borderRadius: 999,
   },
   statusBadgeDraft: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#84664A',
     backgroundColor: '#FFF8EC',
@@ -3139,7 +3154,7 @@ const styles = {
     borderRadius: 999,
   },
   statusBadgePending: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#9A5B00',
     backgroundColor: '#FFF1D6',
@@ -3148,7 +3163,7 @@ const styles = {
     borderRadius: 999,
   },
   statusBadgeRejected: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#BE123C',
     backgroundColor: '#FFF1F2',
@@ -3157,7 +3172,7 @@ const styles = {
     borderRadius: 999,
   },
   pinnedBadge: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#9A5B00',
     backgroundColor: '#FFF1D6',
@@ -3166,7 +3181,7 @@ const styles = {
     borderRadius: 999,
   },
   ackBadge: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     color: '#9A5B00',
     backgroundColor: '#FFF1D6',
@@ -3193,7 +3208,7 @@ const styles = {
     flexWrap: 'wrap',
   },
   tagSelf: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: 800,
     color: '#047857',
     backgroundColor: '#ECFDF5',
@@ -3202,7 +3217,7 @@ const styles = {
     borderRadius: 999,
   },
   tagHint: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: 800,
     color: '#9A5B00',
     backgroundColor: '#FFF1D6',
@@ -3211,7 +3226,7 @@ const styles = {
     borderRadius: 999,
   },
   tagGuided: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: 800,
     color: '#1D4ED8',
     backgroundColor: '#EFF6FF',
@@ -3243,7 +3258,7 @@ const styles = {
   th: {
     backgroundColor: '#FFF8EC',
     padding: '10px 14px',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     letterSpacing: '0.8px',
     textTransform: 'uppercase',
@@ -3269,7 +3284,7 @@ const styles = {
   childChangedBadge: {
     display: 'inline-block',
     marginLeft: 6,
-    fontSize: 10.5,
+    fontSize: 12,
     fontWeight: 800,
     color: '#9A5B00',
     backgroundColor: '#FFF1D6',
@@ -3283,7 +3298,7 @@ const styles = {
     border: 'none',
     borderRadius: 999,
     padding: '4px 10px',
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: 800,
     cursor: 'pointer',
   },
@@ -3293,7 +3308,7 @@ const styles = {
     border: 'none',
     borderRadius: 999,
     padding: '4px 10px',
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: 800,
     cursor: 'pointer',
   },
@@ -3306,7 +3321,7 @@ const styles = {
     border: '1px solid #F6C56A',
     borderRadius: 999,
     padding: '4px 8px',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 800,
     cursor: 'pointer',
   },
@@ -3346,7 +3361,7 @@ const styles = {
   },
   label: {
     display: 'block',
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: 800,
     color: '#84664A',
     textTransform: 'uppercase',

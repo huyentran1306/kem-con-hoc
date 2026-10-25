@@ -23,7 +23,8 @@ function assert(condition, message) {
 
 console.log('🧪 BẮT ĐẦU KIỂM THỬ CHẶNG 3 (PROMPT 11 · CỔNG GIÁO VIÊN BẢN GẤU)...');
 
-const teacherPortalContent = readFileSync(resolve(root, 'src/TeacherPortal.jsx'), 'utf8');
+// Đợt 15: một phần cổng giáo viên tách sang src/teacher/*.jsx
+const teacherPortalContent = ['src/TeacherPortal.jsx', 'src/teacher/parts.jsx'].map((f) => { try { return readFileSync(resolve(root, f), 'utf8') } catch (e) { return '' } }).join('\n');
 const staffIndexContent = readFileSync(resolve(root, 'src/ui/staff/index.jsx'), 'utf8');
 
 // --- 1. Kiểm tra Bộ linh kiện dùng chung Staff Bản Gấu (src/ui/staff/) ---
@@ -33,7 +34,7 @@ assert(staffIndexContent.includes('export function SideNav'), 'SideNav được 
 assert(staffIndexContent.includes('export function ClassSwitcher'), 'ClassSwitcher được định nghĩa trong src/ui/staff');
 assert(staffIndexContent.includes('export function Card'), 'Card được định nghĩa trong src/ui/staff');
 assert(staffIndexContent.includes('export function Kpi'), 'Kpi được định nghĩa trong src/ui/staff');
-assert(staffIndexContent.includes('export function Button'), 'Button được định nghĩa trong src/ui/staff');
+assert(/export (function|const) Button/.test(staffIndexContent), 'Button được định nghĩa trong src/ui/staff');
 assert(staffIndexContent.includes('export function StatusPill'), 'StatusPill được định nghĩa trong src/ui/staff');
 assert(staffIndexContent.includes('export function EmptyState'), 'EmptyState được định nghĩa trong src/ui/staff');
 assert(staffIndexContent.includes('export function AssistantCard'), 'AssistantCard được định nghĩa trong src/ui/staff');
@@ -44,11 +45,11 @@ console.log('\n--- 2. Khung trang StaffShell & Thanh điều hướng ---');
 assert(teacherPortalContent.includes('<StaffShell'), 'TeacherPortal sử dụng StaffShell làm layout chuẩn');
 assert(staffIndexContent.includes('<SideNav'), 'StaffShell nhúng SideNav cho giao diện desktop >= 1024px');
 assert(staffIndexContent.includes('ClassSwitcher') && staffIndexContent.includes('<ClassSwitcher'), 'SideNav nhúng ClassSwitcher chọn lớp đang xem');
-assert(staffIndexContent.includes('196px'), 'SideNav có độ rộng 196px chuẩn theo thiết kế');
+assert(staffIndexContent.includes('220') || staffIndexContent.includes('196px'), 'SideNav có độ rộng chuẩn (đợt 15: 220px)');
 assert(staffIndexContent.includes('Lớp của cô') || teacherPortalContent.includes('Lớp của cô'), 'Có mục "Lớp của cô" trong điều hướng');
-assert(teacherPortalContent.includes('Bài tập & Soạn bài'), 'Có mục "Bài tập & Soạn bài"');
+assert(teacherPortalContent.includes("label: 'Bài tập'"), 'Có mục "Bài tập" (đợt 15 rút gọn nhãn)');
 assert(teacherPortalContent.includes('Học sinh'), 'Có mục "Học sinh"');
-assert(teacherPortalContent.includes('Thông báo & Nhắc việc'), 'Có mục "Thông báo & Nhắc việc"');
+assert(teacherPortalContent.includes("label: 'Thông báo'"), 'Có mục "Thông báo" (đợt 15 rút gọn nhãn)');
 assert(teacherPortalContent.includes('Kết quả'), 'Có mục "Kết quả"');
 assert(teacherPortalContent.includes('Cài đặt của cô'), 'Có mục "Cài đặt của cô"');
 
@@ -69,16 +70,16 @@ assert(teacherPortalContent.includes('TeacherResultsTab'), 'TeacherClassDetail k
 
 // --- 5. Màn Xem kết quả làm bài: 4 KPIs, Biểu đồ bậc, Thẻ trợ lý Gấu ---
 console.log('\n--- 5. Màn Xem kết quả làm bài & Phân tích sư phạm AI ---');
-assert(teacherPortalContent.includes('function AssignmentResultsView'), 'Component AssignmentResultsView tồn tại');
-assert(teacherPortalContent.includes('Sĩ số nộp bài'), 'Có KPI Sĩ số nộp bài');
-assert(teacherPortalContent.includes('Tỉ lệ tự chủ'), 'Có KPI Tỉ lệ tự chủ');
-assert(teacherPortalContent.includes('Số lần bí TB'), 'Có KPI Số lần bí trung bình');
-assert(teacherPortalContent.includes('Điểm vướng nhất') || teacherPortalContent.includes('Bậc hay vướng nhất'), 'Có KPI Bậc hay vướng nhất');
-assert(teacherPortalContent.includes('<AssistantCard'), 'Sử dụng AssistantCard cho nhận xét trợ lý sư phạm AI');
-assert(teacherPortalContent.includes('commonStuckPoint'), 'Hiển thị Chỗ cả lớp vướng từ AI');
-assert(teacherPortalContent.includes('tomorrowTeachingTip'), 'Hiển thị Gợi ý tiết dạy ngày mai từ AI');
-assert(teacherPortalContent.includes('studentsNeedingFollowupCodes'), 'Hiển thị danh sách học sinh cần quan tâm từ AI');
-assert(teacherPortalContent.includes('StatusPill variant="success"'), 'Sử dụng StatusPill chuẩn Staff Bản Gấu');
+// Đợt 15: KPI kết quả theo dữ liệu thật, trợ lý gấu tính từ số liệu lớp (không gọi AI viết cứng)
+assert(teacherPortalContent.includes('label="Hoàn thành"'), 'Có KPI Hoàn thành');
+assert(teacherPortalContent.includes('label="Tự làm được"'), 'Có KPI Tự làm được');
+assert(teacherPortalContent.includes('label="Cần gợi ý"'), 'Có KPI Cần gợi ý');
+assert(teacherPortalContent.includes('Bậc hay vướng'), 'Có biểu đồ Bậc hay vướng');
+assert(teacherPortalContent.includes('BearAssistant'), 'Có thẻ trợ lý gấu');
+assert(teacherPortalContent.includes('buildAssistantTips'), 'Gợi ý trợ lý tính từ số liệu thật');
+assert(teacherPortalContent.includes('StepChart'), 'Có StepChart');
+assert(teacherPortalContent.includes('KpiCard'), 'Dùng KpiCard chuẩn bộ quy chuẩn');
+assert(teacherPortalContent.includes('<StatusPill'), 'Sử dụng StatusPill chuẩn Staff Bản Gấu');
 
 // --- 6. Màn trống, Đang tải, và BearMascot ---
 console.log('\n--- 6. Chuẩn hoá EmptyState và Mascot ---');
