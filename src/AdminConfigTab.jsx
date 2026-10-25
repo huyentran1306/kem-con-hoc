@@ -60,14 +60,35 @@ export function AdminConfigTab({ token, adminProfile, activeSubTab: propSubTab, 
   const [dirty, setDirty] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
 
-  // Load admins & audit logs
+  // Client errors state (Chặng 5 · Mục 5.2)
+  const [clientErrors, setClientErrors] = useState([])
+  const [clientErrorsLoading, setClientErrorsLoading] = useState(false)
+
+  // Load admins, audit logs & client errors
   useEffect(() => {
     if (activeSubTab === 'admins') {
       fetchAdmins()
     } else if (activeSubTab === 'audit') {
       fetchAuditLogs()
+    } else if (activeSubTab === 'infra') {
+      fetchClientErrors()
     }
   }, [activeSubTab])
+
+  const fetchClientErrors = async () => {
+    setClientErrorsLoading(true)
+    try {
+      const res = await adminFetch('/api/v1/admin/client-errors')
+      if (res.ok) {
+        const data = await res.json()
+        setClientErrors(data.errors || [])
+      }
+    } catch (e) {
+      console.warn('Fetch client errors error:', e)
+    } finally {
+      setClientErrorsLoading(false)
+    }
+  }
 
   const fetchAdmins = async () => {
     setAdminsLoading(true)
@@ -797,6 +818,107 @@ export function AdminConfigTab({ token, adminProfile, activeSubTab: propSubTab, 
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Lỗi phía người dùng (Client Errors - Chặng 5 · Mục 5.2) */}
+          <div className="stitch-card" style={{ marginTop: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h3 className="stitch-card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚠️ Lỗi phía người dùng (Client Errors)</span>
+                  <span className="stitch-badge stitch-badge-neutral">{clientErrors.length} loại lỗi ghi nhận</span>
+                </h3>
+                <p className="stitch-card-desc">
+                  Tự động bắt lỗi runtime, unhandled rejection và lỗi Error Boundary từ trình duyệt người dùng. Giữ tối đa 30 ngày.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="stitch-btn-secondary"
+                onClick={fetchClientErrors}
+                disabled={clientErrorsLoading}
+                style={{ fontSize: '13px', padding: '6px 12px' }}
+              >
+                {clientErrorsLoading ? 'Đang tải...' : '🔄 Làm mới'}
+              </button>
+            </div>
+
+            {clientErrorsLoading ? (
+              <p style={{ color: 'var(--admin-text-sub)', padding: '16px 0' }}>Đang tải danh sách lỗi client...</p>
+            ) : clientErrors.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--admin-text-sub)' }}>
+                <span style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}>✨</span>
+                <strong>Chưa ghi nhận lỗi runtime nào từ phía người dùng!</strong>
+                <p style={{ fontSize: '12px', margin: '4px 0 0 0' }}>Hệ thống client đang vận hành ổn định trên các thiết bị.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="stitch-table" style={{ width: '100%', fontSize: '13px' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '70px', textAlign: 'center' }}>Số lần</th>
+                      <th style={{ width: '130px' }}>Lần cuối</th>
+                      <th>Thông điệp lỗi</th>
+                      <th>File & Dòng</th>
+                      <th style={{ width: '90px' }}>Giao diện</th>
+                      <th style={{ width: '90px' }}>Phiên bản</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientErrors.map((err) => (
+                      <tr key={err.id}>
+                        <td style={{ textAlign: 'center' }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              backgroundColor: err.count > 5 ? '#FEE2E2' : '#FEF3C7',
+                              color: err.count > 5 ? '#991B1B' : '#92400E',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                            }}
+                          >
+                            {err.count}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '12px', color: 'var(--admin-text-sub)' }}>
+                          {err.last_seen ? fmtTime(err.last_seen) : '—'}
+                        </td>
+                        <td>
+                          <strong style={{ color: '#DC2626', display: 'block', marginBottom: '2px' }}>
+                            {err.message}
+                          </strong>
+                          {err.stack && (
+                            <pre
+                              style={{
+                                margin: 0,
+                                fontSize: '11px',
+                                color: 'var(--admin-text-sub)',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-all',
+                                maxHeight: '60px',
+                                overflowY: 'auto',
+                              }}
+                            >
+                              {err.stack}
+                            </pre>
+                          )}
+                        </td>
+                        <td style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--admin-text-sub)' }}>
+                          {err.file_line || 'unknown'}
+                        </td>
+                        <td>
+                          <span className="stitch-badge stitch-badge-neutral">{err.theme || 'bear'}</span>
+                        </td>
+                        <td style={{ fontSize: '12px', color: 'var(--admin-text-sub)' }}>
+                          {err.build_version || '1.0.0'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

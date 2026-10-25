@@ -1,0 +1,34 @@
+{
+  "de_bai": "Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?",
+  "phuong_phap": "Truy vấn gợi mở 3 bậc (Scaffolding)",
+  "cac_bac": [
+    {
+      "bac": 1,
+      "cau_hoi": "Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt nào?",
+      "dap_an_cho_me": "Xác định số lượng ban đầu là 15 con vịt.",
+      "goi_y": {
+        "muc_1_do_vat": "Lấy 15 que tính xếp ra bàn để tượng trưng cho đàn vịt.",
+        "muc_2_hinh_ve": "Vẽ 15 chấm tròn hoặc một đoạn thẳng biểu diễn 15 con vịt."
+      }
+    },
+    {
+      "bac": 2,
+      "cau_hoi": "Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con hả con?",
+      "dap_an_cho_me": "Bán bớt tức là làm phép trừ, bớt đi 6 con.",
+      "goi_y": {
+        "muc_1_do_vat": "Tách 6 que tính ra khỏi 15 que tính ban đầu.",
+        "muc_2_hinh_ve": "Gạch chéo 6 chấm tròn trên hình vẽ."
+      }
+    },
+    {
+      "bac": 3,
+      "cau_hoi": "Đếm lại số que tính còn lại trên bàn, hoặc viết phép tính để tìm số vịt còn lại nào!",
+      "dap_an_cho_me": "Phép tính: 15 - 6 = 9 con vịt. Đáp số: 9 con vịt.",
+      "goi_y": {
+        "muc_1_do_vat": "Đếm từng que tính còn lại trước mặt con.",
+        "muc_2_hinh_ve": "Tách 15 thành 10 và 5, lấy 10 trừ 6 còn 4, cộng 5 bằng 9."
+      }
+    }
+  ],
+  "dap_an_cuoi_cho_me": "Bác Ba còn lại 9 con vịt."
+}

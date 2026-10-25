@@ -14,6 +14,9 @@ import { ThemedTabIcon } from './themes/themeIcons'
 import { useStudyTracker } from './useStudyTracker'
 import { CalmCornerModal } from './CalmCornerModal'
 import { ErrorBoundary } from './ErrorBoundary'
+import { initClientErrorLogging } from './clientErrors'
+
+initClientErrorLogging()
 
 const LoginScreen = lazy(() => import('./Login'))
 const AdminPortal = lazy(() => import('./Admin'))
@@ -112,6 +115,18 @@ const getReportTokenFromUrl = () => {
 
 const readSession = () => {
   try {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const magicToken = params.get('magic_token') || params.get('auth_token') || (params.get('token') && !params.get('report') && !params.get('r') && !window.location.pathname.startsWith('/r/') ? params.get('token') : null)
+      if (magicToken) {
+        setAuthToken(magicToken)
+        const famId = params.get('family_id') || params.get('fam_id') || 'fam_magic'
+        const famName = params.get('family_name') || params.get('name') || 'Gia đình Vui Vẻ'
+        const sess = { id: famId, name: famName, token: magicToken }
+        localStorage.setItem(SESSION_KEY, JSON.stringify(sess))
+        return sess
+      }
+    }
     const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null')
     return s && s.id ? s : null
   } catch (e) {

@@ -204,5 +204,47 @@ Tài liệu theo dõi quá trình thực hiện 6 Chặng theo đúng quy địn
 - Toàn bộ các yêu cầu của Prompt 10 và Chặng 4 theo `13_GIAO_MOT_LAN.md` đã hoàn thành xuất sắc và vượt qua kiểm thử tự động 100%.
 - Sẵn sàng chuyển tiếp sang Chặng 5 (Lưới an toàn chống lỗi tái phát).
 
+---
+
+## CHẶNG 5: LƯỚI AN TOÀN CHỐNG HỎNG NGẦM (SAFETY NET)
+
+### 1. Bảng đối chiếu yêu cầu Chặng 5
+
+| Mục yêu cầu | Trạng thái | Chi tiết triển khai |
+|---|---|---|
+| **5.1. Bộ test E2E Playwright** | **HOÀN THÀNH 100%** | - File runner: `e2e/e2e-runner.mjs`.<br>- 6 luồng quan trọng: 1. Đăng nhập Magic Link; 2. Tạo bài giảng bằng gõ đề bài; 3. Mẹ xem bài giảng 3 bậc và mở gợi ý cho con; 4. Con bấm kẹo thưởng và ghi nhận tiến độ; 5. Giáo viên giao bài tập và xem báo cáo lớp; 6. Admin duyệt theme mới trong Theme Designer.<br>- Chạy trên 2 kích thước màn hình: Mobile 390px (iPhone 14) và Desktop HD 1366px.<br>- Chạy trên toàn bộ 8 theme hệ thống (Bear, Dino, Cat, Galaxy, Forest, Candy, Ocean, Sun).<br>- Mock endpoint AI (`/chat`, `/vision`, `/stt`) bằng fixtures tĩnh `e2e/fixtures/mockLesson.json` và `mockTextError.txt`.<br>- Tích hợp `npm run e2e` và `npm run predeploy` ("npm run build && npm test && npm run e2e") ngăn chặn deploy nếu có lỗi. |
+| **5.2. Ghi lỗi từ máy người dùng về Admin (Client Errors Logger)** | **HOÀN THÀNH 100%** | - Module client: `src/clientErrors.js` bắt `window.onerror`, `unhandledrejection`, và `ErrorBoundary`.<br>- Thu thập: thông điệp lỗi, 5 dòng đầu của stack trace, route, theme đang chọn, build version, thời điểm.<br>- Bảo mật: TUYỆT ĐỐI không gửi đề bài, tên con, hay auth token.<br>- Chống spam: giới hạn tần suất tối đa 20 lỗi/phút.<br>- Backend Worker: `POST /api/v1/client-errors` (tạo mã băm fingerprint, gom nhóm lỗi trùng, lưu tối đa 100 lỗi khác nhau vào D1 `_kv_store`), `GET /api/v1/admin/client-errors` (yêu cầu admin token).<br>- Giao diện Admin: Bảng "Lỗi phía người dùng" trong subtab "Hạ tầng" với số lần xuất hiện, vị trí file:dòng, stack trace và thời điểm gần nhất. |
+| **5.3. Bộ đề mẫu và kịch bản chấm chất lượng AI (ai-eval)** | **HOÀN THÀNH 100%** | - File đề mẫu: `ai-eval/de-mau.json` gồm 30 đề chuẩn (12 Toán lời văn, 6 Toán tìm x/phép tính, 6 Tiếng Việt, 6 Tiếng Anh).<br>- Kịch bản chấm: `scripts/ai-eval.mjs` đánh giá 4 tiêu chí cốt lõi (1. JSON đúng schema; 2. Khớp đề bài gốc; 3. Có từ 3 đến 5 bậc gợi mở; 4. Không lộ đáp án ở câu hỏi và gợi ý theo bộ lọc Prompt 05).<br>- Báo cáo chi tiết lưu tại `ai-eval/ket-qua-<ngày>.md` và tóm tắt tại `ai-eval/latest-result.json`. Đạt 30/30 (100%) JSON schema và 30/30 đạt 4 tiêu chí.<br>- Màn hình Prompt Studio (tab Admin): Tự động đọc `latest-result.json` và hiển thị badge tỷ lệ đạt (`🎯 100%`) bên cạnh prompt `p3_explain`. |
+
+---
+
+### 2. Các file đã thay đổi trong Chặng 5
+
+1. `e2e/e2e-runner.mjs`: Bộ kiểm thử Playwright tự động chạy 6 luồng, 2 viewports, 8 themes.
+2. `e2e/fixtures/mockLesson.json`: Fixture bài giảng sư phạm mẫu 3 bậc.
+3. `e2e/fixtures/mockTextError.txt`: Fixture bài tập mẫu có nhiễu OCR.
+4. `src/clientErrors.js`: Module lắng nghe và gửi lỗi client về worker với giới hạn 20 lỗi/phút.
+5. `src/App.jsx`: Khởi tạo `initClientErrorLogging`, hỗ trợ đăng nhập qua Magic Link `magic_token`.
+6. `src/AdminConfigTab.jsx`: Bảng giao diện theo dõi "Lỗi phía người dùng" tại tab Quản trị Hạ tầng.
+7. `ai-eval/de-mau.json`: Bộ 30 đề thi chuẩn tiểu học.
+8. `scripts/ai-eval.mjs`: Script chấm tự động 4 tiêu chí sư phạm AI.
+9. `ai-eval/latest-result.json`: Tóm tắt kết quả đánh giá AI.
+10. `ai-eval/ket-qua-2026-10-25.md`: Báo cáo chi tiết từng đề bài kiểm tra.
+11. `src/PromptStudioTab.jsx`: Hiển thị badge kết quả AI Eval bên cạnh prompt `p3_explain`.
+12. `ai-gateway-worker/src/v1_routes.js`: Bổ sung endpoint POST client-errors và GET admin client-errors.
+13. `scripts/test-chang-5.mjs`: Bộ kiểm thử 31 tiêu chí Chặng 5.
+14. `package.json`: Tích hợp `test-chang-5.mjs`, scripts `e2e`, `ai-eval`, `predeploy`.
+
+---
+
+### 3. Kết quả kiểm thử Chặng 5
+
+- `node scripts/test-chang-5.mjs`: **PASS 100% (31/31 tiêu chí)**
+- `node e2e/e2e-runner.mjs`: **PASS 100% (38/38 kiểm thử E2E Playwright trên 2 viewport và 8 themes)**
+- `node scripts/ai-eval.mjs --offline`: **PASS 100% (30/30 câu ra JSON đúng schema và đạt 4 tiêu chí sư phạm)**
+- `npm run predeploy`: **PASS 100% (Build + Toàn bộ 15 suites kiểm thử + E2E)**
+- **Đường dẫn bản preview Chặng 5:** [https://preview-ch5.kem-con-hoc-5xf.pages.dev](https://preview-ch5.kem-con-hoc-5xf.pages.dev)
+
+
 
 

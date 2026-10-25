@@ -1,0 +1,212 @@
+[
+  {
+    "id": "m01",
+    "subject": "Toán",
+    "category": "Toán lời văn 1 bước",
+    "grade": 2,
+    "prompt": "An có 15 cái kẹo, An chia đều cho 3 bạn. Hỏi mỗi bạn được mấy cái kẹo?"
+  },
+  {
+    "id": "m02",
+    "subject": "Toán",
+    "category": "Toán lời văn 1 bước",
+    "grade": 1,
+    "prompt": "Nhà Mai có 8 con gà, mẹ mua thêm 6 con gà nữa. Hỏi nhà Mai có tất cả bao nhiêu con gà?"
+  },
+  {
+    "id": "m03",
+    "subject": "Toán",
+    "category": "Toán lời văn 1 bước",
+    "grade": 2,
+    "prompt": "Có 24 quyển vở xếp đều vào 4 ngăn. Hỏi mỗi ngăn có bao nhiêu quyển vở?"
+  },
+  {
+    "id": "m04",
+    "subject": "Toán",
+    "category": "Toán lời văn 1 bước",
+    "grade": 3,
+    "prompt": "Một cửa hàng có 45 kg gạo, buổi sáng đã bán được 1/5 số gạo đó. Hỏi cửa hàng đã bán bao nhiêu ki-lô-gam gạo?"
+  },
+  {
+    "id": "m05",
+    "subject": "Toán",
+    "category": "Toán lời văn 1 bước",
+    "grade": 3,
+    "prompt": "Một hình vuông có cạnh dài 8 cm. Tính chu vi hình vuông đó."
+  },
+  {
+    "id": "m06",
+    "subject": "Toán",
+    "category": "Toán lời văn 1 bước",
+    "grade": 4,
+    "prompt": "Trung bình cộng của hai số là 45. Biết số thứ nhất là 38, tìm số thứ hai."
+  },
+  {
+    "id": "m07",
+    "subject": "Toán",
+    "category": "Toán lời văn 2 bước",
+    "grade": 3,
+    "prompt": "Bác Ba có hai rổ cam. Rổ thứ nhất có 36 quả cam. Rổ thứ hai có số cam gấp đôi rổ thứ nhất. Hỏi cả hai rổ có tất cả bao nhiêu quả cam?"
+  },
+  {
+    "id": "m08",
+    "subject": "Toán",
+    "category": "Toán lời văn 2 bước",
+    "grade": 3,
+    "prompt": "Lớp 3A có 32 học sinh, trong đó có 1/4 số học sinh là học sinh giỏi, còn lại là học sinh khá. Hỏi lớp 3A có bao nhiêu học sinh khá?"
+  },
+  {
+    "id": "m09",
+    "subject": "Toán",
+    "category": "Toán lời văn 2 bước",
+    "grade": 4,
+    "prompt": "Một mảnh đất hình chữ nhật có chu vi là 120 m. Chiều dài hơn chiều rộng 16 m. Tính diện tích của mảnh đất đó."
+  },
+  {
+    "id": "m10",
+    "subject": "Toán",
+    "category": "Toán lời văn 2 bước",
+    "grade": 4,
+    "prompt": "Hai ngăn sách có tất cả 180 quyển. Nếu chuyển 15 quyển từ ngăn trên xuống ngăn dưới thì hai ngăn bằng nhau. Hỏi lúc đầu ngăn trên có bao nhiêu quyển sách?"
+  },
+  {
+    "id": "m11",
+    "subject": "Toán",
+    "category": "Toán lời văn 2 bước",
+    "grade": 5,
+    "prompt": "Một người đi xe máy khởi hành từ A lúc 7 giờ và đến B lúc 9 giờ 30 phút. Quãng đường AB dài 90 km. Tính vận tốc của xe máy với đơn vị là km/giờ."
+  },
+  {
+    "id": "m12",
+    "subject": "Toán",
+    "category": "Toán lời văn 2 bước",
+    "grade": 5,
+    "prompt": "Một bể bơi dạng hình hộp chữ nhật có chiều dài 20 m, chiều rộng 8 m và sâu 1.5 m. Người ta lát gạch men xung quanh và đáy bể. Tính diện tích gạch men cần dùng."
+  },
+  {
+    "id": "x01",
+    "subject": "Toán",
+    "category": "Tìm x & Phép tính",
+    "grade": 2,
+    "prompt": "Tìm x biết: x + 125 = 350"
+  },
+  {
+    "id": "x02",
+    "subject": "Toán",
+    "category": "Tìm x & Phép tính",
+    "grade": 3,
+    "prompt": "Tìm x biết: 450 - x = 120"
+  },
+  {
+    "id": "x03",
+    "subject": "Toán",
+    "category": "Tìm x & Phép tính",
+    "grade": 3,
+    "prompt": "Tìm x biết: x × 4 = 128"
+  },
+  {
+    "id": "x04",
+    "subject": "Toán",
+    "category": "Tìm x & Phép tính",
+    "grade": 3,
+    "prompt": "Tìm x biết: 156 : x = 6"
+  },
+  {
+    "id": "x05",
+    "subject": "Toán",
+    "category": "Tìm x & Phép tính",
+    "grade": 4,
+    "prompt": "Tìm x biết: (x + 5) × 3 = 45"
+  },
+  {
+    "id": "x06",
+    "subject": "Toán",
+    "category": "Tìm x & Phép tính",
+    "grade": 4,
+    "prompt": "Tìm x biết: 250 - x × 2 = 150"
+  },
+  {
+    "id": "v01",
+    "subject": "Tiếng Việt",
+    "category": "Chính tả & Từ ngữ",
+    "grade": 2,
+    "prompt": "Điền vào chỗ trống s hay x: 'Buổi ...áng, chim hót ...ôn ...ao trên cành cây.'"
+  },
+  {
+    "id": "v02",
+    "subject": "Tiếng Việt",
+    "category": "Chính tả & Từ ngữ",
+    "grade": 2,
+    "prompt": "Điền vào chỗ trống l hay n: 'Mùa xuân, cây cối đâm chồi ...ảy ...ộc, hoa cúc ...ở rộ khắp vườn.'"
+  },
+  {
+    "id": "v03",
+    "subject": "Tiếng Việt",
+    "category": "Chính tả & Từ ngữ",
+    "grade": 3,
+    "prompt": "Tìm 3 từ chỉ hoạt động và 3 từ chỉ tính nết của một học sinh chăm ngoan."
+  },
+  {
+    "id": "v04",
+    "subject": "Tiếng Việt",
+    "category": "Đặt câu & Ngữ pháp",
+    "grade": 2,
+    "prompt": "Đặt một câu theo mẫu 'Ai là gì?' để giới thiệu về bạn thân của em ở lớp."
+  },
+  {
+    "id": "v05",
+    "subject": "Tiếng Việt",
+    "category": "Đặt câu & Ngữ pháp",
+    "grade": 3,
+    "prompt": "Đặt một câu theo mẫu 'Ai làm gì?' có sử dụng hình ảnh so sánh về chú chim sẻ."
+  },
+  {
+    "id": "v06",
+    "subject": "Tiếng Việt",
+    "category": "Đặt câu & Ngữ pháp",
+    "grade": 4,
+    "prompt": "Xác định chủ ngữ và vị ngữ trong câu sau: 'Dưới ánh nắng ban mai, những giọt sương long lanh như những hạt ngọc.'"
+  },
+  {
+    "id": "e01",
+    "subject": "Tiếng Anh",
+    "category": "Tiếng Anh Tiểu học",
+    "grade": 3,
+    "prompt": "Complete the sentence with the correct form of to be: 'She ___ my new English teacher. They ___ friendly classmates.'"
+  },
+  {
+    "id": "e02",
+    "subject": "Tiếng Anh",
+    "category": "Tiếng Anh Tiểu học",
+    "grade": 3,
+    "prompt": "Change these singular nouns into plural nouns: book, baby, box, foot."
+  },
+  {
+    "id": "e03",
+    "subject": "Tiếng Anh",
+    "category": "Tiếng Anh Tiểu học",
+    "grade": 4,
+    "prompt": "Fill in the blank with in, on, or at: 'My birthday is ___ June 15th. We usually have breakfast ___ 7:00 a.m.'"
+  },
+  {
+    "id": "e04",
+    "subject": "Tiếng Anh",
+    "category": "Tiếng Anh Tiểu học",
+    "grade": 4,
+    "prompt": "Put the words in the correct order to make a question: 'you / like / Do / playing / badminton / with / friends / ?'"
+  },
+  {
+    "id": "e05",
+    "subject": "Tiếng Anh",
+    "category": "Tiếng Anh Tiểu học",
+    "grade": 5,
+    "prompt": "Choose the correct answer: 'Nam (go / goes) to school by bicycle every day, but yesterday he (walk / walked) to school.'"
+  },
+  {
+    "id": "e06",
+    "subject": "Tiếng Anh",
+    "category": "Tiếng Anh Tiểu học",
+    "grade": 5,
+    "prompt": "Rewrite the sentence in negative form: 'They visit their grandparents on Sundays.'"
+  }
+]

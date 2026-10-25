@@ -15,6 +15,7 @@ import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
 import { toast } from './utils'
 import { AdminThemesSection } from './AdminThemesSection'
 import { AdminScopeSection } from './AdminScopeSection'
+import aiEvalResult from '../ai-eval/latest-result.json'
 
 export const AVAILABLE_AI_MODELS = [
   {
@@ -783,13 +784,31 @@ export default function PromptStudioTab() {
                   width: '100%',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, flexWrap: 'wrap' }}>
                   <b style={{ fontSize: 13, color: isSelected ? 'var(--adm-text, #4B3621)' : '#1E293B', lineHeight: 1.3 }}>{item.name}</b>
-                  {status && (
-                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 999, background: status.color, color: '#fff', flexShrink: 0 }}>
-                      {status.label}
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {k === 'p3_explain' && aiEvalResult && (
+                      <span
+                        className="ai-eval-badge"
+                        title={`Đánh giá chất lượng: ${aiEvalResult.allCriteriaPassCount}/${aiEvalResult.totalQuestions} đề đạt chuẩn (${aiEvalResult.passRate}%)`}
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          padding: '2px 6px',
+                          borderRadius: 999,
+                          background: aiEvalResult.passRate >= 90 ? '#10B981' : '#F59E0B',
+                          color: '#fff',
+                        }}
+                      >
+                        🎯 {aiEvalResult.passRate}%
+                      </span>
+                    )}
+                    {status && (
+                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 999, background: status.color, color: '#fff', flexShrink: 0 }}>
+                        {status.label}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span style={{ fontSize: 11.5, color: 'var(--adm-sub, #8A6A4A)', lineHeight: 1.3 }}>{item.desc}</span>
               </button>
@@ -804,7 +823,29 @@ export default function PromptStudioTab() {
             <div className="prompt-studio-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', padding: 18, display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <b style={{ fontSize: 16, color: '#0F172A', display: 'block', lineHeight: 1.3 }}>{curDef.name}</b>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <b style={{ fontSize: 16, color: '#0F172A', display: 'block', lineHeight: 1.3 }}>{curDef.name}</b>
+                    {selectedKey === 'p3_explain' && aiEvalResult && (
+                      <span
+                        className="ai-eval-header-badge"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          background: '#ECFDF5',
+                          border: '1px solid #A7F3D0',
+                          color: '#047857',
+                        }}
+                        title={`File báo cáo chi tiết: ${aiEvalResult.reportFile}`}
+                      >
+                        🎯 Đánh giá AI: {aiEvalResult.allCriteriaPassCount}/{aiEvalResult.totalQuestions} đạt chuẩn ({aiEvalResult.passRate}%)
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2, lineHeight: 1.4 }}>{curDef.desc}</div>
                 </div>
 
