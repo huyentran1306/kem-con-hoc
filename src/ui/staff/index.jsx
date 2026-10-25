@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import './tokens.css';
+import { Pagination } from './kit.jsx';
 
 /* ============================================================
    1. BEAR MASCOT SVG (3 Trạng thái: greeting, nudge, happy)
@@ -103,7 +104,7 @@ export function Card({ children, style = {}, className = '', ...props }) {
 /* ============================================================
    3. BUTTON (Primary, Secondary, Danger)
    ============================================================ */
-export function Button({
+export const Button = React.forwardRef(function Button({
   children,
   variant = 'primary', // 'primary' | 'secondary' | 'danger'
   size = 'md', // 'sm' | 'md' | 'lg'
@@ -113,7 +114,7 @@ export function Button({
   className = '',
   onClick,
   ...props
-}) {
+}, ref) {
   const pad = size === 'sm' ? '5px 11px' : size === 'lg' ? '11px 22px' : '8px 16px';
   const fontSize = size === 'sm' ? 12 : size === 'lg' ? 14.5 : 13;
 
@@ -140,6 +141,7 @@ export function Button({
 
   return (
     <button
+      ref={ref}
       type="button"
       disabled={disabled}
       onClick={onClick}
@@ -170,16 +172,23 @@ export function Button({
       {children}
     </button>
   );
-}
+})
 
 /* ============================================================
    4. STATUS PILL
    ============================================================ */
+const STATUS_LABELS = { dat: 'Đạt', running: 'Đang chạy', review: 'Chờ xem', error: 'Lỗi' }
 export function StatusPill({ status = 'ok', label, style = {} }) {
+  if (label === undefined || label === null) label = STATUS_LABELS[status] || ''
   let bg = 'var(--s-ok-bg)';
   let color = 'var(--s-ok)';
   let border = 'var(--s-ok-border)';
 
+  // Đợt 15: 4 trạng thái chuẩn Đạt · Đang chạy · Chờ xem · Lỗi
+  if (status === 'dat') status = 'ok'
+  else if (status === 'running') status = 'info'
+  else if (status === 'review') status = 'warn'
+  else if (status === 'error') status = 'bad'
   if (status === 'wait' || status === 'pending' || status === 'warn') {
     bg = 'var(--s-warn-bg)';
     color = 'var(--s-warn)';
@@ -236,9 +245,10 @@ export function Kpi({ label, value, sub, trend = null, trendType = 'up', style =
           lineHeight: 1.2,
         }}
       >
-        {value}
+        {value === null || value === undefined || value === '' ? '·' : value}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--s-text-2)' }}>
+        {(value === null || value === undefined || value === '') && !sub && <span>Chưa có dữ liệu</span>}
         {trend && (
           <span style={{ fontWeight: 800, color: trendType === 'up' ? 'var(--s-ok)' : 'var(--s-bad)' }}>
             {trendType === 'up' ? '▲' : '▼'} {trend}
@@ -253,56 +263,46 @@ export function Kpi({ label, value, sub, trend = null, trendType = 'up', style =
 /* ============================================================
    6. TABS
    ============================================================ */
-export function Tabs({ tabs = [], activeTab, onChange, style = {} }) {
+export function Tabs({ tabs = [], activeTab, onChange, style = {}, ariaLabel = 'Các mục' }) {
+  // Đợt 15: tab gạch chân mật ong theo bản vẽ, có số đếm, phím ← → để chuyển
+  const ids = tabs.map((t) => (typeof t === 'string' ? t : t.id))
+  const onKey = (e) => {
+    const i = ids.indexOf(activeTab)
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      const n = (i + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length
+      onChange(ids[n])
+      const el = e.currentTarget.querySelector(`[data-tab="${ids[n]}"]`)
+      el && el.focus()
+    }
+  }
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', ...style }}>
+    <div className="sk-tabs" role="tablist" aria-label={ariaLabel} onKeyDown={onKey} style={style}>
       {tabs.map((t) => {
-        const id = typeof t === 'string' ? t : t.id;
-        const label = typeof t === 'string' ? t : t.label;
-        const count = typeof t === 'object' ? t.count : null;
-        const isActive = id === activeTab;
-
+        const id = typeof t === 'string' ? t : t.id
+        const label = typeof t === 'string' ? t : t.label
+        const count = typeof t === 'object' ? t.count : null
+        const icon = typeof t === 'object' ? t.icon : null
+        const isActive = id === activeTab
         return (
           <button
             key={id}
+            data-tab={id}
             type="button"
+            role="tab"
+            aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
+            className={`sk-tab ${isActive ? 'sk-on' : ''}`}
             onClick={() => onChange(id)}
-            style={{
-              padding: '6px 13px',
-              borderRadius: 999,
-              fontWeight: 800,
-              fontSize: 12,
-              fontFamily: 'var(--s-font-body)',
-              cursor: 'pointer',
-              border: isActive ? '1px solid var(--s-text)' : '1px solid var(--s-line)',
-              backgroundColor: isActive ? 'var(--s-text)' : '#FFFFFF',
-              color: isActive ? 'var(--s-bg)' : 'var(--s-text-2)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'all 0.15s ease',
-            }}
           >
+            {icon && <span aria-hidden="true">{icon}</span>}
             {label}
-            {count !== undefined && count !== null && (
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 900,
-                  padding: '1px 6px',
-                  borderRadius: 999,
-                  backgroundColor: isActive ? 'var(--s-accent)' : 'var(--s-accent-tint)',
-                  color: isActive ? 'var(--s-on-accent)' : 'var(--s-accent-ink)',
-                }}
-              >
-                {count}
-              </span>
-            )}
+            {count !== undefined && count !== null && <span className="sk-tab-count">{count}</span>}
           </button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 /* ============================================================
@@ -468,68 +468,78 @@ export function TextArea({
 /* ============================================================
    10. DATA TABLE
    ============================================================ */
-export function DataTable({ columns = [], data = [], rowKey = 'id', emptyText = 'Không có dữ liệu', style = {} }) {
-  if (!data || data.length === 0) {
-    return (
-      <div style={{ padding: 24, textAlign: 'center', color: 'var(--s-text-2)', fontSize: 13 }}>
-        {emptyText}
-      </div>
-    );
+export function DataTable({
+  columns = [],
+  data = [],
+  rowKey = 'id',
+  emptyText = 'Không có dữ liệu',
+  emptyTitle = null,
+  emptyDescription = null,
+  emptyAction = null,
+  onRowClick = null,
+  pageSize = 0,
+  maxHeight = null,
+  loading = false,
+  style = {},
+}) {
+  const [page, setPage] = useState(1)
+  const pageCount = pageSize ? Math.max(1, Math.ceil((data?.length || 0) / pageSize)) : 1
+  useEffect(() => {
+    if (page > pageCount) setPage(1)
+  }, [pageCount])
+  if (loading) {
+    return <div className="sk-table-empty">Đang tải…</div>
   }
-
+  if (!data || data.length === 0) {
+    if (emptyTitle || emptyDescription) {
+      return (
+        <EmptyState
+          title={emptyTitle || emptyText}
+          description={emptyDescription || ''}
+          actionText={emptyAction?.label}
+          onAction={emptyAction?.onClick}
+          style={{ border: 'none', boxShadow: 'none' }}
+        />
+      )
+    }
+    return <div className="sk-table-empty">{emptyText}</div>
+  }
+  const rows = pageSize ? data.slice((page - 1) * pageSize, page * pageSize) : data
   return (
-    <div style={{ overflowX: 'auto', width: '100%', ...style }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
-        <thead>
-          <tr>
-            {columns.map((c, i) => (
-              <th
-                key={c.key || i}
-                style={{
-                  textAlign: c.align || 'left',
-                  padding: '9px 12px',
-                  backgroundColor: 'var(--s-bg)',
-                  color: 'var(--s-text-2)',
-                  fontSize: 10.5,
-                  fontWeight: 900,
-                  letterSpacing: '1px',
-                  textTransform: 'uppercase',
-                  borderBottom: '1px solid var(--s-line)',
-                }}
-              >
-                {c.title}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, idx) => (
-            <tr
-              key={row[rowKey] || idx}
-              style={{
-                borderBottom: '1px solid #F6EBD9',
-                transition: 'background-color 0.15s',
-              }}
-            >
+    <div style={style}>
+      <div className="sk-table-wrap" style={maxHeight ? { maxHeight, overflowY: 'auto' } : undefined}>
+        <table className="sk-table">
+          <thead>
+            <tr>
               {columns.map((c, i) => (
-                <td
-                  key={c.key || i}
-                  style={{
-                    padding: '9px 12px',
-                    color: 'var(--s-text)',
-                    textAlign: c.align || 'left',
-                    verticalAlign: 'middle',
-                  }}
-                >
-                  {c.render ? c.render(row[c.key], row, idx) : row[c.key]}
-                </td>
+                <th key={c.key || i} style={{ textAlign: c.align || 'left', width: c.width }}>
+                  {c.title}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr
+                key={row[rowKey] ?? idx}
+                className={onRowClick ? 'sk-row-click' : ''}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={onRowClick ? (e) => e.key === 'Enter' && onRowClick(row) : undefined}
+              >
+                {columns.map((c, i) => (
+                  <td key={c.key || i} style={{ textAlign: c.align || 'left' }}>
+                    {c.render ? c.render(row[c.key], row, idx) : row[c.key] ?? '·'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {pageSize > 0 && <Pagination page={page} pageCount={pageCount} onChange={setPage} />}
     </div>
-  );
+  )
 }
 
 /* ============================================================
@@ -649,51 +659,33 @@ export function Banner({
 /* ============================================================
    13. SAVE BAR (Sticky Bottom Bar)
    ============================================================ */
-export function SaveBar({ text, saveText = 'Lưu thay đổi', onSave, onCancel = null, busy = false }) {
+export function SaveBar({
+  text = 'Có thay đổi chưa lưu',
+  saveText = 'Lưu',
+  discardText = 'Bỏ thay đổi',
+  onSave,
+  onCancel = null,
+  onDiscard = null,
+  busy = false,
+  dirty = true,
+}) {
+  // Đợt 15: nền sáng, dính đáy, chỉ hiện khi có thay đổi
+  if (!dirty) return null
+  const discard = onDiscard || onCancel
   return (
-    <div
-      style={{
-        position: 'sticky',
-        bottom: 12,
-        zIndex: 50,
-        backgroundColor: 'var(--s-text)',
-        color: 'var(--s-bg)',
-        borderRadius: 18,
-        padding: '10px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        boxShadow: '0 8px 24px rgba(75, 54, 33, 0.35)',
-        margin: '0 4px',
-      }}
-    >
-      <span style={{ fontSize: 13, fontWeight: 700, flex: 1 }}>{text}</span>
-      {onCancel && (
-        <button
-          type="button"
-          onClick={onCancel}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#F0DDC2',
-            fontSize: 12.5,
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          Huỷ
-        </button>
+    <div className="sk-savebar" role="region" aria-label="Thanh lưu">
+      <span className="sk-savebar-dot" aria-hidden="true" />
+      <span style={{ fontSize: 13, fontWeight: 800, flex: 1 }}>{text}</span>
+      {discard && (
+        <Button variant="ghost" size="sm" onClick={discard} disabled={busy}>
+          {discardText}
+        </Button>
       )}
-      <Button
-        onClick={onSave}
-        disabled={busy}
-        size="sm"
-        style={{ backgroundColor: 'var(--s-accent)', color: 'var(--s-on-accent)' }}
-      >
-        {busy ? 'Đang lưu...' : saveText}
+      <Button onClick={onSave} disabled={busy} size="sm">
+        {busy ? 'Đang lưu…' : saveText}
       </Button>
     </div>
-  );
+  )
 }
 
 /* ============================================================
@@ -1211,3 +1203,6 @@ export function StaffShell({
     </div>
   );
 }
+
+/* Đợt 15 · Chặng 1: các mảnh mới của bộ quy chuẩn */
+export * from './kit.jsx';
