@@ -34,7 +34,7 @@ export function BearStudyTracker({ tracker, onOpenReport }) {
           <span style={{ fontSize: 18 }}>🐾</span>
           <b style={{ fontSize: 14, color: '#4B3621' }}>7 Dấu chân Gấu tuần này</b>
           {streak >= 2 && (
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#9B6916', background: '#FFEBD1', padding: '2px 8px', borderRadius: 999 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#9B6916', background: '#FFEBD1', padding: '2px 8px', borderRadius: 999 }}>
               🔥 {streak} tối
             </span>
           )}
@@ -78,7 +78,7 @@ export function BearStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '🐾' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, fontWeight: isToday ? 800 : 600, color: '#8B6D50' }}>{d.label}</span>
+              <span style={{ fontSize: 12, fontWeight: isToday ? 800 : 600, color: '#8B6D50' }}>{d.label}</span>
             </div>
           )
         })}
@@ -167,7 +167,7 @@ export function CandyStudyTracker({ tracker, onOpenReport }) {
           <span style={{ fontSize: 20 }}>🍬</span>
           <b style={{ fontSize: 14, color: '#4A3B5C' }}>Lọ kẹo của bé</b>
           {streak >= 2 && (
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#A35C76', background: '#EDE4FF', padding: '2px 8px', borderRadius: 999 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#A35C76', background: '#EDE4FF', padding: '2px 8px', borderRadius: 999 }}>
               ✨ {streak} tối
             </span>
           )}
@@ -202,7 +202,7 @@ export function CandyStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '🍬' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, fontWeight: isToday ? 800 : 600, color: '#786C83' }}>{d.label}</span>
+              <span style={{ fontSize: 12, fontWeight: isToday ? 800 : 600, color: '#786C83' }}>{d.label}</span>
             </div>
           )
         })}
@@ -273,7 +273,7 @@ export function GardenStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '🌱' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, fontWeight: isToday ? 800 : 600, color: '#A9C4B5' }}>{d.label}</span>
+              <span style={{ fontSize: 12, fontWeight: isToday ? 800 : 600, color: '#A9C4B5' }}>{d.label}</span>
             </div>
           )
         })}
@@ -394,7 +394,7 @@ export function ChalkStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '⭐' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, color: '#CFC8B8' }}>{d.label}</span>
+              <span style={{ fontSize: 12, color: '#CFC8B8' }}>{d.label}</span>
             </div>
           )
         })}
@@ -449,11 +449,11 @@ export function BentoStudyTracker({ tracker, onOpenReport }) {
           </div>
           <div>
             <b style={{ fontSize: 14, color: '#1E1B3A', display: 'block' }}>Mục tiêu tuần</b>
-            <span style={{ fontSize: 11.5, color: '#6B6E80' }}>Bento học đều đặn</span>
+            <span style={{ fontSize: 12, color: '#6B6E80' }}>Bento học đều đặn</span>
           </div>
         </div>
         {streak >= 2 && (
-          <span style={{ fontSize: 11.5, fontWeight: 800, color: '#BD4F40', background: '#FFF1EE', padding: '3px 8px', borderRadius: 999 }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#BD4F40', background: '#FFF1EE', padding: '3px 8px', borderRadius: 999 }}>
             🔥 {streak} ngày liền
           </span>
         )}
@@ -482,7 +482,7 @@ export function BentoStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '✓' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#6B6E80' }}>{d.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#6B6E80' }}>{d.label}</span>
             </div>
           )
         })}
@@ -525,7 +525,7 @@ export function AuroraStudyTracker({ tracker, onOpenReport }) {
           <span style={{ fontSize: 18 }}>🌌</span>
           <b style={{ fontSize: 14, color: '#F3F4FF' }}>Chòm sao học tối</b>
           {streak >= 2 && (
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#0B1026', background: '#22D3EE', padding: '2px 8px', borderRadius: 999 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#0B1026', background: '#22D3EE', padding: '2px 8px', borderRadius: 999 }}>
               🔥 {streak} tối
             </span>
           )}
@@ -563,7 +563,7 @@ export function AuroraStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '✓' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, color: '#B2B5C3' }}>{d.label}</span>
+              <span style={{ fontSize: 12, color: '#B2B5C3' }}>{d.label}</span>
             </div>
           )
         })}
@@ -619,7 +619,7 @@ export function AuroraStartAction({ onStart }) {
               }}
             >
               Bắt đầu<br />
-              <small style={{ display: 'block', fontSize: 10, letterSpacing: 2, color: '#22D3EE', marginTop: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <small style={{ display: 'block', fontSize: 12, letterSpacing: 2, color: '#22D3EE', marginTop: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 BÀI TỐI NAY
               </small>
             </b>
@@ -718,7 +718,7 @@ export function StickerStudyTracker({ tracker, onOpenReport }) {
           <span style={{ fontSize: 18 }}>🎟️</span>
           <b style={{ fontSize: 14, fontFamily: "'Paytone One', sans-serif" }}>Phiếu bấm lỗ 7 tối</b>
           {streak >= 2 && (
-            <span style={{ fontSize: 11, fontWeight: 900, color: '#1B1B2F', background: '#FFC928', border: '2px solid #1B1B2F', padding: '1px 8px', borderRadius: 999, transform: 'rotate(-3deg)' }}>
+            <span style={{ fontSize: 12, fontWeight: 900, color: '#1B1B2F', background: '#FFC928', border: '2px solid #1B1B2F', padding: '1px 8px', borderRadius: 999, transform: 'rotate(-3deg)' }}>
               🔥 {streak} tối
             </span>
           )}
@@ -752,7 +752,7 @@ export function StickerStudyTracker({ tracker, onOpenReport }) {
               >
                 {isDone ? '★' : d.dayNum}
               </div>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#1B1B2F' }}>{d.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: '#1B1B2F' }}>{d.label}</span>
             </div>
           )
         })}
@@ -897,12 +897,12 @@ export function NotebookStudyTracker({ tracker, onOpenReport }) {
                 textAlign: 'center',
                 padding: '6px 0',
                 borderRight: '1px dashed #D9D0BE',
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 800,
                 color: isToday ? '#AE532F' : '#6B6354',
               }}
             >
-              <span style={{ display: 'block', fontSize: 10 }}>{d.label}</span>
+              <span style={{ display: 'block', fontSize: 12 }}>{d.label}</span>
               <span style={{ fontFamily: "'Mali', cursive", fontSize: 17, color: '#AE532F', display: 'block', height: 24, lineHeight: '24px' }}>
                 {isDone ? '✓' : isToday ? '○' : '·'}
               </span>
@@ -1017,7 +1017,7 @@ export function BentoStartAction({ onStart }) {
       }}
     >
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.85 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.85 }}>
           BẮT ĐẦU BUỔI HỌC
         </span>
         <h4 style={{ fontFamily: "'Lexend', sans-serif", fontSize: 22, margin: '4px 0 8px 0' }}>

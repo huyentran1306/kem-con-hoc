@@ -37,6 +37,15 @@ import {
   NotebookStartAction,
 } from './themedSlots'
 
+import {
+  NoelStudyTracker,
+  NoelStartAction,
+  TetStudyTracker,
+  TetStartAction,
+  ThieunhiStudyTracker,
+  ThieunhiStartAction,
+} from './seasonSlots'
+
 const THEME_SLOT_OVERRIDES = {
   bear: {
     StudyTracker: BearStudyTracker,
@@ -69,6 +78,19 @@ const THEME_SLOT_OVERRIDES = {
   notebook: {
     StudyTracker: NotebookStudyTracker,
     StartAction: NotebookStartAction,
+  },
+  // Đợt 16 · 3 bộ theo mùa
+  noel: {
+    StudyTracker: NoelStudyTracker,
+    StartAction: NoelStartAction,
+  },
+  tet: {
+    StudyTracker: TetStudyTracker,
+    StartAction: TetStartAction,
+  },
+  thieunhi: {
+    StudyTracker: ThieunhiStudyTracker,
+    StartAction: ThieunhiStartAction,
   },
 }
 

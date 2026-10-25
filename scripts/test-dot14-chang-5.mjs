@@ -90,7 +90,8 @@ it('4. Dữ liệu trialData.js có đầy đủ thông tin gia đình dùng th�
 
 // 5. Kiểm tra WCAG AA trên cả 8 bộ theme
 it('5. Cả 8 bộ theme đều định nghĩa đầy đủ các biến màu tương phản giao diện', () => {
-  assert.equal(THEMES.length, 8, 'Hệ thống phải có đúng 8 bộ theme');
+  // Đợt 16: 8 bộ thường ngày + 3 bộ theo mùa
+  assert.ok(THEMES.length >= 8, 'Hệ thống phải có ít nhất 8 bộ theme');
   for (const t of THEMES) {
     assert.ok(t.vars['--c-bg'], `Theme ${t.id} phải có --c-bg`);
     assert.ok(t.vars['--c-surface'], `Theme ${t.id} phải có --c-surface`);

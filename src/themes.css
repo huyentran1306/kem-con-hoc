@@ -1170,3 +1170,213 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   background-size: 18px 18px;
 }
 
+/* ============================================================
+   ĐỢT 16 · 3 BỘ GIAO DIỆN THEO MÙA (đủ biến như 8 bộ hiện có)
+   Giá trị chính lấy từ bản vẽ bo-theo-mua.html, đã đo tương phản
+   ============================================================ */
+/* 9. THEME NOEL · ĐÊM TUYẾT (THEO MÙA) */
+[data-theme="noel"] {
+  --c-bg: #F3F8FC;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #E7F1F8;
+  --c-line: #CFE0EC;
+  --c-text: #17324A;
+  --c-text-2: #4F6578;
+  --c-accent: #C8283F;
+  --c-accent-ink: #B0233A;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #1E6B4C;
+  --c-on-accent: #FFFFFF;
+  --c-on-accent-2: #FFFFFF;
+  --c-good: #1F7A47;
+  --c-good-bg: #E3F4EA;
+  --c-good-fg: #1D6B40;
+  --c-on-good: #FFFFFF;
+  --c-warn: #E3A72F;
+  --c-warn-bg: #FFF4D9;
+  --c-warn-line: #F3E2B5;
+  --c-warn-fg: #8A5A00;
+  --c-danger: #B8213A;
+  --c-danger-ink: #A61E33;
+  --c-on-danger: #FFFFFF;
+  --c-toast-bg: #17324A;
+  --c-toast-text: #FFFFFF;
+  --c-read-bg: #FFF8E6;
+  --c-read-text: #3A2A10;
+  --c-hint1-bg: #FFF4D9;
+  --c-hint1-line: #E3A72F;
+  --c-btn: linear-gradient(#CC2C44, #B8213A);
+  --c-btn-text: #FFFFFF;
+  --c-nav: #FFFFFF;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-btn: 999px;
+  --border-w: 1.5px;
+  --shadow-card: 0 6px 16px -12px rgba(23, 50, 74, .5);
+  --shadow-btn: 0 6px 0 #8E1A2D;
+  --c-hero-bg: radial-gradient(circle at 80% 0, #2B5A80, #14304A 60%);
+  --c-hero-text: #FFFFFF;
+  --c-hero-text-2: #DCE8F3;
+  --c-hero-gold: #F2C14E;
+  --font-head: 'Nunito', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Nunito', sans-serif;
+  --font-greet: 'Pacifico', cursive;
+}
+
+/* 10. THEME TET · XUÂN SUM VẦY (THEO MÙA) */
+[data-theme="tet"] {
+  --c-bg: #FFF5E6;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #FFE9C7;
+  --c-line: #F3D3A3;
+  --c-text: #4A1A0C;
+  --c-text-2: #7A4A33;
+  --c-accent: #C8102E;
+  --c-accent-ink: #B00E28;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #E9A800;
+  --c-on-accent: #FFFFFF;
+  --c-on-accent-2: #4A1A0C;
+  --c-good: #23793F;
+  --c-good-bg: #E5F4E7;
+  --c-good-fg: #1F6B37;
+  --c-on-good: #FFFFFF;
+  --c-warn: #E9A800;
+  --c-warn-bg: #FFF3CC;
+  --c-warn-line: #F3D9A0;
+  --c-warn-fg: #845C00;
+  --c-danger: #B00E28;
+  --c-danger-ink: #A00D25;
+  --c-on-danger: #FFFFFF;
+  --c-toast-bg: #4A1A0C;
+  --c-toast-text: #FFF5E6;
+  --c-read-bg: #B00E28;
+  --c-read-text: #FFE7A3;
+  --c-hint1-bg: #FFF3CC;
+  --c-hint1-line: #E9A800;
+  --c-btn: linear-gradient(#CE1C36, #B50F2A);
+  --c-btn-text: #FFF5D6;
+  --c-nav: #FFFFFF;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-btn: 999px;
+  --border-w: 1.5px;
+  --shadow-card: 0 5px 0 #F3D3A3;
+  --shadow-btn: 0 6px 0 #7E0A1D;
+  --c-hero-bg: radial-gradient(circle at 20% 0, #C8102E, #B00E28 65%);
+  --c-hero-text: #FFF5D6;
+  --c-hero-text-2: #FFE7A3;
+  --c-hero-gold: #F6C344;
+  --font-head: 'Be Vietnam Pro', sans-serif;
+  --font-body: 'Be Vietnam Pro', sans-serif;
+  --font-hand: 'Be Vietnam Pro', sans-serif;
+  --font-greet: 'Lobster', cursive;
+}
+
+/* 11. THEME THIEUNHI · CẦU VỒNG 1/6 (THEO MÙA) */
+[data-theme="thieunhi"] {
+  --c-bg: #F2F8FF;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #E6F0FF;
+  --c-line: #CFE0FA;
+  --c-text: #1D2340;
+  --c-text-2: #4E5675;
+  --c-accent: #2F62E0;
+  --c-accent-ink: #2A56C6;
+  --c-accent-text: #FFFFFF;
+  --c-accent-2: #FF9F1C;
+  --c-on-accent: #FFFFFF;
+  --c-on-accent-2: #1D2340;
+  --c-good: #1FA98F;
+  --c-good-bg: #DFF7F2;
+  --c-good-fg: #127663;
+  --c-on-good: #0B2E28;
+  --c-warn: #FFC93C;
+  --c-warn-bg: #FFF6D6;
+  --c-warn-line: #FFC93C;
+  --c-warn-fg: #8A6100;
+  --c-danger: #D23A50;
+  --c-danger-ink: #C2314A;
+  --c-on-danger: #FFFFFF;
+  --c-toast-bg: #1D2340;
+  --c-toast-text: #FFFFFF;
+  --c-read-bg: #FFF6D6;
+  --c-read-text: #1D2340;
+  --c-hint1-bg: #FFF6D6;
+  --c-hint1-line: #FFC93C;
+  --c-btn: linear-gradient(#3069EA, #2A56C6);
+  --c-btn-text: #FFFFFF;
+  --c-nav: #FFFFFF;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-btn: 999px;
+  --border-w: 1.5px;
+  --shadow-card: 0 6px 0 #CFE0FA;
+  --shadow-btn: 0 6px 0 #1D3F99;
+  --c-hero-bg: linear-gradient(160deg, #2F62E0, #2A56C6);
+  --c-hero-text: #FFFFFF;
+  --c-hero-text-2: #FFFFFF;
+  --c-hero-gold: #FFE38A;
+  --font-head: 'Baloo 2', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-hand: 'Itim', cursive;
+  --font-greet: 'Baloo 2', sans-serif;
+}
+
+/* Bộ icon thanh tab theo mùa: màu đọc từ biến --if --io --is --iw --ip --ia --ic (chỉ trong icon .kch-si) */
+[data-theme="noel"] .kch-si { --is: #17324A; --iw: 1.6; --if: #2E8B57; --io: 1; --ip: #F2C14E; --ia: #C8283F; --ic: #E04A5F; }
+[data-theme="tet"] .kch-si { --is: #4A1A0C; --iw: 1.6; --if: #3E9A55; --io: 1; --ip: #F6C344; --ia: #C8102E; --ic: #E9A800; }
+[data-theme="thieunhi"] .kch-si { --is: #1D2340; --iw: 1.6; --if: #3A86FF; --io: 1; --ip: #FFD23F; --ia: #FF5A5F; --ic: #2EC4B6; }
+
+/* Linh kiện chung (--k) cho 3 bộ theo mùa: thẻ, nút, chip, thanh tab */
+[data-theme="noel"] .stage, [data-theme="noel"] .app,
+[data-theme="tet"] .stage, [data-theme="tet"] .app,
+[data-theme="thieunhi"] .stage, [data-theme="thieunhi"] .app {
+  background: var(--c-bg) !important;
+  color: var(--c-text) !important;
+}
+[data-theme="noel"] .card, [data-theme="noel"] .big-card, [data-theme="noel"] .sheet .pn, [data-theme="noel"] .mini,
+[data-theme="tet"] .card, [data-theme="tet"] .big-card, [data-theme="tet"] .sheet .pn, [data-theme="tet"] .mini,
+[data-theme="thieunhi"] .card, [data-theme="thieunhi"] .big-card, [data-theme="thieunhi"] .sheet .pn, [data-theme="thieunhi"] .mini {
+  border: 1.5px solid var(--c-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="noel"] .btn.solid, [data-theme="noel"] .btn.primary,
+[data-theme="tet"] .btn.solid, [data-theme="tet"] .btn.primary,
+[data-theme="thieunhi"] .btn.solid, [data-theme="thieunhi"] .btn.primary {
+  background: var(--c-btn) !important;
+  color: var(--c-btn-text) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  box-shadow: var(--shadow-btn) !important;
+  font-weight: 900;
+}
+[data-theme="noel"] .btn.ghost, [data-theme="tet"] .btn.ghost, [data-theme="thieunhi"] .btn.ghost {
+  background: var(--c-surface) !important;
+  box-shadow: 0 4px 0 var(--c-line);
+}
+[data-theme="noel"] .chip, [data-theme="tet"] .chip, [data-theme="thieunhi"] .chip {
+  border-radius: 999px;
+}
+[data-theme="noel"] .tabs, [data-theme="tet"] .tabs, [data-theme="thieunhi"] .tabs {
+  background: var(--c-surface);
+  border-top: 1.5px solid var(--c-line);
+}
+[data-theme="noel"] .tabs .ic svg, [data-theme="tet"] .tabs .ic svg, [data-theme="thieunhi"] .tabs .ic svg { opacity: .78; transition: transform .15s; }
+[data-theme="noel"] .tabs .on, [data-theme="tet"] .tabs .on, [data-theme="thieunhi"] .tabs .on {
+  color: var(--c-accent-ink);
+  background: var(--c-surface-2);
+}
+[data-theme="noel"] .tabs .on .ic svg, [data-theme="tet"] .tabs .on .ic svg, [data-theme="thieunhi"] .tabs .on .ic svg {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.12);
+}
+[data-theme="noel"] .bnav, [data-theme="tet"] .bnav, [data-theme="thieunhi"] .bnav {
+  background: var(--c-surface) !important;
+  border-top: 1.5px solid var(--c-line) !important;
+}
+[data-theme="noel"] h1, [data-theme="noel"] h2, [data-theme="noel"] .title { font-weight: 900; }
+[data-theme="tet"] h1, [data-theme="tet"] h2, [data-theme="tet"] .title { font-weight: 800; }
+[data-theme="thieunhi"] h1, [data-theme="thieunhi"] h2, [data-theme="thieunhi"] .title { font-weight: 800; }

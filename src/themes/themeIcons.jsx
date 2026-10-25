@@ -3,6 +3,7 @@
    Prompt 07 Phần B (Chuẩn thiết kế từ 8-bo-giao-dien-rieng.html)
    ============================================================ */
 import React from 'react'
+import { SEASON_ICON_BODIES, ensureSeasonSprite, seasonSymbolId } from './seasonIcons.js'
 
 /**
  * 3 nút nhập đề (dùng chung hình thức nét đẹp, thay cho emoji)
@@ -61,6 +62,16 @@ export function InputModeIcon({ mode, size = 20, className = '' }) {
 export function ThemedTabIcon({ themeId = 'bear', tab = 'home', active = false, size = 22 }) {
   const t = themeId || 'bear'
   tab = tab === 'toy' ? 'game' : tab === 'profile' ? 'child' : tab
+
+  // Đợt 16 · 3 bộ theo mùa: icon nhiều màu dùng <symbol> trong sprite, màu đọc từ biến --if --is --ip --ia --ic
+  if (SEASON_ICON_BODIES[t] && SEASON_ICON_BODIES[t][tab]) {
+    ensureSeasonSprite()
+    return (
+      <svg className="kch-si" width={size + 3} height={size + 3} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <use href={`#${seasonSymbolId(t, tab)}`} />
+      </svg>
+    )
+  }
 
   // A · AURORA (Cực Quang)
   if (t === 'aurora') {

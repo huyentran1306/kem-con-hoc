@@ -19,7 +19,11 @@ export { BUDDY_QUOTES, BUDDY_NAMES }
 const TAP_LINES = ['Hí hí, nhột quá!', 'Con chạm nhẹ quá à, thích ghê!', 'Thêm một cái ôm nữa nha!']
 
 /* Bộ giao diện → linh vật (lấy theo autoIcon trong CUSTOM_BUDDIES; bento không dùng linh vật) */
+/* Đợt 16: linh vật của 3 bộ theo mùa */
+const SEASON_BUDDIES = { noel: 'snowman', tet: 'lion', thieunhi: 'kite' }
+
 export function resolveBuddyId(themeId) {
+  if (SEASON_BUDDIES[themeId]) return SEASON_BUDDIES[themeId]
   if (themeId === 'custom') {
     try {
       const cfg = JSON.parse(localStorage.getItem('kem-con-hoc:custom-theme') || '{}')

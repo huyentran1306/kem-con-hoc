@@ -73,8 +73,55 @@ const B = {
     eyes:[{x:41.5,y:69,r:3.8},{x:58.5,y:69,r:3.8}], ec:'#5B3A29', mouth:{x:50,y:75,w:3.2,style:'simple',c:'#5B3A29'},
     cheeks:[{x:36,y:75,r:3.8}], cc:'#FF7A9A', co:.75, face:{x:50,y:70}, top:14, bloom:true
   }
+  ,
+  /* ĐỢT 16 · linh vật 3 bộ theo mùa (vẽ theo bo-theo-mua.html) */
+  snowman:{
+    body:`<ellipse cx="50" cy="104" rx="30" ry="5" fill="#000" opacity=".12"/>
+<g class="acc-earL"><path d="M22 66 8 56" stroke="#8A5A2B" stroke-width="3" stroke-linecap="round"/></g>
+<g class="acc-earR"><path d="M78 66l14-10" stroke="#8A5A2B" stroke-width="3" stroke-linecap="round"/></g>
+<circle cx="50" cy="74" r="28" fill="#fff" stroke="#17324A" stroke-width="2.4"/>
+<circle cx="50" cy="36" r="21" fill="#fff" stroke="#17324A" stroke-width="2.4"/>
+<path d="M27 20c4-14 42-14 46 0z" fill="#C8283F" stroke="#17324A" stroke-width="2.2"/>
+<rect x="24" y="17" width="52" height="8" rx="4" fill="#fff" stroke="#17324A" stroke-width="2"/>
+<circle cx="74" cy="9" r="5" fill="#fff" stroke="#17324A" stroke-width="2"/>
+<path d="M60 7 C66 2 72 4 74 9" fill="none" stroke="#17324A" stroke-width="2"/>
+<path d="M50 38l12 3-12 3z" fill="#F08A24"/>
+<path d="M29 54q21 10 42 0l2 8q-23 10-46 0z" fill="#1E6B4C" stroke="#17324A" stroke-width="2"/>
+<path d="M64 60l4 18 8-2-5-17z" fill="#1E6B4C" stroke="#17324A" stroke-width="2"/>
+<circle cx="50" cy="70" r="2.6" fill="#17324A"/><circle cx="50" cy="81" r="2.6" fill="#17324A"/>`,
+    eyes:[{x:42,y:32,r:2.8},{x:58,y:32,r:2.8}], ec:'#17324A', mouth:{x:50,y:47,w:5,style:'simple',c:'#17324A'},
+    cheeks:[{x:37,y:42,r:3.6}], cc:'#F7A8B8', co:.9, face:{x:50,y:36}, top:4, sparkAt:{x:84,y:24}
+  },
+  lion:{
+    body:`<ellipse cx="50" cy="95" rx="32" ry="4.5" fill="#000" opacity=".12"/>
+<path d="M14 58c-6-30 18-48 36-48s42 18 36 48c-3 18-18 32-36 32S17 76 14 58z" fill="#E8352A" stroke="#4A1A0C" stroke-width="2.4"/>
+<path d="M50 10l-6-8h12z" fill="#F6C344" stroke="#4A1A0C" stroke-width="2"/>
+<circle cx="50" cy="20" r="6" fill="#F6C344" stroke="#4A1A0C" stroke-width="2"/>
+<path d="M18 40q14-12 26-2M82 40q-14-12-26-2" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+<circle cx="35" cy="50" r="10" fill="#fff" stroke="#4A1A0C" stroke-width="2"/>
+<circle cx="65" cy="50" r="10" fill="#fff" stroke="#4A1A0C" stroke-width="2"/>
+<ellipse cx="50" cy="64" rx="13" ry="7" fill="#F6C344" stroke="#4A1A0C" stroke-width="2"/>
+<circle cx="45" cy="63" r="1.6" fill="#4A1A0C"/><circle cx="55" cy="63" r="1.6" fill="#4A1A0C"/>
+<g class="acc-earL"><path d="M10 52c-6 2-8 8-4 12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></g>
+<g class="acc-earR"><path d="M90 52c6 2 8 8 4 12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></g>`,
+    eyes:[{x:36,y:51,r:5},{x:64,y:51,r:5}], ec:'#4A1A0C', mouth:{x:50,y:75,w:9,style:'simple',c:'#4A1A0C'},
+    cheeks:[{x:22,y:64,r:5}], cc:'#F79A8F', co:.95, face:{x:50,y:52}, top:2, sparkAt:{x:86,y:18}
+  },
+  kite:{
+    body:`<path d="M50 88c-8 6 8 10 0 18" fill="none" stroke="#1D2340" stroke-width="2"/>
+<path d="M44 95l12-3M44 104l11-3" stroke="#FF9F1C" stroke-width="4" stroke-linecap="round"/>
+<path d="M50 4 88 46 50 88 12 46z" fill="#FFD23F"/>
+<path d="M50 4 88 46H50z" fill="#FF5A5F"/>
+<path d="M50 46h38L50 88z" fill="#3A86FF"/>
+<path d="M12 46 50 4v42z" fill="#2EC4B6"/>
+<path d="M12 46h38v42z" fill="#8338EC" opacity=".85"/>
+<path d="M50 4 88 46 50 88 12 46z" fill="none" stroke="#1D2340" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="50" cy="46" r="20" fill="#fff" stroke="#1D2340" stroke-width="2.2"/>`,
+    eyes:[{x:43,y:43,r:2.8},{x:57,y:43,r:2.8}], ec:'#1D2340', mouth:{x:50,y:51,w:6,style:'simple',c:'#1D2340'},
+    cheeks:[{x:38,y:50,r:3.4}], cc:'#FFB3BC', co:.9, face:{x:50,y:46}, top:4, sparkAt:{x:86,y:14}
+  }
 };
-const ORDER = ['bear','unicorn','dragon','cat','star','cloud','sprout'];
+const ORDER = ['bear','unicorn','dragon','cat','star','cloud','sprout','snowman','lion','kite'];
 
 const STATES = [
   {id:'idle',name:'Nghỉ',use:'Trang chủ, thẻ chào. Thở và chớp mắt.'},
@@ -185,7 +232,7 @@ function propsSVG(b, id, state){
 
 
 export const BUDDY_IDS = ORDER
-export const BUDDY_NAMES = { bear: 'Gấu', unicorn: 'Kỳ lân', dragon: 'Rồng con', cat: 'Mèo', star: 'Sao', cloud: 'Mây', sprout: 'Mầm' }
+export const BUDDY_NAMES = { bear: 'Gấu', unicorn: 'Kỳ lân', dragon: 'Rồng con', cat: 'Mèo', star: 'Sao', cloud: 'Mây', sprout: 'Mầm', snowman: 'Người Tuyết Bông', lion: 'Bé Lân', kite: 'Diều Cầu Vồng' }
 export const BUDDY_STATES = STATES
 export const BUDDY_VIEWBOX = '-20 -24 140 140'
 

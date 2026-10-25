@@ -343,7 +343,7 @@ it('4.2 Giới hạn 10 lượt/ngày: Lượt thứ 11 trả về HTTP 429', ()
 console.log('\n--- 5. KIỂM TRA ĐỘ TƯƠNG PHẢN THEME TRÊN CẢ 8 BỘ GIAO DIỆN ---');
 
 it('5.1 Cả 8 bộ giao diện đều có định nghĩa biến màu surface, text, line', () => {
-  assert.strictEqual(THEMES.length, 8);
+  assert.ok(THEMES.length >= 8); // đợt 16 thêm 3 bộ theo mùa
   for (const t of THEMES) {
     assert.ok(t.name, `Theme ${t.id} thiếu name`);
     assert.ok(t.vars['--c-surface'], `Theme ${t.id} thiếu --c-surface`);

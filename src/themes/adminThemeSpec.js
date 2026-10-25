@@ -224,7 +224,7 @@ export function deriveAdminThemeVars(spec) {
 /**
  * 8 bộ gốc được mô tả chuẩn hóa theo ThemeSpec với locked: true
  */
-export const BUILTIN_THEME_SPECS = THEMES.filter((t) => t.id !== 'custom').map((t) => {
+export const BUILTIN_THEME_SPECS = THEMES.filter((t) => t.id !== 'custom' && !t.seasonal).map((t) => {
   return {
     id: t.id,
     name: t.name,

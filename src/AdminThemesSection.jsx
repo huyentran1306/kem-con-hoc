@@ -1,10 +1,12 @@
 /* ============================================================
    🎨 ADMIN: QUẢN LÝ GIAO DIỆN APP (THEMES CONFIG)
-   Quản lý 8 bộ giao diện, bật/tắt hiển thị, chọn bộ mặc định
+   Quản lý 8 bộ thường ngày, nhóm 3 bộ theo mùa (đợt 16), bật/tắt hiển thị, chọn bộ mặc định
    Đồng bộ Cloudflare D1 KV key: app_config:themes
    ============================================================ */
 import React, { useState, useEffect } from 'react'
-import { THEMES, DEFAULT_THEME, getTheme, applyTheme } from './themes'
+import { THEMES, REGULAR_THEMES, DEFAULT_THEME, getTheme, applyTheme } from './themes'
+import { ThemeTwoScreenPreview } from './themes/ThemeTwoScreenPreview'
+import { AdminSeasonsGroup } from './seasons/AdminSeasonsGroup'
 import { dbKvGet, dbKvSet } from './api'
 import { toast } from './utils'
 import { Check, ShieldAlert, Sparkles, RefreshCw, Star, Palette } from 'lucide-react'
@@ -13,7 +15,7 @@ import AdminThemeDesignerTab from './AdminThemeDesignerTab'
 const THEMES_CONFIG_KEY = 'app_config:themes'
 
 export function AdminThemesSection({ token, adminProfile }) {
-  const [mode, setMode] = useState('designer') // 'designer' (Prompt 10) | 'quick'
+  const [mode, setMode] = useState('designer') // 'designer' | 'quick' | 'seasons'
   const [config, setConfig] = useState({
     default: DEFAULT_THEME,
     enabled: THEMES.map((t) => t.id),
@@ -176,8 +178,8 @@ export function AdminThemesSection({ token, adminProfile }) {
 
   return (
     <div style={{ marginTop: 16 }}>
-      {/* Switcher giữa Trình thiết kế chuyên sâu (Prompt 10) và Quản lý nhanh */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      {/* Chuyển giữa Trình thiết kế, Quản lý nhanh 8 bộ thường ngày và nhóm Theo mùa */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <button
           type="button"
           onClick={() => setMode('designer')}
@@ -197,7 +199,7 @@ export function AdminThemesSection({ token, adminProfile }) {
           }}
         >
           <Palette size={16} />
-          <span>🎨 Trình thiết kế bộ giao diện (Prompt 10)</span>
+          <span>🎨 Trình thiết kế bộ giao diện</span>
         </button>
 
         <button
@@ -221,9 +223,32 @@ export function AdminThemesSection({ token, adminProfile }) {
           <Star size={16} />
           <span>⚡ Bật/tắt 8 bộ gốc & Mặc định toàn app</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setMode('seasons')}
+          aria-pressed={mode === 'seasons'}
+          style={{
+            padding: '9px 18px',
+            borderRadius: 10,
+            fontSize: 13.5,
+            fontWeight: 800,
+            cursor: 'pointer',
+            border: mode === 'seasons' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
+            background: mode === 'seasons' ? '#EEF2FF' : '#FFFFFF',
+            color: mode === 'seasons' ? '#4338CA' : '#475569',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span>🎄 Theo mùa (3 bộ)</span>
+        </button>
       </div>
 
-      {mode === 'designer' ? (
+      {mode === 'seasons' ? (
+        <AdminSeasonsGroup />
+      ) : mode === 'designer' ? (
         <AdminThemeDesignerTab token={token} adminProfile={adminProfile} />
       ) : (
         <div className="admin-card" style={{ padding: 24 }}>
@@ -331,7 +356,7 @@ export function AdminThemesSection({ token, adminProfile }) {
           gap: 16,
         }}
       >
-        {THEMES.map((theme) => {
+        {REGULAR_THEMES.map((theme) => {
           const isEnabled = config.enabled.includes(theme.id)
           const isDefault = config.default === theme.id
 
@@ -417,6 +442,9 @@ export function AdminThemesSection({ token, adminProfile }) {
                   />
                 ))}
               </div>
+
+              {/* Xem trước 2 màn: màn chính và hỏi con */}
+              <ThemeTwoScreenPreview themeId={theme.id} vars={theme.vars} icon={theme.icon} label={`Xem trước 2 màn của bộ ${theme.name}`} />
 
               {/* Mô tả */}
               <p style={{ fontSize: 12.5, color: '#475569', margin: 0, lineHeight: 1.4 }}>

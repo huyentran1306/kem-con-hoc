@@ -1,5 +1,5 @@
 /* ============================================================
-   WCAG CONTRAST RATIO TEST FOR 8 THEMES (PROMPT 07 PHẦN A)
+   WCAG CONTRAST RATIO TEST FOR 11 THEMES (PROMPT 07 PHẦN A + ĐỢT 16)
    Đảm bảo mọi cặp chữ trên nền đạt chuẩn WCAG AA:
    - Chữ thân / phụ / ink >= 4.5:1
    - Chữ to / nút bấm / huy hiệu >= 3.0:1
@@ -73,11 +73,35 @@ THEMES.forEach((theme) => {
     if (!pass) allPassed = false
     console.log(`  ${pass ? '✅' : '⚠️'} ${p.label}: ${c.toFixed(2)}:1 (chuẩn >= ${p.min}:1)`)
   })
+
+  // Đợt 16: 3 bộ theo mùa đo thêm mọi cặp chữ trên nền, chữ thường >= 4.5:1
+  if (theme.seasonal) {
+    const lastHex = (col) => {
+      const all = String(col || '').match(/#(?:[0-9a-fA-F]{3}){1,2}/g)
+      return all ? all[all.length - 1] : col
+    }
+    const extra = [
+      ['--c-text-2', '--c-bg'], ['--c-text-2', '--c-surface'], ['--c-text', '--c-surface-2'], ['--c-text-2', '--c-surface-2'],
+      ['--c-accent-ink', '--c-bg'], ['--c-accent-ink', '--c-surface'], ['--c-accent-ink', '--c-surface-2'],
+      ['--c-good-fg', '--c-good-bg'], ['--c-warn-fg', '--c-warn-bg'], ['--c-danger-ink', '--c-surface'], ['--c-danger-ink', '--c-bg'],
+      ['--c-read-text', '--c-read-bg'], ['--c-on-accent', '--c-accent'], ['--c-on-accent-2', '--c-accent-2'],
+      ['--c-on-good', '--c-good'], ['--c-on-danger', '--c-danger'], ['--c-btn-text', '--c-btn'], ['--c-toast-text', '--c-toast-bg'],
+    ]
+    extra.forEach(([fg, bg]) => {
+      const c = contrast(parseColor(v[fg]), parseColor(v[bg]))
+      const pass = c >= 4.5
+      if (!pass) allPassed = false
+      console.log(`  ${pass ? '✅' : '⚠️'} ${fg} / ${bg}: ${c.toFixed(2)}:1 (chuẩn >= 4.5:1)`)
+    })
+    const c2 = contrast(parseColor(v['--c-btn-text']), parseColor(lastHex(v['--c-btn'])))
+    if (c2 < 4.5) allPassed = false
+    console.log(`  ${c2 >= 4.5 ? '✅' : '⚠️'} --c-btn-text / cuối dải --c-btn: ${c2.toFixed(2)}:1 (chuẩn >= 4.5:1)`)
+  }
 })
 
 console.log('\n-----------------------------------------------------------------')
 if (allPassed) {
-  console.log('🎉 TẤT CẢ 8 BỘ GIAO DIỆN VƯỢT QUA KIỂM THỬ TƯƠNG PHẢN WCAG AA!')
+  console.log(`🎉 TẤT CẢ ${THEMES.length} BỘ GIAO DIỆN VƯỢT QUA KIỂM THỬ TƯƠNG PHẢN WCAG AA!`)
   process.exit(0)
 } else {
   console.log('⚠️ Cần tinh chỉnh màu sắc của một số bộ!')

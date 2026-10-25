@@ -1,0 +1,708 @@
+/* ============================================================
+   ĐỢT 16 · LINH KIỆN ĐẶC TRƯNG CỦA 3 BỘ THEO MÙA
+   Đêm Tuyết (noel) · Xuân Sum Vầy (tet) · Cầu Vồng 1/6 (thieunhi)
+   Biến màu nằm ở themes.css; file này chỉ có linh kiện và hiệu ứng.
+   Mọi chữ dùng biến --c-..., không viết cứng màu chữ trắng trên nền sáng.
+   ============================================================ */
+
+/* ---------- 0. Hạt hiệu ứng nằm SAU chữ và nút ---------- */
+[data-theme="noel"] .app > .scroll,
+[data-theme="tet"] .app > .scroll,
+[data-theme="thieunhi"] .app > .scroll {
+  position: relative;
+  z-index: 1;
+}
+.season-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.season-fx i {
+  position: absolute;
+  font-style: normal;
+  transform: scale(var(--s, 1));
+  will-change: top, bottom;
+}
+.season-fx .sfx-snow {
+  top: -14px;
+  color: #9CC3E0;
+  font-size: 14px;
+  opacity: 0.85;
+  animation: sfxFall linear infinite;
+}
+.season-fx .sfx-petal {
+  top: -16px;
+  color: #F6C344;
+  font-size: 16px;
+  text-shadow: 0 0 1px #B07A00;
+  animation: sfxFallSpin linear infinite;
+}
+.season-fx .sfx-petal:nth-child(3n) {
+  color: #F48FB1;
+  text-shadow: 0 0 1px #B0476E;
+}
+.season-fx .sfx-rise {
+  bottom: -60px;
+  width: 26px;
+  height: 33px;
+  border-radius: 50% 50% 46% 46%;
+  background: #FF5A5F;
+  opacity: 0.55;
+  animation: sfxUp linear infinite;
+}
+.season-fx .sfx-rise::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 22px;
+  background: rgba(29, 35, 64, 0.35);
+}
+.season-fx .sfx-rise:nth-child(6n + 1) { background: #FF9F1C; }
+.season-fx .sfx-rise:nth-child(6n + 2) { background: #FFD23F; }
+.season-fx .sfx-rise:nth-child(6n + 3) { background: #2EC4B6; }
+.season-fx .sfx-rise:nth-child(6n + 4) { background: #3A86FF; }
+.season-fx .sfx-rise:nth-child(6n + 5) { background: #8338EC; }
+.season-fx .sfx-conf {
+  top: -10px;
+  width: 7px;
+  height: 12px;
+  border-radius: 2px;
+  background: #FF5A5F;
+  opacity: 0.7;
+  animation: sfxFallSpin linear infinite;
+}
+.season-fx .sfx-conf:nth-child(5n + 1) { background: #FFD23F; }
+.season-fx .sfx-conf:nth-child(5n + 2) { background: #2EC4B6; }
+.season-fx .sfx-conf:nth-child(5n + 3) { background: #3A86FF; }
+.season-fx .sfx-conf:nth-child(5n + 4) { background: #8338EC; }
+/* Pháo hoa của bộ Tết: chỉ là vòng sáng, không có tiếng */
+.season-fx .sfx-fw {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  transform: none;
+  background: radial-gradient(circle, transparent 30%, rgba(246, 195, 68, 0.9) 32%, transparent 36%, transparent 52%, rgba(232, 53, 42, 0.7) 54%, transparent 58%);
+  opacity: 0;
+  animation: sfxBurst ease-out infinite;
+}
+@keyframes sfxFall { to { top: 110%; margin-left: 24px; } }
+@keyframes sfxFallSpin { 0% { top: -16px; rotate: 0deg; } 100% { top: 110%; rotate: 360deg; margin-left: -30px; } }
+@keyframes sfxUp { to { bottom: 115%; margin-left: 20px; } }
+@keyframes sfxBurst { 0% { scale: 0.2; opacity: 0; } 20% { opacity: 1; } 60% { scale: 1.4; opacity: 0; } 100% { opacity: 0; } }
+
+/* ---------- 1. Đầu màn chính ---------- */
+[data-theme="noel"] .hero-band,
+[data-theme="tet"] .hero-band,
+[data-theme="thieunhi"] .hero-band {
+  background: var(--c-hero-bg);
+  color: var(--c-hero-text);
+  border-bottom: 0;
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="noel"] .hero-band > *,
+[data-theme="tet"] .hero-band > *,
+[data-theme="thieunhi"] .hero-band > * {
+  position: relative;
+  z-index: 2;
+}
+[data-theme="noel"] .hero-band .title,
+[data-theme="tet"] .hero-band .title,
+[data-theme="thieunhi"] .hero-band .title {
+  color: var(--c-hero-text) !important;
+}
+[data-theme="noel"] .hero-band .sub,
+[data-theme="tet"] .hero-band .sub,
+[data-theme="thieunhi"] .hero-band .sub {
+  color: var(--c-hero-text-2) !important;
+}
+[data-theme="noel"] .hero-band .title:first-child,
+[data-theme="tet"] .hero-band .title:first-child,
+[data-theme="thieunhi"] .hero-band .title:first-child {
+  font-family: var(--font-greet);
+}
+[data-theme="noel"] .hero-band .title:first-child,
+[data-theme="tet"] .hero-band .title:first-child {
+  font-weight: 400;
+  line-height: 1.4;
+}
+[data-theme="tet"] .hero-band .title:first-child { color: #FFE7A3 !important; font-size: 26px; }
+[data-theme="noel"] .hero-band .sound-pill-btn,
+[data-theme="tet"] .hero-band .sound-pill-btn,
+[data-theme="thieunhi"] .hero-band .sound-pill-btn,
+[data-theme="noel"] .hero-band .chips .chip,
+[data-theme="tet"] .hero-band .chips .chip,
+[data-theme="thieunhi"] .hero-band .chips .chip,
+[data-theme="noel"] .hero-band .sticker-chip,
+[data-theme="tet"] .hero-band .sticker-chip,
+[data-theme="thieunhi"] .hero-band .sticker-chip {
+  background: rgba(0, 0, 0, 0.22) !important;
+  color: var(--c-hero-text) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+[data-theme="noel"] .hero-band .chips .chip.on,
+[data-theme="tet"] .hero-band .chips .chip.on,
+[data-theme="thieunhi"] .hero-band .chips .chip.on {
+  background: var(--c-surface) !important;
+  color: var(--c-text) !important;
+}
+/* Đêm Tuyết: thiệp đêm đông, đồi tuyết dưới chân, tuyết nhẹ trong thiệp */
+[data-theme="noel"] .hero-band { padding-bottom: 30px; }
+[data-theme="noel"] .hero-band::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -20px;
+  height: 38px;
+  background: var(--c-bg);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  z-index: 1;
+}
+[data-theme="noel"] .hero-band::before {
+  content: "";
+  position: absolute;
+  inset: -40px 0 0;
+  background-image:
+    radial-gradient(2px 2px at 12% 20%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(3px 3px at 34% 60%, rgba(255, 255, 255, 0.75), transparent 60%),
+    radial-gradient(2px 2px at 58% 30%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(3px 3px at 76% 72%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(2px 2px at 90% 14%, rgba(255, 255, 255, 0.85), transparent 60%);
+  background-size: 180px 120px;
+  animation: heroSnow 9s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+@keyframes heroSnow { to { background-position: 30px 120px; } }
+/* Xuân Sum Vầy: khung đỏ viền vàng, câu đối hai bên */
+[data-theme="tet"] .hero-band {
+  border-bottom: 3px solid #E9A800;
+  padding-left: 44px;
+  padding-right: 44px;
+}
+[data-theme="tet"] .hero-band::before,
+[data-theme="tet"] .hero-band::after {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  width: 24px;
+  background: #8E0A20;
+  border: 1.5px solid #F6C344;
+  border-radius: 6px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  color: #F6C344;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+[data-theme="tet"] .hero-band::before { content: "An Khang"; left: 10px; }
+[data-theme="tet"] .hero-band::after { content: "Thịnh Vượng"; right: 10px; }
+/* Cầu Vồng 1/6: trời xanh, vòng cầu vồng ở góc */
+[data-theme="thieunhi"] .hero-band::after {
+  content: "";
+  position: absolute;
+  right: -70px;
+  top: -80px;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 52%, #8338EC 52% 56%, #3A86FF 56% 60%, #2EC4B6 60% 64%, #FFD23F 64% 68%, #FF9F1C 68% 72%, #FF5A5F 72% 76%, transparent 76%);
+  opacity: 0.45;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---------- 2. Theo dõi học đều 7 ngày ---------- */
+.season-tracker {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+.season-row-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.season-row-h b { font-size: 15px; color: var(--c-text); }
+.season-chip {
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+  white-space: nowrap;
+}
+.season-tracker .sub { margin: 0; color: var(--c-text-2); }
+/* Lịch đếm ngày 7 ô cửa */
+.season-advent {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+.season-advent span {
+  height: 48px;
+  border-radius: 9px;
+  border: 1.8px dashed var(--c-line);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  background: var(--c-surface-2);
+}
+.season-advent span i { font-style: normal; font-size: 17px; color: #F2C14E; line-height: 1; }
+.season-advent span b { font-size: 11.5px; padding-bottom: 3px; color: var(--c-text-2); }
+.season-advent span.on {
+  border: 2px solid #8E1A2D;
+  background: linear-gradient(#CC2C44, #B8213A);
+  box-shadow: 0 3px 0 #8E1A2D;
+}
+.season-advent span.on b { color: var(--c-on-accent); }
+.season-advent span.now {
+  border: 2.5px solid var(--c-accent);
+  background: var(--c-surface);
+  animation: seasonPulse 1.4s ease-in-out infinite;
+}
+.season-advent span.now b { color: var(--c-accent-ink); }
+@keyframes seasonPulse { 50% { transform: scale(1.08); } }
+/* Cành mai 7 nụ */
+.season-branch { width: 100%; height: auto; }
+.season-branch .bud-now ellipse {
+  animation: seasonBud 1.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes seasonBud { 50% { transform: scale(1.25); } }
+/* Chùm 7 quả bóng */
+.season-balls {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  align-items: end;
+  height: 80px;
+}
+.season-balls span { display: grid; justify-items: center; align-content: end; gap: 2px; }
+.season-balls i {
+  width: 30px;
+  height: 36px;
+  border-radius: 50% 50% 46% 46%;
+  background: var(--bc);
+  border: 1.6px solid var(--c-text);
+  position: relative;
+}
+.season-balls i::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1.4px;
+  height: 8px;
+  background: var(--c-text);
+}
+.season-balls span.off i { width: 16px; height: 18px; background: #DCE5F5; border-style: dashed; }
+.season-balls span.now i {
+  background: var(--c-surface);
+  border: 2.4px solid var(--c-accent);
+  animation: seasonPulse2 1.4s ease-in-out infinite;
+}
+@keyframes seasonPulse2 { 50% { transform: scale(1.12) translateY(-3px); } }
+.season-balls b { font-size: 11.5px; margin-top: 8px; color: var(--c-text-2); }
+
+/* ---------- 3. Nút bắt đầu ---------- */
+.season-cta {
+  background: var(--c-btn);
+  border-radius: 24px;
+  padding: 6px 10px 12px;
+  box-shadow: var(--shadow-btn);
+  position: relative;
+  overflow: hidden;
+}
+.season-cta-main {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--c-btn-text);
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 19px;
+  padding: 12px 8px 6px;
+  cursor: pointer;
+}
+.season-cta-mini { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.season-cta-mini button {
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-btn-text);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.season-cta-thieunhi::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #FF5A5F, #FF9F1C, #FFD23F, #2EC4B6, #3A86FF, #8338EC);
+}
+
+/* ---------- 4. Màn Hỏi con từng bước ---------- */
+.season-steps { margin: 2px 0 4px; }
+.season-lights { width: 100%; height: auto; display: block; }
+.season-lights .on path { filter: drop-shadow(0 0 5px #F2C14E); }
+.season-lights .cur path { animation: seasonBlink 1s steps(2) infinite; }
+@keyframes seasonBlink { 50% { fill: #F06A7D; } }
+.season-lans {
+  display: grid;
+  gap: 10px;
+  padding: 0 10px;
+  border-top: 2px solid #7A4A33;
+}
+.season-lans span { display: grid; justify-items: center; position: relative; }
+.season-lans span::before { content: ""; width: 2px; height: 10px; background: #7A4A33; }
+.season-lans span i {
+  width: 40px;
+  height: 34px;
+  border-radius: 50%;
+  background: #F3D3A3;
+  border: 2px solid #4A1A0C;
+  position: relative;
+}
+.season-lans span i::before,
+.season-lans span i::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 5px;
+  background: #E9A800;
+  border: 1.5px solid #4A1A0C;
+  border-radius: 2px;
+}
+.season-lans span i::before { top: -6px; }
+.season-lans span i::after { bottom: -6px; }
+.season-lans span b { position: absolute; top: 22px; font-size: 13px; font-weight: 900; color: #4A1A0C; }
+.season-lans span.on i { background: radial-gradient(circle at 50% 40%, #D42C44, #B00E28); box-shadow: 0 0 14px rgba(246, 195, 68, 0.9); }
+.season-lans span.cur i { background: #B00E28; }
+.season-lans span.on b,
+.season-lans span.cur b { color: #FFF5D6; }
+.season-lans span.cur { transform-origin: top center; animation: seasonSway 1.6s ease-in-out infinite; }
+@keyframes seasonSway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+.season-rsteps { display: grid; gap: 8px; align-items: end; height: 70px; }
+.season-rsteps span {
+  border-radius: 14px 14px 6px 6px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 20px;
+  color: #1D2340;
+  border: 2px solid #1D2340;
+}
+.season-rsteps span.on { background: var(--sc); }
+.season-rsteps span.cur { background: #FFFFFF; border: 3px solid var(--sc); animation: seasonHop 1s ease-in-out infinite; }
+.season-rsteps span.off { background: transparent; border: 2px dashed #8E9BBD; color: #4E5675; }
+@keyframes seasonHop { 50% { transform: translateY(-6px); } }
+
+/* Câu đọc to: bậc đang hỏi */
+[data-theme="noel"] .card.plum > .step-row,
+[data-theme="tet"] .card.plum > .step-row,
+[data-theme="thieunhi"] .card.plum > .step-row {
+  padding: 12px 14px;
+  border-radius: 18px;
+  position: relative;
+}
+[data-theme="noel"] .card.plum > .step-row {
+  border: 6px solid transparent;
+  background: linear-gradient(#FFFFFF, #FFFFFF) padding-box, repeating-linear-gradient(45deg, #C8283F 0 7px, #FFFFFF 7px 14px) border-box;
+  box-shadow: 0 6px 16px -12px rgba(23, 50, 74, 0.5);
+  color: var(--c-text);
+}
+[data-theme="tet"] .card.plum > .step-row {
+  background:
+    linear-gradient(#F6C344, #F6C344) left 5px top 5px / 12px 2px no-repeat,
+    linear-gradient(#F6C344, #F6C344) left 5px top 5px / 2px 12px no-repeat,
+    linear-gradient(#F6C344, #F6C344) right 5px top 5px / 12px 2px no-repeat,
+    linear-gradient(#F6C344, #F6C344) right 5px top 5px / 2px 12px no-repeat,
+    linear-gradient(#F6C344, #F6C344) left 5px bottom 5px / 12px 2px no-repeat,
+    linear-gradient(#F6C344, #F6C344) left 5px bottom 5px / 2px 12px no-repeat,
+    linear-gradient(#F6C344, #F6C344) right 5px bottom 5px / 12px 2px no-repeat,
+    linear-gradient(#F6C344, #F6C344) right 5px bottom 5px / 2px 12px no-repeat,
+    var(--c-read-bg);
+  border: 2px solid #E9A800;
+  color: var(--c-read-text);
+  padding: 14px 18px;
+}
+[data-theme="tet"] .card.plum > .step-row b { color: var(--c-read-text) !important; }
+[data-theme="tet"] .card.plum > .step-row .n { background: #F6C344 !important; color: #4A1A0C !important; }
+[data-theme="thieunhi"] .card.plum > .step-row {
+  background: var(--c-read-bg);
+  color: var(--c-read-text);
+  border-radius: 28px;
+  padding-left: 24px;
+}
+[data-theme="thieunhi"] .card.plum > .step-row::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 12px;
+  bottom: 12px;
+  width: 6px;
+  border-radius: 6px;
+  background: linear-gradient(#FF5A5F, #FF9F1C, #FFD23F, #2EC4B6, #3A86FF, #8338EC);
+}
+/* Gợi ý: hộp quà / bao lì xì / bóng bay */
+[data-theme="noel"] .card.plum .card.sun,
+[data-theme="tet"] .card.plum .card.sun,
+[data-theme="thieunhi"] .card.plum .card.sun {
+  border-style: dashed !important;
+  position: relative;
+  padding-left: 50px !important;
+}
+[data-theme="noel"] .card.plum .card.sun::before,
+[data-theme="tet"] .card.plum .card.sun::before,
+[data-theme="thieunhi"] .card.plum .card.sun::before {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  font-size: 26px;
+  line-height: 1;
+}
+[data-theme="noel"] .card.plum .card.sun::before { content: "🎁"; }
+[data-theme="tet"] .card.plum .card.sun::before { content: "🧧"; }
+[data-theme="thieunhi"] .card.plum .card.sun::before { content: "🎈"; }
+/* Đáp án cho mẹ: hộp quà lớn / hộp mứt / hộp bút màu, giữ 1,5 giây */
+[data-theme="noel"] .parent-ans,
+[data-theme="tet"] .parent-ans,
+[data-theme="thieunhi"] .parent-ans {
+  background: var(--c-warn-bg);
+  border: 1.5px dashed var(--c-warn);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+[data-theme="noel"] .parent-ans::before,
+[data-theme="tet"] .parent-ans::before,
+[data-theme="thieunhi"] .parent-ans::before {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-warn-fg);
+  margin-bottom: 2px;
+}
+[data-theme="noel"] .parent-ans::before { content: "🎁 Đáp án cho mẹ trong hộp quà lớn"; }
+[data-theme="tet"] .parent-ans::before { content: "🍬 Đáp án cho mẹ trong hộp mứt"; }
+[data-theme="thieunhi"] .parent-ans::before { content: "🖍 Đáp án cho mẹ trong hộp bút màu"; }
+[data-theme="noel"] .parent-ans .sub,
+[data-theme="tet"] .parent-ans .sub,
+[data-theme="thieunhi"] .parent-ans .sub {
+  color: var(--c-warn-fg) !important;
+}
+
+/* ---------- 5. Màn Xong bài ---------- */
+.season-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 4px 0 6px;
+}
+.season-big {
+  font-family: var(--font-head);
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 900;
+  color: var(--c-text);
+  margin: 4px 0 0;
+}
+.season-done .sub { margin: 0; }
+.season-tree-wrap svg { width: 190px; height: 228px; display: block; }
+.season-tree-wrap .drop { animation: seasonDrop 2.6s cubic-bezier(0.3, 1.5, 0.5, 1) 1 both; }
+@keyframes seasonDrop { 0% { transform: translateY(-40px); opacity: 0; } 30%, 100% { transform: translateY(0); opacity: 1; } }
+.season-tree-wrap .star { transform-origin: 50px 12px; animation: seasonTwinkle 1.6s ease-in-out infinite; }
+@keyframes seasonTwinkle { 50% { transform: scale(1.18) rotate(8deg); } }
+.season-lixi-big { display: flex; align-items: flex-end; justify-content: center; height: 150px; margin-top: 8px; }
+.season-lixi-big .env {
+  width: 88px;
+  height: 116px;
+  margin-left: -10px;
+  background: linear-gradient(#D42C44, #B00E28);
+  border: 2px solid #4A1A0C;
+  border-radius: 12px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  color: #FFE7A3;
+  font-size: 12px;
+  line-height: 1.2;
+  transform: rotate(8deg);
+  animation: seasonEnv 2.4s ease-in-out infinite;
+  box-shadow: 0 8px 0 #7E0A1D;
+}
+.season-lixi-big .env svg { width: 44px; height: 44px; }
+.season-lixi-big .env b { font-size: 14px; }
+@keyframes seasonEnv { 50% { transform: rotate(2deg) translateY(-8px); } }
+.season-badge { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 26px; }
+.season-badge .ring {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--c-surface);
+  box-shadow: 0 0 0 8px #FFD23F, 0 0 0 14px #FF9F1C, 0 0 0 20px #FF5A5F;
+}
+.season-badge > span { font-family: var(--font-hand); font-size: 16px; line-height: 1.2; color: var(--c-text-2); }
+.season-badge > span b { display: block; font-size: 21px; color: var(--c-text); font-weight: 400; }
+.season-praise-open { width: 100%; margin-top: 8px; }
+.season-praise-open .btn { width: 100%; }
+.season-praise-card { text-align: left; background: var(--c-read-bg) !important; }
+.season-praise-text { font-family: var(--font-hand); font-size: 19px; line-height: 1.4; color: var(--c-read-text); margin: 4px 0 0; }
+/* Màn Xong bài: chữ có quầng nền để đọc rõ khi hạt bay qua */
+[data-season-screen="done"][data-theme="noel"] .scroll :is(.title, .sub, h1, h2, h3, b, .season-big),
+[data-season-screen="done"][data-theme="tet"] .scroll :is(.title, .sub, h1, h2, h3, b, .season-big),
+[data-season-screen="done"][data-theme="thieunhi"] .scroll :is(.title, .sub, h1, h2, h3, b, .season-big) {
+  text-shadow: 0 0 6px var(--c-bg), 0 0 3px var(--c-bg), 0 0 1px var(--c-bg);
+}
+
+/* ---------- 6. Thẻ theo mùa ở màn chính ---------- */
+.season-back-card,
+.season-day-card {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+.season-back-card { border: 2px solid var(--c-accent) !important; }
+.season-card-h { font-size: 15.5px; color: var(--c-text); font-weight: 900; padding-right: 30px; }
+.season-card-h.hand { font-family: var(--font-hand); font-size: 18px; font-weight: 400; }
+.season-back-card .sub,
+.season-day-card .sub { margin: 0; color: var(--c-text-2); }
+.season-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.season-row2 .btn { width: 100%; min-height: 46px; font-size: 14.5px; }
+.season-day-card { background: var(--c-warn-bg) !important; border: 2px dashed var(--c-warn) !important; }
+.season-day-card.tet { background: var(--c-read-bg) !important; border: 2px solid #E9A800 !important; }
+.season-day-card.tet .season-card-h { color: var(--c-read-text); }
+.season-day-card.tet .season-kk { color: var(--c-read-text); }
+.season-day-card.tet .season-x { color: var(--c-read-text); }
+.season-kk { font-size: 12px; font-weight: 900; letter-spacing: 1.2px; color: var(--c-accent-ink); }
+.season-x {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--c-text-2);
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.season-mini-btn {
+  align-self: flex-start;
+  min-height: 40px;
+  background: var(--c-text);
+  color: var(--c-surface);
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 800;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.season-praise-input { width: 100%; font-family: var(--font-hand); font-size: 17px; resize: vertical; }
+.season-praise-foot .sub { font-size: 12px; }
+/* Bảng gợi ý trượt từ dưới lên */
+.season-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 16, 10, 0.38);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.season-sheet {
+  width: 100%;
+  max-width: 460px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-radius: 28px 28px 0 0;
+  padding: 12px 18px calc(22px + env(safe-area-inset-bottom));
+  box-shadow: 0 -20px 40px -10px rgba(60, 35, 10, 0.35);
+  display: grid;
+  gap: 10px;
+  animation: seasonSheetUp 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@keyframes seasonSheetUp { from { transform: translateY(100%); } to { transform: none; } }
+.season-sheet h4 { font-size: 19px; line-height: 1.3; font-weight: 900; margin: 0; color: var(--c-text); }
+.season-sheet .sub { margin: 0; color: var(--c-text-2); }
+.season-grab { width: 44px; height: 5px; border-radius: 5px; background: var(--c-line); justify-self: center; }
+.season-xs { font-size: 12.5px; color: var(--c-text-2); margin: 0; text-align: center; }
+.season-pv { display: flex; justify-content: center; gap: 10px; padding: 4px 0; }
+.season-mini-ph {
+  width: 92px;
+  height: 120px;
+  border-radius: 16px;
+  border: 2px solid var(--c-text);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  justify-items: center;
+}
+.season-mini-ph span { font-size: 34px; margin-top: 14px; }
+.season-mini-ph i { position: absolute; left: 12px; right: 12px; bottom: 14px; height: 14px; border-radius: 999px; }
+.season-mini-ph.back { transform: rotate(6deg); opacity: 0.55; }
+
+/* ---------- 7. Bảng chọn giao diện: nhóm Theo mùa ---------- */
+.theme-group-h { font-size: 12px; font-weight: 900; letter-spacing: 1.4px; color: var(--c-accent-ink); margin: 6px 0 2px; grid-column: 1 / -1; }
+.theme-group-note { font-size: 12.5px; color: var(--c-text-2); grid-column: 1 / -1; margin: 0 0 4px; }
+.theme-tag {
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border: 1px solid var(--c-line);
+}
+.theme-tag.good { background: var(--c-good-bg); color: var(--c-good-fg); border-color: transparent; }
+
+/* ---------- 8. Tắt chuyển động ---------- */
+[data-motion="off"] .season-fx { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .season-fx { display: none !important; }
+  [data-theme="noel"] .hero-band::before,
+  .season-advent span.now,
+  .season-branch .bud-now ellipse,
+  .season-balls span.now i,
+  .season-lights .cur path,
+  .season-lans span.cur,
+  .season-rsteps span.cur,
+  .season-tree-wrap .drop,
+  .season-tree-wrap .star,
+  .season-lixi-big .env,
+  .season-sheet {
+    animation: none !important;
+  }
+}

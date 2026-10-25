@@ -38,4 +38,19 @@ export const BUDDY_QUOTES = {
     nudge: 'Cây muốn lớn cần tắm nắng và nghỉ ngơi. Con vươn vai hít thở cùng mầm cây nha!',
     cheer: 'Bông hoa đã nở! Con đã tích luỹ thêm một bài học quý giá cho tương lai! 🌸',
   },
+  snowman: {
+    hello: 'Người Tuyết Bông vẫy tay chào con! Tối nay mình mở thêm một ô cửa nhé.',
+    nudge: 'Tuyết rơi chậm thôi, mình cũng thở chậm lại một chút nha.',
+    cheer: 'Giỏi quá! Thêm một quả châu treo lên cây thông rồi!',
+  },
+  lion: {
+    hello: 'Bé Lân múa chào con! Học xong Bé Lân lì xì một sticker nhé.',
+    nudge: 'Bé Lân ngồi nghỉ cùng con một phút, rồi mình học tiếp nha.',
+    cheer: 'Hay quá! Cành mai nở thêm một bông cho con rồi!',
+  },
+  kite: {
+    hello: 'Diều Cầu Vồng bay tới chơi với con nè! Mình cùng học thật vui nhé.',
+    nudge: 'Gió đang lặng, mình hít thở sâu rồi bay tiếp nha.',
+    cheer: 'Tuyệt vời! Thêm một quả bóng căng màu cho con rồi!',
+  },
 }

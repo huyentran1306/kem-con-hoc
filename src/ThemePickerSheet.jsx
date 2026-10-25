@@ -1,10 +1,13 @@
 /* ============================================================
    🎨 MÀN CHỌN GIAO DIỆN CẢ NHÀ (THEME PICKER)
-   8 thẻ xem trước trực quan, xem thử tức thì, tuỳ chỉnh hiệu ứng
+   11 thẻ xem trước (nhóm Theo mùa và Thường ngày), xem thử tức thì, tuỳ chỉnh hiệu ứng
    ============================================================ */
 import React, { useState, useContext, useEffect, useRef } from 'react'
 import { AppCtx } from './ctx'
-import { THEMES, getTheme, applyTheme } from './themes'
+import { getTheme, applyTheme, SEASONAL_THEMES, REGULAR_THEMES } from './themes'
+import { isSeasonalTheme, seasonTag, pickThemePatch } from './seasons/seasonLogic'
+import { useSeasonsConfig, getSeasonToday } from './seasons/useSeasonsConfig'
+import './seasons/seasons.css'
 import { Check, Sparkles, Sliders } from 'lucide-react'
 import { CustomThemeDesigner } from './CustomThemeDesigner'
 import { decodeThemeCode } from './themes/customThemeCode'
@@ -20,6 +23,24 @@ export function ThemePickerSheet({ onClose }) {
   const [selectedMotion, setSelectedMotion] = useState(initialMotion)
   const [showDesigner, setShowDesigner] = useState(false)
   const [inputCode, setInputCode] = useState('')
+  // Đợt 16: nhóm Theo mùa ở trên nhóm Thường ngày
+  const { cfg: seasonCfg } = useSeasonsConfig()
+  const seasonToday = getSeasonToday()
+  const oldTheme = isSeasonalTheme(initialTheme) ? S.themeBeforeSeason || null : null
+  const pickerItems = [
+    { kind: 'h', node: <p key="h-season" className="theme-group-h">THEO MÙA</p> },
+    ...SEASONAL_THEMES.map((t) => ({ kind: 't', theme: t })),
+    {
+      kind: 'h',
+      node: (
+        <p key="n-season" className="theme-group-note">
+          Bộ theo mùa dùng được quanh năm. Đến mùa, app chỉ gợi ý một lần, không tự đổi.
+        </p>
+      ),
+    },
+    { kind: 'h', node: <p key="h-regular" className="theme-group-h">THƯỜNG NGÀY</p> },
+    ...REGULAR_THEMES.map((t) => ({ kind: 't', theme: t })),
+  ]
 
   // Áp dụng thử ngay khi bấm chọn thẻ
   const handlePreview = (themeId) => {
@@ -39,7 +60,7 @@ export function ThemePickerSheet({ onClose }) {
       localStorage.setItem('kem-con-hoc:user-custom-theme', 'true')
     } catch (e) {}
     patch({
-      theme: selectedTheme,
+      ...pickThemePatch(S, selectedTheme, getSeasonToday(), seasonCfg),
       motion: selectedMotion,
     })
     applyTheme(selectedTheme, selectedMotion)
@@ -108,7 +129,7 @@ export function ThemePickerSheet({ onClose }) {
         </div>
       </div>
 
-      {/* Lưới 8 bộ giao diện xem trước */}
+      {/* Lưới bộ giao diện xem trước: Theo mùa ở trên, Thường ngày ở dưới */}
       <div
         className="theme-grid"
         style={{
@@ -120,7 +141,10 @@ export function ThemePickerSheet({ onClose }) {
           paddingBottom: 8,
         }}
       >
-        {THEMES.map((theme) => {
+        {pickerItems.map((item) => {
+          if (item.kind !== 't') return item.node
+          const theme = item.theme
+          const sTag = theme.seasonal ? seasonTag(theme.id, seasonToday, seasonCfg) : ''
           const isSelected = selectedTheme === theme.id
           const isCurrentActive = initialTheme === theme.id
           const v = theme.vars
@@ -192,7 +216,9 @@ export function ThemePickerSheet({ onClose }) {
               </div>
 
               {/* Tag trạng thái */}
-              <div style={{ display: 'flex', gap: 4, marginTop: 'auto' }}>
+              <div style={{ display: 'flex', gap: 4, marginTop: 'auto', flexWrap: 'wrap' }}>
+                {sTag && <span className={`theme-tag ${sTag === 'Đang mùa' ? 'good' : ''}`}>{sTag}</span>}
+                {oldTheme === theme.id && <span className="theme-tag">Bộ cũ</span>}
                 {isCurrentActive && (
                   <span
                     style={{

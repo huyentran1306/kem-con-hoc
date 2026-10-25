@@ -21,6 +21,7 @@ import {
 import { THEMES } from './themes.js'
 import { CUSTOM_COLORS, CUSTOM_FONTS, CUSTOM_SHAPES, CUSTOM_BUDDIES } from './themes/customPalette.js'
 import { ThemedTabIcon } from './themes/themeIcons.jsx'
+import { ThemeTwoScreenPreview } from './themes/ThemeTwoScreenPreview.jsx'
 import { toast } from './utils.js'
 
 const ADMIN_THEMES_STORAGE_KEY = 'kem-con-hoc:admin-custom-themes'
@@ -28,7 +29,7 @@ const ADMIN_THEMES_DRAFTS_KEY = 'kem-con-hoc:admin-theme-drafts'
 const ADMIN_THEMES_HISTORY_KEY = 'kem-con-hoc:admin-theme-history'
 
 export default function AdminThemeDesignerTab({ token, adminProfile }) {
-  // Navigation: 'list' (Màn 1) | 'designer' (Màn 2) | 'checks' (Màn 3) | 'publish' (Màn 4)
+  // Điều hướng: 'list' | 'designer' | 'checks' | 'publish'
   const [screen, setScreen] = useState('list')
   const [filterType, setFilterType] = useState('all') // 'all' | 'builtin' | 'admin' | 'draft'
 
@@ -329,10 +330,10 @@ export default function AdminThemeDesignerTab({ token, adminProfile }) {
           )}
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#0F172A' }}>
-              {screen === 'list' && '🎨 Danh sách bộ giao diện (Màn 1)'}
-              {screen === 'designer' && `Trình thiết kế: ${activeSpec?.name || 'Bộ mới'} (Màn 2)`}
-              {screen === 'checks' && `Kiểm tra trước phát hành: ${activeSpec?.name} (Màn 3)`}
-              {screen === 'publish' && `Phát hành bộ giao diện: ${activeSpec?.name} (Màn 4)`}
+              {screen === 'list' && '🎨 Danh sách bộ giao diện'}
+              {screen === 'designer' && `Trình thiết kế: ${activeSpec?.name || 'Bộ mới'}`}
+              {screen === 'checks' && `Kiểm tra trước phát hành: ${activeSpec?.name}`}
+              {screen === 'publish' && `Phát hành bộ giao diện: ${activeSpec?.name}`}
             </h2>
             <div style={{ fontSize: 12, color: '#64748B' }}>
               Không cần code · Xem trước 12 màn · Kiểm tra tương phản WCAG AA tự động
@@ -509,6 +510,9 @@ export default function AdminThemeDesignerTab({ token, adminProfile }) {
                     <div style={{ flex: 1, background: vars['--c-accent'] }} title="Accent" />
                   </div>
 
+                  {/* Xem trước 2 màn: màn chính và hỏi con */}
+                  <ThemeTwoScreenPreview themeId={theme.base || theme.id} vars={vars} label={`Xem trước 2 màn của bộ ${theme.name}`} />
+
                   {/* Thông tin font & shape */}
                   <div style={{ fontSize: 12, color: '#64748B' }}>
                     Font: <b>{vars['--font-head']?.split(',')[0]}</b> · Bo góc: <b>{vars['--radius-lg']}</b>
@@ -562,7 +566,7 @@ export default function AdminThemeDesignerTab({ token, adminProfile }) {
           {/* KHỐI 5 TỔ HỢP GIA ĐÌNH TỰ GHÉP PHỔ BIẾN NHẤT */}
           <div style={{ background: '#F8FAFC', padding: 20, borderRadius: 14, border: '1.5px dashed #CBD5E1' }}>
             <div style={{ marginBottom: 14 }}>
-              <b style={{ fontSize: 16, color: '#0F172A' }}>🌟 5 Tổ hợp gia đình tự ghép phổ biến nhất (Prompt 09)</b>
+              <b style={{ fontSize: 16, color: '#0F172A' }}>🌟 5 tổ hợp gia đình tự ghép phổ biến nhất</b>
               <p style={{ fontSize: 13, color: '#64748B', margin: '4px 0 0 0' }}>
                 Được tổng hợp từ hành vi người dùng trong app. Admin có thể bấm "Biến thành bộ gốc" để tạo bản nháp chính thức.
               </p>
