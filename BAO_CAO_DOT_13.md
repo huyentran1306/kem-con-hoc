@@ -160,4 +160,49 @@ Tài liệu theo dõi quá trình thực hiện 6 Chặng theo đúng quy địn
 - Toàn bộ các yêu cầu của Prompt 11 phần A, B, C và Chặng 3 theo `13_GIAO_MOT_LAN.md` đã hoàn thành xuất sắc và vượt qua kiểm thử tự động 100%.
 - Không có lỗi tồn đọng. Sẵn sàng chuyển tiếp sang Chặng 4 (Admin thiết kế bộ giao diện).
 
+---
+
+## 📌 CHẶNG 4: ADMIN THIẾT KẾ BỘ GIAO DIỆN (PROMPT 10)
+
+### 1. Danh sách các tính năng Trình thiết kế giao diện Admin đã hoàn thiện
+
+| Hạng mục | Trạng thái | Bằng chứng & Chi tiết triển khai |
+|---|---|---|
+| **Cấu trúc dữ liệu ThemeSpec & 8 bộ gốc** | **HOÀN THÀNH 100%** | - `src/themes/adminThemeSpec.js`: Định nghĩa chuẩn `ThemeSpec` với đầy đủ các trường: `id, name, version, status, base, vars, font, shape, buddy, decor, schedule, shareCode, checks`.<br>- 8 bộ gốc được chuẩn hoá bằng `ThemeSpec` với cờ `locked: true` (không sửa trực tiếp, hỗ trợ nhân bản). Biến CSS sinh ra khớp 100% với biến CSS hiện tại. |
+| **Tính toán tương phản & Tự sửa màu chữ (Auto-Fix)** | **HOÀN THÀNH 100%** | - Thuật toán `getContrastRatio` và `getLuminance` đo độ tương phản màu chuẩn WCAG 2.1 AA.<br>- Hàm `autoFixTextColor(bgHex)` tự động đẩy sắc thái chữ lên $\ge$ 4.5:1 (đối với văn bản) và $\ge$ 3.0:1 (đối với nút bấm). |
+| **Làm sạch SVG an toàn (SVG Sanitizer)** | **HOÀN THÀNH 100%** | - `sanitizeSvg`: Kiểm định bằng allowlist thẻ (`svg`, `path`, `circle`, `rect`, `lineargradient`, v.v.) và thuộc tính an toàn.<br>- Chặn tuyệt đối: `<script>`, handler `on*`, `<foreignObject>`, `<image>`, scheme `javascript:`, giới hạn dung lượng $\le$ 6 KB.<br>- Áp dụng kiểm tra 2 lớp: cả trên trình duyệt và tại Cloudflare Worker khi lưu bản nháp/phát hành. |
+| **6 Bước kiểm tra trước phát hành (Preflight Checks)** | **HOÀN THÀNH 100%** | - `runThemePreflightChecks`: Rà soát tự động 6 tiêu chuẩn (1. Tương phản WCAG AA; 2. Đầy đủ dấu tiếng Việt; 3. SVG sạch; 4. Bố cục 360px & nút $\ge$ 44px; 5. Kích thước gói tải $\le$ 30 KB; 6. Superadmin xác nhận xem xét).<br>- Quy tắc an toàn: Còn bất kỳ cảnh báo nào thì khoá chặt nút `partial` và `published`, chỉ cho phép `testing` nội bộ. |
+| **Phân phối 3 mức phát hành & Bộ theo mùa** | **HOÀN THÀNH 100%** | - `testing`: Chỉ hiển thị cho tối đa 3 `family_id` do admin chỉ định.<br>- `partial`: Băm `family_id` phân phối ổn định cho ~10% gia đình.<br>- `published`: Mở rộng cho toàn bộ người dùng.<br>- Bộ theo mùa (`seasonal: true, expiresAt`): Tự động ẩn khỏi danh mục chọn khi quá hạn nhưng gia đình đang dùng vẫn được giữ nguyên. |
+| **Giao diện 4 màn hình Admin Theme Designer** | **HOÀN THÀNH 100%** | - Màn 1: Danh sách bộ gốc/admin/nháp, 5 tổ hợp gia đình phổ biến (`POPULAR_FAMILY_COMBOS`) với nút "Biến thành bộ gốc".<br>- Màn 2: Trình thiết kế 5 accordion, 12 màn xem trước component thật tỉ lệ 0.55, công tắc "Chữ to" & "Giảm chuyển động", tự lưu nháp 3s và Undo/Redo 20 bước.<br>- Màn 3: Bảng 6 bước preflight checks kèm nút "Tự sửa" cho từng cảnh báo tương phản.<br>- Màn 4: Form phát hành 3 mức, đặt mặc định, mã chia sẻ và lịch sử phiên bản (tối đa 20 phiên bản). |
+| **Worker API & RBAC** | **HOÀN THÀNH 100%** | - Bổ sung các endpoint quản trị: `GET/POST /api/v1/admin/themes`, `GET/PUT /api/v1/admin/themes/:id/draft`, `POST /api/v1/admin/themes/:id/publish`, `POST /api/v1/admin/themes/:id/disable`, `GET /api/v1/admin/themes/:id/history`.<br>- Phân quyền RBAC nghiêm ngặt: Chỉ `superadmin` được phát hành `published`, `editor` chỉ được `testing`/`partial`. Ghi nhật ký đầy đủ vào `audit_log`. Giới hạn tối đa 10 bộ custom hoạt động cùng lúc. |
+
+---
+
+### 2. Các file đã thay đổi trong Chặng 4
+
+1. `src/themes/adminThemeSpec.js`: Cấu trúc dữ liệu `ThemeSpec`, 8 bộ gốc chuẩn hoá, SVG Sanitizer, WCAG AA contrast, Auto-Fix, Preflight checks, kiểm tra phạm vi hiển thị.
+2. `src/AdminThemeDesignerTab.jsx`: Trình thiết kế 4 màn hình trực quan trong tab "Giao diện App".
+3. `src/AdminThemesSection.jsx`: Tích hợp chế độ thiết kế `AdminThemeDesignerTab`.
+4. `/Users/pro/Coding/study-en/ai-gateway-worker/src/admin_stitch_routes.js`: Bổ sung toàn bộ các route backend quản trị theme KV, audit log, RBAC.
+5. `scripts/test-chang-4.mjs`: Bộ kiểm thử tự động toàn diện cho Chặng 4 (9 bước).
+6. `package.json`: Tích hợp `test-chang-4.mjs` vào `npm test`.
+
+---
+
+### 3. Kết quả kiểm thử Chặng 4
+
+- `node scripts/test-chang-4.mjs`: **PASS 100% (9/9 bước kiểm thử của Prompt 10)**
+- `node scripts/test-admin-themes.mjs`: **PASS 100%**
+- `npm test`: **PASS 100% toàn bộ các test suites của hệ thống**
+- `npm run build`: **PASS 100%**
+- **Đường dẫn bản preview Chặng 4:** [https://preview-ch4.kem-con-hoc-5xf.pages.dev](https://preview-ch4.kem-con-hoc-5xf.pages.dev) (hoặc [https://18b0d8f7.kem-con-hoc-5xf.pages.dev](https://18b0d8f7.kem-con-hoc-5xf.pages.dev))
+
+---
+
+### 4. Việc chưa làm trong Chặng 4 và lý do
+
+- Toàn bộ các yêu cầu của Prompt 10 và Chặng 4 theo `13_GIAO_MOT_LAN.md` đã hoàn thành xuất sắc và vượt qua kiểm thử tự động 100%.
+- Sẵn sàng chuyển tiếp sang Chặng 5 (Lưới an toàn chống lỗi tái phát).
+
+
 
