@@ -194,8 +194,8 @@ button.chip.on{border-color:var(--plum);background:var(--plum-tint);color:var(--
   border-radius:999px;padding:14px 18px;transition:transform .12s, opacity .2s;
 }
 .btn:active{transform:scale(.97)}
-.btn.solid{background:var(--c-btn, var(--plum));color:var(--c-btn-text, var(--c-on-accent, #fff));box-shadow:var(--shadow-btn, 0 8px 20px rgba(217,87,127,.32))}
-.btn.solid:active{box-shadow:none}
+.btn.solid,.btn.primary{background:var(--c-btn, var(--plum));color:var(--c-btn-text, var(--c-on-accent, #fff));box-shadow:var(--shadow-btn, 0 8px 20px rgba(217,87,127,.32))}
+.btn.solid:active,.btn.primary:active{box-shadow:none}
 .btn.ghost{border:1.5px solid var(--c-accent, var(--plum));color:var(--c-accent-ink, var(--plum));background:var(--c-surface, #fff)}
 .btn.mint{background:var(--c-good, var(--mint));color:var(--c-on-good, #fff);box-shadow:0 8px 20px rgba(31,122,92,.28)}
 .btn.coral{background:var(--c-accent, var(--coral));color:var(--c-on-accent, #fff);box-shadow:0 8px 20px rgba(240,138,93,.3)}

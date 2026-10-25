@@ -9,7 +9,9 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY } from './api'
+import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { missingCheckWorkFields } from './checkWorkFields.js'
+import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
@@ -362,7 +364,7 @@ export function Home() {
                   key={c.id}
                   className={`chip ${c.id === S.activeId ? 'on' : ''}`}
                   style={{ padding: '3px 9px', fontSize: 12.5, position: 'relative' }}
-                  onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang bé ${c.name} ${c.emoji}`) }}
+                  onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang ${/^bé\s/i.test(c.name) ? c.name : "bé " + c.name} ${c.emoji}`) }}
                 >
                   {c.emoji} {c.name}
                   {hasNotice && (
@@ -856,8 +858,10 @@ function AnalyzeBuddy({ aiState, done }) {
     return () => clearInterval(t)
   }, [loading])
   const state =
-    aiState === 'ocr_failed' || aiState === 'scope_blocked' || aiState === 'scope_warn'
+    aiState === 'ocr_failed' || aiState === 'scope_blocked' || aiState === 'scope_warn' || aiState === 'ai_error'
       ? 'oops'
+      : aiState === 'ai_slow'
+        ? 'thinking'
       : aiState === 'network_slow' || aiState === 'error'
         ? 'sleepy'
         : aiState === 'done'
@@ -895,6 +899,13 @@ export function Analyze() {
   const [childWork, setChildWork] = useState('') // phần con đã viết tay, AI tách khỏi đề
   const [uncertain, setUncertain] = useState([]) // chữ/số AI đọc chưa chắc
   const [zoomOpen, setZoomOpen] = useState(false)
+  const [explainStartedAt, setExplainStartedAt] = useState(0)
+  const [explainSecs, setExplainSecs] = useState(0)
+  useEffect(() => {
+    if (aiState !== 'loading' || !explainStartedAt) return undefined
+    const t = setInterval(() => setExplainSecs(Math.round((Date.now() - explainStartedAt) / 1000)), 1000)
+    return () => clearInterval(t)
+  }, [aiState, explainStartedAt])
   const hasCamBuddy = Boolean(BUDDY_NAMES[useThemeBuddyId()])
   const [zoom, setZoom] = useState(1)
   const reqRef = useRef(null)
@@ -909,6 +920,7 @@ export function Analyze() {
   const startExplain = async (textToUse, customParentNote = '') => {
     setAiState('loading')
     setDone(3)
+    setExplainStartedAt(Date.now())
     try {
       const combinedNote = [customParentNote, redirectNote].filter(Boolean).join('. ')
       const explainRes = await aiExplain(textToUse, child, S.tone, combinedNote)
@@ -927,8 +939,14 @@ export function Analyze() {
         setAiState('done')
         toast('✅ AI đã soạn bài giảng xong!')
         setTimeout(() => go('explain'), 600)
+      } else if (explainRes && explainRes.error === 'trial_limit') {
+        setAiState('trial_limit')
       } else if (explainRes && explainRes.error === 'format_error') {
         setAiState('format_error')
+      } else if (explainRes && explainRes.error === 'timeout') {
+        setAiState('ai_slow')
+      } else if (explainRes && explainRes.error === 'server') {
+        setAiState('ai_error')
       } else {
         setAiState('network_slow')
       }
@@ -1253,13 +1271,19 @@ export function Analyze() {
       {/* Feature 3: Câu hỏi 0 — xuất hiện ngay, không cần chờ AI */}
       {(aiState === 'loading' || aiState === 'cleaning') && (
         <div className="card plum pop" style={{ border: '2px solid var(--plum)', margin: '10px 0' }}>
-          <span className="pill p">❓ Câu hỏi 0 — hỏi con ngay</span>
+          <span className="pill p">❓ Câu hỏi 0: hỏi con ngay</span>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--plum-deep)', margin: '6px 0 2px', lineHeight: 1.5 }}>
             {QUESTION_ZERO[detectSubject(editedText || ocrText || S.flow.ocr)].replace('{parent}', S.parent.toLowerCase())}
           </div>
           <span className="sub" style={{ fontSize: 12 }}>
             Hỏi con trong lúc AI đang xử lý để con đọc hiểu đề trước.
           </span>
+          {aiState === 'loading' && done >= 3 && (
+            <span className="sub" style={{ display: 'block', marginTop: 6, fontSize: 12.5, fontWeight: 700 }}>
+              ⏳ AI đang soạn bài giảng · {explainSecs} giây
+              {explainSecs >= 25 ? '. Bài này AI soạn kỹ, thường mất 20 đến 40 giây.' : ''}
+            </span>
+          )}
         </div>
       )}
 
@@ -1555,6 +1579,30 @@ export function Analyze() {
           <span className="lbl mint">✅ AI đã soạn bài giảng</span>
           <span className="sub">Sẵn sàng hướng dẫn {S.parent.toLowerCase()} đặt 4 câu hỏi gợi mở cho con.</span>
         </div>
+      ) : aiState === 'trial_limit' ? (
+        <div className="card sun pop" data-testid="trial-limit" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
+          <span className="lbl sun">🧸 Dùng thử chỉ có 3 đề mẫu</span>
+          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
+            Mẹ chọn một đề bên dưới để xem AI giảng, chấm vở và nghe con giảng lại nhé. Đăng ký tài khoản để AI giảng mọi đề.
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {PRELOADED_TRIAL_LESSONS.map((l) => (
+              <button
+                key={l.id}
+                className="btn ghost"
+                style={{ width: '100%', padding: '10px 12px', textAlign: 'left', fontSize: 13 }}
+                onClick={() => {
+                  setActiveTrialLesson(l.id)
+                  patch({ flow: { ...S.flow, ocr: l.de_bai } })
+                  startExplain(l.de_bai)
+                }}
+              >
+                <b>{l.subject} · {l.grade}</b>
+                <span style={{ display: 'block', color: 'var(--c-text-2)', marginTop: 2 }}>{l.de_bai}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       ) : aiState === 'format_error' ? (
         <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
           <span className="lbl sun">⚠️ AI trả lời chưa đúng định dạng, mẹ thử lại nhé</span>
@@ -1574,11 +1622,34 @@ export function Analyze() {
             </button>
           </div>
         </div>
+      ) : (aiState === 'ai_slow' || aiState === 'ai_error') ? (
+        <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
+          <span className="lbl sun">
+            {aiState === 'ai_slow' ? '⏳ AI đang soạn lâu hơn thường lệ' : '⚠️ AI đang bận, chưa soạn xong bài'}
+          </span>
+          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
+            {aiState === 'ai_slow'
+              ? 'Đề bài vẫn được giữ nguyên. Mẹ bấm Thử lại, thường lần sau AI soạn nhanh hơn.'
+              : 'Máy chủ AI đang quá tải hoặc tạm lỗi. Mẹ thử lại sau ít phút nhé.'}
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              className="btn solid"
+              style={{ width: '100%', padding: '12px' }}
+              onClick={() => {
+                const textToUse = (editedText || ocrText || S.flow.ocr || '').trim()
+                startExplain(textToUse)
+              }}
+            >
+              🔄 Thử lại
+            </button>
+          </div>
+        </div>
       ) : (aiState === 'network_slow' || aiState === 'error') ? (
         <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
-          <span className="lbl sun">⚠️ Mạng đang chậm, chưa soạn được bài của con</span>
+          <span className="lbl sun">⚠️ Chưa kết nối được máy chủ</span>
           <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
-            Kết nối mạng chập chờn khiến AI chưa hoàn tất phân tích đề bài. Bạn muốn thử lại hay xem bài tập mẫu tương tự để làm quen?
+            Điện thoại đang mất mạng hoặc mạng chập chờn. Mẹ kiểm tra kết nối rồi thử lại, hoặc xem bài mẫu để làm quen.
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
@@ -1636,13 +1707,20 @@ export function Analyze() {
 /* ============================================================
    5. AI GIẢNG CHO MẸ
    ============================================================ */
+// "Lớp 3" → "lớp 3" (tránh "CÁCH LỚP LỚP 3")
+function gradeLabel(g) {
+  const t = String(g || '').trim()
+  if (!t) return 'lớp con'
+  return /^lớp/i.test(t) ? t.replace(/^lớp/i, 'lớp') : `lớp ${t}`
+}
+
 export function Explain() {
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
   const explainText =
     `Đây là dạng bài ${problem.type}. ${problem.summary} ` +
     `${S.parent.toLowerCase()} lưu ý: ${problem.warning} ` +
-    `Cách lớp ${child.grade} đang học: ${problem.method}.`
+    `Cách ${gradeLabel(child.grade)} đang học: ${problem.method}.`
 
   return (
     <>
@@ -1687,19 +1765,23 @@ export function Explain() {
       )}
       <div className="photo">{problem.ocr}</div>
 
-      <div className="card plum">
-        <span className="lbl plum">Dạng bài</span>
-        <b style={{ fontSize: 15.5 }}>{problem.type}</b>
-        <span className="sub">{problem.summary}</span>
-      </div>
+      {(problem.type || problem.summary) && (
+        <div className="card plum">
+          <span className="lbl plum">Dạng bài</span>
+          <b style={{ fontSize: 15.5 }}>{problem.type}</b>
+          {problem.summary && <span className="sub">{problem.summary}</span>}
+        </div>
+      )}
 
-      <div className="card sun">
-        <span className="lbl sun">⚠️ {S.parent} lưu ý</span>
-        <span style={{ fontSize: 14 }}>{problem.warning}</span>
-      </div>
+      {problem.warning && (
+        <div className="card sun">
+          <span className="lbl sun">⚠️ {S.parent} lưu ý</span>
+          <span style={{ fontSize: 14 }}>{problem.warning}</span>
+        </div>
+      )}
 
       <div className="card">
-        <span className="lbl plum">Cách lớp {child.grade} đang học</span>
+        <span className="lbl plum">Cách {gradeLabel(child.grade)} đang học</span>
         <span style={{ fontSize: 14 }}>{problem.method}</span>
         {problem.diagram && (problem.isSample || problem.id === 'mock') && (
           <>
@@ -2000,15 +2082,16 @@ export function Scaffold() {
 
       <HoldReveal locked={false} onOpen={onOpen} />
 
-      {unlocked && (
-        <>
-          <div className="card mint pop">
-            <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
-            <b style={{ fontSize: 16 }}>{problem.answer}</b>
-            {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
-          </div>
-          <button className="btn mint" onClick={() => go('done')}>Hoàn thành bài ›</button>
-        </>
+      {unlocked && (problem.answer || problem.answerLine) && (
+        <div className="card mint pop">
+          <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
+          <b style={{ fontSize: 16 }}>{problem.answer}</b>
+          {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
+        </div>
+      )}
+      {/* Đợt 15 P1: xong bậc cuối là hiện nút, mở đáp án chỉ là tuỳ chọn */}
+      {(unlocked || step >= steps.length) && (
+        <button className="btn mint solid" data-testid="btn-finish-lesson" onClick={() => go('done')}>Hoàn thành bài ›</button>
       )}
 
       {showNudge && (
@@ -2095,8 +2178,15 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
     }
   }
 
-  const useSample = () => {
-    setTranscript('Con lấy ba hộp, mỗi hộp tám cây bút là hai mươi tư cây. Xong mẹ cho bạn Na năm cây thì con lấy hai mươi tư trừ đi năm còn mười chín cây bút ạ.')
+  // Lời giảng mẫu chỉ có ở Dùng thử hoặc bài mẫu, và luôn khớp với bài đang học (đợt 15 P1)
+  const canUseSample = isTrialActive() || Boolean(problem?.isSample)
+  const useSample = async () => {
+    if (isTrialActive()) {
+      const r = await teachBackTranscribe({}).catch(() => null)
+      setTranscript(r?.transcript || '')
+    } else {
+      setTranscript('Con lấy ba hộp, mỗi hộp tám cây bút là hai mươi tư cây. Xong mẹ cho bạn Na năm cây thì con lấy hai mươi tư trừ đi năm còn mười chín cây bút ạ.')
+    }
     setTbState('review')
   }
 
@@ -2114,7 +2204,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
         standardSteps: problem?.answer || '',
         transcript,
         round,
-        finalAnswer: problem?.answer || '19 cây bút',
+        finalAnswer: problem?.answer || problem?.dap_an_cuoi_cho_me || '',
         lop: child?.grade || 'Lớp 3',
         tenCon: child?.name || 'Mít',
       })
@@ -2171,14 +2261,16 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
             >
               <span style={{ fontSize: 18 }}>🎙️</span> Bấm để {child?.name || 'con'} giảng lại
             </button>
-            <button
-              className="btn soft"
-              data-testid="tb-sample-btn"
-              style={{ width: '100%', fontSize: 12.5, padding: '8px', color: 'var(--c-text-2)' }}
-              onClick={useSample}
-            >
-              🎧 Dùng lời giảng mẫu của {child?.name || 'Mít'} (3 hộp bút)
-            </button>
+            {canUseSample && (
+              <button
+                className="btn soft"
+                data-testid="tb-sample-btn"
+                style={{ width: '100%', fontSize: 12.5, padding: '8px', color: 'var(--c-text-2)' }}
+                onClick={useSample}
+              >
+                🎧 Dùng lời giảng mẫu (bài đang học)
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -2406,7 +2498,8 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
 export function Done() {
   const { S, problem, stats, patch, setStats, go, openSheet, toast, boom, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
-  const result = S.flow.result
+  // Đợt 15 P1: chỉ còn 1 bộ đánh giá (mẹ chốt mức hiểu bài trong thẻ Con dạy lại)
+  const result = S.flow.result || (S.flow.teachBack === 'guided' ? 'weak' : S.flow.teachBack ? 'ok' : null)
   const [stkIdx, setStkIdx] = useState(0)
   const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
   const stkOwned = (stats.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
@@ -2509,7 +2602,7 @@ export function Done() {
           problemType: topicName,
           totalSteps: problem?.steps?.length || 4,
           selfSteps: problem?.steps?.length || 4,
-          teachBack: prev.flow?.teachBack || 'self',
+          teachBack: prev.flow?.teachBack || null,
           minutes: 15,
           partial: false,
         }
@@ -2604,11 +2697,13 @@ export function Done() {
           ⚠️ Đây là bài mẫu, không phải bài của con (bài mẫu không tính vào lọ kẹo)
         </div>
       )}
-      <div className="card mint">
-        <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
-        <b style={{ fontSize: 16 }}>{problem.answer}</b>
-        {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
-      </div>
+      {(problem.answer || problem.answerLine || problem.dap_an_cuoi_cho_me) && (
+        <div className="card mint">
+          <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
+          <b style={{ fontSize: 16 }}>{problem.answer || problem.dap_an_cuoi_cho_me}</b>
+          {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
+        </div>
+      )}
 
       {/* Lời mời chấm vở sau khi hoàn thành bài học (Prompt 14 Mục 2.1) */}
       <div
@@ -2684,24 +2779,6 @@ export function Done() {
           )}
         </div>
       )}
-
-      <div>
-        <p className="lbl mut" style={{ marginBottom: 8 }}>{S.parent} đánh giá nhanh</p>
-        <div className="btns">
-          <button
-            className={`btn ${result === 'ok' ? 'mint' : 'ghost'}`}
-            onClick={() => patch({ flow: { ...S.flow, result: 'ok' } })}
-          >
-            😊 {child.name} làm được
-          </button>
-          <button
-            className={`btn ${result === 'weak' ? 'coral' : 'ghost'}`}
-            onClick={() => patch({ flow: { ...S.flow, result: 'weak' } })}
-          >
-            🤔 Còn vướng
-          </button>
-        </div>
-      </div>
 
       {stats.stickers >= 10 && (
         <div
@@ -4874,6 +4951,69 @@ function BowlGame() {
 /* ============================================================
    11. BÁO CÁO TUẦN
    ============================================================ */
+const LOI_LABEL = {
+  doc_de: 'đọc đề',
+  chon_phep_tinh: 'chọn phép tính',
+  tinh_nham: 'tính nhầm',
+  thieu_don_vi: 'thiếu đơn vị',
+  trinh_bay: 'trình bày',
+  chua_lam_xong: 'chưa làm xong',
+}
+
+function WeeklyAiCards({ stats, childName }) {
+  const [safety, setSafety] = useState(null)
+  useEffect(() => {
+    let off = false
+    getSafetySummary('7d')
+      .then((r) => {
+        if (!off && r && r.ok !== false) setSafety(r)
+      })
+      .catch(() => {})
+    return () => {
+      off = true
+    }
+  }, [])
+  const week = (stats?.studyLog || []).filter((e) => e && e.ts && getWeekLabel(e.ts) === 'Tuần này')
+  const teachBacks = week.filter((e) => e.kind !== 'check' && e.teachBack).length
+  const selfFixedLocal = week.filter((e) => e.kind === 'check')
+  const selfFixed = Math.max(selfFixedLocal.length, Number(safety?.work_checks?.self_fixed || 0))
+  const errCount = {}
+  selfFixedLocal.forEach((e) => {
+    if (e.errorType) errCount[e.errorType] = (errCount[e.errorType] || 0) + 1
+  })
+  const topErr = Object.entries(errCount).sort((a, b) => b[1] - a[1])[0]?.[0]
+  const blocked = Number(safety?.total_guard_interventions || 0)
+  const leaked = Number(safety?.guard_events?.leaked || 0)
+  const reported = Number(safety?.feedback?.total || 0)
+  const tile = { flex: 1, minWidth: 0, background: 'var(--c-surface-2)', borderRadius: 14, padding: '10px 10px' }
+  const num = { fontSize: 22, fontWeight: 900, color: 'var(--c-text)', lineHeight: 1.1 }
+  const cap = { fontSize: 11.5, color: 'var(--c-text)', marginTop: 2, lineHeight: 1.3 }
+  return (
+    <div className="card" data-testid="weekly-ai-cards">
+      <span className="lbl plum">Tuần này cùng AI</span>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={tile} data-testid="weekly-teachback">
+          <div style={num}>{teachBacks}</div>
+          <div style={cap}>lần {childName} giảng lại cho {'bố mẹ'}</div>
+        </div>
+        <div style={tile} data-testid="weekly-selffixed">
+          <div style={num}>{selfFixed}</div>
+          <div style={cap}>lỗi tự sửa được{topErr ? ` · hay gặp: ${LOI_LABEL[topErr] || topErr}` : ''}</div>
+        </div>
+      </div>
+      <div style={{ ...tile, marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }} data-testid="weekly-safety">
+        <span style={{ fontSize: 22 }}>🛡️</span>
+        <div style={{ fontSize: 12.5, color: 'var(--c-text)', lineHeight: 1.4 }}>
+          <b>An toàn AI 7 ngày:</b>{' '}
+          {safety
+            ? `AI tự chặn ${blocked} lần định lộ đáp án · ${leaked === 0 ? 'không lần nào lọt tới con' : `${leaked} lần lọt, đội ngũ đang xem`}${reported ? ` · ${reported} câu bố mẹ báo` : ''}.`
+            : 'chưa tải được số liệu.'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Report() {
   const { S, stats, toast, boom, tracker, patch, session } = useContext(AppCtx)
   const child = S?.children?.find((c) => c.id === S?.activeId) || S?.children?.[0] || { name: 'Con', id: 'c1' }
@@ -5181,6 +5321,9 @@ export function Report() {
       </div>
       </>
       )}
+
+      {/* Đợt 15 P1: An toàn AI · con giảng lại · tự sửa lỗi (prompt 14 mục 2.7, 3.7, 4.3) */}
+      <WeeklyAiCards stats={stats} childName={child.name} />
 
       {/* 3. Phân chia ca kèm giữa Bố và Mẹ */}
       <div className="card">
@@ -5544,6 +5687,8 @@ export function CheckWork() {
   const [editingText, setEditingText] = useState('')
   const [candiesAdded, setCandiesAdded] = useState(false)
   const [alreadyHadCandyTonight, setAlreadyHadCandyTonight] = useState(false)
+  const [blurReason, setBlurReason] = useState('')
+  const [gradeError, setGradeError] = useState(null) // { message, retryArgs }
 
   const fileInputRef = useRef(null)
   const retakeInputRef = useRef(null)
@@ -5588,6 +5733,7 @@ export function CheckWork() {
           setStep('invalid_scope')
           return
         }
+        setBlurReason(res.ly_do || '')
         setStep('blur')
         return
       }
@@ -5631,6 +5777,14 @@ export function CheckWork() {
         recheckOf: isRetake ? checkId : undefined,
       })
 
+      // Đợt 15 P0.B: kết quả thiếu trường → báo lỗi có nút Thử lại, không hiện "Dòng ."
+      const missing = missingCheckWorkFields(res)
+      if (missing.length) {
+        setGradeError({ message: 'AI chấm chưa xong, mẹ bấm Thử lại giúp mình nhé.', retryArgs: [idToGrade, probTxt, linesToGrade, editedFlag, isRetake] })
+        setStep('grade_error')
+        return
+      }
+
       setGradeResult(res)
 
       if (isRetake && res.self_fixed === 1) {
@@ -5646,8 +5800,12 @@ export function CheckWork() {
       }
     } catch (err) {
       console.error('Lỗi chấm bài:', err)
-      toast('Có lỗi khi chấm bài, mẹ thử lại nhé')
-      setStep('review')
+      const msg =
+        err?.status === 429
+          ? 'Hôm nay đã dùng hết lượt chấm. Mẹ và bé quay lại vào ngày mai nhé!'
+          : err?.data?.message || 'AI chấm chưa xong, mẹ bấm Thử lại giúp mình nhé.'
+      setGradeError({ message: msg, retryArgs: err?.status === 429 ? null : [idToGrade, probTxt, linesToGrade, editedFlag, isRetake] })
+      setStep('grade_error')
     }
   }
 
@@ -5671,8 +5829,9 @@ export function CheckWork() {
         id: 'sess_' + now + '_' + Math.random().toString(36).slice(2, 6),
         ts: now,
         dateKey: todayKey,
-        problemType: `Chấm vở: Tự sửa được lỗi ${res.loai_loi || 'chọn phép tính'}`,
+        problemType: `Chấm vở: Tự sửa được lỗi ${LOI_LABEL[res.loai_loi] || res.loai_loi || 'trong bài'}`,
         kind: 'check',
+        errorType: res.loai_loi || (gradeResult && gradeResult.loai_loi) || null,
         minutes: 10,
         partial: false,
       }
@@ -5719,27 +5878,23 @@ export function CheckWork() {
     toast(`Đã cập nhật dòng ${lines[idx].so}`)
   }
 
-  // Dùng ảnh mẫu 3 hộp bút
+  // Bài mẫu (chỉ trong Dùng thử): khớp với bài đang học trong Dùng thử
+  const trialMode = isTrialActive()
   const handleUseSample = () => {
-    setProblemText('Bài 3. Có 3 hộp, mỗi hộp 8 bút. Mẹ cho bạn Na 5 bút. Hỏi còn mấy bút?')
-    setLines([
-      { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.95 },
-      { so: 2, noi_dung: '24 + 5 = 29 (cây)', chac_chan: 0.62, lua_chon: ['29', '20'] },
-      { so: 3, noi_dung: 'Đáp số: 29 cây bút', chac_chan: 0.92 },
-    ])
-    setCheckId(`chk_sample_${Date.now()}`)
+    const lesson = getActiveTrialLesson(problemText)
+    const cv = TRIAL_LESSON_EXTRAS[lesson.id].cham_vo
+    setProblemText(lesson.de_bai)
+    setLines(cv.dong_sai.map((d) => ({ ...d })))
+    setCheckId(`chk_sample_${lesson.id}_${Date.now()}`)
     setLinesEdited(0)
     setStep('review')
-    toast('Đã nạp bài mẫu 3 hộp bút 📝')
+    toast('Đã nạp bài làm mẫu của đề đang học 📝')
   }
 
   // Thử chụp lại với bài đã sửa mẫu
   const handleUseSampleRetake = async () => {
-    const fixedLines = [
-      { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.98 },
-      { so: 2, noi_dung: '24 - 5 = 19 (cây)', chac_chan: 0.95 },
-      { so: 3, noi_dung: 'Đáp số: 19 cây bút', chac_chan: 0.96 },
-    ]
+    const lesson = getActiveTrialLesson(problemText)
+    const fixedLines = TRIAL_LESSON_EXTRAS[lesson.id].cham_vo.dong_dung.map((d) => ({ ...d }))
     setLines(fixedLines)
     await doGrade(checkId, problemText, fixedLines, 0, true)
   }
@@ -5838,14 +5993,14 @@ export function CheckWork() {
               🖼️ Chọn ảnh có sẵn
             </button>
 
-            <button
+            {trialMode && <button
               data-testid="btn-sample-photo"
               className="chip"
               style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
               onClick={handleUseSample}
             >
-              ✨ Dùng ảnh mẫu 3 hộp bút (Dùng thử)
-            </button>
+              ✨ Dùng bài làm mẫu (Dùng thử)
+            </button>}
           </div>
         </>
       )}
@@ -6011,6 +6166,25 @@ export function CheckWork() {
         </div>
       )}
 
+      {/* 4b. CHẤM LỖI / THIẾU TRƯỜNG */}
+      {step === 'grade_error' && (
+        <div data-testid="check-work-grade-error" style={{ textAlign: 'center', padding: '40px 14px' }}>
+          <div style={{ fontSize: 46, marginBottom: 12 }}>🧐</div>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Chưa chấm xong</h3>
+          <p style={{ fontSize: 14, color: 'var(--c-text-2)', margin: '8px 0 18px', lineHeight: 1.5 }}>{gradeError?.message}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {gradeError?.retryArgs && (
+              <button className="btn primary solid" style={{ padding: 12 }} data-testid="btn-grade-retry" onClick={() => doGrade(...gradeError.retryArgs)}>
+                🔄 Thử lại
+              </button>
+            )}
+            <button className="btn ghost" style={{ padding: 12 }} onClick={() => setStep(lines.length ? 'review' : 'capture')}>
+              ✏️ Xem lại các dòng bài làm
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 5. MÀN HÌNH KẾT QUẢ CHO MẸ (CHỈ MẸ THẤY) */}
       {step === 'result_parent' && gradeResult && (
         <>
@@ -6069,7 +6243,13 @@ export function CheckWork() {
               </div>
             ) : (
               <div style={{ marginTop: 4, fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.5 }}>
-                Bước sai đầu tiên: <b>Dòng {gradeResult.dong_sai_dau_tien}</b>.{' '}
+                {Number.isInteger(Number(gradeResult.dong_sai_dau_tien)) && Number(gradeResult.dong_sai_dau_tien) > 0 ? (
+                  <>Bước sai đầu tiên: <b>Dòng {gradeResult.dong_sai_dau_tien}</b>.{' '}</>
+                ) : gradeResult.ket_qua === 'chua_xong' ? (
+                  <>Con chưa làm xong bài.{' '}</>
+                ) : (
+                  <>Có chỗ cần xem lại.{' '}</>
+                )}
                 <span
                   style={{
                     display: 'inline-block',
@@ -6317,14 +6497,16 @@ export function CheckWork() {
               📷 Chụp lại bài đã sửa
             </button>
 
-            <button
-              data-testid="btn-sample-retake"
-              className="chip"
-              style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
-              onClick={handleUseSampleRetake}
-            >
-              ✨ Dùng bài đã sửa mẫu (19 cây bút)
-            </button>
+            {(trialMode || String(checkId || '').startsWith('chk_sample')) && (
+              <button
+                data-testid="btn-sample-retake"
+                className="chip"
+                style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
+                onClick={handleUseSampleRetake}
+              >
+                ✨ Dùng bài đã sửa mẫu
+              </button>
+            )}
           </div>
         </>
       )}
@@ -6400,17 +6582,20 @@ export function CheckWork() {
       {step === 'blur' && (
         <div style={{ textAlign: 'center', padding: '30px 10px' }}>
           <div style={{ fontSize: 50, marginBottom: 12 }}>🌫️</div>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Ảnh hơi mờ hoặc thiếu sáng</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Mình chưa đọc rõ ảnh, mẹ chụp lại giúp nhé</h3>
           <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '8px 0 16px' }}>
-            AI chưa đọc rõ nét chữ của {childName}. Mẹ hãy bật đèn, giữ chắc tay và chụp gần hơn nhé!
+            {blurReason && !/chưa đọc rõ ảnh/i.test(blurReason) ? `(${blurReason}) ` : ''}
+            Mẹ bật đèn, giữ chắc tay, chụp thẳng và gần trang vở của {childName} hơn nhé.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button className="btn primary" style={{ padding: '12px' }} onClick={() => setStep('capture')}>
               📷 Chụp lại ảnh khác
             </button>
-            <button className="btn ghost" style={{ padding: '12px' }} onClick={handleUseSample}>
-              ✨ Dùng bài mẫu để thử tính năng
-            </button>
+            {trialMode && (
+              <button className="btn ghost" style={{ padding: '12px' }} onClick={handleUseSample}>
+                ✨ Dùng bài mẫu để thử tính năng
+              </button>
+            )}
           </div>
         </div>
       )}

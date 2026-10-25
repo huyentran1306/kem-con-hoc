@@ -5,7 +5,7 @@ import { PROBLEM } from './data.js'
 import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
 import { getWeekLabel } from './utils.js'
 import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
-import { isTrialActive, matchTrialLesson, PRELOADED_TRIAL_LESSONS, getTrialInitialState } from './trialData.js'
+import { isTrialActive, matchTrialLesson, PRELOADED_TRIAL_LESSONS, getTrialInitialState, trialLessonToProblem, setActiveTrialLesson, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, TRIAL_LIMIT_MESSAGE } from './trialData.js'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -246,25 +246,12 @@ export function fastClassifyProblem(deBai = '', lop = 'Lớp 2') {
    ============================================================ */
 export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = false) {
   if (isTrialActive()) {
+    // Đợt 15 P1: Dùng thử chỉ có 3 đề mẫu, đề khác thì nói rõ (không trả bài vịt cho mọi đề)
     const trial = matchTrialLesson(ocr)
-    return {
-      de_bai: trial.de_bai,
-      phuong_phap: trial.phuong_phap,
-      dang_bai: trial.dang_bai,
-      cac_bac: trial.cac_bac,
-      steps: trial.cac_bac.map((b) => ({
-        question: b.cau_hoi,
-        ly_do_cho_me: b.ly_do_cho_me || '',
-        answerForParent: b.dap_an_cho_me,
-        answer: b.dap_an_cho_me,
-        hint: b.goi_y.muc_1_do_vat,
-        hintLevel1: b.goi_y.muc_1_do_vat,
-        hintLevel2: b.goi_y.muc_2_hinh_ve,
-        stuck: 0,
-      })),
-      dap_an_cuoi_cho_me: trial.dap_an_cuoi_cho_me,
-      finalAnswerForParent: trial.dap_an_cuoi_cho_me,
-    }
+    if (!trial) return { error: 'trial_limit', message: TRIAL_LIMIT_MESSAGE }
+    setActiveTrialLesson(trial.id)
+    await new Promise((r) => setTimeout(r, 500))
+    return trialLessonToProblem(trial)
   }
   const grade = child?.grade || 'Lớp 2'
   const book = child?.book || 'Kết nối tri thức'
@@ -302,6 +289,11 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
 
   const userPrompt = `Soạn bài cho đề sau theo đúng schema. Chỉ trả JSON.\nĐề bài: """${ocr}"""`
 
+  // P0.A: soạn bài có thể mất 20–40 giây; hạn chờ riêng 75 giây, không coi là "mạng chậm"
+  const EXPLAIN_TIMEOUT_MS = Math.max(75000, Number(aiCfg.timeout_ms) || 0)
+  const startedAt = Date.now()
+  const modelId = typeof aiCfg.model === 'string' && aiCfg.model.startsWith('@cf/') ? aiCfg.model : undefined
+
   try {
     let j = await postAi(
       '/chat',
@@ -310,17 +302,18 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           { role: 'system', content: sys },
           { role: 'user', content: userPrompt },
         ],
-        max_tokens: aiCfg.max_tokens || 1500,
+        max_tokens: Math.min(Number(aiCfg.max_tokens) || 1400, 1600),
         temperature: typeof aiCfg.temperature === 'number' ? aiCfg.temperature : 0.3,
-        model: aiCfg.model || 'cloudflare-llama-3.3-70b',
+        model: modelId,
       },
-      aiCfg.timeout_ms || 30000,
+      EXPLAIN_TIMEOUT_MS,
       { 'X-Prompt-Id': 'p3_explain' }
     )
     let data = extractJson(j.response ?? j)
 
-    // Nếu lần đầu lỗi JSON hoặc thiếu schema, tự động thử lại 1 lần
-    if (!isValidExplain(data)) {
+    // Lần đầu lỗi JSON hoặc thiếu schema: thử lại 1 lần nếu còn đủ thời gian
+    const remainingMs = EXPLAIN_TIMEOUT_MS - (Date.now() - startedAt)
+    if (!isValidExplain(data) && remainingMs > 20000) {
       const retryResp = await postAi(
         '/chat',
         {
@@ -330,10 +323,11 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
             { role: 'assistant', content: String(j?.response || '') },
             { role: 'user', content: 'Trả lại đúng JSON theo schema, không thêm chữ.' },
           ],
-          max_tokens: 1500,
+          max_tokens: 1400,
           temperature: 0.2,
+          model: modelId,
         },
-        20000,
+        remainingMs,
         { 'X-Prompt-Id': 'p3_explain' }
       )
       data = extractJson(retryResp.response ?? retryResp)
@@ -388,7 +382,10 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       diagram: null,
     }
   } catch (e) {
-    return null
+    // Phân biệt: hết hạn chờ (AI soạn lâu) / máy chủ báo lỗi / mất mạng thật
+    if (e && e.name === 'AbortError') return { error: 'timeout', message: 'AI đang soạn lâu hơn thường lệ' }
+    if (e && e.status) return { error: 'server', status: e.status, message: e.message }
+    return { error: 'network', message: 'Không kết nối được máy chủ' }
   }
 }
 
@@ -565,6 +562,7 @@ export async function cloudLoadState(famId) {
     }
   }
   const token = getAuthToken()
+  let networkFailed = false
   if (token) {
     try {
       const r = await fetch(GATEWAY + '/api/v1/family/state', {
@@ -578,11 +576,15 @@ export async function cloudLoadState(famId) {
           serverTs: data.ts,
         }
       }
+      if (r.status >= 500) networkFailed = true
     } catch (e) {
+      networkFailed = true
       console.warn('V1 family state load failed, falling back:', e)
     }
   }
-  return dbKvGet(famCloudKey(famId))
+  const legacy = await dbKvGet(famCloudKey(famId))
+  if (!legacy && networkFailed) return { error: 'network' }
+  return legacy
 }
 
 export async function cloudSaveState(famId, state, baseTs = null) {
@@ -1269,28 +1271,14 @@ export async function checkWorkRead({ image, childId, sessionId, problemText, re
   if (isTrialActive()) {
     await new Promise((r) => setTimeout(r, 600))
     if (isSelfie) {
-      return {
-        check_id: `chk_trial_${Date.now()}_rejected`,
-        de_bai: problemText || '',
-        cac_dong: [],
-        doc_duoc: false,
-        ly_do: 'không phải bài làm',
-      }
+      return { check_id: `chk_trial_${Date.now()}_rejected`, de_bai: problemText || '', cac_dong: [], doc_duoc: false, ly_do: 'không phải bài làm' }
     }
+    const lesson = getActiveTrialLesson(problemText)
+    const cv = TRIAL_LESSON_EXTRAS[lesson.id].cham_vo
     return {
-      check_id: `chk_trial_${Date.now()}`,
-      de_bai: problemText || 'Bài 3. Có 3 hộp, mỗi hộp 8 bút. Mẹ cho bạn Na 5 bút. Hỏi còn mấy bút?',
-      cac_dong: recheckOf
-        ? [
-            { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.98 },
-            { so: 2, noi_dung: '24 - 5 = 19 (cây)', chac_chan: 0.95 },
-            { so: 3, noi_dung: 'Đáp số: 19 cây bút', chac_chan: 0.96 },
-          ]
-        : [
-            { so: 1, noi_dung: '8 + 8 + 8 = 24 (cây)', chac_chan: 0.95 },
-            { so: 2, noi_dung: '24 + 5 = 29 (cây)', chac_chan: 0.62, lua_chon: ['29', '20'] },
-            { so: 3, noi_dung: 'Đáp số: 29 cây bút', chac_chan: 0.92 },
-          ],
+      check_id: `chk_trial_${lesson.id}_${Date.now()}`,
+      de_bai: lesson.de_bai,
+      cac_dong: (recheckOf ? cv.dong_dung : cv.dong_sai).map((d) => ({ ...d })),
       doc_duoc: true,
       ly_do: '',
     }
@@ -1331,43 +1319,12 @@ export async function checkWorkRead({ image, childId, sessionId, problemText, re
 export async function checkWorkGrade({ checkId, deBai, cacDong, linesEdited, lop, xungHo, tenCon, recheckOf }) {
   if (isTrialActive()) {
     await new Promise((r) => setTimeout(r, 800))
-    const isFixed = cacDong && cacDong.some((d) => (d.noi_dung || d).includes('- 5') || (d.noi_dung || d).includes('19'))
-    if (isFixed || recheckOf) {
-      return {
-        check_id: checkId,
-        ket_qua: 'dung_het',
-        loi_giai_chuan: ['8 + 8 + 8 = 24', '24 - 5 = 19'],
-        dong_sai_dau_tien: null,
-        loai_loi: null,
-        giai_thich_cho_me: 'Con đã sửa lại phép tính đúng hoàn toàn.',
-        gia_tri_dung_dong_sai: null,
-        dap_an_dung_cho_me: '19 cây bút',
-        loi_khen_cu_the: 'Con rất tự giác và tìm ra phép trừ chuẩn xác!',
-        cau_hoi_cho_con: {
-          muc_1: 'Con tự tìm ra phép trừ và làm đúng rồi, con giỏi lắm!',
-          muc_2: '',
-        },
-        self_fixed: 1,
-        guard_action: 'pass',
-      }
-    }
-    return {
-      check_id: checkId,
-      ket_qua: 'co_buoc_sai',
-      loi_giai_chuan: ['8 + 8 + 8 = 24', '24 - 5 = 19'],
-      dong_sai_dau_tien: 2,
-      loai_loi: 'chon_phep_tinh',
-      giai_thich_cho_me: 'Đề là cho đi bạn Na nên phải bớt, con lại làm phép cộng. Lỗi hay gặp khi thấy chữ cho là cộng.',
-      gia_tri_dung_dong_sai: '19',
-      dap_an_dung_cho_me: '19 cây bút',
-      loi_khen_cu_the: 'Dòng 1 con làm đúng phép tính và ghi đơn vị đầy đủ.',
-      cau_hoi_cho_con: {
-        muc_1: 'Con đọc lại đề nhé. Mẹ cho bạn Na 5 cây thì bút của mình nhiều lên hay ít đi?',
-        muc_2: 'Mẹ có 24 que tính, mẹ lấy bớt đi 5 que đưa bạn Na, con xem trên bàn còn mấy que?',
-      },
-      self_fixed: 0,
-      guard_action: 'pass',
-    }
+    const lesson = getActiveTrialLesson(deBai)
+    const cv = TRIAL_LESSON_EXTRAS[lesson.id].cham_vo
+    const norm = (x) => String(x?.noi_dung ?? x).replace(/\s+/g, ' ').trim()
+    const isFixed = Boolean(recheckOf) || (cacDong || []).map(norm).join('|') === cv.dong_dung.map(norm).join('|')
+    const g = isFixed ? cv.cham_dung : cv.cham_sai
+    return { check_id: checkId, ...g, cau_hoi_cho_con: { ...g.cau_hoi_cho_con }, self_fixed: isFixed ? 1 : 0, guard_action: 'pass' }
   }
 
   const token = getAuthToken()
@@ -1419,11 +1376,7 @@ export async function checkWorkHistory() {
 export async function teachBackTranscribe({ audioBlob }) {
   if (isTrialActive()) {
     await new Promise((r) => setTimeout(r, 600))
-    return {
-      ok: true,
-      transcript:
-        'Con lấy ba hộp mỗi hộp tám cây bút là hai mươi tư cây, rồi mẹ cho bạn Na năm cây nên con lấy hai mươi tư trừ đi năm còn mười chín cây bút ạ.',
-    }
+    return { ok: true, transcript: TRIAL_LESSON_EXTRAS[getActiveTrialLesson().id].giang_lai.transcript }
   }
 
   const token = getAuthToken()
@@ -1474,15 +1427,10 @@ export async function teachBackGrade({
     return {
       ok: true,
       teach_back_id: `tb_trial_${Date.now()}`,
-      tieu_chi: [
-        { ma: 'du_kien', dat: true, trich: 'ba hộp mỗi hộp tám cây bút' },
-        { ma: 'phep_tinh', dat: true, trich: 'nhân tám rồi trừ đi năm' },
-        { ma: 'ket_qua', dat: true, trich: 'còn mười chín cây bút' },
-        { ma: 'vi_sao', dat: true, trich: 'mẹ cho bạn Na năm cây nên con lấy hai mươi tư trừ đi năm' },
-      ],
+      tieu_chi: TRIAL_LESSON_EXTRAS[getActiveTrialLesson(problemText).id].giang_lai.tieu_chi.map((t) => ({ ...t })),
       muc_de_xuat: 'self',
       cau_hoi_them: '',
-      loi_khen_cho_con: `Bé ${tenCon} kể lại các bước rất tự tin và nhớ chính xác từng số liệu!`,
+      loi_khen_cho_con: `Bé ${String(tenCon || "").replace(/^bé\s+/i, "")} kể lại các bước rất tự tin và nhớ chính xác từng số liệu!`,
       hallucination_detected: false,
     }
   }
@@ -1554,7 +1502,7 @@ export async function sendAiFeedback({ familyId, sessionId, promptId, step, reas
   return res.json()
 }
 
-export async function getSafetySummary() {
+export async function getSafetySummary(range = '7d') {
   if (isTrialActive()) {
     return {
       ok: true,
@@ -1576,7 +1524,7 @@ export async function getSafetySummary() {
   const headers = {}
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(`${AI_GATEWAY}/api/v1/safety/summary`, { headers })
+  const res = await fetch(`${AI_GATEWAY}/api/v1/safety/summary?range=${encodeURIComponent(range)}`, { headers })
   return res.json()
 }
 

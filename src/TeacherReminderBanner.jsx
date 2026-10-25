@@ -13,6 +13,7 @@
 import { useState, useEffect } from 'react'
 import { isReminderInDisplayWindow, isLateNightUrgent } from './teacherReminderData.js'
 import { getAuthToken, fetchFamilyReminders, markFamilyReminderDone, teacherLabel } from './api'
+import { isTrialActive, getTrialTeacherReminders } from './trialData.js'
 
 const KID_COLORS = [
   { bg: '#FFF1D6', color: '#9A5B00', border: '#F6C56A' }, // Amber
@@ -68,36 +69,12 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
       return
     }
 
-    // Fallback to local storage or demo reminder
-    try {
-      const stored = localStorage.getItem('kem-con-hoc:teacher-reminders')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setReminders(parsed)
-          return
-        }
-      }
-    } catch {}
-
-    // Default demo reminder
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const tomorrowStr = tomorrow.toISOString().slice(0, 10)
-
-    const initialReminders = [
-      {
-        id: 'rem_demo_1',
-        teacher_name: 'Hạnh',
-        class_name: 'Lớp 3A',
-        child_name: child?.name || 'Mít',
-        message: 'Mai thứ hai, các con mặc đồng phục thể dục và mang vở Toán nhé.',
-        target_date: tomorrowStr,
-        created_at: new Date().toISOString(),
-        assignment_id: null,
-      }
-    ]
-    setReminders(initialReminders)
+    // Đợt 15 P0.C: dữ liệu mẫu CHỈ dùng ở chế độ Dùng thử, không bao giờ cho tài khoản thật
+    if (isTrialActive()) {
+      setReminders(getTrialTeacherReminders(child?.name))
+      return
+    }
+    setReminders([])
   }
 
   const handleMarkDone = async (remId) => {

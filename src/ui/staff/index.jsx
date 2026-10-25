@@ -858,8 +858,8 @@ export function SideNav({
   activeClassId,
   onSelectClass,
   onAddClass,
-  teacherName = 'Hạnh',
-  schoolName = 'Kim Đồng',
+  teacherName = '',
+  schoolName = '',
   onLogout,
 }) {
   return (
@@ -885,7 +885,7 @@ export function SideNav({
           <b style={{ fontFamily: 'var(--s-font-head)', fontSize: 14, color: 'var(--s-text)', display: 'block', lineHeight: 1.1 }}>
             Cổng Giáo Viên
           </b>
-          <small style={{ fontSize: 10, color: 'var(--s-text-2)' }}>Tiểu học {schoolName}</small>
+          {schoolName ? <small style={{ fontSize: 10, color: 'var(--s-text-2)' }}>Tiểu học {schoolName}</small> : null}
         </div>
       </div>
 
@@ -999,7 +999,7 @@ export function SideNav({
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <strong style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--s-text)' }}>
-            Cô {teacherName}
+            {teacherName ? `Cô ${teacherName}` : 'Cô giáo'}
           </strong>
           <span style={{ fontSize: 9.5, color: 'var(--s-ok)', fontWeight: 800 }}>Giáo viên</span>
         </div>
@@ -1037,8 +1037,8 @@ export function StaffShell({
   activeClassId,
   onSelectClass,
   onAddClass,
-  teacherName = 'Hạnh',
-  schoolName = 'Kim Đồng',
+  teacherName = '',
+  schoolName = '',
   onLogout,
   searchValue = '',
   onSearchChange,

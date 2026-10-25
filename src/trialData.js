@@ -228,21 +228,7 @@ export function getTrialInitialState() {
       result: null,
       ocr: PRELOADED_TRIAL_LESSONS[0].de_bai,
     },
-    problem: {
-      type: 'Toán có lời văn',
-      dang_bai: 'Toán có lời văn phép trừ',
-      ocr: PRELOADED_TRIAL_LESSONS[0].de_bai,
-      steps: PRELOADED_TRIAL_LESSONS[0].cac_bac.map((b) => ({
-        question: b.cau_hoi,
-        answerForParent: b.dap_an_cho_me,
-        answer: b.dap_an_cho_me,
-        hint: b.goi_y.muc_1_do_vat,
-        hintLevel1: b.goi_y.muc_1_do_vat,
-        hintLevel2: b.goi_y.muc_2_hinh_ve,
-        stuck: 0,
-      })),
-      finalAnswerForParent: PRELOADED_TRIAL_LESSONS[0].dap_an_cuoi_cho_me,
-    },
+    problem: trialLessonToProblem(PRELOADED_TRIAL_LESSONS[0]),
   };
 }
 
@@ -257,18 +243,243 @@ export function isTrialActive() {
   return false;
 }
 
+export const TRIAL_LIMIT_MESSAGE = 'Dùng thử chỉ có 3 đề mẫu. Mẹ chọn một đề bên dưới, hoặc đăng ký để AI giảng mọi đề nhé.'
+
+/**
+ * Tìm bài mẫu khớp đề. Đợt 15 P1: đề không khớp → null (không còn trả "Bác Ba bán vịt" cho mọi đề).
+ * Đề rỗng → bài đầu tiên.
+ */
 export function matchTrialLesson(text = '') {
-  if (!text) return PRELOADED_TRIAL_LESSONS[0];
+  if (!text || !String(text).trim()) return PRELOADED_TRIAL_LESSONS[0];
   const s = String(text).toLowerCase();
-  if (s.includes('vịt') || s.includes('bán') || s.includes('15')) {
-    return PRELOADED_TRIAL_LESSONS[0];
+  const exact = PRELOADED_TRIAL_LESSONS.find((l) => s.includes(l.de_bai.toLowerCase().slice(0, 30)));
+  if (exact) return exact;
+  if (s.includes('vịt') || (s.includes('bác ba') && s.includes('bán'))) return PRELOADED_TRIAL_LESSONS[0];
+  if (s.includes('mùa xuân') || s.includes('lộc') || s.includes('chồi') || /\bl hay n\b/.test(s)) return PRELOADED_TRIAL_LESSONS[1];
+  if (s.includes('mimi') || s.includes('my cat') || /\bits\b/.test(s)) return PRELOADED_TRIAL_LESSONS[2];
+  return null;
+}
+
+/* ---------- Dữ liệu đầy đủ cho từng đề mẫu (giảng, chấm vở, nghe con giảng lại khớp nhau) ---------- */
+export const TRIAL_LESSON_EXTRAS = {
+  lesson_math_3: {
+    tom_tat: 'Bài trừ một bước: lấy số vịt ban đầu bớt đi số vịt đã bán.',
+    luu_y: 'Con hay thấy hai số rồi cộng luôn. Để con tự nói "bán bớt" là nhiều lên hay ít đi, đừng nói hộ chữ "trừ".',
+    cach_lop_hoc: 'Lớp 3 tóm tắt bằng sơ đồ đoạn thẳng: đoạn dài 15 con, gạch bớt 6 con, phần còn lại là số cần tìm.',
+    dap_an: '15 − 6 = 9 (con vịt)',
+    dap_an_dong: 'Bác Ba còn lại 9 con vịt.',
+    cham_vo: {
+      dong_sai: [
+        { so: 1, noi_dung: 'Số vịt còn lại là:', chac_chan: 0.93 },
+        { so: 2, noi_dung: '15 + 6 = 21 (con)', chac_chan: 0.64, lua_chon: ['21', '27'] },
+        { so: 3, noi_dung: 'Đáp số: 21 con vịt', chac_chan: 0.9 },
+      ],
+      dong_dung: [
+        { so: 1, noi_dung: 'Số vịt còn lại là:', chac_chan: 0.95 },
+        { so: 2, noi_dung: '15 - 6 = 9 (con)', chac_chan: 0.95 },
+        { so: 3, noi_dung: 'Đáp số: 9 con vịt', chac_chan: 0.95 },
+      ],
+      cham_sai: {
+        ket_qua: 'co_buoc_sai',
+        loi_giai_chuan: ['15 - 6 = 9'],
+        dong_sai_dau_tien: 2,
+        loai_loi: 'chon_phep_tinh',
+        giai_thich_cho_me: 'Đề nói bác Ba bán bớt nên số vịt ít đi, con lại làm phép cộng. Lỗi hay gặp khi con chưa đọc kỹ chữ "bán bớt".',
+        gia_tri_dung_dong_sai: '9',
+        dap_an_dung_cho_me: '9 con vịt',
+        loi_khen_cu_the: 'Con viết câu lời giải rõ ràng và ghi đủ đơn vị "con".',
+        cau_hoi_cho_con: {
+          muc_1: 'Con đọc lại đề nhé: bác Ba bán bớt đi thì đàn vịt nhiều lên hay ít đi?',
+          muc_2: 'Mẹ xếp 15 que tính làm đàn vịt, con lấy ra 6 que như bác Ba bán đi, rồi đếm số que còn lại nhé.',
+        },
+      },
+      cham_dung: {
+        ket_qua: 'dung_het',
+        loi_giai_chuan: ['15 - 6 = 9'],
+        dong_sai_dau_tien: null,
+        loai_loi: null,
+        giai_thich_cho_me: 'Con đã đổi sang phép trừ và tính đúng.',
+        gia_tri_dung_dong_sai: null,
+        dap_an_dung_cho_me: '9 con vịt',
+        loi_khen_cu_the: 'Con tự nhận ra "bán bớt" là phải trừ, giỏi quá!',
+        cau_hoi_cho_con: { muc_1: 'Con tự tìm ra chỗ cần sửa rồi đó, con giỏi lắm!', muc_2: '' },
+      },
+    },
+    giang_lai: {
+      transcript: 'Đàn vịt có mười lăm con, bác Ba bán bớt sáu con nên con lấy mười lăm trừ sáu còn chín con vịt ạ.',
+      tieu_chi: [
+        { ma: 'du_kien', dat: true, trich: 'đàn vịt có mười lăm con' },
+        { ma: 'phep_tinh', dat: true, trich: 'mười lăm trừ sáu' },
+        { ma: 'ket_qua', dat: true, trich: 'còn chín con vịt' },
+        { ma: 'vi_sao', dat: true, trich: 'bán bớt sáu con nên con lấy mười lăm trừ sáu' },
+      ],
+    },
+  },
+  lesson_viet_1: {
+    tom_tat: 'Bài chính tả phân biệt phụ âm đầu l và n theo nghĩa của từ.',
+    luu_y: 'Đừng đọc sẵn từ đúng cho con. Cho con nói nghĩa của từ trước rồi mới chọn l hay n.',
+    cach_lop_hoc: 'Lớp 1 đọc to cả câu, nhìn khẩu hình và đặt từ vào ngữ cảnh quen thuộc.',
+    dap_an: 'nảy lộc · nở rộ',
+    dap_an_dong: 'Câu đúng: "cây cối đâm chồi nảy lộc, hoa cúc nở rộ khắp vườn".',
+    cham_vo: {
+      dong_sai: [
+        { so: 1, noi_dung: 'Mùa xuân, cây cối đâm chồi lảy lộc,', chac_chan: 0.86 },
+        { so: 2, noi_dung: 'hoa cúc nở rộ khắp vườn.', chac_chan: 0.9 },
+      ],
+      dong_dung: [
+        { so: 1, noi_dung: 'Mùa xuân, cây cối đâm chồi nảy lộc,', chac_chan: 0.92 },
+        { so: 2, noi_dung: 'hoa cúc nở rộ khắp vườn.', chac_chan: 0.92 },
+      ],
+      cham_sai: {
+        ket_qua: 'co_buoc_sai',
+        loi_giai_chuan: ['nảy lộc', 'nở rộ'],
+        dong_sai_dau_tien: 1,
+        loai_loi: 'trinh_bay',
+        giai_thich_cho_me: 'Con viết "lảy" thay vì "nảy". Tiếng "lộc" con viết đúng.',
+        gia_tri_dung_dong_sai: 'nảy',
+        dap_an_dung_cho_me: 'nảy lộc, nở rộ',
+        loi_khen_cu_the: 'Con viết đúng "lộc" và "nở rộ", chữ đều và rõ.',
+        cau_hoi_cho_con: {
+          muc_1: 'Con đọc to tiếng đầu ở dòng 1 nhé, đầu lưỡi con chạm vào đâu?',
+          muc_2: 'Con soi gương, đọc chậm từng tiếng rồi nhìn lại chữ con viết nhé.',
+        },
+      },
+      cham_dung: {
+        ket_qua: 'dung_het',
+        loi_giai_chuan: ['nảy lộc', 'nở rộ'],
+        dong_sai_dau_tien: null,
+        loai_loi: null,
+        giai_thich_cho_me: 'Con đã sửa đúng chữ đầu dòng 1.',
+        gia_tri_dung_dong_sai: null,
+        dap_an_dung_cho_me: 'nảy lộc, nở rộ',
+        loi_khen_cu_the: 'Con tự nghe ra âm đầu và sửa lại rất cẩn thận!',
+        cau_hoi_cho_con: { muc_1: 'Con tự sửa đúng rồi, giỏi quá!', muc_2: '' },
+      },
+    },
+    giang_lai: {
+      transcript: 'Mùa xuân cây ra lá non nên gọi là nảy lộc, nảy viết n còn lộc viết l, hoa nở thì viết n ạ.',
+      tieu_chi: [
+        { ma: 'du_kien', dat: true, trich: 'mùa xuân cây ra lá non' },
+        { ma: 'phep_tinh', dat: true, trich: 'nảy viết n còn lộc viết l' },
+        { ma: 'ket_qua', dat: true, trich: 'hoa nở thì viết n' },
+        { ma: 'vi_sao', dat: true, trich: 'cây ra lá non nên gọi là nảy lộc' },
+      ],
+    },
+  },
+  lesson_eng_3: {
+    tom_tat: 'Bài chọn tính từ sở hữu "Its" (của nó) cho con vật số ít.',
+    luu_y: 'Con hay nhầm Its với It\'s. Hỏi con "của nó" hay "nó là" trước khi chọn.',
+    cach_lop_hoc: 'Lớp 3 đặt cạnh My name, Your name rồi tìm từ có nghĩa "của nó".',
+    dap_an: 'A. Its',
+    dap_an_dong: 'This is my cat. Its name is Mimi.',
+    cham_vo: {
+      dong_sai: [{ so: 1, noi_dung: "This is my cat. It's name is Mimi.", chac_chan: 0.84 }],
+      dong_dung: [{ so: 1, noi_dung: 'This is my cat. Its name is Mimi.', chac_chan: 0.92 }],
+      cham_sai: {
+        ket_qua: 'co_buoc_sai',
+        loi_giai_chuan: ['Its name is Mimi'],
+        dong_sai_dau_tien: 1,
+        loai_loi: 'doc_de',
+        giai_thich_cho_me: "Con chọn It's (nó là) thay vì Its (của nó). Đây là lỗi rất hay gặp.",
+        gia_tri_dung_dong_sai: 'Its',
+        dap_an_dung_cho_me: 'A. Its',
+        loi_khen_cu_the: 'Con chép câu đúng chính tả và viết hoa đầu câu.',
+        cau_hoi_cho_con: {
+          muc_1: 'Câu này muốn nói "tên CỦA NÓ" hay "NÓ LÀ" hả con?',
+          muc_2: 'Con đọc cạnh nhau: My name, Your name, rồi đến tên của chú mèo nhé.',
+        },
+      },
+      cham_dung: {
+        ket_qua: 'dung_het',
+        loi_giai_chuan: ['Its name is Mimi'],
+        dong_sai_dau_tien: null,
+        loai_loi: null,
+        giai_thich_cho_me: 'Con đã chọn đúng từ chỉ sở hữu.',
+        gia_tri_dung_dong_sai: null,
+        dap_an_dung_cho_me: 'A. Its',
+        loi_khen_cu_the: 'Con phân biệt được "của nó" và "nó là", tuyệt vời!',
+        cau_hoi_cho_con: { muc_1: 'Con tự sửa đúng rồi, giỏi quá!', muc_2: '' },
+      },
+    },
+    giang_lai: {
+      transcript: 'Con mèo tên là Mimi, mình nói tên của nó nên chọn Its không có dấu phẩy ạ.',
+      tieu_chi: [
+        { ma: 'du_kien', dat: true, trich: 'con mèo tên là Mimi' },
+        { ma: 'phep_tinh', dat: true, trich: 'tên của nó' },
+        { ma: 'ket_qua', dat: true, trich: 'chọn Its' },
+        { ma: 'vi_sao', dat: true, trich: 'mình nói tên của nó nên chọn Its' },
+      ],
+    },
+  },
+}
+
+const ACTIVE_TRIAL_KEY = 'kem-con-hoc:trial-lesson'
+export function setActiveTrialLesson(id) {
+  try {
+    localStorage.setItem(ACTIVE_TRIAL_KEY, id)
+  } catch {}
+}
+/** Bài mẫu đang học trong Dùng thử (để chấm vở và nghe giảng lại khớp với bài giảng) */
+export function getActiveTrialLesson(text = '') {
+  const byText = text ? matchTrialLesson(text) : null
+  if (byText) return byText
+  let id = null
+  try {
+    id = localStorage.getItem(ACTIVE_TRIAL_KEY)
+  } catch {}
+  return PRELOADED_TRIAL_LESSONS.find((l) => l.id === id) || PRELOADED_TRIAL_LESSONS[0]
+}
+
+/** Chuyển bài mẫu sang đúng dạng "problem" mà màn Giảng / Hỏi từng bước / Xong bài dùng */
+export function trialLessonToProblem(lesson) {
+  const x = TRIAL_LESSON_EXTRAS[lesson.id] || {}
+  return {
+    id: 'trial-' + lesson.id,
+    trialLessonId: lesson.id,
+    type: lesson.dang_bai,
+    dang_bai: lesson.dang_bai,
+    summary: x.tom_tat || '',
+    warning: x.luu_y || '',
+    method: x.cach_lop_hoc || lesson.phuong_phap || '',
+    ocr: lesson.de_bai,
+    de_bai: lesson.de_bai,
+    phuong_phap: lesson.phuong_phap,
+    cac_bac: lesson.cac_bac,
+    steps: lesson.cac_bac.map((b) => ({
+      q: b.cau_hoi,
+      question: b.cau_hoi,
+      ly_do_cho_me: b.ly_do_cho_me || '',
+      answerForParent: b.dap_an_cho_me,
+      answer: b.dap_an_cho_me,
+      hint: b.goi_y.muc_1_do_vat,
+      hintLevel1: b.goi_y.muc_1_do_vat,
+      hintLevel2: b.goi_y.muc_2_hinh_ve,
+      hint2: b.goi_y.muc_2_hinh_ve,
+      stuck: 0,
+    })),
+    answer: x.dap_an || lesson.dap_an_cuoi_cho_me,
+    answerLine: x.dap_an_dong || '',
+    dap_an_cuoi_cho_me: lesson.dap_an_cuoi_cho_me,
+    finalAnswerForParent: lesson.dap_an_cuoi_cho_me,
+    brotherProblem: null,
+    diagram: null,
   }
-  if (s.includes('mùa xuân') || s.includes('lộc') || s.includes('chính tả') || s.includes('chồi')) {
-    return PRELOADED_TRIAL_LESSONS[1];
-  }
-  if (s.includes('cat') || s.includes('mimi') || s.includes('its') || s.includes('english')) {
-    return PRELOADED_TRIAL_LESSONS[2];
-  }
-  // Mặc định trả về bài toán đàn vịt chuẩn
-  return PRELOADED_TRIAL_LESSONS[0];
+}
+
+/** Lời nhắc mẫu của cô — chỉ dùng trong chế độ Dùng thử (đợt 15 P0.C) */
+export function getTrialTeacherReminders(childName) {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return [
+    {
+      id: 'rem_demo_1',
+      teacher_name: 'Mai',
+      class_name: 'Lớp 3A',
+      child_name: childName || 'Na',
+      message: 'Mai thứ hai, các con mặc đồng phục thể dục và mang vở Toán nhé.',
+      target_date: tomorrow.toISOString().slice(0, 10),
+      created_at: new Date().toISOString(),
+      assignment_id: null,
+    },
+  ]
 }

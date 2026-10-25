@@ -186,7 +186,7 @@ export function ThemePickerSheet({ onClose }) {
                   <b style={{ fontSize: 13.5, color: 'var(--c-text)' }}>{theme.name}</b>
                   {isSelected && <Check size={16} color="var(--c-accent)" strokeWidth={3} />}
                 </div>
-                <p style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 2, lineHeight: 1.35 }}>
+                <p style={{ fontSize: 11.5, color: 'var(--c-text)', opacity: 1, marginTop: 2, lineHeight: 1.35 }}>
                   {theme.desc}
                 </p>
               </div>
@@ -198,13 +198,14 @@ export function ThemePickerSheet({ onClose }) {
                     style={{
                       fontSize: 9.5,
                       fontWeight: 700,
-                      background: 'var(--c-good-bg)',
-                      color: 'var(--c-good)',
+                      background: 'var(--c-good-bg, #E3F5EC)',
+                      color: 'var(--c-text)',
+                      border: '1px solid var(--c-good, #1F7A5C)',
                       padding: '2px 6px',
                       borderRadius: 4,
                     }}
                   >
-                    Đang dùng
+                    ✓ Đang dùng
                   </span>
                 )}
                 {isSelected && !isCurrentActive && (

@@ -16,7 +16,7 @@ import { useStudyTracker } from './useStudyTracker'
 import { CalmCornerModal } from './CalmCornerModal'
 import { ErrorBoundary } from './ErrorBoundary'
 import { initClientErrorLogging } from './clientErrors'
-import { getTrialInitialState, TRIAL_SESSION } from './trialData'
+import { getTrialInitialState, TRIAL_SESSION, PRELOADED_TRIAL_LESSONS, setActiveTrialLesson } from './trialData'
 
 initClientErrorLogging()
 
@@ -289,6 +289,9 @@ export default function App() {
   const hydratedRef = useRef(false)
   const lastSavedHashRef = useRef('')
   const [hydrated, setHydrated] = useState(false)
+  // Đợt 15 P0.D: trạng thái tải state từ máy chủ ('loading' | 'ok' | 'error')
+  const [cloudStatus, setCloudStatus] = useState(famId && !session?.isTrial ? 'loading' : 'ok')
+  const [cloudRetry, setCloudRetry] = useState(0)
 
   useEffect(() => {
     const onHash = () => {
@@ -392,9 +395,15 @@ export default function App() {
   useEffect(() => {
     if (!famId) return
     let cancelled = false
+    if (!session?.isTrial) setCloudStatus('loading')
       ; (async () => {
         const cloud = await cloudLoadState(famId)
         if (cancelled) return
+        if (cloud && cloud.error) {
+          // Không tải được state: KHÔNG hiện màn khai báo, KHÔNG ghi đè máy chủ
+          setCloudStatus('error')
+          return
+        }
         let localRaw = null
         let localTs = 0
         try {
@@ -406,8 +415,18 @@ export default function App() {
           lastServerTsRef.current = cloud.serverTs
         }
 
-        // Đồng bộ khi máy này chưa có dữ liệu HOẶC dữ liệu trên cloud mới hơn máy này
-        if (cloud && cloud.state && cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) {
+        let localOnboarded = false
+        try {
+          localOnboarded = Boolean(localRaw && JSON.parse(localRaw).onboarded)
+        } catch (e) { }
+        const cloudOnboarded = Boolean(cloud?.state?.onboarded)
+        const cloudHasChildren = Array.isArray(cloud?.state?.children) && cloud.state.children.length > 0
+        // Đồng bộ khi máy này chưa có dữ liệu HOẶC cloud mới hơn
+        // HOẶC máy này chưa khai báo mà máy chủ đã khai báo / đã có hồ sơ con (P0.D)
+        if (
+          cloud && cloud.state &&
+          ((cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) || (!localOnboarded && (cloudOnboarded || cloudHasChildren)))
+        ) {
           let nextState = { ...initialState(), ...cloud.state, _ts: cloud.ts }
           const userCustomized = localStorage.getItem('kem-con-hoc:user-custom-theme')
           const lastAppliedForce = parseInt(localStorage.getItem('kem-con-hoc:last-applied-force-theme') || '0', 10)
@@ -427,11 +446,12 @@ export default function App() {
         } catch (e) {}
         hydratedRef.current = true
         setHydrated(true)
+        setCloudStatus('ok')
       })()
     return () => {
       cancelled = true
     }
-  }, [famId])
+  }, [famId, cloudRetry])
 
   /* ---------- lưu localStorage + đồng bộ cloud (debounce & hash check P2.8) ---------- */
   useEffect(() => {
@@ -458,6 +478,8 @@ export default function App() {
     }
 
     if (!S.cloudSync || session?.isTrial) return
+    // P0.D: chưa khai báo xong thì không ghi lên máy chủ (tránh đè hồ sơ con đã có)
+    if (!S.onboarded) return
     // Chỉ ghi cloud khi state thực sự thay đổi nội dung (P2.8)
     if (lastSavedHashRef.current === serialized) {
       return
@@ -583,8 +605,16 @@ export default function App() {
     const loaded = s?.isTrial ? getTrialInitialState() : loadState(famLsKey(s.id))
     setSession(s)
     setS(loaded)
-    hydratedRef.current = true
-    setHydrated(true)
+    if (s?.isTrial) {
+      hydratedRef.current = true
+      setHydrated(true)
+      setCloudStatus('ok')
+    } else {
+      // Chờ tải state từ máy chủ rồi mới quyết định có hiện màn khai báo không (P0.D)
+      hydratedRef.current = false
+      setHydrated(false)
+      setCloudStatus('loading')
+    }
     setStudy(null)
     setScreen(loaded.onboarded ? 'home' : 'onb')
 
@@ -647,7 +677,26 @@ export default function App() {
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const calmLabel = S.parent === 'Mẹ' ? 'Mẹ bình tĩnh' : S.parent === 'Bố' ? 'Bố bình tĩnh' : 'Mình bình tĩnh'
 
-  const ScreenComp = Scr[screen === 'onb' ? 'Onboarding' : TAB_CAP[screen]] || Scr.Home
+  const waitingServerState = Boolean(famId && !session?.isTrial && !S.onboarded && cloudStatus !== 'ok')
+  const ServerStateGate = () =>
+    cloudStatus === 'error' ? (
+      <div style={{ textAlign: 'center', padding: '80px 20px' }} data-testid="server-state-error">
+        <div style={{ fontSize: 44, marginBottom: 10 }}>☁️</div>
+        <p className="title" style={{ fontSize: 19 }}>Chưa tải được dữ liệu gia đình</p>
+        <p className="sub">Mạng đang chập chờn. Hồ sơ của con vẫn an toàn trên máy chủ.</p>
+        <button className="btn primary solid" style={{ marginTop: 14, padding: '12px 22px' }} onClick={() => setCloudRetry((n) => n + 1)}>
+          🔄 Thử lại
+        </button>
+      </div>
+    ) : (
+      <div style={{ textAlign: 'center', padding: '90px 20px', color: 'var(--c-text-2)' }} data-testid="server-state-loading">
+        <div style={{ fontSize: 40, marginBottom: 10 }}>🐻</div>
+        Đang tải dữ liệu gia đình…
+      </div>
+    )
+  const ScreenComp = waitingServerState
+    ? ServerStateGate
+    : Scr[screen === 'onb' ? 'Onboarding' : TAB_CAP[screen]] || Scr.Home
 
   if (showAdmin) {
     return (
@@ -1650,8 +1699,9 @@ function WipeSheet() {
 
 /* ---------- GÕ ĐỀ HOẶC ĐỌC ĐỀ BẰNG GIỌNG NÓI ---------- */
 function TypeProblemSheet({ initialMode, autoMic = false }) {
-  const { S, patch, go, closeSheet, toast } = useContext(AppCtx)
-  const [text, setText] = useState(PROBLEM.ocr)
+  const { S, patch, go, closeSheet, toast, session } = useContext(AppCtx)
+  const isTrial = Boolean(session?.isTrial)
+  const [text, setText] = useState(isTrial ? PRELOADED_TRIAL_LESSONS[0].de_bai : PROBLEM.ocr)
   const save = () => {
     patch({ flow: { ...S.flow, ocr: text.trim() || PROBLEM.ocr } })
     closeSheet()
@@ -1676,6 +1726,25 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
         <VoiceInputBtn onResult={handleVoiceInput} placeholder="Bấm mic & Đọc đề bài" autoStart={autoMic} />
       </div>
 
+      {isTrial && (
+        <div data-testid="trial-sample-picker" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+          <span className="lbl mut" style={{ fontSize: 12 }}>Dùng thử có 3 đề mẫu, mẹ chọn một đề:</span>
+          {PRELOADED_TRIAL_LESSONS.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              className={`opt ${text === l.de_bai ? 'on' : ''}`}
+              style={{ textAlign: 'left', padding: '8px 10px', fontSize: 12.5, lineHeight: 1.4 }}
+              onClick={() => {
+                setActiveTrialLesson(l.id)
+                setText(l.de_bai)
+              }}
+            >
+              <b>{l.subject} · {l.grade}</b> · {l.de_bai}
+            </button>
+          ))}
+        </div>
+      )}
       <textarea
         className="field"
         rows={4}

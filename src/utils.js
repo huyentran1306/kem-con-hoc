@@ -108,11 +108,26 @@ export function onToast(f) {
 /* ---------- Confetti ---------- */
 import confetti from 'canvas-confetti'
 
+// Đợt 15 P1: pháo giấy ngắn (≤ 2 giây), mật độ thấp, tắt khi giảm chuyển động
+let lastBoomAt = 0
 export function boom() {
   try {
-    confetti({ particleCount: 70, spread: 75, origin: { y: 0.75 }, colors: ['#D9577F', '#F08A5D', '#1F7A5C', '#F1D08A'] })
-    setTimeout(() => confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#D9577F', '#F08A5D'] }), 180)
-    setTimeout(() => confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#1F7A5C', '#F1D08A'] }), 320)
+    if (typeof window !== 'undefined') {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      if (document.documentElement.getAttribute('data-motion') === 'off') return
+    }
+    const now = Date.now()
+    if (now - lastBoomAt < 2000) return // không chồng nhiều đợt lên nhau
+    lastBoomAt = now
+    const base = { ticks: 110, gravity: 1.3, scalar: 0.9, disableForReducedMotion: true, zIndex: 50 }
+    confetti({ ...base, particleCount: 26, spread: 70, origin: { y: 0.8 }, colors: ['#D9577F', '#F08A5D', '#1F7A5C', '#F1D08A'] })
+    setTimeout(() => confetti({ ...base, particleCount: 12, angle: 60, spread: 50, origin: { x: 0, y: 0.85 }, colors: ['#D9577F', '#F08A5D'] }), 160)
+    setTimeout(() => confetti({ ...base, particleCount: 12, angle: 120, spread: 50, origin: { x: 1, y: 0.85 }, colors: ['#1F7A5C', '#F1D08A'] }), 280)
+    setTimeout(() => {
+      try {
+        confetti.reset()
+      } catch (e) {}
+    }, 2000)
   } catch (e) {}
 }
 

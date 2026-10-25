@@ -402,23 +402,24 @@ Không thêm bất kỳ text nào ngoài JSON.`,
     desc: 'Đọc chữ viết tay của trẻ từ ảnh vở ô ly, không tự ý sửa lỗi, trả về danh sách dòng kèm độ chắc chắn',
     variables: [],
     requiredVars: [],
-    template: `Quan sát kỹ trang vở bài làm của học sinh tiểu học trong ảnh và trả về DUY NHẤT một JSON hợp lệ theo schema sau:
+    template: `Quan sát kỹ trang vở bài làm của học sinh tiểu học trong ảnh. Trả về DUY NHẤT một JSON hợp lệ theo KHUÔN sau (các chỗ <...> là hướng dẫn, phải thay bằng nội dung thật đọc được trong ảnh, KHÔNG chép lại chữ trong ngoặc nhọn):
 {
   "doc_duoc": true,
   "ly_do": "",
-  "de_bai": "<nội dung đề bài nếu có trong ảnh, hoặc tóm tắt>",
+  "de_bai": "<đề bài nếu thấy trong ảnh, không thấy thì để chuỗi rỗng>",
   "cac_dong": [
-    { "so": 1, "noi_dung": "<chép nguyên văn dòng 1 của trẻ>", "chac_chan": 0.95 },
-    { "so": 2, "noi_dung": "<chép nguyên văn dòng 2>", "chac_chan": 0.62, "lua_chon": ["29", "20"] }
+    { "so": 1, "noi_dung": "<dòng thứ nhất đúng như con viết>", "chac_chan": <số từ 0 đến 1> },
+    { "so": 2, "noi_dung": "<dòng thứ hai đúng như con viết>", "chac_chan": <số từ 0 đến 1>, "lua_chon": ["<cách đọc A>", "<cách đọc B>"] }
   ]
 }
 
 QUY TẮC BẮT BUỘC:
 1. Chép ĐÚNG NHƯ TRẺ VIẾT, kể cả chỗ sai chính tả, sai số liệu hay sai phép tính; tuyệt đối không tự sửa lại cho đúng.
-2. Mỗi dòng bài giải của trẻ là một phần tử trong "cac_dong", đánh số thứ tự từ 1.
-3. "chac_chan" từ 0.0 đến 1.0 đánh giá độ tự tin nét chữ. Nếu có chữ hoặc số không chắc chắn, đưa tối đa 2 cách đọc trong "lua_chon".
-4. Nếu ảnh không phải bài làm (selfie, đồ vật, thú cưng...) hoặc ảnh quá mờ/tối không đọc được chữ, trả về "doc_duoc": false kèm "ly_do" ngắn gọn ("ảnh tối", "không thấy chữ", "không phải bài làm").
-5. CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON, KHÔNG THÊM BẤT KỲ VĂN BẢN NÀO KHÁC.`,
+2. Mỗi dòng bài giải của trẻ là một phần tử trong "cac_dong", đánh số thứ tự từ 1. Có bao nhiêu dòng thì ghi bấy nhiêu, không thêm dòng không có trong ảnh.
+3. "chac_chan" từ 0.0 đến 1.0 đánh giá độ tự tin nét chữ. Chỉ khi có chữ hoặc số không chắc chắn mới thêm "lua_chon" (tối đa 2 cách đọc).
+4. Nếu ảnh không phải bài làm (selfie, đồ vật, thú cưng...) hoặc ảnh quá mờ/tối không đọc được chữ, trả về "doc_duoc": false kèm "ly_do" ngắn gọn ("ảnh tối", "không thấy chữ", "không phải bài làm") và "cac_dong": [].
+5. Không đoán, không bịa đề bài. Không đọc được thì trả "doc_duoc": false.
+6. CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON, KHÔNG THÊM BẤT KỲ VĂN BẢN NÀO KHÁC.`,
   },
 
   p14b_check_work: {
@@ -435,34 +436,34 @@ Các dòng bài làm của con:
 """{{cac_dong}}"""
 
 NHIỆM VỤ:
-1. Tự giải lại bài toán một cách chuẩn xác từng bước ("loi_giai_chuan").
+1. Tự giải lại ĐÚNG BÀI TOÁN TRÊN một cách chuẩn xác từng bước ("loi_giai_chuan").
 2. So sánh từng dòng bài làm của con với lời giải chuẩn để tìm bước sai đầu tiên (nếu có).
 3. Đánh giá kết quả: "dung_het" | "co_buoc_sai" | "chua_xong" | "khong_ro".
 4. Phân loại lỗi nếu có: "doc_de" | "chon_phep_tinh" | "tinh_nham" | "thieu_don_vi" | "trinh_bay" | "chua_lam_xong".
 5. Viết giải thích ngắn gọn, đồng cảm chỉ dành riêng cho mẹ đọc ("giai_thich_cho_me").
 6. Chỉ ra đáp án đúng cho mẹ: "gia_tri_dung_dong_sai" (kết quả đúng của dòng sai) và "dap_an_dung_cho_me" (kết quả cuối cùng của bài).
-7. Nêu điểm sáng cụ thể của con để mẹ khen ngợi ("loi_khen_cu_the"). Khi "dung_het", khen điểm làm tốt và không bịa lỗi.
+7. Nêu điểm sáng cụ thể của con để mẹ khen ngợi ("loi_khen_cu_the"). Khi "dung_het", khen điểm làm tốt và không bịa lỗi; khi đó "dong_sai_dau_tien", "loai_loi", "gia_tri_dung_dong_sai" để null.
 8. Tạo câu hỏi gợi mở cho con tự phát hiện lỗi sai ("cau_hoi_cho_con"):
    - "muc_1": câu hỏi gợi mở đúng trọng tâm chỗ sai để mẹ đọc to cho con.
    - "muc_2": gợi ý thực tế dùng đồ vật (que tính, kẹo, vẽ hình).
    TUYỆT ĐỐI KHÔNG để lộ "gia_tri_dung_dong_sai" hay "dap_an_dung_cho_me" vào "muc_1" hoặc "muc_2".
 
-Trả về DUY NHẤT một JSON hợp lệ:
+Ví dụ dưới đây CHỈ để biết khuôn JSON, là một bài KHÁC (36 cái kẹo chia đều vào 4 túi, con viết "36 : 4 = 8 (cái)"). TUYỆT ĐỐI KHÔNG chép số liệu, câu chữ của ví dụ; mọi giá trị phải lấy từ đề bài và bài làm ở trên.
 {
   "ket_qua": "co_buoc_sai",
-  "loi_giai_chuan": ["8 + 8 + 8 = 24", "24 - 5 = 19"],
-  "dong_sai_dau_tien": 2,
-  "loai_loi": "chon_phep_tinh",
-  "giai_thich_cho_me": "Đề là cho đi nên phải bớt, con lại làm phép cộng. Lỗi hay gặp khi thấy chữ cho là cộng.",
-  "gia_tri_dung_dong_sai": "19",
-  "dap_an_dung_cho_me": "19 cây bút",
-  "loi_khen_cu_the": "Dòng 1 con làm đúng và ghi đơn vị đầy đủ.",
+  "loi_giai_chuan": ["36 : 4 = 9"],
+  "dong_sai_dau_tien": 1,
+  "loai_loi": "tinh_nham",
+  "giai_thich_cho_me": "Con chọn đúng phép chia nhưng tính nhầm kết quả, có thể con đang nhớ nhầm bảng chia 4.",
+  "gia_tri_dung_dong_sai": "9",
+  "dap_an_dung_cho_me": "9 cái kẹo",
+  "loi_khen_cu_the": "Con nhận ra ngay phải chia đều và ghi đơn vị đầy đủ.",
   "cau_hoi_cho_con": {
-    "muc_1": "Con đọc lại đề nhé. Mẹ cho bạn Na 5 cây thì bút của mình nhiều lên hay ít đi?",
-    "muc_2": "Mẹ có 24 que tính, mẹ lấy bớt đi 5 que đưa bạn Na, con xem trên bàn còn mấy que?"
+    "muc_1": "Con thử nhân ngược lại xem: 8 nhân 4 có bằng số kẹo trong đề không?",
+    "muc_2": "Mẹ đưa con một nắm hạt đậu, con chia lần lượt vào 4 cái chén, mỗi lượt mỗi chén một hạt, rồi đếm số hạt trong một chén nhé."
   }
 }
-CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
+CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON CHO BÀI CỦA CON.`,
   },
 
   p14d_teach_back: {
