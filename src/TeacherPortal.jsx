@@ -7,12 +7,17 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, BookOpen, Bell, Settings, Plus, Check, X,
   Share2, Copy, Sparkles, ChevronRight, LogOut, ArrowLeft,
-  AlertCircle, Lock, Calendar, ShieldCheck, UserCheck, RefreshCw, Send, QrCode
+  AlertCircle, Lock, Calendar, ShieldCheck, UserCheck, RefreshCw, Send, QrCode,
+  BarChart3, FileText, Award
 } from 'lucide-react';
 import { toast } from './utils';
 import { REMINDER_TEMPLATES, MAX_REMINDERS_PER_DAY, getQuickReminderDates } from './teacherReminderData.js';
 import { QrCodeModal } from './qrCode.jsx';
-import { BearMascot, Card, Button, StatusPill, Kpi, Tabs, DataTable, Segmented, Toggle, Field, TextArea, EmptyState, Banner, SaveBar, AssistantCard } from './ui/staff';
+import {
+  BearMascot, Card, Button, StatusPill, Kpi, Tabs, DataTable,
+  Segmented, Toggle, Field, TextArea, EmptyState, Banner, SaveBar,
+  AssistantCard, StaffShell, SideNav, ClassSwitcher
+} from './ui/staff';
 import './ui/staff/tokens.css';
 
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
@@ -38,10 +43,14 @@ export default function TeacherPortal({ onExit }) {
     }
     return 'login';
   });
-  const [currentView, setCurrentView] = useState('classes'); // 'classes' | 'class_detail' | 'settings'
+  const [currentNav, setCurrentNav] = useState('classes'); // 'classes' | 'assignments' | 'students' | 'announcements' | 'results' | 'settings'
   const [selectedClassId, setSelectedClassId] = useState(null);
+  const [classes, setClasses] = useState([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+  const [showCreateClassModal, setShowCreateClassModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Load teacher profile
+  // Load teacher profile & classes
   useEffect(() => {
     if (!token) {
       setTeacher(null);
@@ -49,6 +58,7 @@ export default function TeacherPortal({ onExit }) {
       return;
     }
     fetchProfile();
+    loadClasses();
   }, [token]);
 
   async function fetchProfile() {
@@ -71,6 +81,22 @@ export default function TeacherPortal({ onExit }) {
     }
   }
 
+  async function loadClasses() {
+    try {
+      setLoadingClasses(true);
+      const res = await fetch(`${API_BASE}/api/v1/teacher/classes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setClasses(data.classes || []);
+      }
+    } catch {
+    } finally {
+      setLoadingClasses(false);
+    }
+  }
+
   function handleLogout() {
     localStorage.removeItem(TEACHER_TOKEN_KEY);
     setToken('');
@@ -82,7 +108,7 @@ export default function TeacherPortal({ onExit }) {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.spinner}></div>
-        <p style={{ marginTop: 16, color: '#64748B', fontWeight: 600 }}>Đang mở Cổng Giáo Viên...</p>
+        <p style={{ marginTop: 16, color: 'var(--s-text-2, #84664A)', fontWeight: 600 }}>Đang mở Cổng Giáo Viên...</p>
       </div>
     );
   }
@@ -114,67 +140,110 @@ export default function TeacherPortal({ onExit }) {
     );
   }
 
-  return (
-    <div style={styles.pageWrapper}>
-      {/* Teacher Top Navigation */}
-      <header style={styles.header}>
-        <div style={styles.headerContent}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={styles.logoBadge}>🏫</div>
-            <div>
-              <h1 style={styles.brandTitle}>Cổng Giáo Viên</h1>
-              <p style={styles.schoolSubtitle}>{teacher.school_name || 'Tiểu học'} · {teacher.display_name}</p>
-            </div>
-          </div>
+  const totalStudents = classes.reduce((acc, c) => acc + (c.active_students_count || 0), 0);
+  const totalActiveAssignments = classes.reduce((acc, c) => acc + (c.published_assignments_count || 0), 0);
+  const totalPendingStudents = classes.reduce((acc, c) => acc + (c.pending_students_count || 0), 0);
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              style={{ ...styles.navBtn, ...(currentView === 'classes' ? styles.navBtnActive : {}) }}
-              onClick={() => { setCurrentView('classes'); setSelectedClassId(null); }}
-            >
-              <BookOpen size={18} /> Lớp học
-            </button>
-            <button
-              style={{ ...styles.navBtn, ...(currentView === 'settings' ? styles.navBtnActive : {}) }}
-              onClick={() => setCurrentView('settings')}
-            >
-              <Settings size={18} /> Cài đặt của cô
-            </button>
-            <button style={styles.iconBtn} onClick={handleLogout} title="Đăng xuất">
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
-      </header>
+  const navItems = [
+    { id: 'classes', label: 'Lớp của cô', icon: '🏫' },
+    { id: 'assignments', label: 'Bài tập & Soạn bài', icon: '📝' },
+    { id: 'students', label: 'Học sinh', icon: '👥', badge: totalPendingStudents },
+    { id: 'announcements', label: 'Thông báo & Nhắc việc', icon: '⏰' },
+    { id: 'results', label: 'Kết quả', icon: '📊' },
+    { id: 'settings', label: 'Cài đặt của cô', icon: '⚙️' },
+  ];
 
-      {/* Main Content Area */}
-      <main style={styles.mainContainer}>
-        {currentView === 'classes' && !selectedClassId && (
+  function handleNavSelect(itemId) {
+    setCurrentNav(itemId);
+    if (itemId === 'classes') {
+      setSelectedClassId(null);
+    } else if (itemId !== 'settings') {
+      if (!selectedClassId && classes.length > 0) {
+        setSelectedClassId(classes[0].id);
+      }
+    }
+  }
+
+  function renderContent() {
+    if (currentNav === 'settings') {
+      return (
+        <TeacherSettingsScreen
+          token={token}
+          teacher={teacher}
+          onUpdateSuccess={fetchProfile}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
+    if (!selectedClassId || currentNav === 'classes') {
+      if (!selectedClassId) {
+        return (
           <TeacherClassesList
             token={token}
             teacher={teacher}
-            onSelectClass={(id) => setSelectedClassId(id)}
+            classes={classes}
+            loading={loadingClasses}
+            onSelectClass={(id, targetTab) => {
+              setSelectedClassId(id);
+              if (targetTab) setCurrentNav(targetTab);
+            }}
+            onRefreshClasses={loadClasses}
+            onOpenCreateModal={() => setShowCreateClassModal(true)}
           />
-        )}
+        );
+      }
+    }
 
-        {currentView === 'classes' && selectedClassId && (
-          <TeacherClassDetail
-            token={token}
-            classId={selectedClassId}
-            onBack={() => setSelectedClassId(null)}
-          />
-        )}
+    const activeTab = ['assignments', 'students', 'announcements', 'results'].includes(currentNav)
+      ? currentNav
+      : 'assignments';
 
-        {currentView === 'settings' && (
-          <TeacherSettingsScreen
-            token={token}
-            teacher={teacher}
-            onUpdateSuccess={fetchProfile}
-            onLogout={handleLogout}
-          />
-        )}
-      </main>
-    </div>
+    return (
+      <TeacherClassDetail
+        token={token}
+        classId={selectedClassId}
+        initialTab={activeTab}
+        onBack={() => {
+          setSelectedClassId(null);
+          setCurrentNav('classes');
+        }}
+      />
+    );
+  }
+
+  return (
+    <StaffShell
+      items={navItems}
+      activeItem={currentNav}
+      onSelect={handleNavSelect}
+      classes={classes}
+      activeClassId={selectedClassId}
+      onSelectClass={(id) => {
+        setSelectedClassId(id);
+      }}
+      onAddClass={() => setShowCreateClassModal(true)}
+      teacherName={teacher.display_name}
+      schoolName={teacher.school_name || ''}
+      onLogout={handleLogout}
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
+      unreadCount={totalPendingStudents}
+    >
+      {renderContent()}
+
+      {showCreateClassModal && (
+        <CreateClassModal
+          token={token}
+          teacher={teacher}
+          onClose={() => setShowCreateClassModal(false)}
+          onCreated={() => {
+            setShowCreateClassModal(false);
+            loadClasses();
+          }}
+        />
+      )}
+    </StaffShell>
   );
 }
 
@@ -249,11 +318,13 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
     <div style={styles.authWrapper}>
       <div style={styles.authCard}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 44, marginBottom: 8 }}>👩‍🏫</div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1E293B', margin: '0 0 6px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+            <BearMascot mood="welcome" size={64} />
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 6px 0', fontFamily: '"Mitr", sans-serif' }}>
             {mode === 'login' ? 'Đăng nhập Cổng Giáo Viên' : 'Đăng ký Tài khoản Cô Giáo'}
           </h2>
-          <p style={{ fontSize: 14, color: '#64748B', margin: 0 }}>
+          <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)', margin: 0 }}>
             {mode === 'login'
               ? 'Kèm con học theo đúng cách cô dạy ở lớp'
               : 'Tạo lớp, kết nối phụ huynh và giao bài dễ dàng'}
@@ -463,11 +534,13 @@ function TeacherStatusNotice({ teacher, token, onLogout, onRefresh }) {
       <div style={styles.authCard}>
         {teacher.status === 'pending' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>⏳</div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1E293B', margin: '0 0 8px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <BearMascot mood="remind" size={64} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 8px 0', fontFamily: '"Mitr", sans-serif' }}>
               Hồ sơ đang chờ duyệt
             </h2>
-            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)', lineHeight: 1.6, marginBottom: 20 }}>
               Chào <strong>{teacher.display_name}</strong>! Để bảo vệ an toàn cho học sinh, ban quản trị sẽ xác minh trường <strong>{teacher.school_name}</strong> trong vòng 24 giờ.
             </p>
             <div style={styles.infoBox}>
@@ -487,11 +560,13 @@ function TeacherStatusNotice({ teacher, token, onLogout, onRefresh }) {
         {teacher.status === 'rejected' && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 48, marginBottom: 8 }}>⚠️</div>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#DC2626', margin: '0 0 6px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <BearMascot mood="remind" size={64} />
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#DC2626', margin: '0 0 6px 0', fontFamily: '"Mitr", sans-serif' }}>
                 Hồ sơ chưa được phê duyệt
               </h2>
-              <p style={{ fontSize: 14, color: '#64748B' }}>
+              <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)' }}>
                 Lý do từ ban quản trị: <strong>{teacher.review_note || 'Thông tin trường học chưa xác thực được'}</strong>
               </p>
             </div>
@@ -556,31 +631,58 @@ function TeacherStatusNotice({ teacher, token, onLogout, onRefresh }) {
 // ---------------------------------------------------------------------------
 // 3. TEACHER CLASSES LIST
 // ---------------------------------------------------------------------------
-function TeacherClassesList({ token, teacher, onSelectClass }) {
-  const [classes, setClasses] = useState([]);
-  const [loading, setLoading] = useState(true);
+function TeacherClassesList({
+  token,
+  teacher,
+  classes: propClasses = null,
+  loading: propLoading = null,
+  onSelectClass,
+  onRefreshClasses = null,
+  onOpenCreateModal = null,
+}) {
+  const [internalClasses, setInternalClasses] = useState([]);
+  const [internalLoading, setInternalLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  const classes = propClasses !== null ? propClasses : internalClasses;
+  const loading = propLoading !== null ? propLoading : internalLoading;
+
   useEffect(() => {
-    loadClasses();
-  }, []);
+    if (propClasses === null) {
+      loadClasses();
+    }
+  }, [propClasses]);
 
   async function loadClasses() {
     try {
-      setLoading(true);
+      setInternalLoading(true);
       const res = await fetch(`${API_BASE}/api/v1/teacher/classes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setClasses(data.classes || []);
+        setInternalClasses(data.classes || []);
       }
     } catch {
       toast('Lỗi tải danh sách lớp', 'error');
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   }
+
+  function handleCreate() {
+    if (onOpenCreateModal) onOpenCreateModal();
+    else setShowCreateModal(true);
+  }
+
+  function handleRefresh() {
+    if (onRefreshClasses) onRefreshClasses();
+    else loadClasses();
+  }
+
+  const totalStudents = classes.reduce((a, c) => a + (c.active_students_count || 0), 0);
+  const totalActiveAssignments = classes.reduce((a, c) => a + (c.published_assignments_count || 0), 0);
+  const totalPendingStudents = classes.reduce((a, c) => a + (c.pending_students_count || 0), 0);
 
   return (
     <div>
@@ -589,26 +691,101 @@ function TeacherClassesList({ token, teacher, onSelectClass }) {
           <h2 style={styles.sectionHeading}>Danh sách lớp học của cô</h2>
           <p style={styles.sectionSub}>Quản lý học sinh, giao bài tập và đồng hành cùng phụ huynh</p>
         </div>
-        <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
+        <Button variant="primary" onClick={handleCreate}>
           <Plus size={18} /> Tạo lớp mới
-        </button>
+        </Button>
       </div>
 
-      {loading ? (
-        <p style={{ color: '#64748B' }}>Đang tải lớp học...</p>
-      ) : classes.length === 0 ? (
-        <div style={styles.emptyCard}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📚</div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1E293B', margin: '0 0 6px 0' }}>
-            Cô chưa tạo lớp học nào
-          </h3>
-          <p style={{ fontSize: 14, color: '#64748B', maxWidth: 400, margin: '0 auto 20px auto' }}>
-            Bấm "Tạo lớp mới" để có mã lớp gửi cho phụ huynh kết nối các con vào nhé.
-          </p>
-          <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
-            <Plus size={18} /> Tạo lớp đầu tiên
-          </button>
+      {/* 4 Thẻ KPI Tổng quan của Cô */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
+        <Kpi label="Tổng số lớp học" value={classes.length} sub="Đang phụ trách" />
+        <Kpi label="Tổng số học sinh" value={totalStudents} sub="Đang kết nối" />
+        <Kpi label="Bài tập đang mở" value={totalActiveAssignments} sub="Học sinh đang làm" />
+        <Kpi
+          label="Việc cần cô xem"
+          value={totalPendingStudents}
+          sub={totalPendingStudents > 0 ? "Chờ cô duyệt" : "Đã hoàn thành"}
+          style={{ borderColor: totalPendingStudents > 0 ? 'var(--s-warn)' : 'var(--s-line)' }}
+        />
+      </div>
+
+      {/* Khối Việc cần cô xem */}
+      <Card style={{ marginBottom: 24, backgroundColor: totalPendingStudents > 0 ? '#FFFBEB' : '#FFFFFF', border: totalPendingStudents > 0 ? '1.5px solid #FDE68A' : '1px solid var(--s-line)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20 }}>📌</span>
+            <h3 style={{ margin: 0, fontFamily: 'var(--s-font-head)', fontSize: 16, color: 'var(--s-text)' }}>
+              Việc cần cô xem
+            </h3>
+          </div>
+          {totalPendingStudents > 0 ? (
+            <StatusPill status="warn" label={`${totalPendingStudents} việc cần xử lý`} />
+          ) : (
+            <StatusPill status="ok" label="Ổn định" />
+          )}
         </div>
+
+        {totalPendingStudents > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {classes.filter((c) => c.pending_students_count > 0).map((c) => (
+              <div
+                key={c.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: 14,
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #FEF3C7',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#FEF3C7', display: 'grid', placeItems: 'center', fontSize: 18 }}>
+                    👥
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, color: 'var(--s-text)', fontSize: 14 }}>
+                      Có {c.pending_students_count} phụ huynh xin kết nối vào {formatClassName(c.name)}
+                    </div>
+                    <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>
+                      Khối {c.grade} · Cần cô xác nhận danh sách lớp
+                    </span>
+                  </div>
+                </div>
+                <Button variant="primary" style={{ padding: '6px 14px', fontSize: 12.5 }} onClick={() => onSelectClass(c.id, 'students')}>
+                  Duyệt ngay →
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
+            <BearMascot mood="happy" size={36} />
+            <div>
+              <div style={{ fontWeight: 800, color: 'var(--s-text)', fontSize: 14 }}>
+                Lớp học đang ổn định, cô không có việc tồn đọng nào!
+              </div>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--s-text-2)' }}>
+                Mọi học sinh xin vào lớp đã được duyệt và các bài tập đang diễn ra đúng tiến độ.
+              </p>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {loading ? (
+        <p style={{ color: 'var(--s-text-2)' }}>Đang tải lớp học...</p>
+      ) : classes.length === 0 ? (
+        <EmptyState
+          mood="nudge"
+          title="Cô chưa tạo lớp học nào"
+          description="Bấm 'Tạo lớp mới' để có mã lớp và link QR gửi cho phụ huynh kết nối các con vào nhé."
+          actionText="Tạo lớp đầu tiên"
+          onAction={handleCreate}
+        />
       ) : (
         <div style={styles.classesGrid}>
           {classes.map((c) => (
@@ -647,6 +824,43 @@ function TeacherClassesList({ token, teacher, onSelectClass }) {
               </div>
             </div>
           ))}
+
+          {/* Ô tạo lớp mới viền nét đứt mật ong */}
+          <div
+            style={{
+              border: '2px dashed var(--s-accent, #F6A623)',
+              borderRadius: 22,
+              padding: 24,
+              minHeight: 180,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              backgroundColor: 'var(--s-accent-tint, #FFFDF8)',
+              transition: 'all 0.15s ease',
+            }}
+            onClick={handleCreate}
+          >
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                backgroundColor: '#FFFFFF',
+                border: '2px solid var(--s-accent)',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: 22,
+                color: 'var(--s-accent-ink)',
+                marginBottom: 10,
+              }}
+            >
+              +
+            </div>
+            <strong style={{ fontSize: 15, color: 'var(--s-text)' }}>Tạo lớp học mới</strong>
+            <span style={{ fontSize: 12, color: 'var(--s-text-2)', marginTop: 4 }}>Cấp mã lớp & link QR cho phụ huynh</span>
+          </div>
         </div>
       )}
 
@@ -655,7 +869,7 @@ function TeacherClassesList({ token, teacher, onSelectClass }) {
           token={token}
           teacher={teacher}
           onClose={() => setShowCreateModal(false)}
-          onCreated={() => { setShowCreateModal(false); loadClasses(); }}
+          onCreated={() => { setShowCreateModal(false); handleRefresh(); }}
         />
       )}
     </div>
@@ -787,11 +1001,16 @@ function CreateClassModal({ token, teacher, onClose, onCreated }) {
 // ---------------------------------------------------------------------------
 // 4. TEACHER CLASS DETAIL (ROSTER, ASSIGNMENTS, ANNOUNCEMENTS, SETTINGS)
 // ---------------------------------------------------------------------------
-function TeacherClassDetail({ token, classId, onBack }) {
+function TeacherClassDetail({ token, classId, onBack, initialTab = 'assignments' }) {
   const [cls, setCls] = useState(null);
-  const [tab, setTab] = useState('assignments'); // 'assignments' | 'students' | 'announcements' | 'settings'
+  const [tab, setTab] = useState(initialTab); // 'assignments' | 'students' | 'announcements' | 'results' | 'settings'
   const [loading, setLoading] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedResultAsgId, setSelectedResultAsgId] = useState(null);
+
+  useEffect(() => {
+    if (initialTab) setTab(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
     loadClassData();
@@ -815,7 +1034,7 @@ function TeacherClassDetail({ token, classId, onBack }) {
   }
 
   if (loading || !cls) {
-    return <p style={{ color: '#84664A', padding: 20 }}>Đang mở lớp học...</p>;
+    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang mở lớp học...</p>;
   }
 
   const joinLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/vao-lop/${cls.join_code}`;
@@ -832,10 +1051,10 @@ function TeacherClassDetail({ token, classId, onBack }) {
       <div style={styles.classBanner}>
         <div>
           <span style={styles.gradeBadge}>Khối {cls.grade} · {cls.school_year || '2026-2027'}</span>
-          <h2 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 24, fontWeight: 700, color: '#4B3621', margin: '4px 0' }}>
+          <h2 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 24, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '4px 0' }}>
             {formatClassName(cls.name)}
           </h2>
-          <p style={{ fontSize: 13, color: '#84664A', margin: 0 }}>{cls.school_name}</p>
+          <p style={{ fontSize: 13, color: 'var(--s-text-2, #84664A)', margin: 0 }}>{cls.school_name}</p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -878,38 +1097,66 @@ function TeacherClassDetail({ token, classId, onBack }) {
         />
       )}
 
-      {/* Class Navigation Tabs */}
+      {/* Class Navigation Tabs (5 Tabs chuẩn Bản Gấu) */}
       <div style={styles.tabsRow}>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'assignments' ? styles.tabBtnActive : {}) }}
-          onClick={() => setTab('assignments')}
+          onClick={() => { setTab('assignments'); setSelectedResultAsgId(null); }}
         >
           <BookOpen size={16} /> Bài tập & Soạn bài
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'students' ? styles.tabBtnActive : {}) }}
-          onClick={() => setTab('students')}
+          onClick={() => { setTab('students'); setSelectedResultAsgId(null); }}
         >
-          <Users size={16} /> Danh sách học sinh
+          <Users size={16} /> Danh sách học sinh {cls.pending_students_count > 0 && `(${cls.pending_students_count} chờ)`}
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'announcements' ? styles.tabBtnActive : {}) }}
-          onClick={() => setTab('announcements')}
+          onClick={() => { setTab('announcements'); setSelectedResultAsgId(null); }}
         >
-          <Bell size={16} /> Thông báo
+          <Bell size={16} /> Thông báo & Nhắc việc
+        </button>
+        <button
+          style={{ ...styles.tabBtn, ...(tab === 'results' ? styles.tabBtnActive : {}) }}
+          onClick={() => setTab('results')}
+        >
+          <BarChart3 size={16} /> Kết quả
         </button>
         <button
           style={{ ...styles.tabBtn, ...(tab === 'settings' ? styles.tabBtnActive : {}) }}
-          onClick={() => setTab('settings')}
+          onClick={() => { setTab('settings'); setSelectedResultAsgId(null); }}
         >
           <Settings size={16} /> Cài đặt lớp
         </button>
       </div>
 
       {/* Tab Panels */}
-      {tab === 'assignments' && <TeacherAssignmentsTab token={token} classId={classId} cls={cls} />}
+      {tab === 'assignments' && (
+        <TeacherAssignmentsTab
+          token={token}
+          classId={classId}
+          cls={cls}
+          onSelectResult={(asgId) => {
+            setSelectedResultAsgId(asgId);
+            setTab('results');
+          }}
+        />
+      )}
       {tab === 'students' && <TeacherStudentsTab token={token} classId={classId} cls={cls} />}
       {tab === 'announcements' && <TeacherAnnouncementsTab token={token} classId={classId} />}
+      {tab === 'results' && (
+        <TeacherResultsTab
+          token={token}
+          classId={classId}
+          cls={cls}
+          initialAssignmentId={selectedResultAsgId}
+          onBackToAssignments={() => {
+            setSelectedResultAsgId(null);
+            setTab('assignments');
+          }}
+        />
+      )}
       {tab === 'settings' && <TeacherClassSettingsTab token={token} classId={classId} cls={cls} onUpdated={loadClassData} />}
     </div>
   );
@@ -970,14 +1217,12 @@ function TeacherAssignmentsTab({ token, classId, cls }) {
       {loading ? (
         <p style={{ color: '#64748B' }}>Đang tải bài tập...</p>
       ) : assignments.length === 0 ? (
-        <div style={styles.emptyCard}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>📝</div>
-          <h4 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 700 }}>Chưa có bài tập nào</h4>
-          <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px 0' }}>Cô hãy tạo bài tập để phụ huynh kèm con làm bài nhé.</p>
-          <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
-            <Plus size={16} /> Soạn bài tập đầu tiên
-          </button>
-        </div>
+        <EmptyState
+          title="Chưa có bài tập nào"
+          description="Cô hãy tạo bài tập để phụ huynh kèm con làm bài nhé."
+          actionText="Soạn bài tập đầu tiên"
+          onAction={() => setShowCreateModal(true)}
+        />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {assignments.map((a) => (
@@ -1222,7 +1467,108 @@ function CreateAssignmentModal({ token, classId, cls, onClose, onCreated }) {
   );
 }
 
-// Xem kết quả làm bài của cả lớp
+// ---------------------------------------------------------------------------
+// 5B. TEACHER RESULTS TAB
+// ---------------------------------------------------------------------------
+function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToAssignments }) {
+  const [selectedAsgId, setSelectedAsgId] = useState(initialAssignmentId || null);
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (initialAssignmentId) {
+      setSelectedAsgId(initialAssignmentId);
+    }
+  }, [initialAssignmentId]);
+
+  useEffect(() => {
+    loadClassAssignments();
+  }, [classId]);
+
+  async function loadClassAssignments() {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/api/v1/teacher/classes/${classId}/assignments`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await res.json();
+      if (res.ok && d.ok) {
+        setAssignments(d.assignments || []);
+      }
+    } catch {
+      toast('Lỗi tải danh sách bài tập', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (selectedAsgId) {
+    return (
+      <AssignmentResultsView
+        token={token}
+        assignmentId={selectedAsgId}
+        onBack={() => {
+          setSelectedAsgId(null);
+          if (onBackToAssignments) onBackToAssignments();
+        }}
+      />
+    );
+  }
+
+  if (loading) {
+    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang phân tích kết quả học tập...</p>;
+  }
+
+  const published = assignments.filter((a) => a.status === 'published' || a.status === 'closed');
+
+  if (published.length === 0) {
+    return (
+      <EmptyState
+        title="Chưa có kết quả làm bài"
+        description="Lớp chưa có bài tập nào được xuất bản hoặc học sinh chưa làm bài. Cô hãy xuất bản bài tập để xem thống kê nhé!"
+      />
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px 0', color: 'var(--s-text)' }}>
+          Kết quả học tập theo bài giao
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: 0 }}>
+          Chọn một bài tập dưới đây để xem báo cáo chi tiết, phân bố tự làm và nhận xét của trợ lý sư phạm.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+        {published.map((a) => (
+          <Card key={a.id} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--s-accent-ink)' }}>{a.subject || 'Toán'}</span>
+              <StatusPill variant={a.status === 'published' ? 'success' : 'default'}>
+                {a.status === 'published' ? 'Đang giao' : 'Đã đóng'}
+              </StatusPill>
+            </div>
+            <h4 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--s-text)' }}>{a.title}</h4>
+            <div style={{ fontSize: 13, color: 'var(--s-text-2)' }}>
+              {a.item_count || 0} câu hỏi · {a.completed_count || 0} lượt hoàn thành
+            </div>
+            <Button
+              variant="primary"
+              style={{ marginTop: 'auto' }}
+              onClick={() => setSelectedAsgId(a.id)}
+            >
+              <BarChart3 size={15} /> Xem kết quả chi tiết
+            </Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Xem kết quả làm bài của cả lớp (Prompt 11 - Staff Bản Gấu)
 function AssignmentResultsView({ token, assignmentId, onBack }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1269,98 +1615,151 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
   }
 
   if (loading || !data) {
-    return <p style={{ color: '#64748B', padding: 20 }}>Đang phân tích kết quả...</p>;
+    return <p style={{ color: 'var(--s-text-2, #84664A)', padding: 20 }}>Đang phân tích kết quả...</p>;
   }
+
+  const submittedCount = data.students?.filter((s) => (s.completed_items || 0) > 0).length || 0;
+  const totalStudents = data.totalStudents || data.students?.length || 0;
+  const totalDone = data.items?.reduce((acc, it) => acc + (it.done_count || 0), 0) || 0;
+  const totalSelf = data.items?.reduce((acc, it) => acc + (it.self_count || 0), 0) || 0;
+  const selfRate = totalDone > 0 ? Math.round((totalSelf / totalDone) * 100) : 0;
+  const avgStuckAll = data.items?.length
+    ? (data.items.reduce((acc, it) => acc + (Number(it.avg_stuck) || 0), 0) / data.items.length)
+    : 0;
+
+  let mostStuckQuestion = 'Không có';
+  let maxGuided = -1;
+  data.items?.forEach((it) => {
+    if ((it.guided_count || 0) > maxGuided && (it.guided_count || 0) > 0) {
+      maxGuided = it.guided_count;
+      mostStuckQuestion = `Câu ${it.position}`;
+    }
+  });
 
   return (
     <div>
       <div style={{ marginBottom: 14 }}>
-        <button style={styles.backBtn} onClick={onBack}>
+        <Button variant="secondary" onClick={onBack} style={{ gap: 6 }}>
           <ArrowLeft size={16} /> Quay lại danh sách bài tập
-        </button>
+        </Button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px 0' }}>{data.title}</h3>
-          <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>Tổng số học sinh trong lớp: {data.totalStudents} em</p>
+          <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--s-text)' }}>{data.title}</h3>
+          <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: 0 }}>Tổng số học sinh trong lớp: {totalStudents} em</p>
         </div>
-        <button style={styles.aiInsightBtn} onClick={handleGetInsight} disabled={loadingInsight}>
+        <Button variant="primary" onClick={handleGetInsight} disabled={loadingInsight} style={{ gap: 6 }}>
           <Sparkles size={16} /> {loadingInsight ? 'AI đang phân tích...' : 'Nhận xét của trợ lý AI'}
-        </button>
+        </Button>
       </div>
 
-      {/* AI Pedagogical Insight Box */}
+      {/* 4 KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+        <Kpi label="Sĩ số nộp bài" value={`${submittedCount} / ${totalStudents}`} hint="Đã hoàn thành" />
+        <Kpi label="Tỉ lệ tự chủ" value={`${selfRate}%`} hint="Tự giải không cần gợi ý" />
+        <Kpi label="Số lần bí TB" value={`${avgStuckAll.toFixed(1)} lần`} hint="Mức độ trợ giúp" />
+        <Kpi label="Điểm vướng nhất" value={mostStuckQuestion} hint={maxGuided > 0 ? `${maxGuided} em cần hướng dẫn` : 'Lớp làm bài tốt'} />
+      </div>
+
+      {/* AI Pedagogical Insight Box (p8_class_insight) */}
       {insight && (
-        <div style={styles.insightBox}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <Sparkles size={18} color="#D97706" />
-            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#92400E' }}>
-              Trợ lý Sư Phạm tổng kết cho cô
-            </h4>
-          </div>
-          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: '#78350F', lineHeight: 1.6 }}>
-            <li><strong>Chỗ cả lớp vướng:</strong> {insight.commonStuckPoint}</li>
-            <li><strong>Gợi ý tiết dạy ngày mai:</strong> {insight.tomorrowTeachingTip}</li>
-            <li><strong>Học sinh cần quan tâm:</strong> {insight.studentsNeedingFollowupCodes?.join(', ')}</li>
-          </ul>
+        <div style={{ marginBottom: 20 }}>
+          <AssistantCard
+            title="Gấu trợ lý · Phân tích sư phạm"
+            icon={<Sparkles size={20} color="var(--s-accent-ink, #9A5B00)" />}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 13.5, color: 'var(--s-text)', lineHeight: 1.6 }}>
+                <strong style={{ color: 'var(--s-accent-ink)' }}>📍 Chỗ cả lớp vướng:</strong> {insight.commonStuckPoint}
+              </div>
+              <div style={{ fontSize: 13.5, color: 'var(--s-text)', lineHeight: 1.6 }}>
+                <strong style={{ color: 'var(--s-accent-ink)' }}>💡 Gợi ý tiết dạy ngày mai:</strong> {insight.tomorrowTeachingTip}
+              </div>
+              {insight.studentsNeedingFollowupCodes?.length > 0 && (
+                <div style={{ fontSize: 13.5, color: 'var(--s-text)', lineHeight: 1.6 }}>
+                  <strong style={{ color: 'var(--s-accent-ink)' }}>❤️ Học sinh cần quan tâm:</strong>{' '}
+                  {insight.studentsNeedingFollowupCodes.join(', ')}
+                </div>
+              )}
+            </div>
+          </AssistantCard>
         </div>
       )}
 
-      {/* Per-item Breakdown */}
-      <h4 style={{ fontSize: 15, fontWeight: 700, marginTop: 20, marginBottom: 10 }}>Thống kê theo câu hỏi</h4>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-        {data.items?.map((it) => (
-          <div key={it.item_id} style={styles.itemResultCard}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontWeight: 800, color: '#9A5B00' }}>Câu {it.position}</span>
-              <span style={{ fontSize: 12, color: '#64748B' }}>Đã làm: {it.done_count || 0} em</span>
-            </div>
-            <p style={{ fontSize: 13, color: '#334155', margin: '0 0 8px 0' }}>{it.problem_text}</p>
-            <div style={styles.breakdownRow}>
-              <span style={styles.tagSelf}>Tự làm được: {it.self_count || 0}</span>
-              <span style={styles.tagHint}>Cần gợi ý: {it.hint_count || 0}</span>
-              <span style={styles.tagGuided}>Hướng dẫn nhiều: {it.guided_count || 0}</span>
-            </div>
-          </div>
-        ))}
+      {/* Per-item Breakdown & Step distribution chart */}
+      <h4 style={{ fontSize: 15, fontWeight: 700, marginTop: 20, marginBottom: 10, color: 'var(--s-text)' }}>
+        Thống kê theo câu hỏi & Biểu đồ phân bố bậc
+      </h4>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+        {data.items?.map((it) => {
+          const totalAttempts = (it.self_count || 0) + (it.hint_count || 0) + (it.guided_count || 0);
+          const selfPct = totalAttempts > 0 ? Math.round(((it.self_count || 0) / totalAttempts) * 100) : 0;
+          const hintPct = totalAttempts > 0 ? Math.round(((it.hint_count || 0) / totalAttempts) * 100) : 0;
+          const guidedPct = totalAttempts > 0 ? Math.max(0, 100 - selfPct - hintPct) : 0;
+
+          return (
+            <Card key={it.item_id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontWeight: 800, color: 'var(--s-accent-ink)' }}>Câu {it.position}</span>
+                <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>Đã làm: {it.done_count || 0} em</span>
+              </div>
+              <p style={{ fontSize: 13.5, color: 'var(--s-text)', margin: '0 0 10px 0' }}>{it.problem_text}</p>
+
+              {/* Stacked Progress Bar */}
+              <div style={{ height: 10, borderRadius: 999, overflow: 'hidden', display: 'flex', backgroundColor: 'var(--s-line)', marginBottom: 10 }}>
+                {selfPct > 0 && <div style={{ width: `${selfPct}%`, backgroundColor: '#10B981' }} title={`Tự làm: ${selfPct}%`} />}
+                {hintPct > 0 && <div style={{ width: `${hintPct}%`, backgroundColor: '#F59E0B' }} title={`Cần gợi ý: ${hintPct}%`} />}
+                {guidedPct > 0 && <div style={{ width: `${guidedPct}%`, backgroundColor: '#F43F5E' }} title={`Hướng dẫn sâu: ${guidedPct}%`} />}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <StatusPill variant="success">Tự làm được: {it.self_count || 0} ({selfPct}%)</StatusPill>
+                <StatusPill variant="warning">Cần gợi ý: {it.hint_count || 0} ({hintPct}%)</StatusPill>
+                <StatusPill variant="danger">Hướng dẫn nhiều: {it.guided_count || 0} ({guidedPct}%)</StatusPill>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Student List Progress Table */}
-      <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Danh sách làm bài của học sinh</h4>
-      <div style={styles.tableCard}>
-        <table style={styles.table}>
+      <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10, color: 'var(--s-text)' }}>
+        Danh sách làm bài của học sinh
+      </h4>
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
           <thead>
-            <tr>
-              <th style={styles.th}>Tên học sinh</th>
-              <th style={styles.th}>Số câu đã làm</th>
-              <th style={styles.th}>Mức tự làm</th>
-              <th style={styles.th}>Trạng thái</th>
+            <tr style={{ borderBottom: '1px solid var(--s-line)', backgroundColor: 'var(--s-bg)' }}>
+              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Tên học sinh</th>
+              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Số câu đã làm</th>
+              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Mức tự làm</th>
+              <th style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--s-text)' }}>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
             {data.students?.map((s) => (
-              <tr key={s.student_id}>
-                <td style={styles.td}><strong>{s.roster_name}</strong></td>
-                <td style={styles.td}>{s.completed_items || 0} câu</td>
-                <td style={styles.td}>
-                  {s.teach_back_rating === 'self' && <span style={styles.tagSelf}>Tự giải</span>}
-                  {s.teach_back_rating === 'hint' && <span style={styles.tagHint}>Cần gợi ý</span>}
-                  {s.teach_back_rating === 'guided' && <span style={styles.tagGuided}>Mẹ kèm kỹ</span>}
-                  {!s.teach_back_rating && <span style={{ color: '#94A3B8' }}>—</span>}
+              <tr key={s.student_id} style={{ borderBottom: '1px solid var(--s-line)' }}>
+                <td style={{ padding: '10px 14px', color: 'var(--s-text)' }}><strong>{s.roster_name}</strong></td>
+                <td style={{ padding: '10px 14px', color: 'var(--s-text-2)' }}>{s.completed_items || 0} câu</td>
+                <td style={{ padding: '10px 14px' }}>
+                  {s.teach_back_rating === 'self' && <StatusPill variant="success">Tự giải</StatusPill>}
+                  {s.teach_back_rating === 'hint' && <StatusPill variant="warning">Cần gợi ý</StatusPill>}
+                  {s.teach_back_rating === 'guided' && <StatusPill variant="info">Mẹ kèm kỹ</StatusPill>}
+                  {!s.teach_back_rating && <span style={{ color: 'var(--s-text-2)' }}>-</span>}
                 </td>
-                <td style={styles.td}>
+                <td style={{ padding: '10px 14px' }}>
                   {s.completed_items > 0 ? (
-                    <span style={styles.badgeDone}>Đã hoàn thành</span>
+                    <StatusPill variant="success">Đã hoàn thành</StatusPill>
                   ) : (
-                    <span style={styles.badgeNotDone}>Chưa làm</span>
+                    <StatusPill variant="default">Chưa làm</StatusPill>
                   )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -1444,16 +1843,12 @@ function TeacherStudentsTab({ token, classId, cls }) {
       {loading ? (
         <p style={{ color: '#64748B' }}>Đang tải danh sách học sinh...</p>
       ) : students.length === 0 ? (
-        <div style={styles.emptyCard}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>👥</div>
-          <h4 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 700 }}>Chưa có học sinh nào</h4>
-          <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px 0' }}>
-            Cô có thể dán danh sách tên học sinh để hệ thống sinh mã riêng cho từng em.
-          </p>
-          <button style={styles.primaryBtn} onClick={() => setShowRosterModal(true)}>
-            <Plus size={16} /> Thêm danh sách lớp
-          </button>
-        </div>
+        <EmptyState
+          title="Chưa có học sinh nào"
+          description="Cô có thể dán danh sách tên học sinh để hệ thống sinh mã riêng cho từng em."
+          actionText="Thêm danh sách lớp"
+          onAction={() => setShowRosterModal(true)}
+        />
       ) : (
         <div style={styles.tableCard}>
           <table style={styles.table}>
@@ -1860,10 +2255,10 @@ function TeacherAnnouncementsTab({ token, classId }) {
           {loading ? (
             <p style={{ color: '#64748B' }}>Đang tải thông báo...</p>
           ) : announcements.length === 0 ? (
-            <div style={styles.emptyCard}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>📢</div>
-              <p style={{ color: '#64748B', margin: 0 }}>Chưa có thông báo nào được gửi.</p>
-            </div>
+            <EmptyState
+              title="Chưa có thông báo nào"
+              description="Chưa có thông báo nào được gửi tới phụ huynh lớp này."
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {announcements.map((an) => (
@@ -2046,10 +2441,10 @@ function TeacherAnnouncementsTab({ token, classId }) {
             </h4>
 
             {remindersList.length === 0 ? (
-              <div style={styles.emptyCard}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>⏰</div>
-                <p style={{ color: '#64748B', margin: 0 }}>Chưa có lời nhắc việc nào được gửi gần đây.</p>
-              </div>
+              <EmptyState
+                title="Chưa có lời nhắc việc"
+                description="Chưa có lời nhắc việc nào được gửi gần đây."
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {remindersList.map((rem) => (

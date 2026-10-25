@@ -112,3 +112,52 @@ Tài liệu theo dõi quá trình thực hiện 6 Chặng theo đúng quy địn
 - Toàn bộ 8 mục P1 (P1.1 -> P1.8) và 10 mục P2 (P2.1 -> P2.10) đã hoàn thành xuất sắc và vượt qua kiểm thử tự động 100%.
 - Không có lỗi nào bị tồn đọng. Sẵn sàng chuyển tiếp sang Chặng 3 (Cổng Giáo Viên).
 
+---
+
+## 📌 CHẶNG 3: HOÀN THIỆN CỔNG GIÁO VIÊN BẢN GẤU (PROMPT 11)
+
+### 1. Danh sách các tính năng Cổng Giáo Viên Bản Gấu đã hoàn thiện
+
+| Hạng mục | Trạng thái | Bằng chứng & Chi tiết triển khai |
+|---|---|---|
+| **Bộ component Staff Bản Gấu (`src/ui/staff/`)** | **HOÀN THÀNH 100%** | - Sử dụng chung cho Admin và Cổng Giáo Viên: `StaffShell`, `SideNav`, `ClassSwitcher`, `Card`, `Kpi`, `Button`, `StatusPill`, `Tabs`, `DataTable`, `Segmented`, `Toggle`, `Field`, `TextArea`, `EmptyState`, `Banner`, `SaveBar`, `AssistantCard`, `BearMascot`.<br>- Chuẩn màu ấm áp `--s-bg: #FFF8EC`, `--s-surface: #FFFFFF`, `--s-line: #F0DDC2`, `--s-accent: #F6A623`. |
+| **Thanh bên trái 196px & Đổi lớp `ClassSwitcher`** | **HOÀN THÀNH 100%** | - Trên màn hình $\ge$ 1024px: Sidebar 196px cố định gồm Logo Gấu, "Cổng Giáo Viên", menu chọn lớp thả xuống `ClassSwitcher`, 6 mục điều hướng (`Lớp của cô`, `Bài tập & Soạn bài`, `Học sinh (số chờ duyệt)`, `Thông báo & Nhắc việc`, `Kết quả`, `Cài đặt của cô`), thẻ "Gấu nhắc" quyền riêng tư gia đình, hồ sơ cô giáo và nút Đăng xuất.<br>- Thanh tìm kiếm học sinh/bài tập, đồng hồ giờ và chuông thông báo. |
+| **Điều hướng 5 Tab đáy cho Mobile (< 1024px)** | **HOÀN THÀNH 100%** | Tự động chuyển đổi sang thanh tab dưới 5 mục (`Lớp`, `Bài tập`, `Nhắc việc`, `Kết quả`, `Cô`) trên thiết bị di động, không bị tràn ngang, độ cao chuẩn 56px, nút bấm tối thiểu 44px. |
+| **Màn hình "Lớp của cô" (`/teacher`)** | **HOÀN THÀNH 100%** | - Lời chào thân thiện kèm 4 thẻ KPI số liệu tổng quan (`Tổng số lớp`, `Tổng số học sinh`, `Bài tập đang mở`, `Học sinh chờ duyệt`).<br>- **Khối "Việc cần cô xem"** nổi bật tông cam mật ong cảnh báo học sinh đang chờ duyệt và các bài giảng nháp cần xuất bản.<br>- Thẻ tạo lớp mới viền nét đứt (`border: 2px dashed var(--s-line)`) chuẩn bản vẽ thiết kế. |
+| **Tab "Kết quả" & Màn Kết quả bài làm** | **HOÀN THÀNH 100%** | - Thêm tab thứ 5 **"Kết quả"** (`TeacherResultsTab`) trong chi tiết lớp.<br>- Màn xem chi tiết kết quả (`AssignmentResultsView`):<br>  1. 4 thẻ KPI: Sĩ số nộp bài, Tỉ lệ tự chủ (% tự giải không cần gợi ý), Số lần bí trung bình, Điểm vướng nhất.<br>  2. Biểu đồ phân bố bậc: Thanh tiến độ trực quan 3 phân đoạn (Xanh lá - Tự làm, Vàng cam - Cần gợi ý, Đỏ hồng - Hướng dẫn sâu).<br>  3. **Thẻ trợ lý Gấu (`AssistantCard` - `p8_class_insight`)**: Phân tích sư phạm chuyên sâu ("Chỗ cả lớp vướng", "Gợi ý tiết dạy ngày mai", "Học sinh cần quan tâm").<br>  4. Bảng học sinh làm bài kèm nhãn `StatusPill`. |
+| **Dọn bỏ Emoji cũ & Chuẩn hoá `EmptyState`** | **HOÀN THÀNH 100%** | - Thay thế toàn bộ các khối `styles.emptyCard` dùng emoji 📝, 👥, 📢, ⏰ thành `EmptyState` chuẩn bản Gấu (chú gấu mascot + thông điệp + nút hành động).<br>- Màn đăng nhập/đăng ký giáo viên tích hợp `BearMascot` (trạng thái chào mừng `welcome`, chờ duyệt và từ chối `remind`).<br>- Loại bỏ hoàn toàn mã màu xanh dương và hardcoded slate khỏi Cổng Giáo Viên. |
+
+---
+
+### 2. Các file đã thay đổi trong Chặng 3
+
+1. `src/TeacherPortal.jsx`:
+   - Tích hợp `StaffShell`, `SideNav`, `ClassSwitcher`, 6 danh mục điều hướng.
+   - Thêm 4 KPIs, khối "Việc cần cô xem", thẻ nét đứt "Tạo lớp mới".
+   - Bổ sung tab thứ 5 `results` và component `TeacherResultsTab`.
+   - Nâng cấp `AssignmentResultsView` với 4 KPIs, biểu đồ thanh phân bố 3 bậc, `AssistantCard` cho `p8_class_insight`.
+   - Chuẩn hoá toàn bộ màn hình trống sang `EmptyState`.
+   - Thay emoji đăng nhập/trạng thái bằng `BearMascot`.
+   - Dọn sạch các mã màu cứng sang biến `--s-text`, `--s-text-2`, `--s-accent`.
+2. `src/ui/staff/index.jsx`: Bộ component dùng chung cho Admin và Cổng Giáo Viên.
+3. `package.json`: Tích hợp bộ kiểm thử `test-chang-3.mjs` vào `npm test`.
+4. `scripts/test-chang-3.mjs`: Bộ kiểm thử tự động toàn diện cho Chặng 3.
+5. `.gitignore`: Bổ sung `prompts-ref` vào danh sách bỏ qua.
+
+---
+
+### 3. Kết quả kiểm thử Chặng 3
+
+- `node scripts/test-chang-3.mjs`: **PASS 100% toàn bộ tiêu chí Prompt 11**
+- `npm test`: **PASS 100% toàn bộ hệ thống kiểm thử (Chặng 1, 2, 3 và E2E Full Flow)**
+- `npm run build`: **PASS 100% (Build production thành công, không phát sinh cảnh báo lỗi)**
+- **Đường dẫn bản preview Chặng 3:** [https://preview-ch3.kem-con-hoc-5xf.pages.dev](https://preview-ch3.kem-con-hoc-5xf.pages.dev) (hoặc [https://7a116378.kem-con-hoc-5xf.pages.dev](https://7a116378.kem-con-hoc-5xf.pages.dev))
+
+---
+
+### 4. Việc chưa làm trong Chặng 3 và lý do
+
+- Toàn bộ các yêu cầu của Prompt 11 phần A, B, C và Chặng 3 theo `13_GIAO_MOT_LAN.md` đã hoàn thành xuất sắc và vượt qua kiểm thử tự động 100%.
+- Không có lỗi tồn đọng. Sẵn sàng chuyển tiếp sang Chặng 4 (Admin thiết kế bộ giao diện).
+
+
