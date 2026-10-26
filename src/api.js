@@ -227,9 +227,30 @@ export async function aiAnalyzeToy(blobOrFile, timeoutMs = 12000) {
 /* ============================================================
    ✂️ AI TRÍCH ĐỀ — lọc đúng đề bài từ text OCR lẫn mô tả
    ============================================================ */
-export async function aiExtractProblem(rawOcr) {
+export function needsCleanProblem(rawText, confidence = 1) {
+  if (!rawText || !rawText.trim()) return false
+  if (confidence < 0.7) return true
+  const text = rawText.trim()
+  const words = text.split(/\s+/).filter(Boolean)
+  if (words.length === 0) return false
+
+  // Đợt 20 Chặng 1.3: Chỉ làm sạch khi ký tự lạ > 3 hoặc có từ dính dài > 25 ký tự
+  const strangeChars = (text.match(/[^a-zA-Z0-9àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ\s.,!?:;'"()\/\-–—+%×÷=<>]/g) || []).length
+  if (strangeChars > 3) return true
+
+  const joinedWords = words.filter(w => w.length > 25)
+  if (joinedWords.length > 0) return true
+
+  return false
+}
+
+export async function aiExtractProblem(rawOcr, confidence = 1) {
   if (isTrialActive()) return rawOcr || PRELOADED_TRIAL_LESSONS[0].de_bai
   if (!rawOcr || !rawOcr.trim()) return null
+  // Bỏ lần làm sạch thừa: nếu đề đã rõ ràng, trả luôn nguyên văn không gọi AI
+  if (!needsCleanProblem(rawOcr, confidence)) {
+    return rawOcr.trim()
+  }
   const sys = renderPrompt('p2_clean')
   return aiChat(sys, [], rawOcr)
 }
@@ -309,7 +330,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
         model: modelId,
       },
       EXPLAIN_TIMEOUT_MS,
-      { 'X-Prompt-Id': 'p3_explain', 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '' }
+      { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
     )
     let data = extractJson(j.response ?? j)
 
@@ -330,7 +351,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         remainingMs,
-        { 'X-Prompt-Id': 'p3_explain', 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '' }
+        { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
       )
       data = extractJson(retryResp.response ?? retryResp)
     }

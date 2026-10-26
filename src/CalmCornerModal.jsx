@@ -49,6 +49,7 @@ export function CalmCornerModal({
   const [calmPhrase, setCalmPhrase] = useState(null)
   const [isPhraseAi, setIsPhraseAi] = useState(false)
   const [phraseIdx, setPhraseIdx] = useState(0)
+  const [isAiLoading, setIsAiLoading] = useState(false)
 
   // Reset view when opened
   useEffect(() => {
@@ -166,52 +167,75 @@ export function CalmCornerModal({
   const intentionalWrongAnswer = makeWrongAnswer(rawAns)
 
   /* ------------------------------------------------------------
-     4. TẢI CÂU NÓI HỢP BÀI (p8_calm_phrase)
+     4. TẢI CÂU NÓI HỢP BÀI (Thư viện mặc định & AI khi yêu cầu)
      ------------------------------------------------------------ */
-  const loadCalmPhrase = async (reasonId = 'frustrated') => {
-    // 1. Luôn nạp câu dự phòng ngay lập tức (không delay)
-    const fallbacks = FALLBACK_CALM_PHRASES[reasonId] || FALLBACK_CALM_PHRASES.frustrated
-    const initialFallback = fallbacks[phraseIdx % fallbacks.length]
-    setCalmPhrase(initialFallback)
-    setIsPhraseAi(false)
-    setView('phrase')
+  const loadCalmPhrase = (reasonId = "frustrated") => {
+    // 1. Kiểm tra bộ nhớ lưu 7 ngày theo dạng bài & lý do
+    const dangBai = currentProblem?.dang_bai || currentProblem?.type || "toan";
+    const cacheKey = `calm_cache_${dangBai}_${reasonId}`;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached && cached.expires_at > Date.now() && cached.phrase) {
+          setCalmPhrase(cached.phrase);
+          setIsPhraseAi(true);
+          setView("phrase");
+          return;
+        }
+      }
+    } catch (_) {}
 
-    // 2. Gọi AI trong nền nếu mạng sẵn sàng (tối đa 3 lần/tối)
+    // 2. Không gọi AI mặc định: Dùng thư viện câu có sẵn (32+ câu sư phạm)
+    const fallbacks = FALLBACK_CALM_PHRASES[reasonId] || FALLBACK_CALM_PHRASES.frustrated;
+    const initialFallback = fallbacks[phraseIdx % fallbacks.length];
+    setCalmPhrase(initialFallback);
+    setIsPhraseAi(false);
+    setView("phrase");
+  };
+
+  // Chỉ gọi p8_calm_phrase khi mẹ bấm "Câu khác hợp bài hơn"
+  const requestAiCalmPhrase = async (reasonId = selectedReason || "frustrated") => {
+    if (isAiLoading) return;
+    setIsAiLoading(true);
     try {
       const promptInput = {
-        ten_con: child?.name || 'con',
-        lop: child?.grade || 'Lớp 3',
+        ten_con: child?.name || "con",
+        lop: child?.grade || "Lớp 3",
         xung_ho: parentName,
-        dang_bai: currentProblem?.dang_bai || currentProblem?.type || 'Toán',
-        cau_hoi_bac: currentStep?.q || 'Câu hỏi bài tập',
-        ly_do: reasonId === 'frustrated' ? 'Mẹ mệt, bực' : 'Con vướng bài',
-      }
+        dang_bai: currentProblem?.dang_bai || currentProblem?.type || "Toán",
+        cau_hoi_bac: currentStep?.q || "Câu hỏi bài tập",
+        ly_do: reasonId === "frustrated" ? "Mẹ mệt, bực" : (reasonId === "late" ? "Muộn rồi" : (reasonId === "distracted" ? "Con mất tập trung" : "Con vướng bài")),
+      };
 
-      // Render prompt từ Prompt Studio
-      const rendered = renderPrompt('p8_calm_phrase', promptInput)
-      const res = await aiChat(rendered, null, child, 'calm', [{ role: 'user', content: 'Gợi ý câu nói' }])
+      const rendered = renderPrompt("p8_calm_phrase", promptInput);
+      const res = await aiChat(rendered, null, child, "calm", [{ role: "user", content: "Gợi ý câu nói" }]);
 
       if (res) {
-        try {
-          // Parse JSON an toàn
-          const jsonMatch = res.match(/\{[\s\S]*\}/)
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0])
-            // Kiểm tra bộ lọc chống lộ đáp án
-            const isLeaking = checkAnswerLeakage(parsed.thu_noi, currentProblem, currentStepIndex)
-            if (!isLeaking && parsed.thu_noi) {
-              setCalmPhrase(parsed)
-              setIsPhraseAi(true)
-            }
+        const jsonMatch = res.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          const isLeaking = checkAnswerLeakage(parsed.thu_noi, currentProblem, currentStepIndex);
+          if (!isLeaking && parsed.thu_noi) {
+            setCalmPhrase(parsed);
+            setIsPhraseAi(true);
+            try {
+              const dangBai = currentProblem?.dang_bai || currentProblem?.type || "toan";
+              const cacheKey = `calm_cache_${dangBai}_${reasonId}`;
+              localStorage.setItem(cacheKey, JSON.stringify({
+                phrase: parsed,
+                expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000,
+              }));
+            } catch (_) {}
           }
-        } catch (e) {
-          // Giữ câu dự phòng
         }
       }
     } catch (e) {
-      // Giữ câu dự phòng
+      console.warn("requestAiCalmPhrase error:", e);
+    } finally {
+      setIsAiLoading(false);
     }
-  }
+  };
 
   return (
     <div
@@ -565,25 +589,36 @@ export function CalmCornerModal({
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="btn ghost"
-                style={{ flex: 1, padding: '12px', fontSize: 13 }}
-                onClick={() => {
-                  setPhraseIdx((i) => i + 1)
-                  const fallbacks = FALLBACK_CALM_PHRASES[selectedReason || 'frustrated']
-                  setCalmPhrase(fallbacks[(phraseIdx + 1) % fallbacks.length])
-                  setIsPhraseAi(false)
-                }}
-              >
-                Đổi câu khác
-              </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="btn ghost"
+                  style={{ flex: 1, padding: "10px", fontSize: 13 }}
+                  onClick={() => {
+                    const nextIdx = phraseIdx + 1;
+                    setPhraseIdx(nextIdx);
+                    const fallbacks = FALLBACK_CALM_PHRASES[selectedReason || "frustrated"] || FALLBACK_CALM_PHRASES.frustrated;
+                    setCalmPhrase(fallbacks[nextIdx % fallbacks.length]);
+                    setIsPhraseAi(false);
+                  }}
+                >
+                  🔄 Đổi câu khác
+                </button>
+                <button
+                  className="btn ghost"
+                  style={{ flex: 1.2, padding: "10px", fontSize: 13, borderColor: "var(--c-accent)", color: "var(--c-accent)" }}
+                  disabled={isAiLoading}
+                  onClick={() => requestAiCalmPhrase(selectedReason || "frustrated")}
+                >
+                  {isAiLoading ? "⏳ Gấu đang nghĩ..." : "✨ Câu khác hợp bài hơn"}
+                </button>
+              </div>
               <button
                 className="btn solid"
-                style={{ flex: 1.5, padding: '12px', fontWeight: 800 }}
+                style={{ width: "100%", padding: "12px", fontWeight: 800 }}
                 onClick={() => {
-                  onClose()
-                  soundSuccess()
+                  onClose();
+                  soundSuccess();
                 }}
               >
                 Quay lại bài ➔

@@ -182,91 +182,48 @@ CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON THEO ĐÚNG SCHEMA TRÊN, KHÔN
     desc: 'Bổ sung trường cac_bac[].ly_do_cho_me (tối đa 30 từ, không lộ đáp án), minh bạch lý do hỏi cho phụ huynh',
     variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}', '{{ho_so_con}}'],
     requiredVars: ['{{de_bai}}'],
-    template: `Bạn là cố vấn sư phạm tiểu học, nói chuyện với PHỤ HUYNH (không nói với trẻ).
-Nhiệm vụ: giúp phụ huynh dẫn con TỰ tìm ra đáp án bằng câu hỏi gợi mở Socratic.
+    template: `Bạn là trợ lý sư phạm tiểu học hướng dẫn PHỤ HUYNH dẫn con TỰ tìm ra đáp án bằng câu hỏi gợi mở Socratic.
 
-THÔNG TIN
-- Môn: {{mon}}. Lớp: {{lop}}. Bộ sách: {{sach}}.
-- Dạng bài: {{dang_bai}}. Lỗi trẻ hay gặp: {{loi_hay_gap}}.
+THÔNG TIN:
+- Môn: {{mon}}, Lớp: {{lop}}, Bộ sách: {{sach}}.
+- Dạng bài: {{dang_bai}}. Lỗi hay gặp: {{loi_hay_gap}}.
 - Đề bài: """{{de_bai}}"""
-- Hồ sơ học của con (Gấu nhớ con): {{ho_so_con}}
+- Hồ sơ con: {{ho_so_con}}
 {{khung_ghi_chu}}
+PHƯƠNG PHÁP: {{doan_phuong_phap}}
 
-PHƯƠNG PHÁP ÁP DỤNG (chỉ dùng các phương pháp này):
-{{doan_phuong_phap}}
+QUY TẮC BẮT BUỘC:
+1. Tối đa 4 bậc câu hỏi ngắn (< 25 chữ) cho mẹ đọc to. TUYỆT ĐỐI không lộ đáp số cuối trong cau_hoi, goi_y hoặc ly_do_cho_me.
+2. Đáp án từng bậc chỉ để trong "dap_an_cho_me".
+3. Mỗi bậc có "ly_do_cho_me" (< 30 từ, vì sao hỏi câu này, không chứa đáp án).
+4. Mỗi bậc có 2 gợi ý: "muc_1_do_vat" (đồ vật thật), "muc_2_hinh_ve" (hình vẽ/sơ đồ).
+5. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
+6. "loi_khen" (< 15 từ, khen nỗ lực, không khen thông minh).
+7. Kèm "bai_anh_em" (cùng dạng đổi số), "tro_choi_5_phut" (đồ vật ở nhà), "con_day_lai_me" (con đóng vai cô giáo). Nếu đề thiếu: trả "can_hoi_lai".
 
-QUY TẮC BẮT BUỘC
-1. Tối đa 4 bậc. Mỗi bậc là MỘT câu hỏi ngắn (dưới 25 chữ) để phụ huynh đọc to cho con.
-2. Không bậc nào được chứa đáp số cuối cùng trong "cau_hoi", "goi_y" hoặc "ly_do_cho_me".
-3. Đáp án từng bậc chỉ đặt trong trường "dap_an_cho_me".
-4. Mỗi bậc BẮT BUỘC có trường "ly_do_cho_me": một câu, tối đa 30 từ, giải thích cho mẹ vì sao hỏi câu này ở bậc này (dựa vào bậc trước con đã làm gì, lỗi hay gặp của dạng bài). Tuyệt đối không chứa đáp án.
-5. Mỗi bậc có 2 mức gợi ý khi con bí:
-   muc_1_do_vat dùng đồ vật thật trong nhà (kẹo, que tính, ngón tay, chiếc đĩa...),
-   muc_2_hinh_ve dùng hình vẽ hoặc sơ đồ đoạn thẳng (mô tả để bố mẹ vẽ ra giấy cho con).
-6. Dùng tiếng Việt đơn giản, xưng "mẹ/bố" và "con". Không dùng thuật ngữ sư phạm hàn lâm.
-7. Không chê trẻ. Câu khen phải khen sự cố gắng, không khen "thông minh".
-8. Nếu đề không rõ hoặc thiếu dữ kiện: trả "can_hoi_lai" và để trống các bậc.
-9. Tạo 1 "bai_anh_em": cùng dạng, đổi số và bối cảnh, kèm đáp án cho mẹ đối chiếu.
-10. Tạo 1 "tro_choi_5_phut": ôn đúng dạng này bằng đồ vật quen thuộc trong nhà.
-11. Tạo 1 câu "con_day_lai_me": mời con đóng vai thầy/cô giảng lại bước quan trọng nhất cho bố mẹ.
-12. Mỗi bậc BẮT BUỘC có "ky_nang" thuộc danh sách: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
-13. Mỗi bậc BẮT BUỘC có "loi_khen" (tối đa 15 từ, khen đúng việc của bậc đó, không nhắc kết quả các bậc sau).
-14. Nếu có hồ sơ học "ho_so_con" (khác "chưa có"): ưu tiên hỏi kỹ, chẻ nhỏ ở kỹ năng con hay kẹt, giảm gợi ý ở kỹ năng con đã vững.
-
-VÍ DỤ MẪU HOÀN CHỈNH (FEW-SHOT):
-Đề: "Mẹ có 15 chiếc kẹo, chia đều cho 3 bạn nhỏ. Hỏi mỗi bạn được mấy chiếc kẹo?"
-Trả về JSON:
+ĐẦU RA JSON DUY NHẤT (Ví dụ cấu trúc 1 bậc):
 {
-  "dang_bai": "Toán chia đều thành các phần bằng nhau",
-  "giai_thich_cho_me": "Con đang học ý nghĩa của phép chia đều. Con cần hiểu chia đều là chia lần lượt cho từng bạn đến khi hết kẹo.",
-  "luu_y_khi_giang": "Để con tự chia thực tế bằng kẹo hoặc nắp chai trước khi viết phép chia 15 : 3.",
+  "dang_bai": "Toán phép tính",
+  "giai_thich_cho_me": "Mục tiêu bài học",
+  "luu_y_khi_giang": "Lưu ý cho mẹ",
   "cac_bac": [
     {
-      "cau_hoi": "Mẹ có tất cả 15 chiếc kẹo trên bàn, con đếm lại xem đúng không nào?",
+      "cau_hoi": "Đề bài cho biết những số nào hả con?",
       "ky_nang": "doc_hieu_de",
-      "ly_do_cho_me": "Giúp con chủ động nhận diện dữ kiện đầu tiên của bài toán bằng đồ vật cụ thể.",
-      "dap_an_cho_me": "Có đúng 15 chiếc kẹo",
-      "loi_khen": "Con đếm số kẹo rất chuẩn xác và cẩn thận!",
-      "goi_y": {
-        "muc_1_do_vat": "Bày 15 viên kẹo hoặc nắp chai ra bàn cho con đếm.",
-        "muc_2_hinh_ve": "Mẹ chấm 15 chấm tròn nhỏ thành một hàng."
-      }
-    },
-    {
-      "cau_hoi": "Có 3 bạn nhỏ, nếu mình chia đều cho từng bạn thì chia thế nào cho công bằng nhỉ?",
-      "ky_nang": "chon_phep_tinh",
-      "ly_do_cho_me": "Dẫn dắt con nắm vững bản chất chia đều thực tế trước khi đưa vào công thức toán học.",
-      "dap_an_cho_me": "Chia lần lượt mỗi bạn 1 chiếc cho đến hết (làm phép chia 15 : 3)",
-      "loi_khen": "Ý tưởng chia đều từng chiếc rất thông minh!",
-      "goi_y": {
-        "muc_1_do_vat": "Đặt 3 chiếc đĩa đại diện cho 3 bạn, chia lần lượt từng viên kẹo vào mỗi đĩa.",
-        "muc_2_hinh_ve": "Vẽ 3 vòng tròn đại diện cho 3 bạn, chia đều các chấm tròn vào."
-      }
-    },
-    {
-      "cau_hoi": "Mỗi bạn nhận được mấy chiếc kẹo, con giúp mẹ viết phép tính nào!",
-      "ky_nang": "tinh_toan",
-      "ly_do_cho_me": "Kết nối trải nghiệm chia kẹo thực tế thành phép chia chuẩn sách giáo khoa.",
-      "dap_an_cho_me": "15 : 3 = 5 (chiếc kẹo)",
-      "loi_khen": "Phép chia chuẩn và con tính nhẩm rất nhanh!",
-      "goi_y": {
-        "muc_1_do_vat": "Đếm số kẹo trên một chiếc đĩa.",
-        "muc_2_hinh_ve": "Đếm số chấm tròn trong 1 vòng tròn."
-      }
+      "ly_do_cho_me": "Giúp con đọc kỹ và nắm chắc dữ kiện đề bài.",
+      "dap_an_cho_me": "Có 15 kẹo và 3 bạn",
+      "loi_khen": "Con đọc đề rất tập trung!",
+      "goi_y": { "muc_1_do_vat": "Đếm que tính trên bàn.", "muc_2_hinh_ve": "Vẽ 3 vòng tròn." }
     }
   ],
   "dap_an_cuoi_cho_me": "5 chiếc kẹo",
-  "con_day_lai_me": "Con chỉ cho mẹ cách chia kẹo sao cho bạn nào cũng có phần bằng nhau nhé!",
-  "bai_anh_em": {
-    "de": "Bố có 18 quả cam, xếp đều vào 2 chiếc rổ. Hỏi mỗi rổ có mấy quả cam?",
-    "dap_an_cho_me": "18 : 2 = 9 quả cam"
-  },
-  "tro_choi_5_phut": "Dùng 12 hạt đỗ hoặc viên sỏi, chia đều cho 3 chiếc cốc giấy.",
-  "loi_khen": "Con chia kẹo rất khéo và hiểu ngay ý nghĩa của phép chia đều rồi đấy!",
+  "con_day_lai_me": "Con chỉ cho mẹ cách làm bài này nhé!",
+  "bai_anh_em": { "de": "Bố có 18 quả cam...", "dap_an_cho_me": "18 : 2 = 9 quả cam" },
+  "tro_choi_5_phut": "Dùng hạt đỗ chia đều vào các cốc.",
+  "loi_khen": "Con làm bài rất tốt!",
   "can_hoi_lai": ""
 }
-
-CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON THEO ĐÚNG SCHEMA TRÊN, KHÔNG THÊM BẤT KỲ CHỮ NÀO NGOÀI JSON.`,
+CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
   },
 
   p3b_parent_note_explain: {
