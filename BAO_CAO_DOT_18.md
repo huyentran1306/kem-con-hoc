@@ -10,7 +10,7 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 | Chặng | Tên chặng | Trạng thái | Commit | Ghi chú & Kiểm thử |
 |---|---|---|---|---|
 | **Chặng 0** | **Sửa nền AI** | **ĐẠT (100%)** | `dot18-chang-0` | 16/16 unit test `test-dot18-chang-0.mjs` đạt, 28/28 test suites xanh, 46/46 E2E đạt |
-| Chặng 1 | Máy kiểm phép tính | Đang thực hiện | | |
+| **Chặng 1** | **Máy kiểm phép tính** | **ĐẠT (100%)** | `dot18-chang-1` | 33/33 tests `test-dot18-chang-1.mjs` đạt, tự sửa 30 - 8 = 23 thành 22, huy hiệu .chk trên UI |
 | Chặng 2 | Gấu nhớ con | Chưa | | Chờ điểm dừng bắt buộc 1 (D1 migration) |
 | Chặng 3 | Phân tích tiến bộ trung thực | Chưa | | |
 | Chặng 4 | Câu hỏi nhỏ hơn | Chưa | | |
@@ -68,3 +68,48 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `scripts/test-dot18-chang-0.mjs`: **16/16 kiểm thử đạt (100%)**
 - `npm test`: **28/28 test suites đạt (100%)**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+
+---
+
+## CHI TIẾT CHẶNG 1: MÁY KIỂM PHÉP TÍNH (CODE, KHÔNG PHẢI AI)
+
+### 1. Việc đã làm
+- **1.1 Thuật toán Shunting-yard độc lập (evaluateMath & checkArithmetic):**
+  - Viết bộ tính toán độc lập không dùng `eval()` trong `src/arithmetic.js` (đồng bộ cả frontend và backend worker).
+  - Hỗ trợ đầy đủ các phép toán: `+`, `-`, `*`, `/`, `x`, `×`, `:`, `÷`, dấu ngoặc `()`, số thập phân (`2,5` và `2.5`).
+  - Hỗ trợ ký tự trừ unicode chuẩn: `−` (`\u2212`) và `–` (`\u2013`).
+  - Lược bỏ tiền tố nhãn thông minh (ví dụ: `Phép tính: 30 - 8 = 22` hoặc `Bài 2: 30 - 8 = 22` không bị hiểu nhầm dấu hai chấm thành phép chia).
+- **1.2 Đổi đơn vị chục, trăm, nghìn:**
+  - Hỗ trợ quét tự động các phép đổi đơn vị: `X chục = Y`, `X trăm = Y`, `X nghìn = Y`.
+  - Tự động kiểm tra: ví dụ `3 chục = 30` (đúng), `3 chục = 20` (sai, phát hiện và sửa thành 30).
+- **1.3 Kiểm tra toàn bộ bài giảng và tự động sửa sai (validateAllLessonMath & correctLessonMath):**
+  - Quét qua mọi vị trí có thể chứa phép tính: `cac_bac[].dap_an_cho_me`, `cac_bac[].cau_hoi`, `dap_an_cuoi_cho_me`, và `bai_anh_em`.
+  - Tự động sửa phép tính sai: fixture `30 - 8 = 23` bị bắt và tự động sửa thành `30 - 8 = 22`.
+- **1.4 Tích hợp Backend Worker ai-gateway-worker:**
+  - Sau khi AI soạn bài, chạy `validateAllLessonMath(parsed)`.
+  - Nếu có phép tính sai: gọi AI retry nếu còn thời gian (>10s) với câu nhắc rõ ràng: `Phép tính X sai, kết quả đúng là Y`.
+  - Nếu AI vẫn trả sai hoặc hết giờ: code tự động thay thế số sai bằng số đúng và ghi nhận `guard_log` với `outcome: "sua_phep_tinh"`.
+  - Trả về trường `math_verified: { count, calculations, summary }` cho ứng dụng.
+- **1.5 Giao diện Trước khi giảng (Explain trong screens.jsx & styles.css):**
+  - Thêm huy hiệu xác nhận: `✓ Gấu đã kiểm lại N phép tính` kèm dòng tóm tắt `3 chục = 30 · 30 − 8 = 22 · đáp số 22 quả`.
+  - Bấm nút `Xem` mở danh sách chi tiết các phép tính máy tính độc lập đã kiểm định. Bấm lại `Đóng` để thu gọn.
+  - Hỗ trợ chuẩn responsive và dark mode (midnight theme).
+- **1.6 Kiểm thử 30 đề ai-eval:**
+  - Rà soát toàn bộ 30 đề bài trong `ai-eval/de-mau.json`: 0 phép tính sai tới mẹ.
+
+### 2. Files đã chỉnh sửa
+- `src/arithmetic.js`
+- `src/api.js`
+- `src/trialData.js`
+- `src/screens.jsx`
+- `src/styles.css`
+- `package.json`
+- `scripts/test-dot18-chang-1.mjs` (Tạo mới 33 tests)
+- `../study-en/ai-gateway-worker/src/arithmetic.js`
+- `../study-en/ai-gateway-worker/src/index.js`
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-1.mjs`: **33/33 kiểm thử đạt (100%)**
+- `npm test`: **29/29 test suites đạt (100%)**
+- `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch, không lỗi**

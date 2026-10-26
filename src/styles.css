@@ -983,3 +983,82 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   .app.parent-shell .pg-grid2 > .big-card,
   .app.parent-shell .pg-grid2 > .card { margin: 0; }
 }
+
+/* ============================================================
+   Prompt 18 · Chặng 1: Dấu kiểm phép tính (Math Verify Badge)
+   ============================================================ */
+.chk {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #F3FAF4;
+  border: 2px solid #6DAA7A;
+  border-radius: 16px;
+  padding: 9px 12px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.chk:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(63, 122, 62, 0.12);
+}
+.chk > span {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #3F7A3E;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.chk > div {
+  flex: 1;
+  min-width: 0;
+}
+.chk b {
+  font-size: 14px;
+  color: #1F3F22;
+  display: block;
+}
+.chk p.xs {
+  font-size: 11.5px;
+  color: #3F5E42;
+  margin: 2px 0 0;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chk em {
+  font-style: normal;
+  font-weight: 800;
+  color: #3F7A3E;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(63, 122, 62, 0.08);
+}
+[data-theme="midnight"] .chk,
+[data-theme="dark"] .chk {
+  background: #142E1B;
+  border-color: #2F6B38;
+}
+[data-theme="midnight"] .chk b,
+[data-theme="dark"] .chk b {
+  color: #D1FAE5;
+}
+[data-theme="midnight"] .chk p.xs,
+[data-theme="dark"] .chk p.xs {
+  color: #A7F3D0;
+}
+[data-theme="midnight"] .chk em,
+[data-theme="dark"] .chk em {
+  color: #34D399;
+  background: rgba(52, 211, 153, 0.12);
+}

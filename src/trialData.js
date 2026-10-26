@@ -1,3 +1,4 @@
+import { validateAllLessonMath } from "./arithmetic.js";
 /**
  * DỮ LIỆU VÀ TRẠNG THÁI CHẾ ĐỘ DÙNG THỬ (PROMPT 13 · CHẶNG 6)
  * Chế độ dùng thử không cần tài khoản:
@@ -462,6 +463,7 @@ export function trialLessonToProblem(lesson) {
     dap_an_cuoi_cho_me: lesson.dap_an_cuoi_cho_me,
     finalAnswerForParent: lesson.dap_an_cuoi_cho_me,
     brotherProblem: null,
+    mathVerified: validateAllLessonMath(lesson),
     diagram: null,
   }
 }

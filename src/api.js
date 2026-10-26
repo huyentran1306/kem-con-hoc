@@ -337,6 +337,14 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       }
     }
 
+    // Đợt 18 · Chặng 1: Máy kiểm phép tính tự động rà soát và sửa sai nếu có
+    let mathCheck = validateAllLessonMath(data)
+    if (mathCheck.hasError) {
+      const corrected = correctLessonMath(data)
+      data = corrected.lessonData
+      mathCheck = validateAllLessonMath(data)
+    }
+
     // Chuẩn hóa bậc câu hỏi (hỗ trợ cả cac_bac schema Socratic mới và steps schema cũ)
     let rawSteps = []
     if (Array.isArray(data.cac_bac) && data.cac_bac.length > 0) {

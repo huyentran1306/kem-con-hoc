@@ -1,4 +1,4 @@
-import { Fragment, useContext, useEffect, useRef, useState } from 'react'
+import { Fragment, useContext, useEffect, useRef, useState, useMemo } from 'react'
 import { AppCtx } from './ctx'
 import {
   PARENT_TYPES, GRADES, BOOKS, TONES, EMOJIS, PROBLEM, STICKER_REWARD,
@@ -23,6 +23,7 @@ import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
 import { getStudyDateKey } from './useStudyTracker'
+import { validateAllLessonMath } from './arithmetic.js'
 import { ThemeBuddy, BuddyGreeter, buddyReact, useThemeBuddyId, BUDDY_NAMES } from './themes/buddies/buddySvgs'
 import FamilyAnnouncements from './FamilyAnnouncements.jsx'
 
@@ -1755,7 +1756,9 @@ function gradeLabel(g) {
 
 export function Explain() {
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
+  const [showMathList, setShowMathList] = useState(false)
   const child = S.children.find((c) => c.id === S.activeId)
+  const mathInfo = useMemo(() => problem?.mathVerified || problem?.math_verified || validateAllLessonMath(problem), [problem])
   const explainText =
     `Đây là dạng bài ${problem.type}. ${problem.summary} ` +
     `${S.parent.toLowerCase()} lưu ý: ${problem.warning} ` +
@@ -1803,6 +1806,64 @@ export function Explain() {
         </div>
       )}
       <div className="photo">{problem.ocr}</div>
+
+      {mathInfo && mathInfo.verifiedCount > 0 && (
+        <>
+          <div
+            className="chk"
+            id="math-verify-badge"
+            onClick={() => setShowMathList(!showMathList)}
+            style={{ cursor: 'pointer' }}
+            role="button"
+            tabIndex={0}
+          >
+            <span>✓</span>
+            <div>
+              <b>Gấu đã kiểm lại {mathInfo.verifiedCount} phép tính</b>
+              <p className="xs">{mathInfo.summary}</p>
+            </div>
+            <em>{showMathList ? 'Đóng' : 'Xem'}</em>
+          </div>
+
+          {showMathList && (
+            <div
+              className="math-verified-list"
+              id="math-verified-list-popup"
+              style={{
+                background: '#F8FAFC',
+                border: '1.5px solid #CBD5E1',
+                borderRadius: 14,
+                padding: '10px 14px',
+                marginTop: -6,
+                marginBottom: 12,
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#1E293B' }}>
+                🧮 Danh sách phép tính máy tính độc lập đã kiểm:
+              </div>
+              {mathInfo.calculations.map((c, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '6px 0',
+                    borderBottom: idx < mathInfo.calculations.length - 1 ? '1px dashed #E2E8F0' : 'none',
+                    fontSize: 13,
+                  }}
+                >
+                  <span>
+                    <b style={{ color: '#0F172A' }}>{c.expr.replace(/-/g, '−')}</b>{' '}
+                    {c.stepIndex ? <span style={{ color: '#64748B', fontSize: 12 }}>(Bậc {c.stepIndex})</span> : ''}
+                  </span>
+                  <span style={{ color: '#16A34A', fontWeight: 800, fontSize: 12.5 }}>✓ Chính xác</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       {(problem.type || problem.summary) && (
         <div className="card plum">
