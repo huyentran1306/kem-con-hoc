@@ -168,11 +168,36 @@ export function getTrialInitialState() {
           { id: 'stk_2', name: 'Bạn Ong siêng năng', emoji: '🐝', earnedAt: now - 86400000 * 2 },
           { id: 'stk_3', name: 'Bông sen kiên nhẫn', emoji: '🪷', earnedAt: now - 86400000 * 1 },
         ],
-        stickerHistory: [
-          { id: 'stk_1', name: 'Ngôi sao chăm chỉ', earnedAt: now - 86400000 * 3 },
-          { id: 'stk_2', name: 'Bạn Ong siêng năng', earnedAt: now - 86400000 * 2 },
-          { id: 'stk_3', name: 'Bông sen kiên nhẫn', earnedAt: now - 86400000 * 1 },
-        ],
+        stickerHistory: (() => {
+          const list = [];
+          const traits = ['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'];
+          const names = {
+            'Kiên nhẫn': 'Rùa con kiên trì',
+            'Sáng tạo': 'Ngôi sao Sáng tạo',
+            'Tập trung': 'Tia chớp Tập trung',
+            'Tỉ mỉ': 'Kính lúp Tỉ mỉ'
+          };
+          // Tạo dữ liệu trải đều 8 tuần qua
+          for (let w = 7; w >= 0; w--) {
+            const count = 3 + (w % 3);
+            for (let j = 0; j < count; j++) {
+              const tr = traits[(w + j) % 4];
+              const t = now - (w * 7 + (j * 2) % 6) * 86400000;
+              list.push({
+                id: `stk_demo_${w}_${j}`,
+                stickerId: `s${(j % 4) + 1}`,
+                name: names[tr],
+                trait: tr,
+                subject: j % 2 === 0 ? 'Toán' : 'Tiếng Việt',
+                problemType: 'Bài tập rèn luyện',
+                timestamp: t,
+                earnedAt: t,
+                dateStr: new Date(t).toLocaleDateString('vi-VN'),
+              });
+            }
+          }
+          return list;
+        })(),
         weak: [{ n: 'Toán lời văn 2 bước', count: 2 }],
         strong: [{ n: 'Bảng cửu chương 3 & 4', v: 3, t: 3 }],
         history: [

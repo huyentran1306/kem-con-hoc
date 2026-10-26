@@ -588,6 +588,13 @@ export default function App() {
   /* ---------- actions ---------- */
   const patch = (obj) => setS((prev) => (typeof obj === 'function' ? obj(prev) : { ...prev, ...obj }))
   const go = (id) => {
+    if (id !== 'onb' && !TAB_CAP[id]) {
+      const msg = `Lỗi điều hướng: Màn hình "${id}" không tồn tại trong TAB_CAP!`
+      console.error(msg, { validScreens: Object.keys(TAB_CAP) })
+      if (typeof window !== 'undefined' && (import.meta.env.DEV || window.location.hostname.includes('localhost') || window.location.hostname.includes('pages.dev'))) {
+        try { toast(`⚠️ ${msg}`) } catch (_) {}
+      }
+    }
     setScreen(id)
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
   }
@@ -962,7 +969,7 @@ export default function App() {
 }
 
 const TAB_CAP = {
-  home: 'Home', snap: 'SnapHomework', analyze: 'Analyze', explain: 'Explain',
+  home: 'Home', snap: 'SnapHomework', analyze: 'Analyze', explain: 'Explain', prep: 'Explain',
   scaffold: 'Scaffold', done: 'Done', ask: 'AskAI', chat: 'AskAI', toy: 'SnapToy',
   game: 'Game', report: 'Report', profile: 'Profile',
   check: 'CheckWork', check_work: 'CheckWork',

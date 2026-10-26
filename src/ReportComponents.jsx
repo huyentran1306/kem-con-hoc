@@ -30,7 +30,7 @@ export function TraitStackedChart({
   ], []);
 
   // Nhóm badges theo tuần / tháng
-  const weeksData = useMemo(() => {
+  const computedWeeksData = useMemo(() => {
     const validBadges = (badges || []).filter((b) => !b.sample);
     const now = Date.now();
     const numBuckets = filter === "8w" ? 8 : filter === "3m" ? 12 : 12;
@@ -63,7 +63,10 @@ export function TraitStackedChart({
       }
 
       const inBucket = validBadges.filter(
-        (b) => (b.timestamp || 0) >= startTs && (b.timestamp || 0) < endTs
+        (b) => {
+          const ts = b.timestamp || b.earnedAt || 0;
+          return ts >= startTs && ts < endTs;
+        }
       );
 
       const traitCounts = {
@@ -100,14 +103,20 @@ export function TraitStackedChart({
       });
     }
 
-    if (validBadges.length === 0 && isTrialActive() && filter === "8w") {
+    const sumBuckets = buckets.reduce((acc, b) => acc + (b.total || 0), 0);
+    if ((validBadges.length === 0 || sumBuckets === 0) && isTrialActive()) {
       return trialWeeksSample;
     }
     return buckets;
   }, [badges, rewards, filter, trialWeeksSample]);
 
   // Kiểm tra trạng thái trống (dưới 1 tuần dữ liệu)
-  const totalBadgesAll = weeksData.reduce((acc, w) => acc + w.total, 0);
+  let activeWeeksData = computedWeeksData;
+  let totalBadgesAll = activeWeeksData.reduce((acc, w) => acc + w.total, 0);
+  if (totalBadgesAll === 0 && isTrialActive()) {
+    activeWeeksData = trialWeeksSample;
+    totalBadgesAll = activeWeeksData.reduce((acc, w) => acc + w.total, 0);
+  }
   if (totalBadgesAll === 0) {
     return (
       <div
@@ -128,8 +137,8 @@ export function TraitStackedChart({
   }
 
   // Tính số tuần này vs tuần trước để làm chú thích
-  const thisWeek = weeksData[weeksData.length - 1]?.traitCounts || {};
-  const lastWeek = weeksData[weeksData.length - 2]?.traitCounts || {};
+  const thisWeek = activeWeeksData[activeWeeksData.length - 1]?.traitCounts || {};
+  const lastWeek = activeWeeksData[activeWeeksData.length - 2]?.traitCounts || {};
 
   const getDiffSymbol = (t) => {
     const diff = (thisWeek[t] || 0) - (lastWeek[t] || 0);
@@ -142,8 +151,8 @@ export function TraitStackedChart({
   const svgWidth = 340;
   const svgHeight = 160;
   const chartHeight = 110;
-  const colWidth = Math.floor((svgWidth - 40) / weeksData.length);
-  const maxTotal = Math.max(...weeksData.map((w) => w.total), 8);
+  const colWidth = Math.floor((svgWidth - 40) / activeWeeksData.length);
+  const maxTotal = Math.max(...activeWeeksData.map((w) => w.total), 8);
 
   return (
     <div className="card" data-testid="trait-stacked-chart">
@@ -211,7 +220,7 @@ export function TraitStackedChart({
             strokeDasharray="3 3"
           />
 
-          {weeksData.map((wk, cIdx) => {
+          {activeWeeksData.map((wk, cIdx) => {
             const x = 25 + cIdx * colWidth;
             const w = Math.max(14, colWidth - 8);
 
@@ -417,7 +426,7 @@ export function TraitStackedChart({
               <thead>
                 <tr style={{ background: "#F8FAFC" }}>
                   <th>Phẩm chất</th>
-                  {weeksData.map((w) => (
+                  {activeWeeksData.map((w) => (
                     <th key={w.label} style={{ textAlign: "center" }}>
                       {w.label}
                     </th>
@@ -430,7 +439,7 @@ export function TraitStackedChart({
                     <td style={{ fontWeight: 700, color: TRAIT_COLORS[tr] }}>
                       {TRAIT_ICONS[tr]} {tr}
                     </td>
-                    {weeksData.map((w) => (
+                    {activeWeeksData.map((w) => (
                       <td key={w.label} style={{ textAlign: "center" }}>
                         {w.traitCounts[tr] || 0}
                       </td>

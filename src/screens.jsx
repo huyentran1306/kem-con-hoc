@@ -1,3 +1,4 @@
+import { formatTeacherName } from './teacher/format.js'
 import { TopBarT3, TopBarT4, Progress4, HoldBtn, BtnKm, CardKm } from './ui/KhuonMoi'
 import { computeCoachAdvice, isCoachAdviceEnabled } from "./coachRules.js"
 import { Fragment, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react'
@@ -13,7 +14,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, startSession, updateSession, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -208,16 +209,31 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
       ]
     }
 
+    const sessId = 'ses_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
     patch({
       problem: problemObj,
       studySource: 'teacher',
       assignmentId: assignment.assignment_id,
       assignmentItemId: item.id,
-      flow: { step: 0, stuck: 0, peeks: 0 }
+      currentSessionId: sessId,
+      flow: { step: 0, stuck: 0, peeks: 0, sessionId: sessId }
     })
 
+    startSession({
+      id: sessId,
+      childId: child?.id,
+      startedAt: new Date().toISOString(),
+      source: 'teacher',
+      assignmentId: assignment.assignment_id,
+      assignmentItemId: item.id,
+      subject: assignment.subject,
+      grade: child?.grade || 'Lớp 3',
+      problemText: item.problem_text,
+      stepsTotal: (problemObj.steps || []).length
+    }).catch(() => {})
+
     setShowItemsModal(false)
-    go('prep')
+    go('explain')
   }
 
   const dueDayName = assignment.due_at ? new Date(assignment.due_at).toLocaleDateString('vi-VN', { weekday: 'long' }) : 'sớm'
@@ -245,7 +261,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
           </span>
         </div>
         <b style={{ color: '#064E3B', fontSize: 15.5, display: 'block', margin: '3px 0' }}>
-          📚 Cô {assignment.teacher_name} giao {assignment.item_count} bài ({assignment.title})
+          📚 {formatTeacherName(assignment.teacher_name)} giao {assignment.item_count} bài ({assignment.title})
         </b>
         <p style={{ color: '#047857', fontSize: 12.5, margin: '2px 0 10px 0', lineHeight: 1.4 }}>
           Đã kèm con xong: {assignment.completed_count || 0}/{assignment.item_count} câu · Bấm để kèm đúng cách cô dạy
@@ -266,7 +282,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
               <div>
                 <p className="title" style={{ fontSize: 18, margin: 0 }}>📚 {assignment.title}</p>
-                <p className="sub" style={{ margin: '2px 0 0 0' }}>Cô {assignment.teacher_name} · Môn {assignment.subject}</p>
+                <p className="sub" style={{ margin: '2px 0 0 0' }}>{formatTeacherName(assignment.teacher_name)} · Môn {assignment.subject}</p>
               </div>
               <button className="round-btn" onClick={() => setShowItemsModal(false)}>✕</button>
             </div>
@@ -1467,6 +1483,38 @@ export function Explain() {
         onBack={() => go('home')}
         onOpenCalm={() => openSheet('calm')}
       />
+
+      {/* Thẻ Theo cách cô dạy */}
+      {(problem.isTeacherAssigned || problem.teacherMethodNote || S.studySource === 'teacher') && (
+        <div
+          className="card-km"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '10px 14px',
+            background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+            border: '1.5px solid #10B981',
+            borderRadius: 14,
+          }}
+          data-testid="badge-teacher-method"
+        >
+          <span style={{ fontSize: 18, flexShrink: 0 }}>👩‍🏫</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <span style={{ fontSize: 11, fontWeight: 900, backgroundColor: '#047857', color: '#fff', padding: '1px 7px', borderRadius: 6, textTransform: 'uppercase' }}>
+                Theo cách cô dạy
+              </span>
+              <b style={{ fontSize: 12.5, color: '#065F46' }}>
+                {formatTeacherName(problem.teacherName || 'cô')}
+              </b>
+            </div>
+            <p style={{ fontSize: 13, color: '#064E3B', margin: '2px 0 0', lineHeight: 1.4, fontWeight: 600 }}>
+              {problem.teacherMethodNote || 'Hỏi con đọc kỹ đề bài và làm từng bước theo phương pháp của cô.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Dải đề rút gọn 1 dòng */}
       <div
@@ -3144,6 +3192,18 @@ export function Done() {
         },
       }
     })
+
+    if (S.assignmentItemId || problem?.isTeacherAssigned) {
+      const sessId = S.currentSessionId || S.flow?.sessionId || S.flow?.id
+      if (sessId) {
+        updateSession(sessId, {
+          completed: 1,
+          endedAt: new Date().toISOString(),
+          stuckCount: S.flow?.stuck || 0,
+          teachBackRating: S.flow?.teachBack || 'self'
+        }).catch(() => {})
+      }
+    }
 
     if (isSample) {
       toast(`Đã lưu bài mẫu vào sổ của ${child.name} (bài mẫu không tính vào lọ kẹo) 📖`)

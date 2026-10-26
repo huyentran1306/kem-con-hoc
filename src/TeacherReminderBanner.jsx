@@ -252,7 +252,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                   type="button"
                   className="btn ghost btn-sm"
                   onClick={() => {
-                    if (go) go('prep')
+                    if (go) go('explain')
                   }}
                 >
                   📖 Mở bài cô giao ➔
