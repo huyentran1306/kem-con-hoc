@@ -5,6 +5,7 @@ import {
   ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CHAT_REPLIES, CALM_LINES,
   AVAILABLE_STICKERS, WAITING_QUIZZES, SCHEDULE_DEFAULT,
 } from './data'
+import { TraitStackedChart, SubjectAndSkillHeatmap, TraitAiAnalysisCard } from './ReportComponents'
 import { computeSuggestedBadge, TRAIT_COLORS, TRAIT_ICONS, TRAIT_BADGE_INFO } from './badgeRules'
 import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper, Switch, useWide } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
@@ -6332,17 +6333,31 @@ export function Report() {
         {weakSection}
         {strongSection}
 
-        {/* 4. Phẩm chất, rồi khối Phân tích */}
-        {thisWeekStickers.length === 0 ? (
-          <div className="pg-span">{emptyWeekCard}</div>
-        ) : (
-          <>
-            {traitsCard}
-            {progressCard}
-            {/* 5. Lịch học */}
-            {calendarCard}
-          </>
-        )}
+        {/* 4. ĐỢT 19 CHẶNG 3: BIỂU ĐỒ CỘT CHỒNG PHẨM CHẤT & AI PHÂN TÍCH */}
+        <div className="pg-span">
+          <TraitStackedChart
+            badges={stats.stickerHistory || []}
+            rewards={stats.rewardHistory || []}
+            childName={child.name}
+          />
+        </div>
+
+        <div className="pg-span">
+          <TraitAiAnalysisCard
+            child={child}
+            stats={stats}
+          />
+        </div>
+
+        <div className="pg-span">
+          <SubjectAndSkillHeatmap
+            stats={stats}
+            childName={child.name}
+          />
+        </div>
+
+        {/* 5. Lịch học */}
+        {calendarCard}
 
         {/* 6. Riêng cho người lớn */}
         {adultsCard}

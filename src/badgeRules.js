@@ -240,3 +240,24 @@ export function computeSuggestedBadge({
     matchedTraits: matched.map((m) => m.trait),
   };
 }
+
+
+export const HEATMAP_COLORS = [
+  "#f3f7fd",
+  "#cde2fb",
+  "#9ec5f4",
+  "#6da7ec",
+  "#3987e5",
+  "#256abf",
+  "#184f95",
+];
+
+export function getHeatmapColor(pct) {
+  if (pct === 0) return HEATMAP_COLORS[0];
+  if (pct <= 15) return HEATMAP_COLORS[1];
+  if (pct <= 30) return HEATMAP_COLORS[2];
+  if (pct <= 45) return HEATMAP_COLORS[3];
+  if (pct <= 60) return HEATMAP_COLORS[4];
+  if (pct <= 75) return HEATMAP_COLORS[5];
+  return HEATMAP_COLORS[6];
+}

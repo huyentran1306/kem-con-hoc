@@ -1983,3 +1983,85 @@ export async function migrateLegacyBadges(payload = {}) {
     return { error: err.message };
   }
 }
+
+
+export async function fetchAiTraitAnalysis({
+  childId = "",
+  childName = "Bé",
+  facts = {},
+  options = {},
+} = {}) {
+  if (isTrialActive()) {
+    const s1 = typeof options.week1_sessions === "number" ? options.week1_sessions : 4;
+    const s2 = typeof options.week2_sessions === "number" ? options.week2_sessions : 5;
+    if (s1 < 3 || s2 < 3) {
+      const missing = Math.max(0, 3 - s1) + Math.max(0, 3 - s2);
+      return {
+        ok: false,
+        error: {
+          code: "NOT_ENOUGH_DATA",
+          message: `Cần ít nhất 2 tuần, mỗi tuần từ 3 buổi học để AI phân tích nguyên nhân. Hiện có: Tuần trước: ${s1}/3 buổi, Tuần này: ${s2}/3 buổi. Còn thiếu ${missing} buổi.`
+        },
+        week1_count: s1,
+        week2_count: s2,
+        required_per_week: 3,
+        missing_count: missing,
+      };
+    }
+    return {
+      ok: true,
+      analysis: {
+        tom_tat: "Sáng tạo giảm từ 5 xuống 1, Kiên nhẫn tăng từ 3 lên 4.",
+        nhan_dinh: [
+          {
+            y: "Bài lặp lại nhiều làm con ít cơ hội sáng tạo cách mới.",
+            can_cu: ["7/9 bài tuần này là bảng nhân 4 (tuần trước 2/8). Bài lặp lại ít chỗ cho cách làm mới."]
+          },
+          {
+            y: "Thiếu các hoạt động giải tỏa tương tác giữa mẹ và con.",
+            can_cu: ["0 lần \"Con đố mẹ\" hay trò chơi 5 phút (tuần trước 3 lần)."]
+          },
+          {
+            y: "Buổi học kéo dài làm con nhanh mệt và giảm tập trung.",
+            can_cu: ["Buổi học dài trung bình 24 phút (tuần trước 15 phút)."]
+          }
+        ],
+        lo_trinh_7_ngay: [
+          "2 tối đầu: đổi sang toán lời văn có tình huống trong nhà.",
+          `Tối thứ 3: để ${childName} tự đặt một đề đố mẹ.`,
+          "Giữ mỗi buổi khoảng 15 phút, xong là chơi 5 phút."
+        ],
+        luu_y: "Đây là gợi ý, mẹ quyết định."
+      },
+      facts: {
+        total_sessions: 17,
+        from_date: "13/10",
+        to_date: "26/10",
+        traits_w1: { "Kiên nhẫn": 3, "Sáng tạo": 5, "Tập trung": 2, "Tỉ mỉ": 1 },
+        traits_w2: { "Kiên nhẫn": 4, "Sáng tạo": 1, "Tập trung": 3, "Tỉ mỉ": 2 },
+      },
+      sessions_read: 17,
+      from_date: "13/10",
+      to_date: "26/10",
+      latency_ms: 100
+    };
+  }
+
+  try {
+    const res = await post(
+      "/api/v1/ai/trait-analysis",
+      {
+        child_id: childId,
+        child_name: childName,
+        ...facts,
+        ...options,
+      },
+      25000,
+      AI_GATEWAY
+    );
+    return res;
+  } catch (err) {
+    console.warn("fetchAiTraitAnalysis error:", err);
+    return { ok: false, error: { code: "NETWORK_ERROR", message: err.message } };
+  }
+}
