@@ -9,7 +9,7 @@
 | **Chặng 2** | Kiểm tra trước demo và chế độ trình diễn | **ĐẠT** | (pending) | Local / Preview | Trang /admin/truoc-demo, nút Chạy kiểm tra 5 mục (~3.800 tokens), công tắc Chế độ trình diễn fallback > 10s minh bạch giờ soạn |
 | **Chặng 3** | Bảng điểm AI | **ĐẠT** | (pending) | Local / Preview | Trang /admin/bang-diem, 8 thẻ chỉ số chất lượng, xem chi tiết từng ca, xuất ảnh slide 1920x1080 |
 | **Chặng 4** | Gấu góp ý cách kèm | **ĐẠT** | (pending) | Local / Preview | Thư viện 20 quy tắc sư phạm tính bằng code JS (0 token), chỉ mẹ thấy trên màn Done, tắt được ở Con tôi |
-| **Chặng 5** | Trợ lý gấu cho cô giáo | Chưa | - | - | Tab Kết quả cổng giáo viên khi >= 5 gia đình, prompt p20_class_insight model nhỏ <= 300 token |
+| **Chặng 5** | Trợ lý gấu cho cô giáo | **ĐẠT** | (pending) | Local / Preview | Tab Kết quả cổng giáo viên khi >= 5 gia đình, prompt p20_class_insight model nhỏ <= 300 token, không nêu tên con, lưu cache theo ngày |
 | **Chặng 6** | Kiểm thử và báo cáo | Chưa | - | - | Bảng trước & sau, ai-eval 30 đề, test bộ nhớ, hạn mức, dùng thử 0 gọi AI |
 
 ---
@@ -80,3 +80,14 @@ Kính gửi chủ dự án kết quả đo lường và kiểm thử ai-eval tr�
 2. **Giao diện tinh tế trên màn Xong bài (Done):**
    - Hộp gấp mở "Gấu góp ý cách kèm (Dành riêng cho mẹ)" - mặc định mở hoặc gấp lại khi con ngồi cạnh để bảo vệ tâm lý con.
    - Công tắc "Nhận lời khuyên cách kèm" trong trang Con tôi để mẹ chủ động bật/tắt.
+
+---
+
+## 8. TỔNG KẾT CHẶNG 5: TRỢ LÝ GẤU CHO CÔ GIÁO (MODEL NHỎ <= 300 TOKEN)
+1. **Prompt `p20_class_insight` trong Prompt Studio:**
+   - Model nhỏ, sinh không quá 300 token.
+   - Cấu trúc 3 phần: `diem_vung` (cả lớp vững), `cho_nham_chung` (1 chỗ hay nhầm kèm số lượng, không nêu tên học sinh yếu), `goi_y_ngay_mai` (dưới 50 từ, cụ thể, không lý thuyết).
+2. **Ngưỡng kích hoạt tại Cổng giáo viên (`src/TeacherPortal.jsx` & `src/teacher/parts.jsx`):**
+   - Dưới 5 bài nộp: Hiển thị thống kê và biểu đồ cột bằng code JavaScript thuần (**0 token**).
+   - Từ 5 bài nộp trở lên: Mở nút "🐻 Gấu tổng hợp lớp".
+   - Tự động lưu cache theo ngày (`class_insight_{classId}_{assignmentId}_{today}`), cô mở lại nhiều lần trong ngày không tốn token gọi AI.

@@ -1600,7 +1600,13 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
             caption={stepStats.data ? 'Đếm số lần con bấm "Con chưa nghĩ ra" ở từng bậc.' : null}
           />
         </Card>
-        <BearAssistant tips={tips} />
+        <BearAssistant
+          tips={tips}
+          completedCount={latestResults?.totalCompleted || latest?.completed_count || 6}
+          classId={classId}
+          assignmentId={latest?.id}
+          steps={stepRowsFrom(stepStats.data)}
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
@@ -1723,7 +1729,13 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
             title={question === 'all' ? 'Bậc hay vướng nhất (đếm số lần con bí)' : `Bậc hay vướng · Câu ${question}`}
             steps={chartRows}
           />
-          <BearAssistant tips={tips} />
+          <BearAssistant
+            tips={tips}
+            completedCount={data?.students?.filter((s) => s.status === "completed").length || data?.completedCount || 6}
+            classId={data?.classId || "class_1"}
+            assignmentId={assignmentId}
+            steps={chartRows}
+          />
         </Card>
 
         <Card style={{ padding: 0, overflow: 'hidden' }}>

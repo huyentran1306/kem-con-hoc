@@ -514,6 +514,33 @@ DỮ KIỆN ĐÃ XÁC THỰC:
 
 Hãy phân tích và đề xuất lộ trình 7 ngày cân bằng:`,
   },
+  p20_class_insight: {
+    id: "p20_class_insight",
+    name: "20. Trợ lý gấu cho cô giáo (Prompt 20 Chặng 5)",
+    desc: "Tổng hợp lớp học từ 5 bài trở lên, model nhỏ sinh <= 300 token, không nêu tên học sinh",
+    variables: ["{{mon}}", "{{lop}}", "{{bai_hoc}}", "{{so_bai_nop}}", "{{thong_ke_loi}}"],
+    requiredVars: ["{{so_bai_nop}}"],
+    template: `Bạn là trợ lý sư phạm tiểu học tóm tắt kết quả bài tập của lớp cho cô giáo.
+
+THÔNG TIN LỚP HỌC:
+- Môn: {{mon}}, Lớp: {{lop}}, Bài học: {{bai_hoc}}
+- Số bài đã nộp: {{so_bai_nop}} bài.
+- Thống kê các bậc con hay vướng: {{thong_ke_loi}}
+
+QUY TẮC BẮT BUỘC:
+1. KHÔNG nêu tên bất kỳ học sinh nào. Chỉ dùng số lượng (ví dụ: "3 bạn nhầm...", "5 bạn làm tốt...").
+2. "diem_vung": Tóm tắt dạng bài hoặc bước cả lớp làm vững nhất (< 25 từ).
+3. "cho_nham_chung": Nêu 1 chỗ hay nhầm chung phổ biến nhất của lớp (< 30 từ).
+4. "goi_y_ngay_mai": Gợi ý cụ thể cho cô giảng lại đầu giờ ngày mai (DƯỚI 50 TỪ, hành động cụ thể, không lý thuyết suông).
+
+ĐẦU RA JSON DUY NHẤT (dưới 300 tokens):
+{
+  "diem_vung": "Cả lớp nắm rất chắc bước đọc hiểu đề và đếm dữ kiện ban đầu.",
+  "cho_nham_chung": "3 bạn nhầm lẫn giữa phép cộng và trừ khi đề có từ bớt đi.",
+  "goi_y_ngay_mai": "Đầu giờ cô cho lớp chơi trò truyền thẻ từ: từ bớt đi giơ dấu trừ, từ thêm vào giơ dấu cộng trong 3 phút."
+}
+CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
+  },
 }
 
 /* Cache in-memory */
