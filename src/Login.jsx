@@ -47,9 +47,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
   }
 
   return (
-    <div className="stage">
-      <div className="app login-app">
-        <div className="scroll" style={{ justifyContent: 'center', paddingBottom: 40 }}>
+    <div className="scroll" style={{ justifyContent: 'center', paddingBottom: 40 }}>
           {classJoinBanner && (
             <div
               style={{
@@ -216,7 +214,5 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
             </div>
           </div>
         </div>
-      </div>
-    </div>
   )
 }

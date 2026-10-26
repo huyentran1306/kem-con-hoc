@@ -809,7 +809,7 @@ export default function App() {
     return (
       <AppCtx.Provider value={ctx}>
         <div className="stage">
-          <div className="app">
+          <div className="app login-app">
             <ThemeDecor themeId={S.theme || 'bear'} motion={S.motion || 'full'} />
             <Suspense fallback={<div style={{ padding: 24, textAlign: 'center' }}>Đang nạp đăng nhập...</div>}>
               <LoginScreen
