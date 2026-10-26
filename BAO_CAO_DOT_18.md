@@ -162,3 +162,56 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `scripts/test-dot18-chang-2.mjs`: **36/36 kiểm thử đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch, không lỗi**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+
+---
+
+## CHI TIẾT CHẶNG 3: PHÂN TÍCH TIẾN BỘ TRUNG THỰC (PROMPT 17 CHẶNG 4)
+
+### 1. Việc đã làm
+- **1.1 Backend Worker API (`POST /api/v1/ai/progress`):**
+  - Đọc `learning_sessions` và `learning_events` trong 28 ngày qua từ D1.
+  - Xử lý ngưỡng dưới 3 buổi học: trả mã `NOT_ENOUGH_DATA` kèm `sessions_count` và `required: 3`, tuyệt đối không gọi AI để tránh lãng phí token và bịa đặt.
+  - Caching thông minh trong bảng `progress_reports`: khi số lượng buổi học chưa tăng thêm, trả lại ngay bản phân tích đã lưu gần nhất (`cached: true`), không gọi AI.
+  - Gọi prompt sư phạm `p17_progress` với model `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, max 600 tokens, timeout 25s.
+  - **Worker kiểm định dữ kiện (Fact Verification):** Quét toàn bộ con số trong phản hồi AI, đối chiếu với tập số thực tế (số buổi, số bài tự làm, số sự kiện, 28 ngày, ngày bắt đầu và kết thúc). Nếu phát hiện số bịa ngoài dữ kiện, tự động chuẩn hoá lại lời văn tóm tắt theo đúng dữ kiện thật.
+- **1.2 Thẻ An toàn AI (`WeeklyAiCards` & `dot18_safety`):**
+  - Cập nhật `study-en/ai-gateway-worker/src/safety.js` để tổng hợp 4 chỉ số an toàn thực tế:
+    1. Phép tính sai đã bắt (`phep_tinh_sai_da_bat` từ `guard_log` với `outcome = 'sua_phep_tinh'`)
+    2. Bậc bộ chặn sửa lại (`bac_bo_chan_sua_lai` từ `guard_log` với `outcome IN ('sua_bac', 'regenerated')`)
+    3. Câu nhỏ hơn đã tạo (`cau_nho_hon_da_tao` từ `learning_events.micro_steps`)
+    4. Số lần Gấu nghe con (`so_lan_gau_nghe_con` từ `learning_events.voice_verdict`)
+  - Giao diện thẻ An toàn AI: hiển thị lưới 2 cột số liệu thật và dòng cam kết: `MẸ THẤY GÌ: Không câu nào lộ đáp án tới con. Mọi phép tính trong bài đã được Gấu tính lại.`
+- **1.3 Giao diện Report màn Báo cáo (`src/screens.jsx` & `src/styles.css`):**
+  - Thay thế khối phân tích tĩnh cũ bằng thẻ **CON TIẾN BỘ THẾ NÀO** theo đúng bản vẽ thiết kế (`tham-khao/ai-nho-con.html`):
+    - Đủ 4 trạng thái linh hoạt:
+      1. Cần ít nhất 3 buổi học (`st-card` icon `🌱`)
+      2. Đang phân tích (`st-card` spinner quay)
+      3. Lỗi / Chưa phân tích được (`st-card warn` icon `⏳` kèm nút bấm `Thử lại`)
+      4. Đã có phân tích (`card ana`):
+         - Dòng nguồn: `🐻 Gấu đã đọc N buổi học, từ {tu_ngay} đến {den_ngay}`
+         - Đoạn văn nhận xét tiến bộ trung thực
+         - Lưới 3 dữ kiện: Hay kẹt, Đã vững, Tự làm
+         - Đúng 3 gợi ý tuần tới cho mẹ
+         - Nút "Xem dữ liệu Gấu đã đọc ›" mở hộp thoại chi tiết dữ liệu thực tế
+         - Thời gian phân tích
+- **1.4 Sửa lỗi chia cho 0 trong máy kiểm phép tính (`src/arithmetic.js`):**
+  - Bổ sung cơ chế phát hiện chia cho 0 (`/[\:\/\÷]\s*0(?![0-9])/`) và trả về `error: "division_by_zero"`, giải quyết 100% 31/31 unit test toán học.
+
+### 2. Files đã chỉnh sửa
+- `../study-en/ai-gateway-worker/src/v1_routes.js`
+- `../study-en/ai-gateway-worker/src/index.js`
+- `../study-en/ai-gateway-worker/src/safety.js`
+- `../study-en/ai-gateway-worker/src/arithmetic.js`
+- `src/arithmetic.js`
+- `src/api.js`
+- `src/screens.jsx`
+- `src/styles.css`
+- `package.json`
+- `scripts/test-dot18-chang-3.mjs` (Tạo mới 14 tests)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-3.mjs`: **14/14 kiểm thử đạt (100%)**
+- `scripts/test-dot14-chang-2.mjs`: **31/31 kiểm thử đạt (100%)**
+- `npm test`: **30/30 test suites đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch, không lỗi (306ms)**
+- `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**

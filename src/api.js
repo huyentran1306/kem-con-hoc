@@ -1523,6 +1523,12 @@ export async function getSafetySummary(range = '7d') {
       feedback: { total: 0, open: 0, byReason: {} },
       work_checks: { total: 0, self_fixed: 0 },
       teach_backs: { total: 0, self_level: 0 },
+      dot18_safety: {
+        phep_tinh_sai_da_bat: 0,
+        bac_bo_chan_sua_lai: 0,
+        cau_nho_hon_da_tao: 0,
+        so_lan_gau_nghe_con: 0,
+      },
       four_layer_safety: [
         { layer: 1, name: 'Prompt Sư phạm Socratic', status: 'active', desc: 'Không giải bài hộ, chia 3 bậc gợi ý' },
         { layer: 2, name: 'Bộ chặn rò rỉ đáp án (Guard Module)', status: 'active', desc: 'Kiểm tra số chữ/số nguyên, thay thế tự động nếu lộ' },
@@ -1629,5 +1635,59 @@ export async function clearLearnerHistory(childId) {
   } catch (err) {
     console.warn('clearLearnerHistory error:', err)
     return { error: err.message }
+  }
+}
+
+export async function fetchAiProgressReport(childId, childName = 'Bé', options = {}) {
+  if (isTrialActive()) {
+    const sCount = typeof options.sessionsCount === 'number' ? options.sessionsCount : 3;
+    if (sCount < 3) {
+      return {
+        ok: false,
+        error: {
+          code: 'NOT_ENOUGH_DATA',
+          message: `Cần ít nhất 3 buổi học để phân tích tiến bộ. ${childName} mới học ${sCount} buổi.`
+        },
+        sessions_count: sCount,
+        required: 3,
+        child_name: childName
+      };
+    }
+    return {
+      ok: true,
+      report: {
+        tom_tat: `${childName} đang tiến bộ đều đặn. Con làm chắc các phép tính cơ bản, cần rèn thêm cách tóm tắt đề bài toán 2 bước.`,
+        hay_ket: ['Đọc hiểu đề'],
+        da_vung: ['Tính toán cơ bản'],
+        tu_lam_count: sCount,
+        goi_y_cho_me: [
+          'Cho con kể lại đề bằng lời của con',
+          'Đố ngược: mẹ đọc đáp số, con đoán đề',
+          'Duy trì 15 phút mỗi tối'
+        ],
+        nguon_du_lieu: {
+          so_buoi: sCount,
+          tu_ngay: '20/10',
+          den_ngay: '26/10'
+        }
+      },
+      fact_basis: {
+        so_buoi: sCount,
+        tu_ngay: '20/10',
+        den_ngay: '26/10',
+        hay_ket: ['Đọc hiểu đề'],
+        da_vung: ['Tính toán cơ bản'],
+        tu_lam_count: sCount
+      },
+      cached: false
+    };
+  }
+
+  try {
+    const res = await post('/api/v1/ai/progress', { child_id: childId, child_name: childName }, 30000, AI_GATEWAY);
+    return res;
+  } catch (err) {
+    console.warn('fetchAiProgressReport error:', err);
+    return { ok: false, error: { code: 'NETWORK_ERROR', message: 'Không thể kết nối máy chủ phân tích' } };
   }
 }

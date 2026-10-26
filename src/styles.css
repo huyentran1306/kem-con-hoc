@@ -1167,3 +1167,102 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
 [data-theme="dark"] .st.hot {
   background: #261B0E !important;
 }
+
+/* Đợt 18 · Chặng 3: Phân tích tiến bộ trung thực & Thẻ An toàn AI */
+.card.ana {
+  display: grid;
+  gap: 10px;
+}
+.src-badge {
+  font-size: 13px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: var(--c-text-2);
+  display: inline-block;
+  margin: 0;
+}
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.facts-grid.two-cols {
+  grid-template-columns: 1fr 1fr;
+}
+.facts-grid > div {
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.facts-grid span {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--c-text-2);
+  text-transform: uppercase;
+}
+.facts-grid b {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--c-text);
+  line-height: 1.25;
+}
+.facts-grid em {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--c-text-2);
+}
+.st-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--c-line);
+  background: var(--c-surface);
+}
+.st-card.warn {
+  border-color: #F0C36A;
+  background: rgba(240, 195, 106, 0.08);
+}
+.st-card .e2 {
+  font-size: 24px;
+  line-height: 1;
+}
+.mini-btn {
+  display: inline-block;
+  margin-top: 8px;
+  background: var(--c-text);
+  color: var(--c-surface);
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lnk-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.ana-f {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--c-line);
+}

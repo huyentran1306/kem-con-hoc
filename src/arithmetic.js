@@ -160,6 +160,18 @@ export function parseEquationAt(text, eqIdx) {
         isCorrect,
         rawMatch: text.slice(eqIdx - arithM[0].length, eqIdx + 1 + rMatch[0].length).trim(),
       };
+    } else if (/[\:\/\÷]\s*0(?![0-9])/.test(exprLeft)) {
+      const cleanExprLeft = exprLeft.replace(/[\u2212\u2013]/g, "-");
+      return {
+        type: "arithmetic",
+        expr: `${cleanExprLeft} = ${stated}`,
+        correctExpr: `${cleanExprLeft} = không chia được cho 0`,
+        computed: null,
+        stated,
+        isCorrect: false,
+        error: "division_by_zero",
+        rawMatch: text.slice(eqIdx - arithM[0].length, eqIdx + 1 + rMatch[0].length).trim(),
+      };
     }
   }
 
@@ -207,6 +219,7 @@ export function checkArithmetic(line) {
       stated: wrong.stated,
       expression: wrong.expr,
       correction: wrong.correctExpr,
+      error: wrong.error || undefined,
       allEquations: eqs,
     };
   }

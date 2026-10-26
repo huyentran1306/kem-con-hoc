@@ -9,7 +9,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -5224,13 +5224,38 @@ function WeeklyAiCards({ stats, childName }) {
           <div style={cap}>lỗi tự sửa được{topErr ? ` · hay gặp: ${LOI_LABEL[topErr] || topErr}` : ''}</div>
         </div>
       </div>
-      <div style={{ ...tile, marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }} data-testid="weekly-safety">
-        <span style={{ fontSize: 22 }}>🛡️</span>
-        <div style={{ fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.45 }}>
-          <b>An toàn AI 7 ngày:</b>{' '}
-          {safety
-            ? `AI tự chặn ${blocked} lần định lộ đáp án · ${leaked === 0 ? 'không lần nào lọt tới con' : `${leaked} lần lọt, đội ngũ đang xem`}${reported ? ` · ${reported} câu bố mẹ báo` : ''}.`
-            : 'chưa tải được số liệu.'}
+      <div style={{ ...tile, marginTop: 8 }} data-testid="weekly-safety">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 20 }}>🛡️</span>
+            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>An toàn AI 7 ngày</b>
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Số thật từ hệ thống</span>
+        </div>
+        <div className="facts-grid two-cols">
+          <div>
+            <span>Phép tính sai đã bắt</span>
+            <b>{safety?.dot18_safety?.phep_tinh_sai_da_bat ?? 0}</b>
+            <em>trước khi tới mẹ</em>
+          </div>
+          <div>
+            <span>Bậc bộ chặn sửa lại</span>
+            <b>{safety?.dot18_safety?.bac_bo_chan_sua_lai ?? blocked}</b>
+            <em>sửa đúng bậc học</em>
+          </div>
+          <div>
+            <span>Câu nhỏ hơn đã tạo</span>
+            <b>{safety?.dot18_safety?.cau_nho_hon_da_tao ?? 0}</b>
+            <em>chia nhỏ khi con kẹt</em>
+          </div>
+          <div>
+            <span>Lần Gấu nghe con</span>
+            <b>{safety?.dot18_safety?.so_lan_gau_nghe_con ?? 0}</b>
+            <em>lắng nghe con trả lời</em>
+          </div>
+        </div>
+        <div style={{ background: 'var(--c-surface)', borderRadius: 10, padding: '8px 10px', marginTop: 8, fontSize: 13, color: 'var(--c-text)' }}>
+          <b>MẸ THẤY GÌ:</b> Không câu nào lộ đáp án tới con. Mọi phép tính trong bài đã được Gấu tính lại.
         </div>
       </div>
     </div>
@@ -5273,57 +5298,75 @@ export function Report() {
     { trait: 'Tỉ mỉ', fa: 'fa-solid fa-compass-drafting' },
   ]
 
-  // State phân tích AI Lộ trình Sư phạm
-  const [aiAnalysis, setAiAnalysis] = useState(null)
-  const [analyzing, setAnalyzing] = useState(false)
+  // State phân tích tiến bộ trung thực (Đợt 18 Chặng 3)
+  const [progressState, setProgressState] = useState({
+    loading: false,
+    data: null,
+    factBasis: null,
+    error: null,
+    notEnough: false,
+    sessionsCount: 0,
+    required: 3,
+    createdAt: null,
+  })
+  const [showFactModal, setShowFactModal] = useState(false)
   const [showZaloReport, setShowZaloReport] = useState(false)
 
-  const handleRunAiAnalysis = async () => {
-    soundPop(550)
-    setAnalyzing(true)
-
-    // Đợt 18 · Chặng 0.7: Chế độ Dùng thử dùng bản mẫu có cấu trúc, KHÔNG gọi AI
-    if (session?.isTrial) {
-      setTimeout(() => {
-        setAiAnalysis(`### 📋 Bản mẫu phân tích tiến bộ (Chế độ Dùng thử)
-- **Kiên nhẫn**: Con có xu hướng kiên trì vượt qua các bài toán có nhiều bước gợi mở.
-- **Tập trung**: Các phiên học buổi tối đạt hiệu quả tiếp thu cao nhất.
-- **Điểm cần lưu ý**: Dạng bài toán có lời văn 2 bước cần thêm thời gian để con tự tóm tắt đề bài bằng sơ đồ trực quan.
-
-💡 *Đây là dữ liệu mẫu giúp phụ huynh hình dung báo cáo khi học thật.*`)
-        setAnalyzing(false)
-        soundSuccess()
-        toast('Đã nạp bản mẫu phân tích tiến bộ! ✨')
-      }, 400)
-      return
-    }
-
-    toast('AI đang phân tích phẩm chất và đề xuất lộ trình… 🧠')
-
+  const loadProgress = useCallback(async () => {
+    setProgressState((prev) => ({ ...prev, loading: true, error: null }))
     try {
-      const result = await aiAnalyzeLongitudinalProgress({
-        child,
-        stats,
-        stickerHistory,
-      })
-
-      if (result) {
-        setAiAnalysis(result)
-        soundSuccess()
-        boom()
-        toast('Đã có báo cáo lộ trình cân bằng cho con! ✨')
+      const res = await fetchAiProgressReport(child.id, child.name, { sessionsCount: totalSessions })
+      if (res && res.ok) {
+        setProgressState({
+          loading: false,
+          data: res.report,
+          factBasis: res.fact_basis,
+          error: null,
+          notEnough: false,
+          sessionsCount: res.report?.nguon_du_lieu?.so_buoi || res.fact_basis?.so_buoi || totalSessions,
+          required: 3,
+          createdAt: res.created_at ? new Date(res.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        })
+      } else if (res?.error?.code === 'NOT_ENOUGH_DATA') {
+        setProgressState({
+          loading: false,
+          data: null,
+          factBasis: null,
+          error: null,
+          notEnough: true,
+          sessionsCount: res.sessions_count ?? totalSessions,
+          required: res.required || 3,
+          createdAt: null,
+        })
       } else {
-        setAiAnalysis(null)
-        toast('Chưa kết nối được AI để phân tích, mẹ bấm Thử lại nhé.')
+        setProgressState({
+          loading: false,
+          data: null,
+          factBasis: null,
+          error: res?.error?.message || 'Gấu chưa phân tích được lúc này',
+          notEnough: false,
+          sessionsCount: totalSessions,
+          required: 3,
+          createdAt: null,
+        })
       }
-    } catch (e) {
-      console.warn('Analysis error:', e)
-      setAiAnalysis(null)
-      toast('Chưa kết nối được AI, mẹ bấm Thử lại nhé.')
-    } finally {
-      setAnalyzing(false)
+    } catch (err) {
+      setProgressState({
+        loading: false,
+        data: null,
+        factBasis: null,
+        error: err.message || 'Lỗi kết nối',
+        notEnough: false,
+        sessionsCount: totalSessions,
+        required: 3,
+        createdAt: null,
+      })
     }
-  }
+  }, [child.id, child.name, totalSessions])
+
+  useEffect(() => {
+    loadProgress()
+  }, [loadProgress])
 
   // Đợt 15 · 6.3: hiện đủ "vướng 2/3 lần" (dữ liệu cũ có thể chỉ có count)
   const weakText = (w) => {
@@ -5440,62 +5483,126 @@ export function Report() {
     </div>
   )
 
-  // Phân tích (AI) đặt dưới phẩm chất
-  const analysisCard = (
-    <div className="card rpt-card accent">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-        <span className="rpt-kicker">
-          <i className="fa-solid fa-brain fa-fw" style={{ marginRight: 6 }} aria-hidden="true" />
-          Con tiến bộ theo tuần
-        </span>
-        <span className="rpt-tag">Theo dõi dài hạn</span>
-      </div>
-
-      <b className="rpt-title" style={{ display: 'block', marginBottom: 6 }}>
-        Phân tích phẩm chất và lộ trình cân bằng
-      </b>
-      <p style={{ fontSize: 14, color: 'var(--c-text)', lineHeight: 1.5, margin: '0 0 12px' }}>
-        Dựa trên <b>{stickerHistory.length} huy hiệu</b> đã tích luỹ qua các tuần, AI tìm hiểu vì sao tuần này con nhận nhiều hay ít huy hiệu <i>Kiên nhẫn</i>, <i>Sáng tạo</i> để cân bằng tâm lý và nhịp học.
-      </p>
-
-      {aiAnalysis ? (
-        <div
-          style={{
-            background: 'var(--c-surface-2)',
-            borderRadius: 14,
-            padding: '14px 12px',
-            border: '1.5px solid var(--c-line)',
-            fontSize: 14,
-            lineHeight: 1.55,
-            color: 'var(--c-text)',
-            marginBottom: 12,
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {aiAnalysis}
+  // Thẻ "Con tiến bộ thế nào" (Đợt 18 · Chặng 3)
+  const progressCard = (() => {
+    if (progressState.notEnough) {
+      return (
+        <div className="card st-card" data-testid="progress-not-enough">
+          <span className="e2" aria-hidden="true">🌱</span>
+          <div>
+            <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Cần ít nhất 3 buổi học</b>
+            <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
+              {child.name} mới học {progressState.sessionsCount} buổi. Học thêm {Math.max(1, (progressState.required || 3) - progressState.sessionsCount)} buổi nữa, Gấu sẽ phân tích cho mẹ.
+            </p>
+          </div>
         </div>
-      ) : null}
+      )
+    }
 
-      <button
-        className="btn solid"
-        disabled={analyzing}
-        onClick={handleRunAiAnalysis}
-        style={{ fontWeight: 800, fontSize: 15 }}
-      >
-        {analyzing ? (
-          <>
-            <i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> Đang phân tích cho {child.name}…
-          </>
-        ) : aiAnalysis ? (
-          <>
-            <i className="fa-solid fa-rotate" aria-hidden="true" /> Phân tích lại
-          </>
-        ) : (
-          <>✨ AI phân tích lộ trình cân bằng cho con</>
-        )}
-      </button>
-    </div>
-  )
+    if (progressState.loading) {
+      return (
+        <div className="card st-card" data-testid="progress-analyzing">
+          <span className="e2"><i className="fa-solid fa-spinner fa-spin" style={{ color: 'var(--c-accent)' }} /></span>
+          <div>
+            <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu đang phân tích dữ liệu của {child.name}…</b>
+            <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
+              Đang đối chiếu dữ liệu các buổi học để tìm gợi ý cho tuần tới.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    if (progressState.error) {
+      return (
+        <div className="card st-card warn" data-testid="progress-error">
+          <span className="e2" aria-hidden="true">⏳</span>
+          <div style={{ flex: 1 }}>
+            <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu chưa phân tích được lúc này</b>
+            <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
+              Không có bài viết sẵn nào thay thế. Mẹ thử lại sau ít phút nhé.
+            </p>
+            <button className="mini-btn" onClick={loadProgress}>Thử lại</button>
+          </div>
+        </div>
+      )
+    }
+
+    if (progressState.data) {
+      const pData = progressState.data
+      const soBuoi = pData.nguon_du_lieu?.so_buoi || progressState.factBasis?.so_buoi || totalSessions
+      const tuNgay = pData.nguon_du_lieu?.tu_ngay || progressState.factBasis?.tu_ngay
+      const denNgay = pData.nguon_du_lieu?.den_ngay || progressState.factBasis?.den_ngay
+      return (
+        <div className="card ana" data-testid="progress-ready">
+          <div className="lbl plum" style={{ margin: 0 }}>CON TIẾN BỘ THẾ NÀO</div>
+          <p className="src-badge">
+            🐻 Gấu đã đọc <b>{soBuoi} buổi học</b>{tuNgay ? `, từ ${tuNgay} đến ${denNgay}` : ''}
+          </p>
+          <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '4px 0', lineHeight: 1.5 }}>
+            {pData.tom_tat}
+          </p>
+          <div className="facts-grid">
+            <div>
+              <span>Hay kẹt</span>
+              <b>{pData.hay_ket?.[0] || 'Chưa có'}</b>
+              <em>{progressState.factBasis?.hay_ket?.[0] ? 'cần kiên nhẫn' : 'bước nâng cao'}</em>
+            </div>
+            <div>
+              <span>Đã vững</span>
+              <b>{pData.da_vung?.[0] || 'Phép tính'}</b>
+              <em>làm chắc chắn</em>
+            </div>
+            <div>
+              <span>Tự làm</span>
+              <b>{pData.tu_lam_count ?? progressState.factBasis?.tu_lam_count ?? soBuoi} bài</b>
+              <em>con tự tin</em>
+            </div>
+          </div>
+
+          <div className="lbl plum" style={{ margin: '8px 0 0' }}>GỢI Ý TUẦN TỚI</div>
+          <ol style={{ paddingLeft: 20, margin: '4px 0', fontSize: 14, color: 'var(--c-text)', lineHeight: 1.5 }}>
+            {(pData.goi_y_cho_me || []).map((item, idx) => (
+              <li key={idx} style={{ marginBottom: 4 }}>{item}</li>
+            ))}
+          </ol>
+
+          <div className="ana-f">
+            <button className="lnk-btn" onClick={() => setShowFactModal(true)}>
+              Xem dữ liệu Gấu đã đọc ›
+            </button>
+            <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
+              {progressState.createdAt ? `Phân tích lúc ${progressState.createdAt}` : ''}
+            </span>
+          </div>
+
+          {showFactModal && (
+            <div className="card st-card" style={{ marginTop: 8 }} data-testid="fact-modal">
+              <span className="e2" aria-hidden="true">🔎</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Dữ liệu Gấu đã đọc</b>
+                  <button className="lnk-btn" onClick={() => setShowFactModal(false)}>Đóng ✕</button>
+                </div>
+                <ul style={{ paddingLeft: 18, margin: '6px 0', fontSize: 13, color: 'var(--c-text-2)', lineHeight: 1.5 }}>
+                  <li>{soBuoi} buổi học · {tuNgay || '28 ngày qua'} đến {denNgay || 'nay'}</li>
+                  <li>Kỹ năng hay kẹt: {progressState.factBasis?.hay_ket?.join(', ') || 'Chưa có bước kẹt thường xuyên'}</li>
+                  <li>Kỹ năng đã vững: {progressState.factBasis?.da_vung?.join(', ') || 'Đang rèn luyện'}</li>
+                  <li>Con tự làm hết: {progressState.factBasis?.tu_lam_count ?? soBuoi} bài</li>
+                  <li>Mẹ kèm {momSessions} buổi, bố kèm {dadSessions} buổi</li>
+                </ul>
+                <p style={{ fontSize: 12, color: 'var(--c-text-2)', margin: '4px 0 0', fontStyle: 'italic' }}>
+                  Gấu chỉ được dùng các con số trong danh sách này để phân tích.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    return null
+  })()
 
   // Lưới học 30 ngày trong tháng (Prompt 07 Phần B)
   const calendarCard = (
@@ -5626,7 +5733,7 @@ export function Report() {
         ) : (
           <>
             {traitsCard}
-            {analysisCard}
+            {progressCard}
             {/* 5. Lịch học */}
             {calendarCard}
           </>
