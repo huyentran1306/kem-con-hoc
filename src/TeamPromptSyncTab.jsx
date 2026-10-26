@@ -1,6 +1,6 @@
 import { appAlert, appConfirm } from './dialog'
 import { useState, useEffect, useMemo } from 'react'
-import { dbKvGet, dbKvSet, AI_GATEWAY } from './api'
+import { dbKvGet, dbKvSet } from './api'
 import { toast } from './utils'
 import { BearMascot, AdminPageLoading } from './AdminMascot'
 
@@ -84,10 +84,7 @@ export default function TeamPromptSyncTab() {
   const [formRunBy, setFormRunBy] = useState('')
   const [formAiResult, setFormAiResult] = useState('')
 
-  // Quick Test Playground state
-  const [testingId, setTestingId] = useState(null)
-  const [testResult, setTestResult] = useState(null)
-  const [testRunning, setTestRunning] = useState(false)
+
 
   // 1. Đồng bộ ban đầu từ Cloud D1 KV
   useEffect(() => {
@@ -313,45 +310,7 @@ export default function TeamPromptSyncTab() {
     toast('📋 Đã copy toàn bộ bảng tổng hợp Markdown để gửi cho Team!')
   }
 
-  // 10. Chạy thử nhanh qua AI Gateway
-  const handleQuickTest = async (item) => {
-    setTestingId(item.id)
-    setTestRunning(true)
-    setTestResult(null)
-    const start = performance.now()
-    try {
-      const res = await fetch(`${AI_GATEWAY}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: item.promptDetail },
-            { role: 'user', content: 'Hãy thực hiện mẫu theo yêu cầu trong prompt.' },
-          ],
-          max_tokens: 600,
-          temperature: 0.3,
-        }),
-      })
 
-      if (!res.ok) throw new Error('Gateway trả về mã lỗi HTTP ' + res.status)
-      const data = await res.json()
-      const elapsed = Math.round((performance.now() - start) / 1000)
-      setTestResult({
-        success: true,
-        text: data.response || '(Không có phản hồi)',
-        elapsed,
-      })
-      toast(`⚡ Đã chạy thử xong qua AI Gateway (${elapsed}s)`)
-    } catch (err) {
-      setTestResult({
-        success: false,
-        text: 'Lỗi: ' + err.message,
-      })
-      toast('Chạy thử thất bại: ' + err.message)
-    } finally {
-      setTestRunning(false)
-    }
-  }
 
   // Thống kê nhanh
   const metrics = useMemo(() => {
@@ -737,7 +696,7 @@ export default function TeamPromptSyncTab() {
         ) : (
           filteredPrompts.map((item, idx) => {
             const isExpanded = !!expandedMap[item.id]
-            const isTestingThis = testingId === item.id
+            
             const catObj = PROMPT_CATEGORIES.find((c) => c.id === item.category) || { name: 'Khác', icon: '🏷️' }
 
             return (
@@ -1026,68 +985,12 @@ export default function TeamPromptSyncTab() {
                     </div>
                   )}
 
-                  {/* QUICK TEST FOOTER */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, paddingTop: 4 }}>
-                    <button
-                      type="button"
-                      disabled={testRunning}
-                      onClick={() => handleQuickTest(item)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '7px 14px',
-                        borderRadius: 8,
-                        background: '#FFF1D6',
-                        border: '1.5px solid #F6C56A',
-                        color: '#9A5B00',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        boxShadow: '0 1px 2px rgba(75, 54, 33, 0.06)',
-                      }}
-                      title="Chạy thử mẫu prompt này trực tiếp qua AI Gateway"
-                    >
-                      <span>⚡</span>
-                      <span>{isTestingThis && testRunning ? 'Đang chạy thử…' : 'Chạy thử qua AI Gateway'}</span>
-                    </button>
-
+                  {/* FOOTER */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 10, paddingTop: 4 }}>
                     <span style={{ fontSize: 11.5, color: '#8A6A4A' }}>
                       Cập nhật lần cuối: {item.updatedAt || item.createdAt}
                     </span>
                   </div>
-
-                  {/* KẾT QUẢ TEST THỬ REALTIME NẾU CÓ */}
-                  {isTestingThis && testResult && (
-                    <div
-                      style={{
-                        marginTop: 4,
-                        background: testResult.success ? '#F0FDF4' : '#FFF1F2',
-                        borderRadius: 10,
-                        border: testResult.success ? '1.5px solid #A7F3D0' : '1.5px solid #FECDD3',
-                        padding: '12px',
-                        fontSize: 12.5,
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontWeight: 700 }}>
-                        <span style={{ color: testResult.success ? '#15803D' : '#B91C1C' }}>
-                          {testResult.success ? `✨ Kết quả trả về (${testResult.elapsed}s):` : '❌ Có lỗi khi gọi Gateway:'}
-                        </span>
-                        <button
-                          onClick={() => {
-                            setTestingId(null)
-                            setTestResult(null)
-                          }}
-                          style={{ background: 'none', border: 'none', color: '#8A6A4A', cursor: 'pointer' }}
-                        >
-                          Đóng ✕
-                        </button>
-                      </div>
-                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#4B3621', fontFamily: 'inherit' }}>
-                        {testResult.text}
-                      </pre>
-                    </div>
-                  )}
                 </div>
               </div>
             )
