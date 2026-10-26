@@ -5959,7 +5959,7 @@ export function Report() {
   const dadPct = totalSessions ? 100 - momPct : 0
 
   // 📈 Phân tích Big Data Sticker History dài hạn (bỏ qua bản ghi mẫu sample: true)
-  const stickerHistory = (stats.stickerHistory || []).filter((s) => !s.sample)
+  const stickerHistory = (stats?.stickerHistory || []).filter((s) => !s?.sample)
   const thisWeekStickers = stickerHistory.filter((s) => getWeekLabel(s.timestamp) === 'Tuần này')
   const lastWeekStickers = stickerHistory.filter((s) => getWeekLabel(s.timestamp) === 'Tuần trước')
 
@@ -6417,8 +6417,8 @@ export function Report() {
         {/* 4. ĐỢT 19 CHẶNG 3: BIỂU ĐỒ CỘT CHỒNG PHẨM CHẤT & AI PHÂN TÍCH */}
         <div className="pg-span">
           <TraitStackedChart
-            badges={stats.stickerHistory || []}
-            rewards={stats.rewardHistory || []}
+            badges={stats?.stickerHistory || []}
+            rewards={stats?.rewardHistory || []}
             childName={child.name}
           />
         </div>
