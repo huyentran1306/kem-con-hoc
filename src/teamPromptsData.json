@@ -1,5 +1,19 @@
 [
   {
+    "id": "prompt-21-bo-nho-gau-va-sua-3-cho-sap",
+    "promptNumber": "21",
+    "title": "Prompt 21 & 21B: Bộ nhớ Gấu (Những gì Gấu nhớ), Sửa 3 chỗ sập khi soạn bài giảng & Danh sách prompt cho Team AI (26/10/2026)",
+    "category": "socratic",
+    "targetAi": "Cloudflare Workers AI (Llama 3.3) & Deepseek/Claude",
+    "author": "Antigravity AI & Team Kèm Con Học",
+    "createdAt": "2026-10-26T18:00:00.000Z",
+    "isRunCompanyAi": true,
+    "runBy": "Antigravity AI (Đã kiểm thử production)",
+    "runAt": "2026-10-26T19:30:00.000Z",
+    "aiResult": "Đã sửa triệt để 3 chỗ sập: (1) validateAllLessonMath & correctLessonMath trong api.js, (2) useCallback trong screens.jsx, (3) Di chuyển useState lên trước useMemo trong Done screen tránh lỗi TDZ. Đã kiểm thử 100% 6 bước trên production pass mượt mà.",
+    "promptDetail": "# Prompt 21 & 21B · Bộ nhớ Gấu (Những gì Gấu nhớ), Sửa 3 chỗ sập và Mở Danh sách Prompt\n\n### 1. Sửa 3 chỗ sập trên production (đã test pass):\n- **api.js**: Import đúng validateAllLessonMath và correctLessonMath, kiểm tra phép tính khi AI trả về bài giảng. Lỗi code xử lý toán học không được nuốt thành lỗi mạng (\"Chưa kết nối được máy chủ\").\n- **screens.jsx**: Import đầy đủ useCallback từ React.\n- **screens.jsx (Done screen)**: Di chuyển toàn bộ khai báo useState lên đầu component trước useMemo để triệt tiêu hoàn toàn lỗi TDZ (Cannot access variable before initialization).\n\n### 2. Bộ nhớ Gấu (Longitudinal Memory & Student Insights):\n- Mục \"Những gì Gấu nhớ\": ghi nhận phẩm chất, điểm mạnh và điểm cần cải thiện của con qua từng buổi học để cá nhân hoá lời động viên.\n\n### 3. Danh sách Prompt cho Team AI:\n- Mở trang Team Prompts Sync (/admin/team-prompts) trên production để toàn bộ đội ngũ kỹ thuật và AI trong công ty có thể xem, copy và chạy thử nghiệm các prompt sư phạm mới nhất."
+  },
+  {
     "id": "prompt-20-tiet-kiem-token-va-demo-chac",
     "promptNumber": "20",
     "title": "Prompt 20: Tiết kiệm token AI, demo chắc chắn, bảng điểm AI & Gấu góp ý (26/10/2026)",

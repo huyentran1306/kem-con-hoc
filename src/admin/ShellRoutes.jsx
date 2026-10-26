@@ -22,6 +22,7 @@ export const ADMIN_PAGES = [
 
   { id: 'model', slug: 'mo-hinh', label: 'Mô hình & tham số', icon: '🧠', group: 'ai', kind: 'config', sub: 'model', restricted: true, keywords: ['mo hinh', 'tham so', 'model'] },
   { id: 'prompts', slug: 'prompt-studio', label: 'Prompt Studio', icon: '✍️', group: 'ai', kind: 'config', sub: 'prompts', restricted: true, keywords: ['prompt', 'studio'] },
+  { id: 'team-prompts', slug: 'team-prompts', label: 'Danh sách prompt (Team AI)', icon: '📋', group: 'ai', kind: 'tools', sub: 'team_prompts', keywords: ['team prompts', 'danh sach prompt', 'prompts'] },
   { id: 'router', slug: 'router', label: 'Router sư phạm', icon: '🧭', group: 'ai', kind: 'config', sub: 'router', restricted: true, keywords: ['router', 'su pham', 'luat'] },
   { id: 'scope', slug: 'pham-vi', label: 'Phạm vi đề & ảnh', icon: '🛡️', group: 'ai', kind: 'config', sub: 'scope', restricted: true, keywords: ['pham vi', 'de bai', 'pham vi de'] },
   { id: 'safety', slug: 'an-toan', label: 'An toàn AI', icon: '🐻', group: 'ai', kind: 'tab', keywords: ['an toan', 'phan hoi', 'feedback'] },
@@ -32,7 +33,6 @@ export const ADMIN_PAGES = [
   { id: 'infra', slug: 'ha-tang', label: 'Hạ tầng & lỗi', icon: '☁️', group: 'system', kind: 'config', sub: 'infra', restricted: true, keywords: ['ha tang', 'loi he thong', 'cloudflare'] },
   { id: 'zalo', slug: 'zalo', label: 'Thông báo & Zalo', icon: '💬', group: 'system', kind: 'config', sub: 'zalo', restricted: true, keywords: ['thong bao', 'zalo'] },
   { id: 'sql', slug: 'sql', label: 'D1 SQL Studio', icon: '🗄️', group: 'system', kind: 'tools', sub: 'sql', superadminOnly: true, keywords: ['sql', 'd1'] },
-  { id: 'team-prompts', slug: 'team-prompts', label: 'Team Prompts Sync', icon: '🔄', group: 'system', kind: 'tools', sub: 'team_prompts', devOnly: true, keywords: ['team prompts'] },
   { id: 'token-ai', slug: 'token-ai', label: 'Token AI', icon: '🪙', group: 'system', kind: 'tab', keywords: ['token', 'token ai', 'chi phi'] },
   { id: 'pre-demo', slug: 'truoc-demo', label: 'Kiểm tra trước demo', icon: '🩺', group: 'system', kind: 'tab', keywords: ['demo', 'truoc demo', 'kiem tra demo'] },
   { id: 'scoreboard', slug: 'bang-diem', label: 'Bảng điểm AI', icon: '🏅', group: 'system', kind: 'tab', keywords: ['bang diem', 'bang diem ai', 'eval'] },
@@ -58,6 +58,7 @@ export const ADMIN_ROUTE_TABLE = {
   '/admin/zalo': 'zalo',
   '/admin/sql': 'sql',
   '/admin/team-prompts': 'team-prompts',
+  '/admin/danh-sach-prompt': 'team-prompts',
   '/admin/token-ai': 'token-ai',
   '/admin/truoc-demo': 'pre-demo',
   '/admin/bang-diem': 'scoreboard',
