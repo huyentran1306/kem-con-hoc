@@ -38,6 +38,8 @@ import { AdminTeachersTab } from './AdminTeachersTab'
 import { AdminConfigTab } from './AdminConfigTab'
 import { AdminToolsTab } from './AdminToolsTab'
 import { AdminSafetyTab } from './AdminSafetyTab.jsx'
+import { AdminAnalyticsTab } from './admin/AdminAnalyticsTab.jsx'
+import { AdminTokenAiPage } from './admin/AdminTokenAiPage.jsx'
 
 /**
  * Đợt 15: cờ cũ `kem-con-hoc:admin-auth` (chỉ cần đặt 'true' là vào được admin) bị xoá hẳn.
@@ -396,6 +398,8 @@ export default function AdminPortal({ onExit }) {
         {activeTab === 'reports' && <AdminReportsTab token={token} />}
         {activeTab === 'teachers' && <AdminTeachersTab token={token} />}
         {activeTab === 'safety' && <AdminSafetyTab token={token} />}
+        {activeTab === 'analytics' && <AdminAnalyticsTab token={token} />}
+        {activeTab === 'token-ai' && <AdminTokenAiPage token={token} />}
       </>
     )
   }

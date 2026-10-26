@@ -19,7 +19,8 @@
     "test:dot19-3": "node scripts/test-dot19-chang-3.mjs",
     "test:dot19-4": "node scripts/test-dot19-chang-4.mjs",
     "test:dot19-5": "node scripts/test-dot19-chang-5.mjs",
-    "test:dot19-6": "node scripts/test-dot19-chang-6.mjs"
+    "test:dot19-6": "node scripts/test-dot19-chang-6.mjs",
+    "test:dot20-0": "node scripts/test-dot20-chang-0.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

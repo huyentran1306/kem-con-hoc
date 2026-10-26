@@ -33,6 +33,9 @@ export const ADMIN_PAGES = [
   { id: 'zalo', slug: 'zalo', label: 'Thông báo & Zalo', icon: '💬', group: 'system', kind: 'config', sub: 'zalo', restricted: true, keywords: ['thong bao', 'zalo'] },
   { id: 'sql', slug: 'sql', label: 'D1 SQL Studio', icon: '🗄️', group: 'system', kind: 'tools', sub: 'sql', superadminOnly: true, keywords: ['sql', 'd1'] },
   { id: 'team-prompts', slug: 'team-prompts', label: 'Team Prompts Sync', icon: '🔄', group: 'system', kind: 'tools', sub: 'team_prompts', devOnly: true, keywords: ['team prompts'] },
+  { id: 'token-ai', slug: 'token-ai', label: 'Token AI', icon: '🪙', group: 'system', kind: 'tab', keywords: ['token', 'token ai', 'chi phi'] },
+  { id: 'pre-demo', slug: 'truoc-demo', label: 'Kiểm tra trước demo', icon: '🩺', group: 'system', kind: 'tab', keywords: ['demo', 'truoc demo', 'kiem tra demo'] },
+  { id: 'scoreboard', slug: 'bang-diem', label: 'Bảng điểm AI', icon: '🏅', group: 'system', kind: 'tab', keywords: ['bang diem', 'bang diem ai', 'eval'] },
 ]
 
 /** Bảng slug → id trang (dùng cho kiểm thử tĩnh và điều hướng) */
@@ -55,6 +58,9 @@ export const ADMIN_ROUTE_TABLE = {
   '/admin/zalo': 'zalo',
   '/admin/sql': 'sql',
   '/admin/team-prompts': 'team-prompts',
+  '/admin/token-ai': 'token-ai',
+  '/admin/truoc-demo': 'pre-demo',
+  '/admin/bang-diem': 'scoreboard',
 }
 
 export const DEV_TOOLS_ON = (() => {
