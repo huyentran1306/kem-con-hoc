@@ -5,7 +5,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory, recordRewardEvent } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory, recordRewardEvent, deleteBadgeEvents } from './api'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
@@ -1714,6 +1714,29 @@ function EditChildSheet() {
   const [book, setBook] = useState(child?.book || BOOKS[0])
   const [bearMemory, setBearMemory] = useState(child?.bearMemory !== false)
 
+  const childBadges = (S.stats?.[child?.id]?.stickerHistory || []).filter((s) => !s.sample)
+  const earliestDate = childBadges.length > 0
+    ? new Date(Math.min(...childBadges.map((b) => b.timestamp || Date.now()))).toLocaleDateString('vi-VN')
+    : 'chưa có'
+
+  const handleClearBadgeHistory = async () => {
+    if (!child) return
+    const ok = await appConfirm(`Xoá toàn bộ lịch sử ${childBadges.length} huy hiệu của ${child.name}? Các mốc phẩm chất sẽ được xoá khỏi hệ thống.`)
+    if (!ok) return
+    await deleteBadgeEvents(child.id)
+    patch((prev) => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        [child.id]: {
+          ...(prev.stats?.[child.id] || {}),
+          stickerHistory: [],
+        },
+      },
+    }))
+    toast(`Đã xoá lịch sử huy hiệu của ${child.name}`)
+  }
+
   const handleClearHistory = async () => {
     if (!child) return
     const ok = await appConfirm(`Xoá toàn bộ lịch sử học tập và ghi nhớ của ${child.name}? Gấu sẽ bắt đầu lại từ đầu cho bé.`)
@@ -1792,6 +1815,23 @@ function EditChildSheet() {
           role="switch"
           aria-checked={bearMemory}
         />
+      </div>
+
+      {/* ĐỢT 19 · CHẶNG 5: NHỮNG GÌ GẤU NHỚ - LỊCH SỬ HUY HIỆU */}
+      <div className="card" style={{ border: '1.5px dashed #F59E0B', background: '#FFFBEB' }}>
+        <b style={{ fontSize: 13.5, color: '#B45309' }}>Những gì Gấu nhớ · Lịch sử huy hiệu</b>
+        <p style={{ fontSize: 12, color: '#92400E', margin: '3px 0 8px' }}>
+          Lịch sử huy hiệu: <b>{childBadges.length} huy hiệu</b> {childBadges.length > 0 ? `từ ${earliestDate}` : ''}.
+        </p>
+        <button
+          type="button"
+          id="btn-clear-child-badges"
+          className="btn ghost btn-sm"
+          onClick={handleClearBadgeHistory}
+          style={{ color: '#D97706', borderColor: '#FCD34D' }}
+        >
+          🗑 Xoá lịch sử huy hiệu của {child?.name || 'bé'}
+        </button>
       </div>
 
       <div className="card" style={{ border: '1.5px dashed #FCA5A5', background: '#FEF2F2' }}>

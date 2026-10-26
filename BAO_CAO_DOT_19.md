@@ -7,8 +7,8 @@
 | **Chặng 1** | Lưu lịch sử thành dữ liệu thật | **ĐẠT** | `8ee7d73` | Local / Preview | Đã tạo bảng D1, API badge_events & reward_events, gỡ week ghi cứng, chuyển dữ liệu cũ an toàn |
 | **Chặng 2** | Gấu gợi ý huy hiệu theo việc con làm | **ĐẠT** | `0e855c7` | Local / Preview | Rule engine tính bằng code theo 4 phẩm chất, lý do có số thật, tie-breaker 2 tuần, fallback an toàn |
 | **Chặng 3** | Báo cáo bố mẹ: biểu đồ và AI tìm nguyên nhân | **ĐẠT** | `85d69ed` | Local / Preview | Cột chồng 4 màu chuẩn, mốc đổi quà 🎁, Heatmap đơn sắc 7 mốc, thẻ Gấu thấy, AI fact-checking p19_trait_analysis |
-| **Chặng 4** | Admin: trang "Phân tích học tập" | **ĐẠT** | (pending) | Local / Preview | Tuyến /admin/phan-tich, 4 KPIs, 3 biểu đồ (100% stacked, Sáng tạo, Heatmap), ẩn danh < 5 gia đình, xuất CSV |
-| **Chặng 5** | Riêng tư và dữ liệu | Chưa | - | - | Xoá gia đình cascade, xoá lịch sử huy hiệu có ConfirmDialog, cô giáo không thấy |
+| **Chặng 4** | Admin: trang "Phân tích học tập" | **ĐẠT** | `3ee0d38` | Local / Preview | Tuyến /admin/phan-tich, 4 KPIs, 3 biểu đồ (100% stacked, Sáng tạo, Heatmap), ẩn danh < 5 gia đình, xuất CSV |
+| **Chặng 5** | Riêng tư và dữ liệu | **ĐẠT** | (pending) | Local / Preview | Cascade delete sạch sẽ khi xoá gia đình, Con tôi có dòng huy hiệu & nút xoá riêng, cô giáo không thấy |
 | **Chặng 6** | Kiểm thử tổng thể & Hoàn tất | Chưa | - | - | Unit tests, E2E, báo cáo đầy đủ trước deploy production |
 
 ---
