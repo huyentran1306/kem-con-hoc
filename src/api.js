@@ -5,6 +5,7 @@ import { PROBLEM } from './data.js'
 import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
 import { getWeekLabel } from './utils.js'
 import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
+import { viNumberWords } from './guard.js'
 import { isTrialActive, matchTrialLesson, PRELOADED_TRIAL_LESSONS, getTrialInitialState, trialLessonToProblem, setActiveTrialLesson, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, TRIAL_LIMIT_MESSAGE } from './trialData.js'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -1744,6 +1745,97 @@ export async function fetchAiMicroStep({
     return res;
   } catch (err) {
     console.warn('fetchAiMicroStep error:', err);
+    return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
+  }
+}
+
+export async function fetchAiJudgeAnswer({
+  stepQuestion = '',
+  stepAnswer = '',
+  childSpeech = '',
+  problemText = '',
+  childName = 'Bé',
+} = {}) {
+  let cleanSpeech = childSpeech.trim();
+  cleanSpeech = cleanSpeech.replace(/\bkhông\s+(biết|rõ|hiểu|thấy|phải|được)\b/gi, "ko $1");
+  try {
+    cleanSpeech = viNumberWords(cleanSpeech).replace(/(\d+)\s*chục\b/gi, (_, n) => String(Number(n) * 10));
+  } catch (_) {}
+
+  if (isTrialActive()) {
+    const lower = cleanSpeech.toLowerCase();
+    const ansNums = (stepAnswer.match(/\b\d+\b/g) || []);
+    const speechNums = (cleanSpeech.match(/\b\d+\b/g) || []);
+    const isAllNums = ansNums.length > 0 && ansNums.every(n => speechNums.includes(n));
+    const hasAnyNum = ansNums.some(n => speechNums.includes(n));
+
+    let verdict = {
+      danh_gia: "khong_ro",
+      nhan_xet_cho_me: "Chưa nghe rõ câu trả lời của con.",
+      cau_me_noi_tiep: "Con nói lại to hơn cho Gấu nghe nhé!",
+      khen_cu_the: "Cố lên con!"
+    };
+
+    const hasOpMismatch = (lower.includes("cộng") && stepAnswer.toLowerCase().includes("trừ")) ||
+                          (lower.includes("trừ") && stepAnswer.toLowerCase().includes("cộng"));
+
+    if (hasOpMismatch) {
+      verdict = {
+        danh_gia: "sai_huong",
+        nhan_xet_cho_me: `${childName} đã đúng số nhưng chọn nhầm phép tính.`,
+        cau_me_noi_tiep: "Con nhìn lại xem trong đề hỏi còn lại hay thêm vào nhé?",
+        khen_cu_the: "Con đã tìm đúng số rồi!"
+      };
+    } else if (isAllNums || lower.includes("đúng") || lower.includes("chính xác")) {
+      verdict = {
+        danh_gia: "dung",
+        nhan_xet_cho_me: `${childName} đã nêu đúng kết quả!`,
+        cau_me_noi_tiep: "Đúng rồi! Con giỏi quá!",
+        khen_cu_the: `Giỏi lắm ${childName} ơi!`
+      };
+    } else if (hasAnyNum || lower.includes("gần") || lower.includes("suýt") || Math.abs((Number(speechNums[0]) || 0) - (Number(ansNums[0]) || 0)) <= 2) {
+      verdict = {
+        danh_gia: "gan_dung",
+        nhan_xet_cho_me: `${childName} đã đúng một số trong bài.`,
+        cau_me_noi_tiep: "Con đã tìm đúng một số rồi, còn bước tính nữa nào?",
+        khen_cu_the: "Con làm tốt một phần rồi!"
+      };
+    } else if (speechNums.length > 0 || lower.includes("cộng") || lower.includes("trừ")) {
+      verdict = {
+        danh_gia: "sai_huong",
+        nhan_xet_cho_me: `${childName} đang chọn số hoặc phép tính chưa đúng.`,
+        cau_me_noi_tiep: "Con nhìn lại xem trong đề bài hỏi còn lại hay thêm vào nhé?",
+        khen_cu_the: "Không sao, con nhìn lại đề nào!"
+      };
+    }
+
+    return {
+      ok: true,
+      verdict,
+      cleanSpeech,
+      latency_ms: 80,
+    };
+  }
+
+  try {
+    const res = await post(
+      '/api/v1/ai/judge-answer',
+      {
+        step_question: stepQuestion,
+        step_answer: stepAnswer,
+        child_speech: cleanSpeech,
+        problem_text: problemText,
+        child_name: childName,
+      },
+      10000,
+      AI_GATEWAY
+    );
+    if (res && res.ok) {
+      res.cleanSpeech = cleanSpeech;
+    }
+    return res;
+  } catch (err) {
+    console.warn('fetchAiJudgeAnswer error:', err);
     return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
   }
 }

@@ -253,3 +253,46 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `scripts/test-dot18-chang-4.mjs`: **15/15 kiểm thử đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch (228ms)**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+
+---
+
+## CHI TIẾT CHẶNG 5: GẤU NGHE CON TRẢ LỜI (PROMPT 18 CHẶNG 5)
+
+### 1. Việc đã làm
+- **1.1 Chuẩn hóa chuyển đổi số bằng chữ sang số:**
+  - Chuyển đổi chính xác các từ chỉ số trong tiếng Việt trước khi chấm điểm: "hai mươi hai" -> "22", "ba chục" -> "30", "mười lăm" -> "15".
+  - Bảo vệ ngữ nghĩa phủ định: các từ "không biết", "không hiểu", "không rõ" được bảo vệ tránh bị hiểu nhầm thành số 0.
+- **1.2 Backend Worker API (`POST /api/v1/ai/judge-answer`):**
+  - Xây dựng endpoint hỗ trợ prompt `p18_judge_answer` với model `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, timeout 10s.
+  - Phân loại 4 trường hợp đánh giá chính xác:
+    - `dung`: Con nêu đúng kết quả hoặc ý chính -> khen ngợi cụ thể, gợi ý mẹ bấm "Con làm được rồi".
+    - `gan_dung`: Con đúng một phần hoặc đúng số nhưng thiếu chi tiết -> gợi ý câu mẹ nói tiếp để con hoàn thành.
+    - `sai_huong`: Con chọn sai số hoặc phép tính -> gợi mở để con suy nghĩ lại, không lộ đáp án; có nút chuyển sang "Chẻ nhỏ câu hỏi".
+    - `khong_ro`: Chưa nghe rõ nội dung con nói -> khích lệ con nói lại, không trừ lượt.
+  - Bộ chặn rò rỉ đáp án: `cau_me_noi_tiep` tuyệt đối không vô tình tiết lộ đáp án cho con.
+  - **Quyền riêng tư tuyệt đối:** Không bao giờ lưu audio, file ghi âm hay raw transcript vào Database/R2. Chỉ lưu kết quả đánh giá phân loại (`voice_verdict`) vào `learning_events`.
+- **1.3 Giao diện người dùng (`Scaffold` trong `src/screens.jsx` & `src/styles.css`):**
+  - Nút bấm `🎙 Con trả lời, Gấu nghe`:
+    - Tự động kiểm tra quyền và hỗ trợ micro (ẩn an toàn nếu trình duyệt không hỗ trợ).
+    - Lắng nghe qua Web Speech API tiếng Việt real-time (tối đa 15 giây tự ngắt).
+  - Bong bóng thoại hiển thị câu con vừa nói: `{TÊN CON} NÓI: "..."`.
+  - Thẻ nhận định sư phạm:
+    - Huy hiệu phân loại (`✓ Đúng rồi`, `⚡ Gần đúng`, `⚠️ Sai hướng nhẹ`, `❓ Chưa nghe rõ`).
+    - Dòng cam kết bảo mật: `Gấu nghe được, không lưu giọng nói`.
+    - Lời nhận xét cho mẹ và khối `MẸ NÓI TIẾP: "..."`.
+    - Nút chốt bài `✓ Mẹ chốt: Con làm được rồi!` (mẹ luôn là người duyệt cuối cùng).
+    - Nút `🎙 Con nói lại` và `Chẻ nhỏ câu hỏi` khi con sai hướng.
+
+### 2. Files đã chỉnh sửa
+- `../study-en/ai-gateway-worker/src/v1_routes.js`
+- `../study-en/ai-gateway-worker/src/index.js`
+- `src/api.js`
+- `src/screens.jsx`
+- `src/styles.css`
+- `package.json`
+- `scripts/test-dot18-chang-5.mjs` (Tạo mới 16 tests)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-5.mjs`: **16/16 kiểm thử đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch (217ms)**
+- `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**

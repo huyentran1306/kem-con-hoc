@@ -9,7 +9,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -2062,6 +2062,17 @@ export function Scaffold() {
   const [microCount, setMicroCount] = useState(0)
   const [showMicroWhy, setShowMicroWhy] = useState(false)
 
+  // State Gấu nghe con trả lời (Đợt 18 · Chặng 5)
+  const [voiceState, setVoiceState] = useState({
+    listening: false,
+    transcript: '',
+    verdict: null,
+    loading: false,
+  })
+  const [hasMicSupport, setHasMicSupport] = useState(true)
+  const voiceRecoRef = useRef(null)
+  const voiceTimeoutRef = useRef(null)
+
   useEffect(() => {
     setShowAns(false)
     setStepSeconds(0)
@@ -2069,7 +2080,16 @@ export function Scaffold() {
     setLoadingMicro(false)
     setMicroCount(0)
     setShowMicroWhy(false)
+    setVoiceState({ listening: false, transcript: '', verdict: null, loading: false })
   }, [step])
+
+  useEffect(() => {
+    const supported = typeof window !== 'undefined' && (
+      Boolean(window.SpeechRecognition || window.webkitSpeechRecognition) ||
+      Boolean(navigator?.mediaDevices?.getUserMedia)
+    )
+    setHasMicSupport(supported)
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -2126,6 +2146,118 @@ export function Scaffold() {
       buddyReact('cheer', praiseText, 2500)
     } else {
       buddyReact('cheer', praiseText, 2000)
+    }
+  }
+
+  const startVoiceListen = () => {
+    if (voiceState.listening) {
+      if (voiceRecoRef.current) {
+        try { voiceRecoRef.current.stop() } catch (_) {}
+      }
+      setVoiceState(prev => ({ ...prev, listening: false }))
+      return
+    }
+
+    const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
+    if (SpeechRecognition) {
+      try {
+        const reco = new SpeechRecognition()
+        reco.lang = 'vi-VN'
+        reco.continuous = false
+        reco.interimResults = false
+
+        reco.onstart = () => {
+          setVoiceState(prev => ({ ...prev, listening: true, verdict: null }))
+          toast('🎙 Đang lắng nghe con… (nói tối đa 15s)')
+        }
+        reco.onresult = (evt) => {
+          const transcript = evt.results?.[0]?.[0]?.transcript || ''
+          if (transcript.trim()) {
+            handleVoiceResult(transcript.trim())
+          }
+        }
+        reco.onerror = (err) => {
+          console.warn('SpeechRecognition error:', err)
+          setVoiceState(prev => ({ ...prev, listening: false }))
+          toast('Chưa nghe rõ lời con, thử bấm nói lại nhé!')
+        }
+        reco.onend = () => {
+          setVoiceState(prev => ({ ...prev, listening: false }))
+        }
+
+        voiceRecoRef.current = reco
+        reco.start()
+
+        if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current)
+        voiceTimeoutRef.current = setTimeout(() => {
+          try { reco.stop() } catch (_) {}
+        }, 15000)
+        return
+      } catch (err) {
+        console.warn('Web Speech error, using fallback:', err)
+      }
+    }
+
+    toast('Trình duyệt chưa hỗ trợ ghi âm trực tiếp')
+  }
+
+  const handleVoiceResult = async (rawTranscript) => {
+    const curStep = steps[step]
+    setVoiceState({
+      listening: false,
+      transcript: rawTranscript,
+      verdict: null,
+      loading: true,
+    })
+    toast('Gấu đang lắng nghe và suy nghĩ… 🧠')
+
+    try {
+      const res = await fetchAiJudgeAnswer({
+        stepQuestion: curStep?.q || curStep?.question || '',
+        stepAnswer: curStep?.answerForParent || curStep?.answer || curStep?.dap_an_cho_me || '',
+        childSpeech: rawTranscript,
+        problemText: problem.text || problem.problem_text || '',
+        childName: child.name,
+      })
+
+      if (res && res.ok && res.verdict) {
+        const v = res.verdict
+        setVoiceState({
+          listening: false,
+          transcript: rawTranscript,
+          verdict: v,
+          loading: false,
+        })
+
+        recordLearningEvent({
+          child_id: child?.id,
+          session_id: S.flow?.sessionId || (`sess_${Date.now()}`),
+          subject: problem?.subject || "Toán",
+          problem_type: problem?.type || "",
+          step_no: step + 1,
+          skill: curStep?.ky_nang || "tinh_toan",
+          result: v.danh_gia === 'dung' ? 'tu_lam' : (v.danh_gia === 'gan_dung' ? 'can_goi_y' : 'me_dan'),
+          hints_used: stuck,
+          micro_steps: microCount,
+          voice_verdict: v.danh_gia,
+        }).catch(() => {})
+
+        if (v.danh_gia === 'dung') {
+          buddyReact('cheer', v.khen_cu_the || 'Con trả lời đúng rồi!', 2500)
+          soundSuccess()
+        } else if (v.danh_gia === 'gan_dung') {
+          buddyReact('thinking', v.khen_cu_the || 'Gần đúng rồi con ơi!', 2500)
+        } else if (v.danh_gia === 'sai_huong') {
+          buddyReact('surprised', 'Chưa đúng hướng rồi, để mẹ hướng dẫn thêm nhé!', 2500)
+        } else {
+          buddyReact('idle', 'Gấu nghe chưa rõ, con nói to lại nha!', 2500)
+        }
+      } else {
+        setVoiceState(prev => ({ ...prev, loading: false }))
+      }
+    } catch (err) {
+      console.warn('Judge answer error:', err)
+      setVoiceState(prev => ({ ...prev, loading: false }))
     }
   }
 
@@ -2318,6 +2450,83 @@ export function Scaffold() {
                   })}
                 />
               </div>
+
+              {hasMicSupport && (
+                <div style={{ margin: '6px 0' }}>
+                  <button
+                    className={`voice-listen-btn ${voiceState.listening ? 'active' : ''}`}
+                    onClick={startVoiceListen}
+                    data-testid="btn-voice-listen"
+                  >
+                    <i className="fa-solid fa-microphone" style={{ color: voiceState.listening ? '#EF4444' : '#F6A623' }} />
+                    {voiceState.listening ? 'Đang nghe con nói… (tối đa 15s)' : '🎙 Con trả lời, Gấu nghe'}
+                  </button>
+                </div>
+              )}
+
+              {voiceState.transcript && (
+                <div className="card-said fadeIn" data-testid="card-child-said">
+                  <span className="said-mic" aria-hidden="true">🎙</span>
+                  <div>
+                    <span className="lbl plum" style={{ fontSize: 11, margin: 0 }}>{child.name.toUpperCase()} NÓI</span>
+                    <p style={{ margin: '2px 0 0', fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)' }}>
+                      "{voiceState.transcript}"
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {voiceState.loading && (
+                <div className="card verdict fadeIn">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="fa-solid fa-spinner fa-spin" style={{ color: '#E9A13B' }} />
+                    <span style={{ fontSize: 13.5, color: 'var(--c-text)' }}>Gấu đang đánh giá câu trả lời của con…</span>
+                  </div>
+                </div>
+              )}
+
+              {voiceState.verdict && !voiceState.loading && (
+                <div className={`card verdict fadeIn ${voiceState.verdict.danh_gia}`} data-testid="card-voice-verdict">
+                  <div className="vh-row">
+                    <span className={`vb-badge ${voiceState.verdict.danh_gia}`}>
+                      {voiceState.verdict.danh_gia === 'dung'
+                        ? '✓ Đúng rồi'
+                        : voiceState.verdict.danh_gia === 'gan_dung'
+                        ? '⚡ Gần đúng'
+                        : voiceState.verdict.danh_gia === 'sai_huong'
+                        ? '⚠️ Sai hướng nhẹ'
+                        : '❓ Chưa nghe rõ'}
+                    </span>
+                    <span style={{ fontSize: 11.5, color: 'var(--c-text-2)' }}>Gấu nghe được, không lưu giọng nói</span>
+                  </div>
+                  <p style={{ fontSize: 13.5, color: 'var(--c-text)', margin: '4px 0', lineHeight: 1.45 }}>
+                    {voiceState.verdict.nhan_xet_cho_me}
+                  </p>
+                  <div className="say-box">
+                    <span className="lbl plum" style={{ fontSize: 11, margin: 0 }}>MẸ NÓI TIẾP</span>
+                    <p style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)', margin: '2px 0 0' }}>
+                      "{voiceState.verdict.cau_me_noi_tiep}"
+                    </p>
+                  </div>
+                  {voiceState.verdict.danh_gia === 'dung' && (
+                    <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}>
+                      <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }} onClick={stepOk} data-testid="btn-voice-confirm-ok">
+                        ✓ Mẹ chốt: Con làm được rồi!
+                      </button>
+                    </div>
+                  )}
+                  {voiceState.verdict.danh_gia === 'sai_huong' && (
+                    <div className="row2" style={{ marginTop: 6 }}>
+                      <button className="btn g" style={{ fontSize: 13, padding: '6px 10px' }} onClick={startVoiceListen}>
+                        🎙 Con nói lại
+                      </button>
+                      <button className="btn" style={{ fontSize: 13, padding: '6px 10px' }} onClick={() => triggerMicroStep(1)}>
+                        Chẻ nhỏ câu hỏi
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {stuck >= 2 && (
                 <div className="stuck-badge" data-testid="stuck-badge-2">
