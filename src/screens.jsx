@@ -9,7 +9,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -2056,9 +2056,19 @@ export function Scaffold() {
   const [showNudge, setShowNudge] = useState(false)
   const [nudgeReason, setNudgeReason] = useState('')
 
+  // State câu hỏi nhỏ hơn (Đợt 18 · Chặng 4)
+  const [microStep, setMicroStep] = useState(null)
+  const [loadingMicro, setLoadingMicro] = useState(false)
+  const [microCount, setMicroCount] = useState(0)
+  const [showMicroWhy, setShowMicroWhy] = useState(false)
+
   useEffect(() => {
     setShowAns(false)
     setStepSeconds(0)
+    setMicroStep(null)
+    setLoadingMicro(false)
+    setMicroCount(0)
+    setShowMicroWhy(false)
   }, [step])
 
   useEffect(() => {
@@ -2119,10 +2129,103 @@ export function Scaffold() {
     }
   }
 
+  const triggerMicroStep = async (idx = 1) => {
+    const curStep = steps[step]
+    setLoadingMicro(true)
+    buddyReact('thinking', 'Để Gấu chẻ nhỏ câu hỏi cho con nhé…', 2500)
+    try {
+      const res = await fetchAiMicroStep({
+        problemText: problem.text || problem.problem_text || '',
+        stepQuestion: curStep?.q || curStep?.question || '',
+        stepAnswer: curStep?.answerForParent || curStep?.answer || curStep?.dap_an_cho_me || '',
+        hintsUsed: [curStep?.hint].filter(Boolean),
+        skill: curStep?.ky_nang || 'tinh_toan',
+        childProfile: S.learnerProfile || '',
+        childSpeech: '',
+        microIndex: idx,
+        childName: child.name,
+        sessionId: S.flow?.sessionId,
+        familyId: S.familyId,
+      })
+
+      if (res && res.ok && res.micro_step) {
+        setMicroStep(res.micro_step)
+        setMicroCount(idx)
+        buddyReact('reading', 'Mẹ thử hỏi con câu nhỏ này xem sao nha!', 2500)
+      } else {
+        toast('Gấu tạm chuyển sang gợi ý hình vẽ cho mẹ nhé')
+        buddyReact('oops', 'Mình xem gợi ý vẽ hình nhé!', 2000)
+      }
+    } catch (e) {
+      console.warn('Micro-step error:', e)
+    } finally {
+      setLoadingMicro(false)
+    }
+  }
+
+  const handleMicroSolved = () => {
+    const curStep = steps[step]
+    const praiseText = curStep?.loi_khen || curStep?.praise || `Giỏi quá! Lên bậc ${step + 2} nào`
+    const ns = step + 1
+
+    recordLearningEvent({
+      child_id: child?.id,
+      session_id: S.flow?.sessionId || (`sess_${Date.now()}`),
+      subject: problem?.subject || "Toán",
+      problem_type: problem?.type || "",
+      step_no: step + 1,
+      skill: curStep?.ky_nang || "tinh_toan",
+      result: "can_goi_y",
+      hints_used: stuck,
+      micro_steps: microCount || 1,
+    }).catch(() => {})
+
+    setMicroStep(null)
+    setMicroCount(0)
+    patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
+    if (ns >= steps.length) {
+      boom()
+      toast(`🎉 ${child.name} đã tìm ra đáp án rồi!`)
+      buddyReact('cheer', praiseText, 2500)
+    } else {
+      buddyReact('cheer', praiseText, 2000)
+    }
+  }
+
+  const handleMicroStillStuck = () => {
+    if (microCount < 2) {
+      triggerMicroStep(2)
+    } else {
+      const curStep = steps[step]
+      recordLearningEvent({
+        child_id: child?.id,
+        session_id: S.flow?.sessionId || (`sess_${Date.now()}`),
+        subject: problem?.subject || "Toán",
+        problem_type: problem?.type || "",
+        step_no: step + 1,
+        skill: curStep?.ky_nang || "tinh_toan",
+        result: "me_dan",
+        hints_used: 2,
+        micro_steps: 2,
+      }).catch(() => {})
+
+      setMicroStep(null)
+      setShowAns(true)
+      toast(`Mẹ hãy chỉ dẫn từng bước cho ${child.name} nhé 💚`)
+      buddyReact('idle', 'Mẹ hướng dẫn từng bước cho con nhé', 2500)
+    }
+  }
+
   const stepStuck = () => {
     const ns = stuck + 1
     patch({ flow: { ...S.flow, stuck: ns } })
-    buddyReact('oops', 'Không sao đâu, mình xem gợi ý tiếp nhé', 2200)
+
+    // Đợt 18 · Chặng 4: Lần 2 ở cùng bậc -> gọi AI chẻ nhỏ câu hỏi
+    if (ns === 2 && !microStep) {
+      triggerMicroStep(1)
+    } else {
+      buddyReact('oops', 'Không sao đâu, mình xem gợi ý tiếp nhé', 2200)
+    }
   }
 
   const onOpen = () => {
@@ -2215,6 +2318,53 @@ export function Scaffold() {
                   })}
                 />
               </div>
+
+              {stuck >= 2 && (
+                <div className="stuck-badge" data-testid="stuck-badge-2">
+                  <span aria-hidden="true">🙈</span> Con chưa nghĩ ra · lần {stuck}
+                </div>
+              )}
+
+              {loadingMicro && (
+                <div className="card micro fadeIn" data-testid="card-micro-loading">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="fa-solid fa-spinner fa-spin" style={{ color: '#F6A623', fontSize: 18 }} />
+                    <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Gấu đang chẻ nhỏ câu hỏi cho {child.name}…</b>
+                  </div>
+                </div>
+              )}
+
+              {microStep && !loadingMicro && (
+                <div className="card micro fadeIn" data-testid="card-micro-step">
+                  <div className="lbl plum" style={{ margin: 0, color: '#92400E' }}>GẤU CHẺ NHỎ CÂU HỎI</div>
+                  <p style={{ fontSize: 15.5, fontWeight: 700, margin: '4px 0', color: 'var(--c-text)', lineHeight: 1.45 }}>
+                    "{microStep.cau_hoi_nho}"
+                  </p>
+                  <div className="mr-row">
+                    <span className="tagm">Câu nhỏ {microStep.micro_index || microCount}/2</span>
+                    <button className="lnk-btn" onClick={() => setShowMicroWhy(!showMicroWhy)}>
+                      Vì sao câu này? ›
+                    </button>
+                  </div>
+                  {showMicroWhy && (
+                    <div style={{ background: 'var(--c-surface)', borderRadius: 10, padding: '8px 10px', marginTop: 4, fontSize: 13, color: 'var(--c-text-2)', border: '1px solid var(--c-line)' }}>
+                      💡 <b>Lý do cho mẹ:</b> {microStep.ly_do_cho_me}
+                      <div style={{ marginTop: 4, fontWeight: 700, color: 'var(--c-text)' }}>
+                        Đáp án đợi con: {microStep.dap_an_cho_me}
+                      </div>
+                    </div>
+                  )}
+                  <div className="row2" style={{ marginTop: 8 }}>
+                    <button className="btn g" onClick={handleMicroStillStuck} data-testid="btn-micro-stuck">
+                      🙈 Vẫn chưa ra
+                    </button>
+                    <button className="btn" onClick={handleMicroSolved} data-testid="btn-micro-solved">
+                      🎉 Con ra rồi!
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {stuck > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0' }}>
                   {s.hint && (

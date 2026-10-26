@@ -1691,3 +1691,59 @@ export async function fetchAiProgressReport(childId, childName = 'Bé', options 
     return { ok: false, error: { code: 'NETWORK_ERROR', message: 'Không thể kết nối máy chủ phân tích' } };
   }
 }
+
+export async function fetchAiMicroStep({
+  problemText = '',
+  stepQuestion = '',
+  stepAnswer = '',
+  hintsUsed = [],
+  skill = 'tinh_toan',
+  childProfile = '',
+  childSpeech = '',
+  microIndex = 1,
+  childName = 'Bé',
+  sessionId = null,
+  familyId = null,
+} = {}) {
+  if (isTrialActive()) {
+    const sampleQuestions = [
+      `${childName} tìm trong đề chữ đứng trước số nhé. Số đó là bao nhiêu?`,
+      `Nếu bớt đi thì số còn lại nhiều hơn hay ít hơn lúc đầu hả ${childName}?`
+    ];
+    return {
+      ok: true,
+      micro_step: {
+        cau_hoi_nho: sampleQuestions[(microIndex - 1) % sampleQuestions.length] || sampleQuestions[0],
+        dap_an_cho_me: stepAnswer || 'Số liệu trong đề',
+        ly_do_cho_me: 'Giúp con nhận diện đúng dữ kiện nhỏ nhất trước khi bắt đầu tính.',
+        micro_index: microIndex,
+      },
+      latency_ms: 120,
+    };
+  }
+
+  try {
+    const res = await post(
+      '/api/v1/ai/micro-step',
+      {
+        problem_text: problemText,
+        step_question: stepQuestion,
+        step_answer: stepAnswer,
+        hints_used: hintsUsed,
+        skill,
+        child_profile: childProfile,
+        child_speech: childSpeech,
+        micro_index: microIndex,
+        child_name: childName,
+        session_id: sessionId,
+        family_id: familyId,
+      },
+      12000,
+      AI_GATEWAY
+    );
+    return res;
+  } catch (err) {
+    console.warn('fetchAiMicroStep error:', err);
+    return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
+  }
+}

@@ -1266,3 +1266,49 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   padding-top: 8px;
   border-top: 1px dashed var(--c-line);
 }
+
+/* Đợt 18 · Chặng 4: Câu hỏi nhỏ hơn */
+.stuck-badge {
+  align-self: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #8A5A00;
+  background: #FFE7B8;
+  border-radius: 99px;
+  padding: 4px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+}
+.card.micro {
+  border: 2px solid #F6A623;
+  background: var(--c-surface-2);
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+.mr-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.tagm {
+  font-size: 12px;
+  font-weight: 900;
+  background: #FFE7B8;
+  color: #8A5A00;
+  border-radius: 99px;
+  padding: 3px 10px;
+}
+.tagm.ok {
+  background: #EAF6EC;
+  color: #3F7A3E;
+}
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}

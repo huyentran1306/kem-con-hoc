@@ -215,3 +215,41 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `npm test`: **30/30 test suites đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch, không lỗi (306ms)**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+
+---
+
+## CHI TIẾT CHẶNG 4: CÂU HỎI NHỎ HƠN (PROMPT 18 CHẶNG 4)
+
+### 1. Việc đã làm
+- **1.1 Backend Worker API (`POST /api/v1/ai/micro-step`):**
+  - Xây dựng endpoint hỗ trợ prompt `p18_micro_step` với model `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, timeout 12s.
+  - Nhận đầu vào: `problem_text`, `step_question`, `step_answer`, `hints_used`, `skill`, `child_profile`, `child_speech`, `micro_index` (1 hoặc 2), `child_name`.
+  - Giới hạn nghiêm ngặt: `cau_hoi_nho` tối đa 20 từ, `ly_do_cho_me` tối đa 25 từ.
+  - Tích hợp bộ chặn rò rỉ đáp án: nếu câu hỏi nhỏ vô tình chứa số kết quả của bài toán, tự động thay thế bằng câu hỏi an toàn theo kỹ năng của bậc và ghi nhật ký vào `guard_log` với `outcome = 'sua_bac'`.
+- **1.2 Frontend API & Dùng thử (`src/api.js`):**
+  - Thêm hàm `fetchAiMicroStep`.
+  - Hỗ trợ Chế độ Dùng thử không gửi request mạng, trả về câu hỏi nhỏ mẫu tức thì.
+- **1.3 Giao diện người dùng (`Scaffold` trong `src/screens.jsx` & `src/styles.css`):**
+  - Kích hoạt thông minh: mẹ bấm "Con chưa nghĩ ra" lần 1 hiện gợi ý vật thật có sẵn; lần 2 ở cùng bậc tự động kích hoạt gọi AI chẻ nhỏ câu hỏi.
+  - Huy hiệu trạng thái: `🙈 Con chưa nghĩ ra · lần 2`.
+  - Thẻ `GẤU CHẺ NHỎ CÂU HỎI`:
+    - Câu hỏi nhỏ trong ngoặc kép với chữ to, rõ ràng.
+    - Nhãn `Câu nhỏ 1/2` (hoặc `2/2`).
+    - Nút `Vì sao câu này? ›` mở phần giải thích sư phạm và đáp án mẹ đợi con.
+    - Hai nút thao tác: `🙈 Vẫn chưa ra` và `🎉 Con ra rồi!`.
+  - Khi con giải được: bấm `Con ra rồi!` ghi nhận sự kiện vào `learning_events.micro_steps` và chuyển tiếp bậc.
+  - Khi vẫn chưa ra: bấm `Vẫn chưa ra` lần 1 gọi tiếp câu nhỏ 2/2; hết 2 câu nhỏ tự động chuyển sang gợi ý hình vẽ và đáp án cho mẹ với nhãn `me_dan`.
+
+### 2. Files đã chỉnh sửa
+- `../study-en/ai-gateway-worker/src/v1_routes.js`
+- `../study-en/ai-gateway-worker/src/index.js`
+- `src/api.js`
+- `src/screens.jsx`
+- `src/styles.css`
+- `package.json`
+- `scripts/test-dot18-chang-4.mjs` (Tạo mới 15 tests)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-4.mjs`: **15/15 kiểm thử đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch (228ms)**
+- `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
