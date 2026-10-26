@@ -36,7 +36,7 @@ export const CUSTOM_BUDDIES = [
   { id: 'cat', name: 'Mèo hạt dẻ', emoji: '🐱', autoIcon: 'notebook' },
   { id: 'star', name: 'Ngôi sao', emoji: '⭐', autoIcon: 'chalk' },
   { id: 'sprout', name: 'Mầm non', emoji: '🌱', autoIcon: 'garden' },
-  { id: 'none', name: 'Không dùng', emoji: '⏹️', autoIcon: 'bento' },
+  { id: 'onigiri', name: 'Bé Cơm Nắm', emoji: '🍙', autoIcon: 'bento' },
 ]
 
 /**

@@ -89,8 +89,8 @@
 
 /* Lời chào ở trang chủ */
 .kb-greeter{position:relative;flex:0 0 auto}
-.kb-greeter .kb-say{position:absolute;right:calc(100% + 6px);top:50%;transform-origin:100% 50%;width:max-content;max-width:200px;margin-top:-22px;z-index:3}
-.kb-greeter .kb-say::after{content:"";position:absolute;right:-7px;top:16px;border:7px solid transparent;border-left-color:var(--c-surface, #fff);border-right:0}
+.kb-greeter .kb-say{position:absolute;top:calc(100% + 6px);right:0;transform-origin:top right;width:max-content;max-width:220px;background:var(--c-surface, #fff);color:var(--c-text, #3A2A33);border:var(--border-w, 1.5px) solid var(--c-line, #F4DDE7);box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10}
+.kb-greeter .kb-say::after{content:"";position:absolute;right:20px;top:-7px;border:7px solid transparent;border-bottom-color:var(--c-surface, #fff);border-top:0}
 
 /* Linh vật bật lên khi con làm đúng / bối rối */
 .kb-pop{position:absolute;left:14px;bottom:calc(150px + env(safe-area-inset-bottom, 0px));z-index:9;display:flex;align-items:flex-end;gap:6px;pointer-events:none;animation:kbPopUp .45s cubic-bezier(.3,1.5,.5,1) both;max-width:calc(100% - 28px)}
@@ -106,6 +106,8 @@
 @keyframes kbFlash{0%{opacity:.95}100%{opacity:0}}
 
 /* Giảm chuyển động: đứng yên, vẫn giữ biểu cảm & đạo cụ */
+[data-motion="off"] .kbuddy *, [data-motion="off"] .kbuddy, [data-motion="off"] .kb-pop, [data-motion="off"] .kb-say, [data-motion="off"] .kb-flash.go{animation:none !important}
+[data-motion="off"] .kbuddy .bd-root{animation:none !important;transform:none !important}
 [data-motion="off"] .kbuddy .pr-float,[data-motion="off"] .kbuddy .pr-z,[data-motion="off"] .kbuddy .pr-puff,[data-motion="off"] .kbuddy .pr-sweat,[data-motion="off"] .kbuddy .pr-spark{opacity:1}
 [data-motion="off"] .kb-heart{display:none}
 @media (prefers-reduced-motion: reduce){

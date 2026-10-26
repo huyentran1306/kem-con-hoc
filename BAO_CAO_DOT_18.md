@@ -331,3 +331,43 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `scripts/test-dot18-chang-6.mjs`: **14/14 kiểm thử đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch (220ms)**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+
+---
+
+## CHẶNG 7: LINH VẬT ĐỘNG (HOÀN THIỆN PHẦN ĐÃ LÀM)
+
+### 1. Các hạng mục đã thực hiện
+- **1.1 Bé Cơm Nắm (onigiri) cho bộ Bento Mềm:**
+  - Bổ sung cấu hình hình vẽ SVG `onigiri` vào thư viện `buddyArt.js` với đầy đủ 9 trạng thái cảm xúc (`idle`, `hello`, `reading`, `thinking`, `cheer`, `love`, `surprised`, `oops`, `sleepy`).
+  - Đăng ký tên linh vật `onigiri: "Bé Cơm Nắm"` vào `BUDDY_NAMES` và `ORDER`.
+  - Bổ sung trọn bộ câu thoại `hello`, `nudge`, `cheer` cho Bé Cơm Nắm vào `buddyQuotes.js`.
+  - Cập nhật `customPalette.js` gán bộ `bento` vào Bé Cơm Nắm `onigiri` thay vì `none`.
+- **1.2 Bong bóng lời nói trang chủ:**
+  - Sửa lỗi bong bóng che dòng chào "Chào buổi sáng, mẹ!": định vị bong bóng ở bên dưới linh vật (`top: calc(100% + 6px); right: 0;`).
+  - Màu nền đặc `var(--c-surface)`, chữ `var(--c-text)`, có viền và đổ bóng rõ ràng, không bị lẫn chữ ở các bộ tối (Cực Quang, Bảng Phấn).
+  - Chiều rộng tối đa 220px, tự động ẩn sau 3 giây.
+- **1.3 Tắt chuyển động (`data-motion="off"` & `prefers-reduced-motion`):**
+  - Khi tắt chuyển động, linh vật đứng yên hoàn toàn (tắt nhảy, thở, lắc lư, chớp mắt), nhưng vẫn giữ nguyên biểu cảm khuôn mặt và phụ kiện/đạo cụ.
+- **1.4 Linh vật phản ứng đồng bộ trong lúc học:**
+  - **Màn Hỏi con từng bước (`Scaffold`):** Linh vật nhỏ 48px đứng cạnh câu hỏi:
+    - Con làm được rồi -> `cheer`
+    - Con chưa nghĩ ra -> `thinking`
+    - Gấu nghe con: `dung` -> `cheer`, `gan_dung` -> `thinking`, `sai_huong` -> `surprised`, `khong_ro` -> `idle`
+    - Câu nhỏ hơn hiện ra -> `reading`
+  - **Màn Xong bài (`Done`):** Ở mọi bộ giao diện không theo mùa, hiển thị linh vật cỡ lớn (96px) chúc mừng với trạng thái `cheer` (và chuyển sang `love` khi con dạy lại bài cho mẹ).
+  - **Màn Báo cáo (`Report`):** Linh vật hiển thị `reading` khi đang phân tích và `oops` khi gặp lỗi.
+
+### 2. Files đã chỉnh sửa
+- `src/themes/buddies/buddyArt.js`
+- `src/themes/buddies/buddyQuotes.js`
+- `src/themes/customPalette.js`
+- `src/themes/buddies/buddySvgs.jsx`
+- `src/themes/buddies/buddy.css`
+- `src/screens.jsx`
+- `package.json`
+- `scripts/test-dot18-chang-7.mjs` (Tạo mới 6 nhóm kiểm thử)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-7.mjs`: **6/6 kiểm thử đạt (100% - bao gồm 99 tổ hợp SVG linh vật)**
+- `npm test`: **Toàn bộ test suite dự án đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch (315ms)**

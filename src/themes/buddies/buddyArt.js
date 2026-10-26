@@ -119,9 +119,16 @@ const B = {
 <circle cx="50" cy="46" r="20" fill="#fff" stroke="#1D2340" stroke-width="2.2"/>`,
     eyes:[{x:43,y:43,r:2.8},{x:57,y:43,r:2.8}], ec:'#1D2340', mouth:{x:50,y:51,w:6,style:'simple',c:'#1D2340'},
     cheeks:[{x:38,y:50,r:3.4}], cc:'#FFB3BC', co:.9, face:{x:50,y:46}, top:4, sparkAt:{x:86,y:14}
+  },
+  onigiri:{
+    body:`<path d="M50 16 C58 16 82 56 82 72 C82 85 73 89 50 89 C27 89 18 85 18 72 C18 56 42 16 50 16 Z" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M36 68 L64 68 L64 89 C58 89 42 89 36 89 Z" fill="#27272A"/>
+<circle cx="50" cy="30" r="3.2" fill="#EF4444" opacity=".85"/>`,
+    eyes:[{x:39,y:52,r:3.8},{x:61,y:52,r:3.8}], ec:'#18181B', mouth:{x:50,y:60,w:3.8,style:'simple',c:'#18181B'},
+    cheeks:[{x:30,y:58,r:4}], cc:'#FDA4AF', co:.9, face:{x:50,y:54}, top:12, sparkAt:{x:82,y:20}
   }
 };
-const ORDER = ['bear','unicorn','dragon','cat','star','cloud','sprout','snowman','lion','kite'];
+const ORDER = ['bear','unicorn','dragon','cat','star','cloud','sprout','snowman','lion','kite','onigiri'];
 
 const STATES = [
   {id:'idle',name:'Nghỉ',use:'Trang chủ, thẻ chào. Thở và chớp mắt.'},
@@ -232,7 +239,7 @@ function propsSVG(b, id, state){
 
 
 export const BUDDY_IDS = ORDER
-export const BUDDY_NAMES = { bear: 'Gấu', unicorn: 'Kỳ lân', dragon: 'Rồng con', cat: 'Mèo', star: 'Sao', cloud: 'Mây', sprout: 'Mầm', snowman: 'Người Tuyết Bông', lion: 'Bé Lân', kite: 'Diều Cầu Vồng' }
+export const BUDDY_NAMES = { bear: 'Gấu', unicorn: 'Kỳ lân', dragon: 'Rồng con', cat: 'Mèo', star: 'Sao', cloud: 'Mây', sprout: 'Mầm', snowman: 'Người Tuyết Bông', lion: 'Bé Lân', kite: 'Diều Cầu Vồng', onigiri: 'Bé Cơm Nắm' }
 export const BUDDY_STATES = STATES
 export const BUDDY_VIEWBOX = '-20 -24 140 140'
 

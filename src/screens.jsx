@@ -18,7 +18,7 @@ import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeN
 import { ZaloReportModal } from './ZaloReportModal'
 import { NpsSurveyCard } from './NpsSurveySheet'
 import { getSlot } from './themes/slots/registry'
-import { SeasonHomeLayer, SeasonStepProgress, SeasonDoneArt, seasonLevelEmoji } from './seasons'
+import { SeasonHomeLayer, SeasonStepProgress, SeasonDoneArt, seasonLevelEmoji, isSeasonalTheme } from './seasons'
 import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
@@ -2072,6 +2072,8 @@ export function Scaffold() {
   const [hasMicSupport, setHasMicSupport] = useState(true)
   const voiceRecoRef = useRef(null)
   const voiceTimeoutRef = useRef(null)
+  // State Linh vật phản ứng (Đợt 18 · Chặng 7)
+  const [buddyState, setBuddyState] = useState('idle')
 
   useEffect(() => {
     setShowAns(false)
@@ -2081,6 +2083,7 @@ export function Scaffold() {
     setMicroCount(0)
     setShowMicroWhy(false)
     setVoiceState({ listening: false, transcript: '', verdict: null, loading: false })
+    setBuddyState('idle')
   }, [step])
 
   useEffect(() => {
@@ -2122,6 +2125,7 @@ export function Scaffold() {
   const ScaffoldActionsSlot = getSlot(S.theme, 'ScaffoldActions') || DefaultScaffoldActions
 
   const stepOk = () => {
+    setBuddyState('cheer')
     const curStep = steps[step]
     const praiseText = curStep?.loi_khen || curStep?.praise || `Giỏi quá! Lên bậc ${step + 2} nào`
     const ns = step + 1
@@ -2246,10 +2250,13 @@ export function Scaffold() {
           buddyReact('cheer', v.khen_cu_the || 'Con trả lời đúng rồi!', 2500)
           soundSuccess()
         } else if (v.danh_gia === 'gan_dung') {
+          setBuddyState('thinking')
           buddyReact('thinking', v.khen_cu_the || 'Gần đúng rồi con ơi!', 2500)
         } else if (v.danh_gia === 'sai_huong') {
+          setBuddyState('surprised')
           buddyReact('surprised', 'Chưa đúng hướng rồi, để mẹ hướng dẫn thêm nhé!', 2500)
         } else {
+          setBuddyState('idle')
           buddyReact('idle', 'Gấu nghe chưa rõ, con nói to lại nha!', 2500)
         }
       } else {
@@ -2283,6 +2290,7 @@ export function Scaffold() {
       if (res && res.ok && res.micro_step) {
         setMicroStep(res.micro_step)
         setMicroCount(idx)
+        setBuddyState('reading')
         buddyReact('reading', 'Mẹ thử hỏi con câu nhỏ này xem sao nha!', 2500)
       } else {
         toast('Gấu tạm chuyển sang gợi ý hình vẽ cho mẹ nhé')
@@ -2296,6 +2304,7 @@ export function Scaffold() {
   }
 
   const handleMicroSolved = () => {
+    setBuddyState('cheer')
     const curStep = steps[step]
     const praiseText = curStep?.loi_khen || curStep?.praise || `Giỏi quá! Lên bậc ${step + 2} nào`
     const ns = step + 1
@@ -2349,6 +2358,7 @@ export function Scaffold() {
   }
 
   const stepStuck = () => {
+    setBuddyState('thinking')
     const ns = stuck + 1
     patch({ flow: { ...S.flow, stuck: ns } })
 
@@ -2434,9 +2444,12 @@ export function Scaffold() {
         if (i === step)
           return (
             <div className="card plum fadeIn" key={i}>
-              <div className="step-row">
-                <span className="n">{i + 1}</span>
-                <b style={{ fontSize: 15 }}>{s.q || s.question}</b>
+              <div className="step-row" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ThemeBuddy state={buddyState} size={48} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span className="n" style={{ marginRight: 6 }}>{i + 1}</span>
+                  <b style={{ fontSize: 15 }}>{s.q || s.question}</b>
+                </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <SpeakBtn text={s.q || s.question} />
@@ -3297,6 +3310,17 @@ export function Done() {
     <>
       <Header title="Xong bài rồi! 🎉" back="home" />
       <SeasonDoneArt />
+      {!isSeasonalTheme(S?.theme) && (
+        <div className="card sunset fadeIn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 14px', margin: '12px 0', textAlign: 'center' }} data-testid="done-buddy-art">
+          <ThemeBuddy state={S.flow?.teachBack ? 'love' : 'cheer'} size={96} />
+          <h3 style={{ margin: '10px 0 4px', fontSize: 18, fontWeight: 800 }}>
+            {S.flow?.teachBack ? `Thương ${child.name} ghê! 💕` : `Hoan hô ${child.name}! 🎉`}
+          </h3>
+          <p className="sub" style={{ margin: 0, textAlign: 'center' }}>
+            {S.flow?.teachBack ? `${child.name} đã giảng lại cho ${S.parent.toLowerCase()} nghe thật cừ!` : 'Con đã xuất sắc hoàn thành bài học hôm nay!'}
+          </p>
+        </div>
+      )}
       {problem?.isSample && (
         <div
           className="sample-banner"
@@ -5943,8 +5967,8 @@ export function Report() {
 
     if (progressState.loading) {
       return (
-        <div className="card st-card" data-testid="progress-analyzing">
-          <span className="e2"><i className="fa-solid fa-spinner fa-spin" style={{ color: 'var(--c-accent)' }} /></span>
+        <div className="card st-card" data-testid="progress-analyzing" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <ThemeBuddy state="reading" size={52} />
           <div>
             <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu đang phân tích dữ liệu của {child.name}…</b>
             <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
@@ -5957,8 +5981,8 @@ export function Report() {
 
     if (progressState.error) {
       return (
-        <div className="card st-card warn" data-testid="progress-error">
-          <span className="e2" aria-hidden="true">⏳</span>
+        <div className="card st-card warn" data-testid="progress-error" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <ThemeBuddy state="oops" size={52} />
           <div style={{ flex: 1 }}>
             <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu chưa phân tích được lúc này</b>
             <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>

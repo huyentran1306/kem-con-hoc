@@ -53,4 +53,9 @@ export const BUDDY_QUOTES = {
     nudge: 'Gió đang lặng, mình hít thở sâu rồi bay tiếp nha.',
     cheer: 'Tuyệt vời! Thêm một quả bóng căng màu cho con rồi!',
   },
-}
+  onigiri: {
+    hello: 'Bé Cơm Nắm tròn xoe chào con! Tối nay mình cùng nạp năng lượng học thật ngoan nhé! 🍙',
+    nudge: 'Bé Cơm Nắm thơm ngon nhắc con: uống ngụm nước rồi hai mẹ con cùng làm tiếp nha!',
+    cheer: 'Giỏi quá là giỏi! Bé Cơm Nắm tặng con trọn hộp bento dinh dưỡng tinh thần! 🍱✨',
+  },
+};

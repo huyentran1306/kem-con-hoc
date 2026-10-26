@@ -132,7 +132,7 @@ export function BuddyGreeter({ size = 72 }) {
     setSay({ text: lines[idx.current % lines.length], k: Date.now() })
     idx.current += 1
     clearTimeout(t2.current)
-    t2.current = setTimeout(() => setSay(null), 3200)
+    t2.current = setTimeout(() => setSay(null), 3000)
   }
 
   return (
