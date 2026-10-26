@@ -10,7 +10,7 @@
 | **Chặng 3** | Bảng điểm AI | **ĐẠT** | (pending) | Local / Preview | Trang /admin/bang-diem, 8 thẻ chỉ số chất lượng, xem chi tiết từng ca, xuất ảnh slide 1920x1080 |
 | **Chặng 4** | Gấu góp ý cách kèm | **ĐẠT** | (pending) | Local / Preview | Thư viện 20 quy tắc sư phạm tính bằng code JS (0 token), chỉ mẹ thấy trên màn Done, tắt được ở Con tôi |
 | **Chặng 5** | Trợ lý gấu cho cô giáo | **ĐẠT** | (pending) | Local / Preview | Tab Kết quả cổng giáo viên khi >= 5 gia đình, prompt p20_class_insight model nhỏ <= 300 token, không nêu tên con, lưu cache theo ngày |
-| **Chặng 6** | Kiểm thử và báo cáo | Chưa | - | - | Bảng trước & sau, ai-eval 30 đề, test bộ nhớ, hạn mức, dùng thử 0 gọi AI |
+| **Chặng 6** | Kiểm thử và báo cáo | **ĐẠT** | (pending) | Local / Preview | Bảng trước & sau, ai-eval 30 đề, test bộ nhớ, hạn mức, dùng thử 0 gọi AI, test-dot20-chang-6.mjs pass 100% |
 
 ---
 
@@ -91,3 +91,23 @@ Kính gửi chủ dự án kết quả đo lường và kiểm thử ai-eval tr�
    - Dưới 5 bài nộp: Hiển thị thống kê và biểu đồ cột bằng code JavaScript thuần (**0 token**).
    - Từ 5 bài nộp trở lên: Mở nút "🐻 Gấu tổng hợp lớp".
    - Tự động lưu cache theo ngày (`class_insight_{classId}_{assignmentId}_{today}`), cô mở lại nhiều lần trong ngày không tốn token gọi AI.
+
+---
+
+## 9. TỔNG KẾT TOÀN DIỆN ĐỢT 20 VÀ ĐIỂM DỪNG BẮT BUỘC 3 (DEPLOY PRODUCTION)
+Toàn bộ 7 chặng của Đợt 20 (Prompt 20: Tiết kiệm token AI và demo chắc chắn) đã được lập trình, kiểm thử và xác thực nghiêm ngặt 100%:
+- **Chặng 0 (Đo token thật & Admin Token AI):** Đã chạy migration remote D1 19 DDL queries, ra mắt `/admin/token-ai` với 4 KPIs, bảng so sánh và biểu đồ.
+- **Chặng 1 (Cắt chỗ phí token):** Đã tích hợp `lesson_cache` 30 ngày, rút gọn `p3_explain_v2` giảm 50% token vào, loại bỏ `p2_clean` cho ảnh rõ, mở rộng 32 câu hạ hoả ngoại tuyến, giới hạn 30 bài/ngày.
+- **Chặng 2 (Kiểm tra trước demo & Chế độ trình diễn):** Ra mắt `/admin/truoc-demo`, chạy 5 mục kiểm tra sức khoẻ (~3.800 tokens), công tắc Chế độ trình diễn tự động mở bản soạn sẵn nếu quá 10 giây kèm chú thích giờ soạn minh bạch.
+- **Chặng 3 (Bảng điểm AI & Slide 1920x1080):** Ra mắt `/admin/bang-diem`, 8 thẻ chỉ số chất lượng, xem chi tiết từng ca kiểm thử, chạy lại theo lô có thanh tiến độ và modal xuất slide 16:9.
+- **Chặng 4 (Gấu góp ý cách kèm):** Thư viện 20 quy tắc sư phạm tính bằng code JS (0 token), hiển thị trên màn Done (chỉ mẹ thấy), tắt được trong Con tôi.
+- **Chặng 5 (Trợ lý gấu cho cô giáo):** Prompt `p20_class_insight` model nhỏ <= 300 token khi lớp có từ 5 bài nộp trở lên, không nêu tên học sinh, lưu cache theo ngày.
+- **Chặng 6 (Kiểm thử tổng hợp & Báo cáo):** Chạy script `scripts/test-dot20-chang-6.mjs` kiểm tra xuyên suốt 7 chặng, vượt qua 100% các tiêu chí.
+
+---
+
+## 10. TRÌNH DUYỆT ĐIỂM DỪNG 3: DEPLOY PRODUCTION
+Kính xin ý kiến phê duyệt của Chủ dự án để tiến hành:
+1. Push các commit Đợt 20 (`dot20-chang-0` đến `dot20-chang-6`) lên nhánh `main`.
+2. Triển khai Cloudflare Worker AI Gateway (`wrangler deploy`).
+3. Triển khai Cloudflare Pages (`npm run deploy`).
