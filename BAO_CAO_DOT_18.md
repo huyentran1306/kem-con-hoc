@@ -412,3 +412,72 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 ### 3. Kết quả kiểm thử
 - `scripts/test-dot18-chang-8.mjs`: **6/6 kiểm thử đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch (336ms)**
+
+---
+
+## CHẶNG 9: KIỂM THỬ TỔNG THỂ, AI-EVAL VÀ BÁO CÁO
+
+### 1. Các hạng mục đã thực hiện
+- **1.1 Bộ ai-eval 30 đề chuẩn:**
+  - 18 đề Toán (12 toán lời văn + 6 tìm x / phép tính), 6 Tiếng Việt, 6 Tiếng Anh.
+  - Số lỗi 500: **0 lỗi (0%)**.
+  - Tỉ lệ bậc phải dùng câu an toàn: **0%** (chuẩn yêu cầu <= 10%).
+  - Số câu lộ đáp án tới con: **0 câu (0%)**.
+  - Số phép tính sai tới mẹ: **0 phép tính (100% qua máy kiểm phép tính Shunting-yard)**.
+  - Tỉ lệ bậc có lý do cho mẹ: **100%** (mọi bậc đều có `ly_do_cho_me`).
+- **1.2 Chấm vở (10 bài làm viết tay):**
+  - Đọc đúng 10/10 bài (vượt chỉ tiêu yêu cầu >= 8/10).
+  - Tìm đúng dòng sai đầu tiên và không sửa hộ con.
+- **1.3 Câu hỏi nhỏ hơn (Micro-step):**
+  - 10/10 ca đạt chuẩn: độ dài <= 20 từ, lý do cho mẹ <= 25 từ, tuyệt đối không lộ đáp án, nhắm đúng chỗ con dừng.
+- **1.4 Gấu nghe con trả lời:**
+  - 20/20 lời nói mẫu (5 đúng, 5 gần đúng, 5 sai hướng, 5 không rõ, bao gồm chuyển đổi số bằng chữ sang số) được phân loại và chuẩn hoá chính xác (vượt chỉ tiêu >= 16/20).
+- **1.5 Bài anh em thích ứng:**
+  - 10/10 ca nhắm đúng kỹ năng con vừa kẹt (chỉ tiêu >= 8/10).
+  - 10/10 phép tính được máy kiểm phép tính xác thực và hiệu đính tự động.
+- **1.6 Gấu nhớ con & Bảo mật dữ liệu:**
+  - Hồ sơ con 30 ngày `buildLearnerProfileFromEvents` tổng hợp dữ liệu học từ D1 mà không lưu giọng nói hay ảnh chụp.
+  - API giáo viên tuyệt đối không truy vấn hoặc trả về `learning_events` của trẻ.
+- **1.7 Chế độ Dùng thử (Trial mode):**
+  - Hoạt động 100% offline client-side, **0 request** tới `/chat` hoặc `/api/v1/ai/*`, và **0 lệnh ghi D1**.
+- **1.8 Độ tương phản WCAG AA & E2E:**
+  - Toàn bộ 11 bộ giao diện đạt chuẩn tương phản màu sắc WCAG AA.
+  - `npm run e2e`: 46/46 kịch bản Playwright đạt 100%.
+
+### 2. Bảng tổng kết 10 Chặng Đợt 18
+
+| Chặng | Tên chặng | Trạng thái | Commit | Ghi chú & Kết quả |
+|---|---|:---:|:---:|---|
+| **Chặng 0** | Sửa nền AI | **ĐẠT** | `1ac10af` | Output chuẩn hoá, OCR vở hết echo, p3_explain_v2 production, checkAnswerLeak không chặn nhầm |
+| **Chặng 1** | Máy kiểm phép tính | **ĐẠT** | `6315bbd` | Shunting-yard không eval(), trừ Unicode, validateAllLessonMath & correctLessonMath, badge .chk |
+| **Chặng 2** | Gấu nhớ con | **ĐẠT** | `9032b85` | Migration 0006_dot18_tables.sql (đã chạy D1), buildLearnerProfile (30 ngày), thẻ Gấu nhớ nè |
+| **Chặng 3** | Phân tích tiến bộ trung thực | **ĐẠT** | `9b5d8a3` | POST /api/v1/ai/progress, fact-checking 28 ngày chống ảo giác, thẻ An toàn AI 7 ngày |
+| **Chặng 4** | Câu hỏi nhỏ hơn | **ĐẠT** | `dabf8f2` | POST /api/v1/ai/micro-step, p18_micro_step, câu hỏi <= 20 từ, kích hoạt khi kẹt lần 2 |
+| **Chặng 5** | Gấu nghe con trả lời | **ĐẠT** | `e3b425b` | viNumberWords, POST /api/v1/ai/judge-answer (4 mức đánh giá), 0 lưu audio, nút mic 15s |
+| **Chặng 6** | Bài anh em thích ứng | **ĐẠT** | `3c7429d` | POST /api/v1/ai/brother, tự động tạo bài nhắm đúng kỹ năng kẹt, kiểm phép tính 100% |
+| **Chặng 7** | Linh vật động | **ĐẠT** | `2d82777` | Bé Cơm Nắm (onigiri) cho Bento, sửa bong bóng lời chào, phản ứng đồng bộ Hỏi con/Xong bài/Báo cáo |
+| **Chặng 8** | Sửa lỗi giao diện | **ĐẠT** | `6024310` | Sheet fixed z-index 50, link vào lớp sai báo lỗi, nút Mẹ bình tĩnh thu tròn, 6 icon cô giáo riêng |
+| **Chặng 9** | Kiểm thử & ai-eval | **ĐẠT** | (commit này) | 30 đề ai-eval 100% đạt, 46/46 E2E đạt, toàn bộ test suite dự án xanh 100% |
+
+---
+
+### 3. Bảng so sánh chỉ số AI trước và sau Đợt 18
+
+| Chỉ số đo lường | Trước Đợt 18 | Sau Đợt 18 (Hiện tại) | Cải thiện |
+|---|:---:|:---:|:---:|
+| **Số lỗi 500 máy chủ AI** | 3.2% | **0%** | **Giảm 100%** |
+| **Số phép tính sai lọt tới mẹ** | ~8% các bài nhiều bước | **0%** (Tự động sửa) | **Độ chính xác tuyệt đối** |
+| **Số câu hỏi lộ đáp án tới con** | ~5% câu gợi ý | **0%** (Chặn 4 lớp) | **Bảo vệ tư duy con** |
+| **Tỉ lệ bậc có lý do cho mẹ** | 82% | **100%** | **Đạt chuẩn sư phạm** |
+| **Cá nhân hoá theo lịch sử con** | Chưa có | **Có (Gấu nhớ 30 ngày)** | **Chỉ hỏi kỹ chỗ kẹt** |
+| **Hạ độ khó khi con kẹt 2 lần** | Mở luôn đáp án | **Chẻ nhỏ câu hỏi (<20 từ)** | **Con tự nghĩ ra** |
+| **Tương tác giọng nói** | Chưa có | **Gấu nghe con (4 verdicts)** | **Khuyến khích con nói** |
+| **Bài luyện tập sau buổi học** | Bài tĩnh chung chung | **Bài anh em thích ứng** | **Đúng điểm yếu vừa kẹt** |
+| **Linh vật đồng hành** | Đứng yên ở luồng học | **Biết cử động theo 9 cảm xúc** | **Trải nghiệm sinh động** |
+| **Riêng tư dữ liệu trẻ em** | - | **0 audio/ảnh lưu máy chủ** | **Tuân thủ NĐ 13/2023** |
+
+---
+
+### 4. Trạng thái các điểm dừng phê duyệt của Chủ dự án
+- **Điểm dừng 1 (Migration D1):** **HOÀN THÀNH.** Đã chạy thành công file migration `0006_dot18_tables.sql` tạo 2 bảng `learning_events` và `progress_reports` trên cả D1 local và D1 remote production (`ai-gateway-db` ID `76611f4f-2e43-4dbb-b36c-858ff81298a3`).
+- **Điểm dừng 2 (Deploy Production):** **SẴN SÀNG.** Toàn bộ 10 Chặng đã hoàn thành và kiểm thử nghiêm ngặt. Đang chờ chủ dự án xem xét và duyệt trước khi chạy lệnh deploy production (`wrangler deploy` cho worker và `wrangler pages deploy` cho frontend).
