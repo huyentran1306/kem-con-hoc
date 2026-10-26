@@ -1,3 +1,25 @@
+
+let memoryDemoMode = false;
+export function isDemoMode() {
+  try {
+    if (typeof localStorage !== "undefined") {
+      return localStorage.getItem("kch_demo_mode") === "true";
+    }
+    return memoryDemoMode;
+  } catch (_) {
+    return memoryDemoMode;
+  }
+}
+
+export function setDemoMode(val) {
+  memoryDemoMode = Boolean(val);
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("kch_demo_mode", val ? "true" : "false");
+    }
+  } catch (_) {}
+}
+
 /* ============================================================
    CLIENT GATEWAY — API Service & Database Bridge
    ============================================================ */
@@ -318,20 +340,52 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const modelId = typeof aiCfg.model === 'string' && aiCfg.model.startsWith('@cf/') ? aiCfg.model : undefined
 
   try {
-    let j = await postAi(
-      '/chat',
-      {
-        messages: [
-          { role: 'system', content: sys },
-          { role: 'user', content: userPrompt },
-        ],
-        max_tokens: Math.min(Number(aiCfg.max_tokens) || 1400, 1600),
-        temperature: typeof aiCfg.temperature === 'number' ? aiCfg.temperature : 0.3,
-        model: modelId,
-      },
-      EXPLAIN_TIMEOUT_MS,
-      { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
-    )
+    let j;
+    // Đợt 20 · Chặng 2: Chế độ trình diễn - nếu quá 10s tự động chuyển bản soạn sẵn
+    if (isDemoMode()) {
+      try {
+        const demoTimeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("demo_safeguard_10s_timeout")), 10000)
+        );
+        const aiPromise = postAi(
+          '/chat',
+          {
+            messages: [
+              { role: 'system', content: sys },
+              { role: 'user', content: userPrompt },
+            ],
+            max_tokens: Math.min(Number(aiCfg.max_tokens) || 1400, 1600),
+            temperature: typeof aiCfg.temperature === 'number' ? aiCfg.temperature : 0.3,
+            model: modelId,
+          },
+          10000,
+          { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
+        );
+        j = await Promise.race([aiPromise, demoTimeoutPromise]);
+      } catch (dErr) {
+        console.warn("Chế độ trình diễn: Quá 10s hoặc lỗi mạng, mở bản soạn sẵn:", dErr);
+        const matched = matchTrialLesson(ocr) || PRELOADED_TRIAL_LESSONS[0];
+        const p = trialLessonToProblem(matched);
+        p.is_preloaded_demo = true;
+        p.demo_timestamp = localStorage.getItem("kch_demo_preload_time") || "19:42";
+        return p;
+      }
+    } else {
+      j = await postAi(
+        '/chat',
+        {
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: userPrompt },
+          ],
+          max_tokens: Math.min(Number(aiCfg.max_tokens) || 1400, 1600),
+          temperature: typeof aiCfg.temperature === 'number' ? aiCfg.temperature : 0.3,
+          model: modelId,
+        },
+        EXPLAIN_TIMEOUT_MS,
+        { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
+      );
+    }
     let data = extractJson(j.response ?? j)
 
     // Lần đầu lỗi JSON hoặc thiếu schema: thử lại 1 lần nếu còn đủ thời gian

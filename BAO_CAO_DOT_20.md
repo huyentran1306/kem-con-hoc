@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|
 | **Chặng 0** | Đo token thật (làm trước khi tối ưu) | **ĐẠT** | `58bae20` | Local / Preview | Đã chạy migration 0008 remote D1, trang /admin/token-ai theo token-demo-20.html, đo nền 20 bài |
 | **Chặng 1** | Cắt chỗ phí token | **ĐẠT** | (pending) | Local / Preview | lesson_cache 30 ngày, rút gọn p3_explain_v2 giảm 50% token vào, bỏ p2_clean thừa, câu hạ hoả offline 32 câu, hạn mức 30 bài/ngày |
-| **Chặng 2** | Kiểm tra trước demo và chế độ trình diễn | Chưa | - | - | Trang /admin/truoc-demo, nút Chạy kiểm tra 5 mục, công tắc Chế độ trình diễn fallback nếu > 10s |
+| **Chặng 2** | Kiểm tra trước demo và chế độ trình diễn | **ĐẠT** | (pending) | Local / Preview | Trang /admin/truoc-demo, nút Chạy kiểm tra 5 mục (~3.800 tokens), công tắc Chế độ trình diễn fallback > 10s minh bạch giờ soạn |
 | **Chặng 3** | Bảng điểm AI | Chưa | - | - | Trang /admin/bang-diem, 8 thẻ chỉ số, lưu eval_runs, xuất ảnh 1920x1080 cho slide |
 | **Chặng 4** | Gấu góp ý cách kèm | Chưa | - | - | Tính bằng code từ learning_events và thời gian từng bậc, không tốn token, chỉ mẹ thấy, tắt được |
 | **Chặng 5** | Trợ lý gấu cho cô giáo | Chưa | - | - | Tab Kết quả cổng giáo viên khi >= 5 gia đình, prompt p20_class_insight model nhỏ <= 300 token |
@@ -47,3 +47,15 @@ Kính gửi chủ dự án kết quả đo lường và kiểm thử ai-eval tr�
 2. **Bỏ gọi `p2_clean` thừa:** Hàm `needsCleanProblem` chỉ kích hoạt làm sạch khi độ tin cậy < 0.7, có ký tự lạ > 3 hoặc từ dính dài > 25 ký tự. Tiết kiệm ~580 tokens cho toàn bộ bài chụp rõ.
 3. **Thư viện câu hạ hoả ngoại tuyến:** Mở rộng lên 32 câu sư phạm ấm áp thuộc 4 nhóm lý do (`not_understood`, `distracted`, `frustrated`, `late`). Mở góc hạ hoả không gọi AI. Chỉ gọi `p8_calm_phrase` khi mẹ yêu cầu "Câu khác hợp bài hơn", lưu cache 7 ngày.
 4. **Hạn mức gia đình:** Giới hạn 30 lượt soạn bài/ngày/gia đình. Quá hạn mức trả thông điệp hướng dẫn mẹ con cùng ôn tập nhẹ nhàng, bảo vệ mắt cho bé.
+
+---
+
+## 5. TỔNG KẾT CHẶNG 2: KIỂM TRA TRƯỚC DEMO VÀ CHẾ ĐỘ TRÌNH DIỄN
+1. **Trang `/admin/truoc-demo` (`AdminPreDemoPage.jsx`):**
+   - Khám tổng quát 5 mục: Soạn bài đề chuẩn (bỏ qua cache), Chấm vở viết tay mẫu, Gấu nghe con giảng lại, Phân tích tiến bộ học tập, 3 đề trình diễn sẵn trong bộ nhớ.
+   - Ước tính trước chi phí token cho một lần chạy kiểm tra (~3.800 tokens).
+   - Đo thời gian phản hồi (ms) và trạng thái màu Đạt / Cảnh báo / Lỗi.
+2. **Chế độ trình diễn (Demo Safeguard):**
+   - Khi bật, app vẫn gọi AI thật trước. Nếu mạng chậm quá 10 giây (hoặc lỗi), tự động fallback mở bản soạn sẵn trong cache.
+   - Hiển thị dòng nhỏ minh bạch: `🕒 Bản soạn sẵn lúc 19:42 (Chế độ trình diễn)`.
+   - Tuyệt đối trung thực, không giả vờ AI đang chạy.

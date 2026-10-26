@@ -1935,6 +1935,11 @@ export function Explain() {
       {Array.isArray(problem.steps) && problem.steps.length > 0 && (
         <div className="card" style={{ padding: "12px 14px" }}>
           <span className="lbl plum">{problem.steps.length} BẬC GẤU ĐÃ SOẠN</span>
+          {problem.demo_timestamp && (
+            <div style={{ fontSize: 12, color: "#64748b", fontStyle: "italic", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+              <span>🕒</span> Bản soạn sẵn lúc {problem.demo_timestamp} (Chế độ trình diễn)
+            </div>
+          )}
           <div className="steps" style={{ display: "grid", gap: 8, marginTop: 8 }}>
             {problem.steps.map((st, i) => {
               const skillName = SKILL_LABELS[st.ky_nang] || st.ky_nang || ""
