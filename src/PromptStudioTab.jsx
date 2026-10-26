@@ -334,6 +334,7 @@ export default function PromptStudioTab() {
   const [busy, setBusy] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)
   const [filledOpen, setFilledOpen] = useState(false)
+  const [activeColumnTab, setActiveColumnTab] = useState('editor')
 
   // Bàn thử
   const [deBai, setDeBai] = useState(SAMPLE_PROBLEM)
@@ -661,24 +662,55 @@ export default function PromptStudioTab() {
     )
 
   return (
-    <div className="aip-root aip-ps">
+    <div className="aip-root aip-ps" data-active-col={activeColumnTab}>
       <PageHeader
         title="Prompt Studio"
         description="Sửa cách AI giảng mà không cần phát hành lại app · mỗi lần lưu là một phiên bản"
         actions={
-          <>
-            <Button variant="ghost" onClick={() => setHistoryOpen(true)}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)}>
               🕘 Lịch sử
             </Button>
-            <Button variant="secondary" onClick={saveDraft} disabled={!!busy || !isUnsaved}>
+            <Button variant="secondary" size="sm" onClick={saveDraft} disabled={!!busy || !isUnsaved}>
               {busy === 'draft' ? 'Đang lưu…' : 'Lưu nháp'}
             </Button>
-            <Button onClick={publish} disabled={!!busy || validation.error || !differsFromLive}>
+            <Button size="sm" onClick={publish} disabled={!!busy || validation.error || !differsFromLive}>
               {busy === 'publish' ? 'Đang xuất bản…' : 'Xuất bản'}
             </Button>
-          </>
+          </div>
         }
       />
+
+      {/* Thanh chuyển cột trên mobile & tablet hẹp */}
+      <div className="aip-ps-tabs" role="tablist" aria-label="Chế độ xem Prompt Studio">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeColumnTab === 'list'}
+          className={`aip-ps-tab-btn ${activeColumnTab === 'list' ? 'is-active' : ''}`}
+          onClick={() => setActiveColumnTab('list')}
+        >
+          📋 Danh sách <span className="aip-ps-tab-badge">{keys.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeColumnTab === 'editor'}
+          className={`aip-ps-tab-btn ${activeColumnTab === 'editor' ? 'is-active' : ''}`}
+          onClick={() => setActiveColumnTab('editor')}
+        >
+          ✏️ Soạn thảo <span className="aip-ps-tab-badge">{promptCode(selected)}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeColumnTab === 'bench'}
+          className={`aip-ps-tab-btn ${activeColumnTab === 'bench' ? 'is-active' : ''}`}
+          onClick={() => setActiveColumnTab('bench')}
+        >
+          🧪 Bàn thử & Lịch sử
+        </button>
+      </div>
 
       <div className="aip-ps-grid">
         {/* Cột 1: danh sách prompt */}
@@ -704,7 +736,10 @@ export default function PromptStudioTab() {
                   type="button"
                   className={`aip-plist-item ${selected === k ? 'on' : ''}`}
                   aria-current={selected === k ? 'true' : undefined}
-                  onClick={() => setSelected(k)}
+                  onClick={() => {
+                    setSelected(k)
+                    setActiveColumnTab('editor')
+                  }}
                 >
                   <span className="aip-plist-title">
                     <span className="aip-plist-code">{promptCode(k)}</span>
@@ -763,6 +798,9 @@ export default function PromptStudioTab() {
               {wrap ? '↔ Giữ nguyên dòng' : '↩ Tự xuống dòng'}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setFilledOpen(true)}>Xem bản điền biến</Button>
+            <Button variant="secondary" size="sm" onClick={() => setActiveColumnTab('bench')} title="Chuyển sang bàn thử để kiểm tra">
+              🧪 Sang Bàn thử
+            </Button>
           </div>
 
           <div ref={editorWrapRef}>
@@ -798,11 +836,16 @@ export default function PromptStudioTab() {
         <div className="aip-ps-bench">
           <Card>
             <div style={{ display: 'grid', gap: 10 }}>
-              <h3 className="aip-h3">Bàn thử</h3>
+              <div className="aip-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="aip-h3">Bàn thử</h3>
+                <Button variant="ghost" size="sm" onClick={() => setActiveColumnTab('editor')} title="Quay lại trình soạn prompt">
+                  ← Trình soạn
+                </Button>
+              </div>
               <Field label="Đề bài">
                 <Textarea rows={3} value={deBai} onChange={(e) => setDeBai(e.target.value)} />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 8, width: '100%', minWidth: 0 }}>
                 <Field label="Lớp">
                   <Select value={lop} onChange={setLop} options={GRADES} ariaLabel="Lớp" size="sm" />
                 </Field>

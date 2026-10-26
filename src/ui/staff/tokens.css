@@ -199,7 +199,9 @@ button.sk-card { width: 100%; font: inherit; }
 .sk-invalid, .sk-invalid.sk-input-wrap { border-color: var(--s-bad) !important; }
 
 /* Select tự vẽ */
-.sk-select { position: relative; min-width: 160px; font-family: var(--s-font-body); }
+/* Select tự vẽ */
+.sk-select { position: relative; min-width: 0; width: 100%; font-family: var(--s-font-body); }
+.sk-select.sk-sm { min-width: 0; }
 .sk-select-btn {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 9px 12px; border: 2px solid var(--s-line); border-radius: var(--s-radius-input);
@@ -211,7 +213,7 @@ button.sk-card { width: 100%; font: inherit; }
 .sk-placeholder { color: #A08467; font-weight: 600; }
 .sk-caret { color: var(--s-accent-deep); font-size: 12px; }
 .sk-select-list {
-  position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; right: 0; max-height: 260px; overflow: auto;
+  position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; right: 0; min-width: 130px; max-height: 260px; overflow: auto;
   margin: 0; padding: 6px; list-style: none; background: var(--s-surface); border: 1.5px solid var(--s-line);
   border-radius: 16px; box-shadow: 0 14px 30px -10px rgba(75, 54, 33, .3);
 }

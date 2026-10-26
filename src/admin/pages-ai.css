@@ -21,17 +21,125 @@
 .aip-linkbtn:hover { color: var(--s-text); }
 .aip-linkbtn:focus-visible, .aip-plist-item:focus-visible, .aip-sample:focus-visible { outline: 3px solid rgba(246, 166, 35, .55); outline-offset: 2px; }
 
-/* ---------- Prompt Studio: 3 cột ---------- */
-.aip-ps { container-type: inline-size; container-name: aipps; }
-.aip-ps-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-@container aipps (min-width: 760px) {
-  .aip-ps-grid { grid-template-columns: 220px minmax(0, 1fr); }
-  .aip-ps-bench { grid-column: 2; }
+/* ---------- Prompt Studio: 3 cột & Responsive ---------- */
+.aip-ps {
+  container-type: inline-size;
+  container-name: aipps;
+  min-width: 0;
+  max-width: 100%;
 }
+
+/* Thanh chuyển tab trên mobile / màn hình nhỏ */
+.aip-ps-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--s-surface, #FFFBF5);
+  border: 1.5px solid var(--s-line, #F0DDC2);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+  max-width: 100%;
+}
+.aip-ps-tabs::-webkit-scrollbar { display: none; }
+.aip-ps-tab-btn {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--s-text-2, #84664A);
+  font: 700 12.5px/1.2 var(--s-font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.aip-ps-tab-btn.is-active {
+  background: var(--s-accent, #F6A623);
+  color: var(--s-on-accent, #4A2800);
+  box-shadow: 0 2px 4px rgba(246, 166, 35, 0.25);
+  font-weight: 800;
+}
+.aip-ps-tab-badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.aip-ps-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
+.aip-ps-side, .aip-ps-editor, .aip-ps-bench {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ẩn các cột không kích hoạt trên màn hình nhỏ < 1080px */
+@container aipps (max-width: 1079px) {
+  .aip-ps[data-active-col="list"] .aip-ps-editor,
+  .aip-ps[data-active-col="list"] .aip-ps-bench {
+    display: none !important;
+  }
+  .aip-ps[data-active-col="editor"] .aip-ps-side,
+  .aip-ps[data-active-col="editor"] .aip-ps-bench {
+    display: none !important;
+  }
+  .aip-ps[data-active-col="bench"] .aip-ps-side,
+  .aip-ps[data-active-col="bench"] .aip-ps-editor {
+    display: none !important;
+  }
+}
+@media (max-width: 1079px) {
+  .aip-ps[data-active-col="list"] .aip-ps-editor,
+  .aip-ps[data-active-col="list"] .aip-ps-bench {
+    display: none !important;
+  }
+  .aip-ps[data-active-col="editor"] .aip-ps-side,
+  .aip-ps[data-active-col="editor"] .aip-ps-bench {
+    display: none !important;
+  }
+  .aip-ps[data-active-col="bench"] .aip-ps-side,
+  .aip-ps[data-active-col="bench"] .aip-ps-editor {
+    display: none !important;
+  }
+}
+
+/* Trên màn hình lớn (>= 1080px): hiển thị song song 3 cột và ẩn tab */
 @container aipps (min-width: 1080px) {
-  .aip-ps-grid { grid-template-columns: 220px minmax(0, 1fr) 300px; }
-  .aip-ps-bench { grid-column: 3; }
+  .aip-ps-tabs { display: none !important; }
+  .aip-ps-grid {
+    grid-template-columns: 220px minmax(360px, 1fr) minmax(300px, 340px);
+  }
+  .aip-ps-side, .aip-ps-editor, .aip-ps-bench {
+    display: flex !important;
+  }
   .aip-ps-side { position: sticky; top: 12px; }
+  .aip-ps-bench { grid-column: 3; }
+}
+@media (min-width: 1180px) {
+  .aip-ps-tabs { display: none !important; }
+  .aip-ps-grid {
+    grid-template-columns: 220px minmax(360px, 1fr) minmax(300px, 340px);
+  }
+  .aip-ps-side, .aip-ps-editor, .aip-ps-bench {
+    display: flex !important;
+  }
+  .aip-ps-side { position: sticky; top: 12px; }
+  .aip-ps-bench { grid-column: 3; }
 }
 .aip-ps-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 140px); overflow: hidden; }
 .aip-plist-scroll { display: grid; gap: 4px; overflow-y: auto; flex: 1; min-height: 0; padding-right: 2px; scrollbar-width: thin; }
@@ -131,3 +239,25 @@
 .aip-kv span { display: block; font-size: 11px; color: var(--s-text-2); font-weight: 700; }
 .aip-kv b { font-size: 13.5px; }
 .aip-kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+/* Tối ưu PageHeader & Tabs trong Prompt Studio khi trên màn hình hẹp */
+@media (max-width: 767px) {
+  .aip-root.aip-ps .sk-page-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .aip-root.aip-ps .sk-page-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .aip-root.aip-ps .sk-page-actions > * {
+    flex: 1 1 auto !important;
+  }
+  .aip-root.aip-ps .aip-ps-tab-btn {
+    font-size: 11.5px !important;
+    padding: 6px 6px !important;
+  }
+}
