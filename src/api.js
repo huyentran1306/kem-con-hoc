@@ -1,3 +1,4 @@
+import { validateAllLessonMath, correctLessonMath } from './arithmetic.js';
 
 let memoryDemoMode = false;
 export function isDemoMode() {
@@ -257,7 +258,7 @@ export function needsCleanProblem(rawText, confidence = 1) {
   if (words.length === 0) return false
 
   // Đợt 20 Chặng 1.3: Chỉ làm sạch khi ký tự lạ > 3 hoặc có từ dính dài > 25 ký tự
-  const strangeChars = (text.match(/[^a-zA-Z0-9àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ\s.,!?:;'"()\/\-–—+%×÷=<>]/g) || []).length
+  const strangeChars = (text.match(/[^a-zA-Z0-9àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ\s.,!?:;'"()/\-–—+%×÷=<>]/g) || []).length
   if (strangeChars > 3) return true
 
   const joinedWords = words.filter(w => w.length > 25)
@@ -469,10 +470,15 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       diagram: null,
     }
   } catch (e) {
+    // Phân biệt: lỗi mã nguồn (ReferenceError, TypeError,...) không che giấu dưới dạng lỗi mạng
+    if (e instanceof ReferenceError || e instanceof TypeError || e instanceof RangeError || e instanceof SyntaxError) {
+      console.error('Lỗi mã nguồn trong xử lý bài giảng:', e);
+      return { error: 'runtime_error', message: 'Lỗi xử lý bài giảng: ' + (e?.message || e) };
+    }
     // Phân biệt: hết hạn chờ (AI soạn lâu) / máy chủ báo lỗi / mất mạng thật
-    if (e && e.name === 'AbortError') return { error: 'timeout', message: 'AI đang soạn lâu hơn thường lệ' }
-    if (e && e.status) return { error: 'server', status: e.status, message: e.message }
-    return { error: 'network', message: 'Không kết nối được máy chủ' }
+    if (e && e.name === 'AbortError') return { error: 'timeout', message: 'AI đang soạn lâu hơn thường lệ' };
+    if (e && e.status) return { error: 'server', status: e.status, message: e.message };
+    return { error: 'network', message: 'Không kết nối được máy chủ' };
   }
 }
 

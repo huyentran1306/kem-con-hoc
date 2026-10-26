@@ -1,5 +1,5 @@
 import { computeCoachAdvice, isCoachAdviceEnabled } from "./coachRules.js"
-import { Fragment, useContext, useEffect, useRef, useState, useMemo } from 'react'
+import { Fragment, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { AppCtx } from './ctx'
 import {
   PARENT_TYPES, GRADES, BOOKS, TONES, EMOJIS, PROBLEM, STICKER_REWARD,
@@ -2757,7 +2757,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
           setTbState('review')
         } catch (err) {
           toast('Không bóc băng được âm thanh, dùng lời giảng mẫu nhé!')
-          useSample()
+          applySample()
         }
       }
       mr.start(250)
@@ -2774,7 +2774,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
       }, 1000)
     } catch (err) {
       toast('Không kết nối được micro, đang dùng lời giảng mẫu!')
-      useSample()
+      applySample()
     }
   }
 
@@ -2787,7 +2787,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
 
   // Lời giảng mẫu chỉ có ở Dùng thử hoặc bài mẫu, và luôn khớp với bài đang học (đợt 15 P1)
   const canUseSample = isTrialActive() || Boolean(problem?.isSample)
-  const useSample = async () => {
+  const applySample = async () => {
     if (isTrialActive()) {
       const r = await teachBackTranscribe({}).catch(() => null)
       setTranscript(r?.transcript || '')
@@ -2873,7 +2873,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
                 className="btn soft"
                 data-testid="tb-sample-btn"
                 style={{ width: '100%', fontSize: 12.5, padding: '8px', color: 'var(--c-text-2)' }}
-                onClick={useSample}
+                onClick={applySample}
               >
                 🎧 Dùng lời giảng mẫu (bài đang học)
               </button>
@@ -3107,7 +3107,13 @@ export function Done() {
   const child = S.children.find((c) => c.id === S.activeId)
   // Đợt 15 P1: chỉ còn 1 bộ đánh giá (mẹ chốt mức hiểu bài trong thẻ Con dạy lại)
   const result = S.flow.result || (S.flow.teachBack === 'guided' ? 'weak' : S.flow.teachBack ? 'ok' : null)
+
+  // Khởi tạo các State trước useMemo để tránh lỗi Temporal Dead Zone (Cannot access 'adaptiveBrother' before initialization)
   const [stkIdx, setStkIdx] = useState(0)
+  const [pickedTrait, setPickedTrait] = useState(null)
+  const [isCoachOpen, setIsCoachOpen] = useState(true)
+  const [adaptiveBrother, setAdaptiveBrother] = useState(null)
+  const [loadingBrother, setLoadingBrother] = useState(false)
 
   // Đợt 19 Chặng 2: Tính huy hiệu Gấu gợi ý theo hành động của con
   const recentBadges2Weeks = useMemo(() => {
@@ -3150,16 +3156,6 @@ export function Done() {
     })
   }, [child?.name, sessionData, recentBadges2Weeks])
 
-  const [pickedTrait, setPickedTrait] = useState(null)
-  const currentTrait = pickedTrait || suggestedBadge.trait
-  const currentBadgeInfo = TRAIT_BADGE_INFO[currentTrait] || TRAIT_BADGE_INFO['Kiên nhẫn']
-  const isSuggested = currentTrait === suggestedBadge.trait
-  const currentReason = isSuggested ? suggestedBadge.reason : `${child?.name || 'Con'} được chọn huy hiệu ${currentTrait}.`
-  const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
-  const stkOwned = (stats.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
-
-  // State Bài anh em thích ứng (Đợt 18 · Chặng 6)
-  const [isCoachOpen, setIsCoachOpen] = useState(true)
   const coachAdviceEnabled = isCoachAdviceEnabled(child)
   const coachAdviceList = useMemo(() => {
     return computeCoachAdvice({
@@ -3173,8 +3169,13 @@ export function Done() {
       }
     })
   }, [sessionData, child, S?.flow])
-  const [adaptiveBrother, setAdaptiveBrother] = useState(null)
-  const [loadingBrother, setLoadingBrother] = useState(false)
+
+  const currentTrait = pickedTrait || suggestedBadge.trait
+  const currentBadgeInfo = TRAIT_BADGE_INFO[currentTrait] || TRAIT_BADGE_INFO['Kiên nhẫn']
+  const isSuggested = currentTrait === suggestedBadge.trait
+  const currentReason = isSuggested ? suggestedBadge.reason : `${child?.name || 'Con'} được chọn huy hiệu ${currentTrait}.`
+  const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
+  const stkOwned = (stats?.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
   const hadStuckStep = Boolean(S.flow?.stuck > 0 || S.flow?.teachBack === 'hint' || S.flow?.teachBack === 'guided')
   const stuckSkill = S.flow?.lastStuckSkill || 'tinh_toan'
 
@@ -3209,7 +3210,7 @@ export function Done() {
       return
     }
     soundPop(600)
-    let found = null
+    let found
     let customSource = 'chon_khac'
     let customReason = 'Con làm bài rất nỗ lực'
 

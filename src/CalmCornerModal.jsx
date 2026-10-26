@@ -61,7 +61,6 @@ export function CalmCornerModal({
     }
   }, [isOpen])
 
-  if (!isOpen) return null
 
   const steps = currentProblem?.steps || []
   const currentStep = steps[currentStepIndex] || steps[0] || {}
@@ -236,6 +235,8 @@ export function CalmCornerModal({
       setIsAiLoading(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
