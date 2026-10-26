@@ -51,9 +51,9 @@ export default function TeamPromptSyncTab() {
           }
           return item
         })
-        INITIAL_TEAM_PROMPTS.forEach((initPrompt) => {
+        ;[...INITIAL_TEAM_PROMPTS].reverse().forEach((initPrompt) => {
           if (!list.some((p) => p.id === initPrompt.id)) {
-            list.push(initPrompt)
+            list.unshift(initPrompt)
           }
         })
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list))
@@ -105,6 +105,11 @@ export default function TeamPromptSyncTab() {
             return { ...item, promptDetail: fallback.promptDetail, title: fallback.title || item.title }
           }
           return item
+        })
+        ;[...INITIAL_TEAM_PROMPTS].reverse().forEach((initPrompt) => {
+          if (!merged.some((p) => p.id === initPrompt.id)) {
+            merged.unshift(initPrompt)
+          }
         })
         setPrompts(merged)
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged))
