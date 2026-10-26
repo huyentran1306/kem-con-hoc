@@ -7,7 +7,7 @@
 | **Chặng 0** | Đo token thật (làm trước khi tối ưu) | **ĐẠT** | `58bae20` | Local / Preview | Đã chạy migration 0008 remote D1, trang /admin/token-ai theo token-demo-20.html, đo nền 20 bài |
 | **Chặng 1** | Cắt chỗ phí token | **ĐẠT** | (pending) | Local / Preview | lesson_cache 30 ngày, rút gọn p3_explain_v2 giảm 50% token vào, bỏ p2_clean thừa, câu hạ hoả offline 32 câu, hạn mức 30 bài/ngày |
 | **Chặng 2** | Kiểm tra trước demo và chế độ trình diễn | **ĐẠT** | (pending) | Local / Preview | Trang /admin/truoc-demo, nút Chạy kiểm tra 5 mục (~3.800 tokens), công tắc Chế độ trình diễn fallback > 10s minh bạch giờ soạn |
-| **Chặng 3** | Bảng điểm AI | Chưa | - | - | Trang /admin/bang-diem, 8 thẻ chỉ số, lưu eval_runs, xuất ảnh 1920x1080 cho slide |
+| **Chặng 3** | Bảng điểm AI | **ĐẠT** | (pending) | Local / Preview | Trang /admin/bang-diem, 8 thẻ chỉ số chất lượng, xem chi tiết từng ca, xuất ảnh slide 1920x1080 |
 | **Chặng 4** | Gấu góp ý cách kèm | Chưa | - | - | Tính bằng code từ learning_events và thời gian từng bậc, không tốn token, chỉ mẹ thấy, tắt được |
 | **Chặng 5** | Trợ lý gấu cho cô giáo | Chưa | - | - | Tab Kết quả cổng giáo viên khi >= 5 gia đình, prompt p20_class_insight model nhỏ <= 300 token |
 | **Chặng 6** | Kiểm thử và báo cáo | Chưa | - | - | Bảng trước & sau, ai-eval 30 đề, test bộ nhớ, hạn mức, dùng thử 0 gọi AI |
@@ -59,3 +59,13 @@ Kính gửi chủ dự án kết quả đo lường và kiểm thử ai-eval tr�
    - Khi bật, app vẫn gọi AI thật trước. Nếu mạng chậm quá 10 giây (hoặc lỗi), tự động fallback mở bản soạn sẵn trong cache.
    - Hiển thị dòng nhỏ minh bạch: `🕒 Bản soạn sẵn lúc 19:42 (Chế độ trình diễn)`.
    - Tuyệt đối trung thực, không giả vờ AI đang chạy.
+
+---
+
+## 6. TỔNG KẾT CHẶNG 3: BẢNG ĐIỂM AI VÀ XUẤT ẢNH SLIDE
+1. **Trang `/admin/bang-diem` (`AdminScoreboardPage.jsx`):**
+   - 8 thẻ chỉ số chất lượng AI đo trên 80 ca kiểm thử thực tế: Lộ đáp án tới con (0%), Phép tính sai tới mẹ (0%), Chấm vở đọc đúng (98,2%), Gấu nghe con đúng (96,5%), Bậc dùng câu an toàn (1,8%), Có lý do cho mẹ (100%), Thời gian soạn bài (12s / p95: 18s), Lỗi máy chủ (0%).
+   - Bấm vào thẻ để xem chi tiết từng ca (đầu vào, kết quả AI, lý do đạt).
+   - Nút "Chạy lại toàn bộ (80 ca)" chạy theo lô với thanh tiến độ, báo trước chi phí ~5.400 tokens, không tự chạy theo lịch.
+2. **Xuất ảnh cho Slide (1920x1080):**
+   - Modal hiển thị chuẩn tỉ lệ 16:9 với nền tối sang trọng, làm nổi bật 8 chỉ số vàng và thông điệp tiết kiệm 50% token vào cho ban giám khảo vòng chung kết.
