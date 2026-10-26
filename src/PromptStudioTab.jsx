@@ -625,7 +625,7 @@ export default function PromptStudioTab() {
           {result.steps.slice(0, 6).map((s, i) => (
             <li key={i}>
               <b>{i + 1}</b>
-              <span>“{s.cau_hoi || s.question || s.q || '·'}”</span>
+              <span>“{s.cau_hoi || s.question || s.q || '(trống)'}”</span>
             </li>
           ))}
         </ol>
@@ -642,7 +642,7 @@ export default function PromptStudioTab() {
       <ul className="aip-vers">
         {rows.slice(0, limit).map((v) => (
           <li key={v.id}>
-            <span className="v">{v.local ? '·' : `v${v.version}`}</span>
+            <span className="v">{v.local ? 'nháp máy' : `v${v.version}`}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               {v.live ? <b>đang dùng</b> : v.status === 'draft' ? 'nháp' : 'đã xuất bản'}
               <span className="aip-muted">
@@ -687,14 +687,14 @@ export default function PromptStudioTab() {
             <span className="aip-label">{keys.length} prompt</span>
           </div>
           <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Tìm prompt…" aria-label="Tìm prompt" />
-          <nav aria-label="Danh sách prompt" style={{ display: 'grid', gap: 2, marginTop: 4 }}>
+          <nav className="aip-plist-scroll" aria-label="Danh sách prompt">
             {visibleKeys.map((k) => {
               const p = DEFAULT_PROMPTS[k]
               const st = promptState(k)
               const lv = latest && latest[k]
               const ev = EVAL_FOR[k]
               const meta = []
-              meta.push(lv ? `v${lv.version}` : 'v·')
+              if (lv?.version) { meta.push(`v${lv.version}`); } else { meta.push('mặc định'); }
               if (st.draftOn) meta.push('nháp')
               if (ev) meta.push(`chấm AI ${ev.allCriteriaPassCount}/${ev.totalQuestions}`)
               return (
