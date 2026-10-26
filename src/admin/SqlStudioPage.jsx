@@ -13,6 +13,8 @@ const QUICK = [
   { name: 'Lượt gọi AI theo ngày', sql: "SELECT date(created_at) AS ngay, COUNT(*) AS luot, SUM(CASE WHEN ok = 0 THEN 1 ELSE 0 END) AS loi FROM ai_calls GROUP BY ngay ORDER BY ngay DESC LIMIT 14" },
   { name: 'Danh sách bảng', sql: "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' ORDER BY name" },
   { name: 'Phiếu NPS gần nhất', sql: 'SELECT score, tags, comment, created_at FROM nps_responses ORDER BY created_at DESC LIMIT 10' },
+  { name: '10 huy hiệu Đợt 19', sql: 'SELECT id, family_id, child_id, trait, source, reason, created_at FROM badge_events ORDER BY created_at DESC LIMIT 10' },
+  { name: '10 đổi quà Đợt 19', sql: 'SELECT id, family_id, child_id, count, redeemed_at FROM reward_events ORDER BY redeemed_at DESC LIMIT 10' },
 ]
 
 export default function SqlStudioPage({ adminProfile }) {

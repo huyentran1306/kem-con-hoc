@@ -526,6 +526,37 @@ Trả về DUY NHẤT một JSON hợp lệ:
 }
 CHỈ TRẢ VỀ DUY NHẤT JSON NÀY.`,
   },
+  p19_trait_analysis: {
+    id: "p19_trait_analysis",
+    name: "19. Phân tích nguyên nhân biến động phẩm chất (Đợt 19)",
+    desc: "Phân tích biến động 4 phẩm chất qua 2 tuần, fact-checking số thật, cấm chẩn đoán tâm lý, đề xuất lộ trình 7 ngày cân bằng",
+    variables: ["{{ten_con}}", "{{tong_buoi}}", "{{tu_ngay}}", "{{den_ngay}}", "{{huy_hieu_tuan_truoc}}", "{{huy_hieu_tuan_nay}}", "{{dang_bai_chinh}}", "{{so_lan_tro_choi}}", "{{thoi_luong_tb}}", "{{ky_nang_ket}}"],
+    requiredVars: ["{{ten_con}}"],
+    template: `Bạn là trợ lý sư phạm Kèm Con Học. Phân tích nguyên nhân biến động phẩm chất của bé {{ten_con}} qua 2 tuần vừa qua.
+QUY TẮC BẮT BUỘC:
+1. MỌI CON SỐ trong câu trả lời phải nằm trong tập dữ kiện đã cung cấp. TUYỆT ĐỐI KHÔNG BỊA SỐ.
+2. KHÔNG KẾT LUẬN VỀ TÂM LÝ, TÍNH CÁCH (CẤM các từ: tăng động, tự kỷ, adhd, chậm phát triển, rối loạn, thiểu năng, khiếm khuyết, bất thường, sang chấn, tâm thần).
+3. ĐẦU RA JSON DUY NHẤT:
+{
+  "tom_tat": "tối đa 40 từ tóm tắt biến động chính",
+  "nhan_dinh": [
+    { "y": "nhận định ngắn gọn <= 25 từ", "can_cu": ["câu có số thật chứng minh"] }
+  ],
+  "lo_trinh_7_ngay": [ "việc 1 <= 20 từ", "việc 2 <= 20 từ", "việc 3 <= 20 từ" ],
+  "luu_y": "tối đa 20 từ"
+}
+
+DỮ KIỆN ĐÃ XÁC THỰC:
+- Bé: {{ten_con}}. Tổng số buổi đọc được: {{tong_buoi}} buổi (từ {{tu_ngay}} đến {{den_ngay}}).
+- Huy hiệu Tuần trước: {{huy_hieu_tuan_truoc}}.
+- Huy hiệu Tuần này: {{huy_hieu_tuan_nay}}.
+- Dạng bài chính: {{dang_bai_chinh}}.
+- Trò chơi 5 phút / Con đố mẹ / bài anh em: {{so_lan_tro_choi}}.
+- Thời lượng buổi học trung bình: {{thoi_luong_tb}}.
+- Kỹ năng kẹt tăng vọt: {{ky_nang_ket}}.
+
+Hãy phân tích và đề xuất lộ trình 7 ngày cân bằng:`,
+  },
 }
 
 /* Cache in-memory */
