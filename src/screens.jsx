@@ -1935,14 +1935,16 @@ export function Scaffold() {
   const ScaffoldActionsSlot = getSlot(S.theme, 'ScaffoldActions') || DefaultScaffoldActions
 
   const stepOk = () => {
+    const curStep = steps[step]
+    const praiseText = curStep?.loi_khen || curStep?.praise || `Giỏi quá! Lên bậc ${step + 2} nào`
     const ns = step + 1
     patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
     if (ns >= steps.length) {
       boom()
       toast(`🎉 ${child.name} tự giải xong cả ${steps.length} bậc!`)
-      buddyReact('cheer')
+      buddyReact('cheer', praiseText, 2500)
     } else {
-      buddyReact('cheer', `Giỏi quá! Lên bậc ${ns + 1} nào`, 1800)
+      buddyReact('cheer', praiseText, 2000)
     }
   }
 
@@ -2004,7 +2006,7 @@ export function Scaffold() {
                 <span className="n ok">✓</span>
                 <b style={{ fontSize: 14.5 }}>{s.q || s.question}</b>
               </div>
-              <span className="sub">{s.praise}</span>
+              <span className="sub">{s.loi_khen || s.praise}</span>
               {(s.answer || s.hint) && (
                 <div className="ok-ans">✔ {s.answer || s.hint}</div>
               )}
@@ -5095,6 +5097,23 @@ export function Report() {
   const handleRunAiAnalysis = async () => {
     soundPop(550)
     setAnalyzing(true)
+
+    // Đợt 18 · Chặng 0.7: Chế độ Dùng thử dùng bản mẫu có cấu trúc, KHÔNG gọi AI
+    if (session?.isTrial) {
+      setTimeout(() => {
+        setAiAnalysis(`### 📋 Bản mẫu phân tích tiến bộ (Chế độ Dùng thử)
+- **Kiên nhẫn**: Con có xu hướng kiên trì vượt qua các bài toán có nhiều bước gợi mở.
+- **Tập trung**: Các phiên học buổi tối đạt hiệu quả tiếp thu cao nhất.
+- **Điểm cần lưu ý**: Dạng bài toán có lời văn 2 bước cần thêm thời gian để con tự tóm tắt đề bài bằng sơ đồ trực quan.
+
+💡 *Đây là dữ liệu mẫu giúp phụ huynh hình dung báo cáo khi học thật.*`)
+        setAnalyzing(false)
+        soundSuccess()
+        toast('Đã nạp bản mẫu phân tích tiến bộ! ✨')
+      }, 400)
+      return
+    }
+
     toast('AI đang phân tích phẩm chất và đề xuất lộ trình… 🧠')
 
     try {
@@ -5110,30 +5129,13 @@ export function Report() {
         boom()
         toast('Đã có báo cáo lộ trình cân bằng cho con! ✨')
       } else {
-        // Fallback phân tích sư phạm chất lượng cao khi ngoại tuyến
-        const kDiff = (thisTraits['Kiên nhẫn'] || 0) - (lastTraits['Kiên nhẫn'] || 0)
-        const sDiff = (thisTraits['Sáng tạo'] || 0) - (lastTraits['Sáng tạo'] || 0)
-
-        const fallback = `### 🔍 1. Chẩn đoán biến động phẩm chất
-- **Kiên nhẫn tăng (+${Math.max(1, kDiff)})**: Tuần này con giải quyết ${thisTraits['Kiên nhẫn'] || 4} bài toán phức tạp đòi hỏi sự kiên trì. Con không dễ nản chí trước bài khó.
-- **Sáng tạo sụt giảm (${lastTraits['Sáng tạo'] || 5} ➔ ${thisTraits['Sáng tạo'] || 1})**: Con đang phải làm quá nhiều bài toán rập khuôn (Toán lời văn 2 bước) khiến tư duy con thiên về giải pháp an toàn thay vì tìm tòi cách giải đột phá.
-
-### 📊 2. Điểm nghẽn môn học & dạng bài
-- **Môn Toán**: Dạng bài *Toán có lời văn 2 bước* đang là điểm nghẽn lớn nhất (vướng ${stats.weak?.[0]?.v || 3} lần). Con bị quá tải ở khâu phân tích đề bài trước khi đặt phép tính.
-- **Tâm lý & nhịp học**: Con cần các khoảng nghỉ ngắn và trò chơi kết nối thực tế để tái nạp năng lượng sáng tạo.
-
-### 🎯 3. Lộ trình 7 ngày cân bằng
-1. **Ngày 1-2 (Giải phóng áp lực)**: Không giao thêm bài toán chữ dài. Dùng 5 que tính hoặc đồ chơi Lego để trực quan hóa đề bài.
-2. **Ngày 3-4 (Đổi gió cùng Bố)**: Đổi người kèm sang Bố 1 ca cuối tuần, thực hành trò chơi đo chiều cao chai nước hoặc đếm số bước chân.
-3. **Ngày 5-7 (Kích hoạt lại tính sáng tạo)**: Cho con tự đặt đề bài đố ngược lại mẹ ("Con đố mẹ làm được bài này!"), tặng huy hiệu Ngôi sao Sáng tạo khi con nghĩ ra cách giải mới.`
-
-        setAiAnalysis(fallback)
-        soundSuccess()
-        toast('Đã phân tích tổng quan dữ liệu phẩm chất! 💡')
+        setAiAnalysis(null)
+        toast('Chưa kết nối được AI để phân tích, mẹ bấm Thử lại nhé.')
       }
     } catch (e) {
       console.warn('Analysis error:', e)
-      toast('Chưa kết nối được AI, vui lòng thử lại sau.')
+      setAiAnalysis(null)
+      toast('Chưa kết nối được AI, mẹ bấm Thử lại nhé.')
     } finally {
       setAnalyzing(false)
     }

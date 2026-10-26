@@ -207,6 +207,8 @@ QUY TẮC BẮT BUỘC
 9. Tạo 1 "bai_anh_em": cùng dạng, đổi số và bối cảnh, kèm đáp án cho mẹ đối chiếu.
 10. Tạo 1 "tro_choi_5_phut": ôn đúng dạng này bằng đồ vật quen thuộc trong nhà.
 11. Tạo 1 câu "con_day_lai_me": mời con đóng vai thầy/cô giảng lại bước quan trọng nhất cho bố mẹ.
+12. Mỗi bậc BẮT BUỘC có "ky_nang" thuộc danh sách: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
+13. Mỗi bậc BẮT BUỘC có "loi_khen" (tối đa 15 từ, khen đúng việc của bậc đó, không nhắc kết quả các bậc sau).
 
 VÍ DỤ MẪU HOÀN CHỈNH (FEW-SHOT):
 Đề: "Mẹ có 15 chiếc kẹo, chia đều cho 3 bạn nhỏ. Hỏi mỗi bạn được mấy chiếc kẹo?"
@@ -218,8 +220,10 @@ Trả về JSON:
   "cac_bac": [
     {
       "cau_hoi": "Mẹ có tất cả 15 chiếc kẹo trên bàn, con đếm lại xem đúng không nào?",
+      "ky_nang": "doc_hieu_de",
       "ly_do_cho_me": "Giúp con chủ động nhận diện dữ kiện đầu tiên của bài toán bằng đồ vật cụ thể.",
       "dap_an_cho_me": "Có đúng 15 chiếc kẹo",
+      "loi_khen": "Con đếm số kẹo rất chuẩn xác và cẩn thận!",
       "goi_y": {
         "muc_1_do_vat": "Bày 15 viên kẹo hoặc nắp chai ra bàn cho con đếm.",
         "muc_2_hinh_ve": "Mẹ chấm 15 chấm tròn nhỏ thành một hàng."
@@ -227,8 +231,10 @@ Trả về JSON:
     },
     {
       "cau_hoi": "Có 3 bạn nhỏ, nếu mình chia đều cho từng bạn thì chia thế nào cho công bằng nhỉ?",
+      "ky_nang": "chon_phep_tinh",
       "ly_do_cho_me": "Dẫn dắt con nắm vững bản chất chia đều thực tế trước khi đưa vào công thức toán học.",
       "dap_an_cho_me": "Chia lần lượt mỗi bạn 1 chiếc cho đến hết (làm phép chia 15 : 3)",
+      "loi_khen": "Ý tưởng chia đều từng chiếc rất thông minh!",
       "goi_y": {
         "muc_1_do_vat": "Đặt 3 chiếc đĩa đại diện cho 3 bạn, chia lần lượt từng viên kẹo vào mỗi đĩa.",
         "muc_2_hinh_ve": "Vẽ 3 vòng tròn đại diện cho 3 bạn, chia đều các chấm tròn vào."
@@ -236,8 +242,10 @@ Trả về JSON:
     },
     {
       "cau_hoi": "Mỗi bạn nhận được mấy chiếc kẹo, con giúp mẹ viết phép tính nào!",
+      "ky_nang": "tinh_toan",
       "ly_do_cho_me": "Kết nối trải nghiệm chia kẹo thực tế thành phép chia chuẩn sách giáo khoa.",
       "dap_an_cho_me": "15 : 3 = 5 (chiếc kẹo)",
+      "loi_khen": "Phép chia chuẩn và con tính nhẩm rất nhanh!",
       "goi_y": {
         "muc_1_do_vat": "Đếm số kẹo trên một chiếc đĩa.",
         "muc_2_hinh_ve": "Đếm số chấm tròn trong 1 vòng tròn."

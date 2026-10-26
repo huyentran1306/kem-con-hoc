@@ -258,12 +258,10 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const book = child?.book || 'Kết nối tri thức'
   const classification = fastClassifyProblem(ocr, grade)
 
-  const isPreviewOrDev =
-    typeof window !== 'undefined' &&
-    (window.location.hostname.includes('preview') ||
-     window.location.hostname === 'localhost' ||
-     window.location.hostname === '127.0.0.1');
-  const targetPromptId = isPreviewOrDev ? 'p3_explain_v2' : 'p3_explain';
+  // Đợt 18 · Chặng 0.3: Mặc định bật p3_explain_v2 trên mọi môi trường (kể cả production)
+  const aiCfg = getActiveAiConfig();
+  const useV1 = aiCfg?.prompt_version === 'v1' || aiCfg?.p3_version === 'v1';
+  const targetPromptId = useV1 ? 'p3_explain' : 'p3_explain_v2';
 
   const sys = renderPrompt(targetPromptId, {
     mon: classification.mon,
@@ -277,8 +275,6 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     ghi_chu: parentNote,
     isStuck,
   })
-
-  const aiCfg = getActiveAiConfig()
 
   const isValidExplain = (d) => {
     if (!d || typeof d !== 'object') return false
@@ -346,12 +342,14 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     if (Array.isArray(data.cac_bac) && data.cac_bac.length > 0) {
       rawSteps = data.cac_bac.map((b, idx) => ({
         question: b.cau_hoi || `Bậc ${idx + 1}`,
+        ky_nang: b.ky_nang || 'tinh_toan',
         ly_do_cho_me: b.ly_do_cho_me || '',
         answerForParent: b.dap_an_cho_me || '',
         answer: b.dap_an_cho_me || '',
         hint: b.goi_y?.muc_1_do_vat || (typeof b.goi_y === 'string' ? b.goi_y : ''),
         hint2: b.goi_y?.muc_2_hinh_ve || '',
-        praise: data.loi_khen || 'Con rất nỗ lực!',
+        loi_khen: b.loi_khen || '',
+        praise: b.loi_khen || data.loi_khen || 'Con rất nỗ lực!',
       }))
     } else if (Array.isArray(data.steps) && data.steps.length > 0) {
       rawSteps = data.steps.map((s) => ({

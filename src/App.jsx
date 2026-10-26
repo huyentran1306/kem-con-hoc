@@ -359,9 +359,11 @@ export default function App() {
 
   /* ---------- đồng bộ screen theo trạng thái onboarded ---------- */
   useEffect(() => {
+    // Đợt 18 · Chặng 0.6: Chỉ hiện màn khai báo sau khi đã tải xong dữ liệu đám mây (hydrated)
+    if (famId && !session?.isTrial && !hydrated) return
     if (!S.onboarded && screen !== 'onb') setScreen('onb')
     else if (S.onboarded && screen === 'onb') setScreen('home')
-  }, [S.onboarded])
+  }, [S.onboarded, hydrated, famId, session])
 
   /* ---------- tải cấu hình công khai (Scope rules, Theme mặc định) ---------- */
   useEffect(() => {
@@ -434,6 +436,9 @@ export default function App() {
           ((cloud.ts > 0 && (!localRaw || cloud.ts > localTs)) || (!localOnboarded && (cloudOnboarded || cloudHasChildren)))
         ) {
           let nextState = { ...initialState(), ...cloud.state, _ts: cloud.ts }
+          if (cloudOnboarded || cloudHasChildren) {
+            nextState.onboarded = true
+          }
           const userCustomized = localStorage.getItem('kem-con-hoc:user-custom-theme')
           const lastAppliedForce = parseInt(localStorage.getItem('kem-con-hoc:last-applied-force-theme') || '0', 10)
           if (!userCustomized && lastAppliedForce > 0) {
@@ -709,7 +714,7 @@ export default function App() {
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const calmLabel = S.parent === 'Mẹ' ? 'Mẹ bình tĩnh' : S.parent === 'Bố' ? 'Bố bình tĩnh' : 'Mình bình tĩnh'
 
-  const waitingServerState = Boolean(famId && !session?.isTrial && !S.onboarded && cloudStatus !== 'ok')
+  const waitingServerState = Boolean(famId && !session?.isTrial && (!hydrated || cloudStatus === 'loading'))
   const ServerStateGate = () =>
     cloudStatus === 'error' ? (
       <div style={{ textAlign: 'center', padding: '80px 20px' }} data-testid="server-state-error">
