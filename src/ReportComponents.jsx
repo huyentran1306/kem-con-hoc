@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { TRAIT_COLORS, TRAIT_ICONS, HEATMAP_COLORS, getHeatmapColor } from "./badgeRules";
 import { getVnMondayStart, getWeekLabel } from "./utils";
 import { fetchAiTraitAnalysis } from "./api";
+import { isTrialActive } from "./trialData.js";
 
 
 
@@ -16,6 +17,17 @@ export function TraitStackedChart({
   const [filter, setFilter] = useState("8w"); // "8w", "3m", "1y"
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [showTable, setShowTable] = useState(false);
+  // Dữ liệu mẫu 8 tuần phẩm chất cho chế độ Dùng thử (Prompt 22 - 0.2)
+  const trialWeeksSample = useMemo(() => [
+    { label: "7/9", traitCounts: { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 1, "Tỉ mỉ": 1 }, total: 7, hasReward: false },
+    { label: "14/9", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 2, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 8, hasReward: false },
+    { label: "21/9", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 4, "Tập trung": 1, "Tỉ mỉ": 2 }, total: 11, hasReward: true },
+    { label: "28/9", traitCounts: { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 10, hasReward: false },
+    { label: "5/10", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 4, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 10, hasReward: false },
+    { label: "12/10", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 12, hasReward: true },
+    { label: "19/10", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 5, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 11, hasReward: false },
+    { label: "26/10", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 1, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 10, hasReward: false },
+  ], []);
 
   // Nhóm badges theo tuần / tháng
   const weeksData = useMemo(() => {
@@ -88,8 +100,11 @@ export function TraitStackedChart({
       });
     }
 
+    if (validBadges.length === 0 && isTrialActive() && filter === "8w") {
+      return trialWeeksSample;
+    }
     return buckets;
-  }, [badges, rewards, filter]);
+  }, [badges, rewards, filter, trialWeeksSample]);
 
   // Kiểm tra trạng thái trống (dưới 1 tuần dữ liệu)
   const totalBadgesAll = weeksData.reduce((acc, w) => acc + w.total, 0);
@@ -441,6 +456,17 @@ export function SubjectAndSkillHeatmap({
   const [selectedSubject, setSelectedSubject] = useState("Toán");
   const [activeCellTip, setActiveCellTip] = useState(null);
   const [showTable, setShowTable] = useState(false);
+  // Dữ liệu mẫu 8 tuần phẩm chất cho chế độ Dùng thử (Prompt 22 - 0.2)
+  const trialWeeksSample = useMemo(() => [
+    { label: "7/9", traitCounts: { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 1, "Tỉ mỉ": 1 }, total: 7, hasReward: false },
+    { label: "14/9", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 2, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 8, hasReward: false },
+    { label: "21/9", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 4, "Tập trung": 1, "Tỉ mỉ": 2 }, total: 11, hasReward: true },
+    { label: "28/9", traitCounts: { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 10, hasReward: false },
+    { label: "5/10", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 4, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 10, hasReward: false },
+    { label: "12/10", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 12, hasReward: true },
+    { label: "19/10", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 5, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 11, hasReward: false },
+    { label: "26/10", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 1, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 10, hasReward: false },
+  ], []);
 
   // Danh sách kỹ năng chuẩn theo môn
   const MATH_SKILLS = [
@@ -467,12 +493,12 @@ export function SubjectAndSkillHeatmap({
   const heatmapData = useMemo(() => {
     const weeks = ["7/9", "14/9", "21/9", "28/9", "5/10", "12/10", "19/10", "26/10"];
 
-    // Giá trị mẫu mô phỏng số liệu trung thực theo dõi qua 8 tuần
+    // Dữ liệu mẫu 8 tuần: Tính toán & Đơn vị là null để hiển thị 'chưa có' (Prompt 22 - 0.2)
     const ratesBySkill = {
       doc_hieu_de: [40, 45, 50, 45, 55, 60, 65, 70], // Tăng cao nhất tuần này
       chon_phep_tinh: [30, 35, 40, 35, 30, 25, 20, 25],
-      tinh_toan: [15, 10, 15, 20, 15, 10, 10, 12],
-      don_vi: [20, 25, 20, 15, 20, 25, 20, 22],
+      tinh_toan: [null, null, null, null, null, null, null, null], // Hàng không có số -> hiện ô 'chưa có'
+      don_vi: [null, null, null, null, null, null, null, null],    // Hàng không có số -> hiện ô 'chưa có'
       viet_loi_giai: [35, 40, 45, 40, 35, 35, 40, 38],
       kiem_tra_lai: [50, 55, 45, 50, 45, 50, 55, 52],
       doc_hieu: [30, 35, 40, 35, 40, 45, 40, 42],
@@ -488,6 +514,19 @@ export function SubjectAndSkillHeatmap({
   const insightText = useMemo(() => {
     return `Đọc hiểu đề tuần này kẹt 70%, cao nhất trong 8 tuần, trùng tuần làm nhiều bài lặp.`;
   }, []);
+
+  const totalRealSessions = (stats?.sessionsMom || 0) + (stats?.sessionsDad || 0) + (Array.isArray(stats?.studyLog) ? stats.studyLog.length : 0);
+  if (!isTrialActive() && totalRealSessions === 0) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: "24px 16px" }} data-testid="subject-skill-heatmap-empty">
+        <div style={{ fontSize: 36, marginBottom: 6 }}>📐 📖 ✨</div>
+        <b style={{ fontSize: 15, color: "var(--c-text)" }}>Chưa có dữ liệu môn học của {childName}</b>
+        <p className="xs" style={{ margin: "4px 0 0", color: "#64748B" }}>
+          Sau khi {childName} hoàn thành bài học, tỷ lệ kẹt theo môn và bản đồ nhiệt kỹ năng sẽ xuất hiện tại đây!
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="card" data-testid="subject-skill-heatmap">
@@ -573,9 +612,20 @@ export function SubjectAndSkillHeatmap({
                 <tr key={sk.key}>
                   <td style={{ fontWeight: 700, fontSize: 11.5 }}>{sk.label}</td>
                   {rates.map((pct, idx) => {
+                    const wLabel = heatmapData.weeks[idx];
+                    if (pct == null) {
+                      return (
+                        <td
+                          key={idx}
+                          style={{ background: "#F8FAFC", color: "#94A3B8", fontSize: 10, fontStyle: "italic", textAlign: "center" }}
+                          aria-label={`${sk.label} tuần ${wLabel}: chưa có số liệu`}
+                        >
+                          chưa có
+                        </td>
+                      );
+                    }
                     const bg = getHeatmapColor(pct);
                     const textColor = pct >= 45 ? "#fff" : "#1E293B";
-                    const wLabel = heatmapData.weeks[idx];
                     return (
                       <td
                         key={idx}
@@ -655,19 +705,56 @@ export function TraitAiAnalysisCard({
   const [showDataModal, setShowDataModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // Tự động kiểm tra hoặc chạy phân tích
+  const momSessions = stats?.sessionsMom || 0;
+  const dadSessions = stats?.sessionsDad || 0;
+  const totalSessions = (stats?.sessionsMom != null || stats?.sessionsDad != null)
+    ? (momSessions + dadSessions)
+    : (Array.isArray(stats?.studyLog) ? stats.studyLog.length : 0);
+
+  // Hàm sinh câu tóm tắt bằng code logic, không bao giờ nhầm chiều (Prompt 22 - 0.1)
+  const computeTomTat = (w1, w2) => {
+    const list = ["Kiên nhẫn", "Sáng tạo", "Tập trung", "Tỉ mỉ"];
+    const diffs = [];
+    for (const t of list) {
+      const v1 = w1?.[t] || 0;
+      const v2 = w2?.[t] || 0;
+      if (v1 !== v2) {
+        if (v2 > v1) {
+          diffs.push(`${t} tăng từ ${v1} lên ${v2}`);
+        } else {
+          diffs.push(`${t} giảm từ ${v1} xuống ${v2}`);
+        }
+      }
+    }
+    if (diffs.length === 0) return "Các phẩm chất giữ mức ổn định qua 2 tuần.";
+    return diffs.slice(0, 2).join(", ") + ".";
+  };
+
   const runAnalysis = async () => {
     setLoading(true);
     setErrorMsg(null);
     setNotEnough(null);
 
+    const isTrial = isTrialActive();
+
+    // Tài khoản thật dưới 3 buổi: KHÔNG gọi AI, hiện thẻ cần thêm buổi (Prompt 22 - 0.1)
+    if (!isTrial && totalSessions < 3) {
+      setNotEnough(`Gấu cần thêm ${Math.max(1, 3 - totalSessions)} buổi học của ${child.name} để phân tích nguyên nhân.`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetchAiTraitAnalysis({
         childId: child.id,
         childName: child.name,
-        options: {
+        options: isTrial ? {
           week1_sessions: 4,
           week2_sessions: 5,
+        } : {
+          week1_sessions: Math.floor(totalSessions / 2),
+          week2_sessions: Math.ceil(totalSessions / 2),
+          total_sessions: totalSessions,
         },
       });
 
@@ -689,7 +776,7 @@ export function TraitAiAnalysisCard({
 
   useEffect(() => {
     runAnalysis();
-  }, [child.id]);
+  }, [child.id, totalSessions]);
 
   if (notEnough) {
     return (
@@ -708,12 +795,12 @@ export function TraitAiAnalysisCard({
     <div className="card ana" data-testid="card-trait-ai-analysis">
       <div className="kk ink">GẤU PHÂN TÍCH 2 TUẦN GẦN NHẤT</div>
       <p className="src">
-        🐻 Gấu đã đọc {analysisResult?.sessions_read || 17} buổi, từ {analysisResult?.from_date || "13/10"} đến {analysisResult?.to_date || "26/10"}
+        🐻 Gấu đã đọc {analysisResult?.sessions_read || totalSessions} buổi{analysisResult?.from_date ? `, từ ${analysisResult.from_date} đến ${analysisResult.to_date}` : ""}
       </p>
 
-      {/* Tóm tắt biến động */}
+      {/* Tóm tắt biến động bằng code logic */}
       <p className="sm" style={{ color: "var(--c-text)", margin: "4px 0" }}>
-        <b>{ana?.tom_tat || "Sáng tạo giảm từ 5 xuống 1, Kiên nhẫn tăng từ 3 lên 4."}</b>
+        <b>{computeTomTat(analysisResult?.facts?.traits_w1, analysisResult?.facts?.traits_w2) || ana?.tom_tat || "Các phẩm chất giữ mức ổn định."}</b>
       </p>
 
       {/* Căn cứ */}
@@ -778,12 +865,12 @@ export function TraitAiAnalysisCard({
               </button>
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.6 }}>
-              <p>• Tổng số buổi học: <b>17 buổi</b> (từ 13/10 đến 26/10)</p>
-              <p>• Phẩm chất tuần trước: Kiên nhẫn 3, Sáng tạo 5, Tập trung 2, Tỉ mỉ 1</p>
-              <p>• Phẩm chất tuần này: Kiên nhẫn 4, Sáng tạo 1, Tập trung 3, Tỉ mỉ 2</p>
-              <p>• Bài lặp dạng: 7/9 bài tuần này là bảng nhân 4</p>
-              <p>• Trò chơi 5 phút / Con đố mẹ: 0 lần tuần này (tuần trước 3 lần)</p>
-              <p>• Thời lượng học trung bình: 24 phút (tuần trước 15 phút)</p>
+              <p>• Tổng số buổi học: <b>{analysisResult?.facts?.total_sessions || analysisResult?.sessions_read || totalSessions} buổi</b>{analysisResult?.from_date ? ` (từ ${analysisResult.from_date} đến ${analysisResult.to_date})` : ""}</p>
+              <p>• Phẩm chất tuần trước: Kiên nhẫn {analysisResult?.facts?.traits_w1?.["Kiên nhẫn"] ?? 0}, Sáng tạo {analysisResult?.facts?.traits_w1?.["Sáng tạo"] ?? 0}, Tập trung {analysisResult?.facts?.traits_w1?.["Tập trung"] ?? 0}, Tỉ mỉ {analysisResult?.facts?.traits_w1?.["Tỉ mỉ"] ?? 0}</p>
+              <p>• Phẩm chất tuần này: Kiên nhẫn {analysisResult?.facts?.traits_w2?.["Kiên nhẫn"] ?? 0}, Sáng tạo {analysisResult?.facts?.traits_w2?.["Sáng tạo"] ?? 0}, Tập trung {analysisResult?.facts?.traits_w2?.["Tập trung"] ?? 0}, Tỉ mỉ {analysisResult?.facts?.traits_w2?.["Tỉ mỉ"] ?? 0}</p>
+              {analysisResult?.facts?.top_problem_type && <p>• Bài lặp dạng: {analysisResult.facts.top_problem_type_w2_count}/{analysisResult.facts.total_sessions} bài là {analysisResult.facts.top_problem_type}</p>}
+              {analysisResult?.facts?.games_w1 != null && <p>• Trò chơi 5 phút / Con đố mẹ: {analysisResult.facts.games_w2 || 0} lần tuần này (tuần trước {analysisResult.facts.games_w1} lần)</p>}
+              {analysisResult?.facts?.avg_mins_w2 != null && <p>• Thời lượng học trung bình: {analysisResult.facts.avg_mins_w2} phút (tuần trước {analysisResult.facts.avg_mins_w1} phút)</p>}
             </div>
           </div>
         </div>

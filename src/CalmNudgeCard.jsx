@@ -23,7 +23,8 @@ export function CalmNudgeCard({
     <div
       style={{
         position: 'fixed',
-        bottom: 74,
+        bottom: 110,
+        zIndex: 998,
         left: 12,
         right: 12,
         zIndex: 9990,

@@ -57,6 +57,34 @@ export const THEMES = [
       '--shadow-card': '0 7px 0 #F3D9E6',
       '--shadow-btn': '0 6px 0 #E0598E',
     },
+    motion: {
+      "mascot": "Mây bồng",
+      "vessel": {
+            "name": "Lọ kẹo bông",
+            "icon": "🍭",
+            "liquid": "linear-gradient(#FFC2D9,#FF8FB8)",
+            "drop": "🍬",
+            "spark": "✧"
+      },
+      "stuck": {
+            "particle": "💭"
+      },
+      "split": {
+            "tag": "",
+            "cardStyle": "soft"
+      },
+      "listen": {
+            "ring": "dotted",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "✧"
+      },
+      "paw": {
+            "stamp": "☁️"
+      },
+      "sound": "pop kẹo"
+},
   },
   {
     id: 'bear',
@@ -109,6 +137,34 @@ export const THEMES = [
       '--shadow-card': '0 6px 0 #F0DDC2',
       '--shadow-btn': '0 6px 0 #C47F0E',
     },
+    motion: {
+      "mascot": "Gấu mật",
+      "vessel": {
+            "name": "Hũ mật",
+            "icon": "🍯",
+            "liquid": "linear-gradient(#F8C04A,#E8A21A)",
+            "drop": "💧",
+            "spark": "✦"
+      },
+      "stuck": {
+            "particle": "?"
+      },
+      "split": {
+            "tag": "",
+            "cardStyle": "soft"
+      },
+      "listen": {
+            "ring": "solid",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "•"
+      },
+      "paw": {
+            "stamp": "🐾"
+      },
+      "sound": "bụp mềm"
+},
   },
   {
     id: 'bento',
@@ -161,6 +217,34 @@ export const THEMES = [
       '--shadow-card': '0 10px 26px -20px rgba(21, 22, 30, .35)',
       '--shadow-btn': '0 12px 24px -14px rgba(21, 22, 30, .5)',
     },
+    motion: {
+      "mascot": "Bé Cơm Nắm",
+      "vessel": {
+            "name": "Hộp cơm",
+            "icon": "🍱",
+            "liquid": "linear-gradient(#FFB4A6,#FF7A66)",
+            "drop": "🍚",
+            "spark": "✦"
+      },
+      "stuck": {
+            "particle": "?"
+      },
+      "split": {
+            "tag": "🍙",
+            "cardStyle": "soft"
+      },
+      "listen": {
+            "ring": "solid",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "•"
+      },
+      "paw": {
+            "stamp": "🍙"
+      },
+      "sound": "tách hộp"
+},
   },
   {
     id: 'sticker',
@@ -213,6 +297,34 @@ export const THEMES = [
       '--shadow-card': '5px 5px 0 #1B1B2F',
       '--shadow-btn': '4px 4px 0 #1B1B2F',
     },
+    motion: {
+      "mascot": "Kỳ lân",
+      "vessel": {
+            "name": "Thanh năng lượng",
+            "icon": "⚡",
+            "liquid": "repeating-linear-gradient(45deg,#FF4F8B 0 10px,#FF77A6 10px 20px)",
+            "drop": "⚡",
+            "spark": "★"
+      },
+      "stuck": {
+            "particle": "⁉"
+      },
+      "split": {
+            "tag": "",
+            "cardStyle": "sticker"
+      },
+      "listen": {
+            "ring": "sticker",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "⚡"
+      },
+      "paw": {
+            "stamp": "⭐"
+      },
+      "sound": "bóc sticker"
+},
   },
   {
     id: 'notebook',
@@ -265,6 +377,34 @@ export const THEMES = [
       '--shadow-card': '0 12px 26px -20px rgba(42, 38, 34, .5)',
       '--shadow-btn': 'none',
     },
+    motion: {
+      "mascot": "Mèo hạt dẻ",
+      "vessel": {
+            "name": "Lọ mực",
+            "icon": "✒️",
+            "liquid": "linear-gradient(#7A6AA0,#5A4B7A)",
+            "drop": "💧",
+            "spark": "✎"
+      },
+      "stuck": {
+            "particle": "?"
+      },
+      "split": {
+            "tag": "📎",
+            "cardStyle": "paper"
+      },
+      "listen": {
+            "ring": "dashed",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "✈️"
+      },
+      "paw": {
+            "stamp": "✒️"
+      },
+      "sound": "lật giấy"
+},
   },
   {
     id: 'garden',
@@ -317,6 +457,34 @@ export const THEMES = [
       '--shadow-card': '0 14px 30px -22px rgba(0, 0, 0, .8)',
       '--shadow-btn': '0 0 34px -8px rgba(255, 209, 102, .8)',
     },
+    motion: {
+      "mascot": "Mầm non",
+      "vessel": {
+            "name": "Lọ đom đóm",
+            "icon": "🫙",
+            "liquid": "radial-gradient(circle at 50% 70%,#FFE9A6,#FFD166 45%,#C99A2E)",
+            "drop": "✨",
+            "spark": "✦"
+      },
+      "stuck": {
+            "particle": "🍃"
+      },
+      "split": {
+            "tag": "🏮",
+            "cardStyle": "night"
+      },
+      "listen": {
+            "ring": "glow",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "✨"
+      },
+      "paw": {
+            "stamp": "🌱"
+      },
+      "sound": "chuông gió"
+},
   },
   {
     id: 'aurora',
@@ -369,6 +537,34 @@ export const THEMES = [
       '--shadow-card': '0 20px 50px -30px rgba(0, 0, 0, .8)',
       '--shadow-btn': '0 14px 30px -10px rgba(34, 211, 238, .8)',
     },
+    motion: {
+      "mascot": "Rồng con",
+      "vessel": {
+            "name": "Ống ánh sáng",
+            "icon": "💎",
+            "liquid": "linear-gradient(#22D3EE,#A78BFA)",
+            "drop": "💫",
+            "spark": "✦"
+      },
+      "stuck": {
+            "particle": "✦"
+      },
+      "split": {
+            "tag": "",
+            "cardStyle": "glass"
+      },
+      "listen": {
+            "ring": "glow",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "💫"
+      },
+      "paw": {
+            "stamp": "✦"
+      },
+      "sound": "ngân pha lê"
+},
   },
   {
     id: 'chalk',
@@ -421,6 +617,34 @@ export const THEMES = [
       '--shadow-card': 'none',
       '--shadow-btn': '3px 3px 0 rgba(246, 241, 230, .5)',
     },
+    motion: {
+      "mascot": "Ngôi sao",
+      "vessel": {
+            "name": "Hộp phấn",
+            "icon": "🖍️",
+            "liquid": "repeating-linear-gradient(0deg,#F9E07F 0 8px,#FBEAA6 8px 10px)",
+            "drop": "▮",
+            "spark": "✳"
+      },
+      "stuck": {
+            "particle": "?"
+      },
+      "split": {
+            "tag": "",
+            "cardStyle": "chalk"
+      },
+      "listen": {
+            "ring": "chalk",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "·"
+      },
+      "paw": {
+            "stamp": "✔"
+      },
+      "sound": "tiếng phấn"
+},
   },
   /* ============ BỘ THEO MÙA (ĐỢT 16) · dùng được quanh năm, đến mùa app chỉ gợi ý ============ */
   {
@@ -478,6 +702,34 @@ export const THEMES = [
       '--shadow-card': '0 6px 16px -12px rgba(23, 50, 74, .5)',
       '--shadow-btn': '0 6px 0 #8E1A2D',
     },
+    motion: {
+      "mascot": "Người Tuyết",
+      "vessel": {
+            "name": "Tất Noel",
+            "icon": "🧦",
+            "liquid": "linear-gradient(#E3475E,#C8283F)",
+            "drop": "🎁",
+            "spark": "❄"
+      },
+      "stuck": {
+            "particle": "❄️"
+      },
+      "split": {
+            "tag": "🎁",
+            "cardStyle": "soft"
+      },
+      "listen": {
+            "ring": "solid",
+            "icon": "🔔"
+      },
+      "fly": {
+            "trail": "❄"
+      },
+      "paw": {
+            "stamp": "❄️"
+      },
+      "sound": "leng keng"
+},
   },
   {
     id: 'tet',
@@ -534,6 +786,34 @@ export const THEMES = [
       '--shadow-card': '0 5px 0 #F3D3A3',
       '--shadow-btn': '0 6px 0 #7E0A1D',
     },
+    motion: {
+      "mascot": "Bé Lân",
+      "vessel": {
+            "name": "Bao lì xì",
+            "icon": "🧧",
+            "liquid": "linear-gradient(#F2C14E,#E9A800)",
+            "drop": "🌼",
+            "spark": "✿"
+      },
+      "stuck": {
+            "particle": "🏮"
+      },
+      "split": {
+            "tag": "🧧",
+            "cardStyle": "soft"
+      },
+      "listen": {
+            "ring": "solid",
+            "icon": "🥁"
+      },
+      "fly": {
+            "trail": "🌸"
+      },
+      "paw": {
+            "stamp": "🌼"
+      },
+      "sound": "trống tùng"
+},
   },
   {
     id: 'thieunhi',
@@ -590,6 +870,34 @@ export const THEMES = [
       '--shadow-card': '0 6px 0 #CFE0FA',
       '--shadow-btn': '0 6px 0 #1D3F99',
     },
+    motion: {
+      "mascot": "Diều Cầu Vồng",
+      "vessel": {
+            "name": "Bóng bay",
+            "icon": "🎈",
+            "liquid": "linear-gradient(#FF9F1C,#FF5E7E 50%,#2F62E0)",
+            "drop": "🎈",
+            "spark": "✦"
+      },
+      "stuck": {
+            "particle": "🌬️"
+      },
+      "split": {
+            "tag": "🎈",
+            "cardStyle": "soft"
+      },
+      "listen": {
+            "ring": "dashed",
+            "icon": ""
+      },
+      "fly": {
+            "trail": "🎈"
+      },
+      "paw": {
+            "stamp": "🎈"
+      },
+      "sound": "tiếng còi giấy"
+},
   },
 ]
 

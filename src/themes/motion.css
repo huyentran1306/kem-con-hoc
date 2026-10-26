@@ -1,0 +1,256 @@
+/* ============================================================
+   🎨 KÈM CON HỌC · 6 CHUYỂN ĐỘNG CHO ĐỦ 11 BỘ GIAO DIỆN (Prompt 22)
+   100% không viết cứng mã màu hex. Tất cả đều đọc biến --c-*
+   ============================================================ */
+
+.st {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+}
+.st .card {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1.5px solid var(--c-line);
+  box-sizing: border-box;
+}
+.st[data-style="sticker"] .card, .st[data-style="sticker"] .cap {
+  border: 2.5px solid var(--c-text);
+  box-shadow: 3px 3px 0 var(--c-text);
+  border-radius: 10px;
+}
+.st[data-style="paper"] .card {
+  border: 1px dashed var(--c-line);
+  border-radius: 4px;
+}
+.st[data-style="glass"] .card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--c-line);
+}
+.st[data-style="chalk"] .card {
+  background: transparent;
+  border: 2px dashed var(--c-text);
+  border-radius: 6px;
+}
+.st[data-style="night"] .card, .st[data-style="night"] .cap {
+  background: var(--c-surface);
+  border-color: var(--c-line);
+}
+.st[data-style="night"] .glow, .st[data-style="glass"] .glow {
+  text-shadow: 0 0 10px var(--c-accent), 0 0 18px var(--c-accent);
+}
+
+/* 1. Xong một bậc (fill / step_done) */
+.fill { position: relative; width: 210px; height: 160px; margin: 0 auto; }
+.fill .m { position: absolute; left: 6px; bottom: 30px; animation: kchHop 2.4s ease-in-out infinite; }
+.vessel { position: absolute; right: 22px; bottom: 30px; width: 80px; height: 98px; border: 3px solid var(--c-text); border-radius: 16px 16px 22px 22px; background: var(--c-surface); overflow: hidden; }
+.vessel .liq { position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: var(--liq); animation: kchFillup 2.4s ease-in-out infinite; }
+.vessel .vi { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; z-index: 1; }
+.vessel .fr { position: absolute; left: 0; right: 0; top: 4px; text-align: center; font-weight: 900; font-size: 12px; z-index: 1; color: var(--c-text); }
+.fill .drop { position: absolute; right: 52px; top: -2px; font-size: 20px; opacity: 0; animation: kchDrop 2.4s ease-in infinite; }
+.fill .sp { position: absolute; color: var(--c-accent); font-size: 18px; font-style: normal; opacity: 0; animation: kchSpark 2.4s ease-out infinite; }
+.fill .s1 { right: 8px; top: 26px; }
+.fill .s2 { right: 100px; top: 36px; animation-delay: .1s; }
+.fill .s3 { right: 56px; top: 4px; animation-delay: .2s; }
+
+@keyframes kchHop {
+  0%, 55%, 100% { transform: translateY(0); }
+  65% { transform: translateY(-22px) rotate(-6deg); }
+  75% { transform: translateY(0); }
+  82% { transform: translateY(-8px); }
+}
+@keyframes kchFillup {
+  0%, 40% { height: 45%; }
+  60%, 100% { height: 75%; }
+}
+@keyframes kchDrop {
+  0%, 25% { transform: translateY(0); opacity: 0; }
+  30% { opacity: 1; }
+  52% { transform: translateY(58px); opacity: 1; }
+  58%, 100% { transform: translateY(62px); opacity: 0; }
+}
+@keyframes kchSpark {
+  0%, 58% { opacity: 0; transform: scale(.3); }
+  68% { opacity: 1; transform: scale(1.3) rotate(20deg); }
+  85%, 100% { opacity: 0; transform: scale(.6); }
+}
+
+/* 2. Kẹt (stuck) */
+.stuck-motion { position: relative; width: 220px; height: 170px; margin: 0 auto; }
+.stuck-motion .m { position: absolute; left: 82px; top: 4px; animation: kchTilt 2.6s ease-in-out infinite; transform-origin: 50% 90%; }
+.stuck-motion .q { position: absolute; font-style: normal; font-weight: 900; color: var(--c-accent); font-size: 20px; opacity: 0; animation: kchQfloat 2.6s ease-out infinite; }
+.stuck-motion .q1 { left: 146px; top: 28px; }
+.stuck-motion .q2 { left: 162px; top: 10px; animation-delay: .5s; }
+.stuck-motion .q3 { left: 56px; top: 22px; animation-delay: 1s; }
+.stuck-motion .card { position: absolute; left: 10px; right: 10px; bottom: 32px; padding: 9px; font-size: 13px; text-align: center; animation: kchWob 2.6s ease-in-out infinite; }
+
+@keyframes kchTilt {
+  0%, 100% { transform: rotate(0); }
+  30%, 60% { transform: rotate(-14deg); }
+}
+@keyframes kchQfloat {
+  0% { opacity: 0; transform: translateY(10px) scale(.6); }
+  25% { opacity: 1; }
+  80% { opacity: 0; transform: translateY(-26px) scale(1.1); }
+  100% { opacity: 0; }
+}
+@keyframes kchWob {
+  0%, 20%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-2deg); }
+  30% { transform: rotate(2deg); }
+  35% { transform: rotate(-1deg); }
+  40% { transform: rotate(0); }
+}
+
+/* 3. Chẻ nhỏ (split / micro_step) */
+.split-motion { position: relative; width: 230px; height: 176px; margin: 0 auto; }
+.split-motion .card { position: absolute; left: 50%; text-align: center; }
+.split-motion .big { top: 14px; width: 196px; margin-left: -98px; padding: 13px 10px; font-size: 13.5px; border-color: var(--c-accent); animation: kchShrink 3s ease-in-out infinite; }
+.split-motion .sm { width: 206px; margin-left: -103px; padding: 6px 8px; font-size: 11.5px; white-space: nowrap; opacity: 0; border-color: var(--c-accent-2); }
+.split-motion .a { top: 72px; animation: kchOutA 3s ease-in-out infinite; }
+.split-motion .b { top: 112px; animation: kchOutB 3s ease-in-out infinite; }
+
+@keyframes kchShrink {
+  0%, 30% { opacity: 1; transform: scale(1); }
+  45%, 90% { opacity: .35; transform: scale(.9) translateY(-8px); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes kchOutA {
+  0%, 35% { opacity: 0; transform: translate(0, -40px) scale(.7); }
+  50%, 90% { opacity: 1; transform: translate(-12px, 0) scale(1); }
+  100% { opacity: 0; }
+}
+@keyframes kchOutB {
+  0%, 42% { opacity: 0; transform: translate(0, -80px) scale(.7); }
+  58%, 90% { opacity: 1; transform: translate(12px, 0) scale(1); }
+  100% { opacity: 0; }
+}
+
+/* 4. Nghe con (listen_start / listen_result) */
+.listen-motion { position: relative; width: 230px; height: 180px; margin: 0 auto; }
+.listen-motion .m { position: absolute; left: 18px; top: 22px; animation: kchLean 1.3s ease-in-out infinite; }
+.listen-motion .ring { position: absolute; left: 42px; top: 46px; width: 20px; height: 20px; margin: -10px; border: 2.5px solid var(--c-accent); border-radius: 50%; animation: kchRing 1.8s ease-out infinite; }
+.listen-motion .r2 { animation-delay: .6s; }
+.listen-motion .r3 { animation-delay: 1.2s; }
+.listen-motion[data-ring="dotted"] .ring { border-style: dotted; border-width: 4px; }
+.listen-motion[data-ring="dashed"] .ring { border-style: dashed; }
+.listen-motion[data-ring="sticker"] .ring { border: 3.5px solid var(--c-text); }
+.listen-motion[data-ring="chalk"] .ring { border: 2.5px dashed var(--c-text); }
+.listen-motion[data-ring="glow"] .ring { box-shadow: 0 0 10px var(--c-accent), inset 0 0 8px var(--c-accent); }
+.listen-motion .ri { position: absolute; left: 74px; top: 12px; font-size: 22px; animation: kchRingI 1.2s ease-in-out infinite; }
+.listen-motion .said { position: absolute; right: 6px; top: 26px; width: 124px; padding: 8px; font-size: 12.5px; border-radius: 14px 14px 4px 14px; animation: kchType 3.6s steps(1) infinite; }
+.listen-motion .ok { position: absolute; right: 28px; top: 96px; background: var(--c-good); color: var(--c-on-good); font-weight: 900; font-size: 13px; padding: 5px 12px; border-radius: 99px; animation: kchPop 3.6s ease-out infinite; }
+
+@keyframes kchLean { 50% { transform: rotate(8deg); } }
+@keyframes kchRing { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(6); opacity: 0; } }
+@keyframes kchRingI { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-18deg); } 75% { transform: rotate(18deg); } }
+@keyframes kchType { 0% { opacity: 0; } 20%, 100% { opacity: 1; } }
+@keyframes kchPop { 0%, 45% { opacity: 0; transform: scale(.3); } 55% { opacity: 1; transform: scale(1.2); } 62%, 100% { opacity: 1; transform: scale(1); } }
+
+/* 5. Sticker bay (fly / badge_given) */
+.fly-motion { position: relative; width: 230px; height: 180px; margin: 0 auto; }
+.fly-motion .stk { position: absolute; left: 22px; top: 18px; width: 58px; height: 58px; border-radius: 18px; background: var(--c-accent-2); display: grid; place-items: center; font-size: 34px; box-shadow: 0 5px 0 rgba(0,0,0,.18); animation: kchArc 2.8s cubic-bezier(.45,0,.3,1) infinite; z-index: 2; }
+.fly-motion .tr { position: absolute; font-size: 15px; font-style: normal; color: var(--c-accent); opacity: 0; animation: kchTrail 2.8s ease-out infinite; }
+.fly-motion .t1 { left: 70px; top: 8px; animation-delay: .35s; }
+.fly-motion .t2 { left: 112px; top: 10px; animation-delay: .6s; }
+.fly-motion .t3 { left: 146px; top: 40px; animation-delay: .85s; }
+.fly-motion .t4 { left: 162px; top: 76px; animation-delay: 1.1s; }
+.fly-motion .book { position: absolute; right: 20px; bottom: 30px; font-size: 44px; animation: kchBounce 2.8s ease-out infinite; }
+.fly-motion .book span { position: absolute; right: -10px; top: -8px; font-weight: 900; font-size: 13px; color: var(--c-on-good); background: var(--c-good); border-radius: 99px; padding: 1px 6px; opacity: 0; animation: kchPlus 2.8s ease-out infinite; }
+
+@keyframes kchArc {
+  0%, 15% { transform: translate(0, 0) scale(1) rotate(0); }
+  50% { transform: translate(80px, -10px) scale(.85) rotate(160deg); }
+  75% { transform: translate(138px, 92px) scale(.35) rotate(340deg); opacity: 1; }
+  80%, 100% { transform: translate(138px, 92px) scale(.2); opacity: 0; }
+}
+@keyframes kchTrail {
+  0% { opacity: 0; transform: scale(.4); }
+  10% { opacity: 1; transform: scale(1.1); }
+  45% { opacity: 0; transform: scale(.6) translateY(8px); }
+  100% { opacity: 0; }
+}
+@keyframes kchBounce {
+  0%, 74% { transform: translateY(0); }
+  80% { transform: translateY(-12px) scale(1.12); }
+  88%, 100% { transform: translateY(0); }
+}
+@keyframes kchPlus {
+  0%, 76% { opacity: 0; transform: translateY(6px); }
+  84%, 96% { opacity: 1; transform: translateY(-4px); }
+  100% { opacity: 0; }
+}
+
+/* 6. Dấu chân tuần này (paw / day_logged) */
+.paw-motion { display: flex; gap: 8px; justify-content: center; align-items: center; width: 230px; height: 180px; margin: 0 auto; }
+.paw-motion span { display: flex; flex-direction: column; align-items: center; font-size: 26px; animation: kchStampIn 2.6s ease-out infinite; }
+.paw-motion span b { font-size: 11px; font-weight: 800; color: var(--c-text-2); margin-top: 4px; }
+.paw-motion span:nth-child(1) { animation-delay: .2s; }
+.paw-motion span:nth-child(2) { animation-delay: .6s; }
+.paw-motion span:nth-child(3) { animation-delay: 1.0s; }
+.paw-motion span:nth-child(4) { animation-delay: 1.4s; }
+
+@keyframes kchStampIn {
+  0% { opacity: 0; transform: scale(2) rotate(-15deg); }
+  15%, 85% { opacity: 1; transform: scale(1) rotate(0); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* Captions */
+.st .cap {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--c-text-2);
+}
+
+/* Reduced motion & Off */
+@media (prefers-reduced-motion: reduce) {
+  .fill .m, .vessel .liq, .fill .drop, .fill .sp,
+  .stuck-motion .m, .stuck-motion .q, .stuck-motion .card,
+  .split-motion .big, .split-motion .sm,
+  .listen-motion .m, .listen-motion .ring, .listen-motion .ri, .listen-motion .said, .listen-motion .ok,
+  .fly-motion .stk, .fly-motion .tr, .fly-motion .book, .fly-motion .book span,
+  .paw-motion span {
+    animation: none !important;
+  }
+  .fill .drop, .fill .sp, .stuck-motion .q, .fly-motion .tr, .fly-motion .book span {
+    display: none !important;
+  }
+  .vessel .liq { height: 75% !important; }
+  .split-motion .big { opacity: 0.5 !important; transform: none !important; }
+  .split-motion .sm { opacity: 1 !important; transform: none !important; }
+  .listen-motion .said, .listen-motion .ok { opacity: 1 !important; transform: none !important; }
+  .fly-motion .stk { opacity: 0 !important; }
+  .paw-motion span { opacity: 1 !important; transform: none !important; }
+}
+
+[data-motion="off"] .fill .m, [data-motion="off"] .vessel .liq, [data-motion="off"] .fill .drop, [data-motion="off"] .fill .sp,
+[data-motion="off"] .stuck-motion .m, [data-motion="off"] .stuck-motion .q, [data-motion="off"] .stuck-motion .card,
+[data-motion="off"] .split-motion .big, [data-motion="off"] .split-motion .sm,
+[data-motion="off"] .listen-motion .m, [data-motion="off"] .listen-motion .ring, [data-motion="off"] .listen-motion .ri, [data-motion="off"] .listen-motion .said, [data-motion="off"] .listen-motion .ok,
+[data-motion="off"] .fly-motion .stk, [data-motion="off"] .fly-motion .tr, [data-motion="off"] .fly-motion .book, [data-motion="off"] .fly-motion .book span,
+[data-motion="off"] .paw-motion span {
+  animation: none !important;
+}
+[data-motion="off"] .fill .drop, [data-motion="off"] .fill .sp, [data-motion="off"] .stuck-motion .q, [data-motion="off"] .fly-motion .tr, [data-motion="off"] .fly-motion .book span {
+  display: none !important;
+}
+[data-motion="off"] .vessel .liq { height: 75% !important; }
+[data-motion="off"] .split-motion .big { opacity: 0.5 !important; transform: none !important; }
+[data-motion="off"] .split-motion .sm { opacity: 1 !important; transform: none !important; }
+[data-motion="off"] .listen-motion .said, [data-motion="off"] .listen-motion .ok { opacity: 1 !important; transform: none !important; }
+[data-motion="off"] .fly-motion .stk { opacity: 0 !important; }
+[data-motion="off"] .paw-motion span { opacity: 1 !important; transform: none !important; }
+
+/* Motion light (nhẹ: bỏ hạt bay, giữ thay đổi chính) */
+[data-motion="light"] .fill .drop,
+[data-motion="light"] .fill .sp,
+[data-motion="light"] .stuck-motion .q,
+[data-motion="light"] .fly-motion .tr {
+  display: none !important;
+}

@@ -11,6 +11,7 @@ import { dbKvGet, dbKvSet } from './api'
 import { toast } from './utils'
 import { Check, ShieldAlert, Sparkles, RefreshCw, Star, Palette } from 'lucide-react'
 import AdminThemeDesignerTab from './AdminThemeDesignerTab'
+import { AdminMotionPreviewTab } from './admin/AdminMotionPreviewTab.jsx'
 
 const THEMES_CONFIG_KEY = 'app_config:themes'
 
@@ -244,9 +245,34 @@ export function AdminThemesSection({ token, adminProfile }) {
         >
           <span>🎄 Theo mùa (3 bộ)</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setMode('motion')}
+          aria-pressed={mode === 'motion'}
+          data-testid="btn-tab-motion-preview"
+          style={{
+            padding: '9px 18px',
+            borderRadius: 10,
+            fontSize: 13.5,
+            fontWeight: 800,
+            cursor: 'pointer',
+            border: mode === 'motion' ? '2px solid #4F46E5' : '1px solid #CBD5E1',
+            background: mode === 'motion' ? '#EEF2FF' : '#FFFFFF',
+            color: mode === 'motion' ? '#4338CA' : '#475569',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            boxShadow: mode === 'motion' ? '0 2px 6px rgba(79,70,229,0.15)' : 'none',
+          }}
+        >
+          <span>🎬 Xem trước chuyển động</span>
+        </button>
       </div>
 
-      {mode === 'seasons' ? (
+      {mode === 'motion' ? (
+        <AdminMotionPreviewTab />
+      ) : mode === 'seasons' ? (
         <AdminSeasonsGroup />
       ) : mode === 'designer' ? (
         <AdminThemeDesignerTab token={token} adminProfile={adminProfile} />

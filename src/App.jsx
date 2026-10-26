@@ -29,6 +29,7 @@ const JoinFamilyView = lazy(() => import('./JoinFamilyView').then(m => ({ defaul
 const PublicReportView = lazy(() => import('./PublicReportView').then(m => ({ default: m.PublicReportView })))
 const FamilyClassSheet = lazy(() => import('./FamilyClassSheet').then(m => ({ default: m.FamilyClassSheet })))
 import { BuddyPopLayer } from './themes/buddies/buddySvgs'
+import MotionLayer from './MotionLayer'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -580,6 +581,7 @@ export default function App() {
     setScreen(id)
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
   }
+  if (typeof window !== 'undefined') window.__kchGo = go
   const openSheet = (type, data) => {
     if (type === 'calm') {
       const nowTs = Date.now()
@@ -914,6 +916,7 @@ export default function App() {
           )}
 
           {S.onboarded && <BuddyPopLayer />}
+          {S.onboarded && <MotionLayer />}
 
           {S.onboarded && (
             <button

@@ -24,6 +24,7 @@ import { getSlot } from './themes/slots/registry'
 import { SeasonHomeLayer, SeasonStepProgress, SeasonDoneArt, seasonLevelEmoji, isSeasonalTheme } from './seasons'
 import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
+import { emitMotion } from './MotionLayer'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
 import { getStudyDateKey } from './useStudyTracker'
 import { validateAllLessonMath } from './arithmetic.js'
@@ -2117,10 +2118,11 @@ export function Scaffold() {
     if (nudgeProblemCount >= 1) return
 
     let reason = ''
-    if (stuck >= 2) {
-      reason = `${child?.name || 'Con'} bí 2 lần ở bậc này rồi`
-    } else if (stepSeconds >= 240) {
-      reason = 'Bậc này đã 4 phút rồi'
+    // Prompt 22 - 0.3: Chỉ gợi ý nghỉ khi đã hiện đủ 2 câu nhỏ mà con vẫn kẹt, hoặc khi mẹ bấm Mẹ bình tĩnh
+    if (microCount >= 2 && stuck >= 2) {
+      reason = `${child?.name || 'Con'} bí 2 lần ở câu nhỏ rồi`
+    } else if (stepSeconds >= 300 && microCount >= 2) {
+      reason = 'Bậc này đã 5 phút rồi'
     }
 
     if (reason && !showNudge) {
@@ -2128,7 +2130,7 @@ export function Scaffold() {
       setShowNudge(true)
       setNudgeProblemCount((c) => c + 1)
     }
-  }, [stuck, stepSeconds, S.calmNudgeEnabled, snoozeUntil, nudgeProblemCount, showNudge])
+  }, [stuck, microCount, stepSeconds, S.calmNudgeEnabled, snoozeUntil, nudgeProblemCount, showNudge])
 
   const ScaffoldActionsSlot = getSlot(S.theme, 'ScaffoldActions') || DefaultScaffoldActions
 
@@ -2151,6 +2153,7 @@ export function Scaffold() {
       micro_steps: 0,
     }).catch(() => {})
 
+    emitMotion('step_done', { step: ns, total: steps.length })
     patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
     if (ns >= steps.length) {
       boom()
@@ -2179,6 +2182,7 @@ export function Scaffold() {
         reco.interimResults = false
 
         reco.onstart = () => {
+          emitMotion('listen_start')
           setVoiceState(prev => ({ ...prev, listening: true, verdict: null }))
           toast('🎙 Đang lắng nghe con… (nói tối đa 15s)')
         }
@@ -2254,6 +2258,7 @@ export function Scaffold() {
           voice_verdict: v.danh_gia,
         }).catch(() => {})
 
+        emitMotion('listen_result', { verdict: v })
         if (v.danh_gia === 'dung') {
           buddyReact('cheer', v.khen_cu_the || 'Con trả lời đúng rồi!', 2500)
           soundSuccess()
@@ -2277,6 +2282,7 @@ export function Scaffold() {
   }
 
   const triggerMicroStep = async (idx = 1) => {
+    emitMotion('micro_step', { index: idx })
     const curStep = steps[step]
     setLoadingMicro(true)
     buddyReact('thinking', 'Để Gấu chẻ nhỏ câu hỏi cho con nhé…', 2500)
@@ -2368,6 +2374,7 @@ export function Scaffold() {
   const stepStuck = () => {
     setBuddyState('thinking')
     const ns = stuck + 1
+    emitMotion('stuck', { stuck: ns })
     patch({ flow: { ...S.flow, stuck: ns } })
 
     // Đợt 18 · Chặng 4: Lần 2 ở cùng bậc -> gọi AI chẻ nhỏ câu hỏi
@@ -2698,7 +2705,7 @@ export function Scaffold() {
       )}
       {/* Đợt 15 P1: xong bậc cuối là hiện nút, mở đáp án chỉ là tuỳ chọn */}
       {(unlocked || step >= steps.length) && (
-        <button className="btn mint solid" data-testid="btn-finish-lesson" onClick={() => go('done')}>Hoàn thành bài ›</button>
+        <button className="btn mint solid" data-testid="btn-finish-lesson" onClick={() => go('done')} style={{ position: 'relative', zIndex: 1000 }}>Hoàn thành bài ›</button>
       )}
 
       {showNudge && (
@@ -3210,6 +3217,7 @@ export function Done() {
       return
     }
     soundPop(600)
+    emitMotion('badge_given', { sticker: e })
     let found
     let customSource = 'chon_khac'
     let customReason = 'Con làm bài rất nỗ lực'
@@ -3284,6 +3292,7 @@ export function Done() {
 
   const saveResult = () => {
     soundPop(600)
+    emitMotion('day_logged')
     const topicName = problem?.dang_bai || problem?.type || (problem?.ocr ? problem.ocr.slice(0, 40) : 'Bài tập rèn luyện')
     const isSample = Boolean(problem?.isSample)
 
@@ -4177,7 +4186,7 @@ export function SnapToy() {
   }
 
   useEffect(() => {
-    startCamera()
+    // Prompt 22 - 0.6: Tab Trò chơi KHÔNG tự bật camera khi mở. Chỉ bật khi mẹ bấm Chụp / Mở máy ảnh
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop())
@@ -4281,6 +4290,24 @@ export function SnapToy() {
       <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden' }}>
         <div className="frame" />
         {/* Always keep video element in DOM so camera stream is not lost */}
+        {!shot && !camOn && !camErr && (
+          <div style={{ textAlign: 'center', padding: '24px 16px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} data-testid="snap-toy-static-invite">
+            <span style={{ fontSize: 52, marginBottom: 8 }}>🧸 📸 🧴</span>
+            <b style={{ fontSize: 16, color: 'var(--c-text)', marginBottom: 4 }}>Chụp đồ vật quanh nhà</b>
+            <p className="xs" style={{ color: 'var(--c-text-2)', maxWidth: 280, margin: '0 0 14px', lineHeight: 1.45 }}>
+              Chụp cây lược, bút, chai lọ hoặc đồ chơi để AI gợi ý trò chơi học toán cùng con!
+            </p>
+            <button
+              type="button"
+              className="btn solid"
+              onClick={startCamera}
+              style={{ padding: '10px 22px', fontSize: 14, fontWeight: 800 }}
+              data-testid="btn-start-camera"
+            >
+              📷 Bật máy ảnh chụp
+            </button>
+          </div>
+        )}
         <video
           ref={videoRef}
           playsInline
@@ -4290,7 +4317,7 @@ export function SnapToy() {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            display: shot ? 'none' : 'block',
+            display: (shot || !camOn) ? 'none' : 'block',
             opacity: camOn ? 1 : 0,
             transition: 'opacity .3s',
           }}
@@ -5918,27 +5945,27 @@ function WeeklyAiCards({ stats, childName }) {
             <span style={{ fontSize: 20 }}>🛡️</span>
             <b style={{ fontSize: 14, color: 'var(--c-text)' }}>An toàn AI 7 ngày</b>
           </div>
-          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Số thật từ hệ thống</span>
+          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>{isTrialActive() ? 'Số mẫu' : 'Số thật từ hệ thống'}</span>
         </div>
         <div className="facts-grid two-cols">
           <div>
             <span>Phép tính sai đã bắt</span>
-            <b>{safety?.dot18_safety?.phep_tinh_sai_da_bat ?? 0}</b>
+            <b>{isTrialActive() ? 3 : (safety?.dot18_safety?.phep_tinh_sai_da_bat ?? 0)}</b>
             <em>trước khi tới mẹ</em>
           </div>
           <div>
             <span>Bậc bộ chặn sửa lại</span>
-            <b>{safety?.dot18_safety?.bac_bo_chan_sua_lai ?? blocked}</b>
+            <b>{isTrialActive() ? 2 : (safety?.dot18_safety?.bac_bo_chan_sua_lai ?? blocked)}</b>
             <em>sửa đúng bậc học</em>
           </div>
           <div>
             <span>Câu nhỏ hơn đã tạo</span>
-            <b>{safety?.dot18_safety?.cau_nho_hon_da_tao ?? 0}</b>
+            <b>{isTrialActive() ? 5 : (safety?.dot18_safety?.cau_nho_hon_da_tao ?? 0)}</b>
             <em>chia nhỏ khi con kẹt</em>
           </div>
           <div>
             <span>Lần Gấu nghe con</span>
-            <b>{safety?.dot18_safety?.so_lan_gau_nghe_con ?? 0}</b>
+            <b>{isTrialActive() ? 8 : (safety?.dot18_safety?.so_lan_gau_nghe_con ?? 0)}</b>
             <em>lắng nghe con trả lời</em>
           </div>
         </div>
@@ -6476,6 +6503,209 @@ export function Report() {
 /* ============================================================
    12. CON TÔI
    ============================================================ */
+
+/* ============================================================
+   NHỮNG GÌ GẤU NHỚ VỀ CON (Prompt 18 Chặng 2 & Prompt 22 - 0.5)
+   ============================================================ */
+function BearMemorySection({ child, S, stats, patch, toast }) {
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const memoryEnabled = child.bearMemory !== false
+
+  // 1. Dạng hay kẹt
+  const weakList = (stats?.weak || []).map((w, idx) => ({
+    id: `weak_${idx}`,
+    type: 'weak',
+    label: `${w.n} (vướng ${w.v || 1}/${w.t || 1} lần)`,
+    icon: '🧩',
+    tag: 'Dạng hay kẹt',
+    color: '#DC2626',
+  }))
+
+  // 2. Dạng đã vững
+  const strongList = (stats?.strong || []).map((s, idx) => ({
+    id: `strong_${idx}`,
+    type: 'strong',
+    label: `${s.n} (làm chắc chắn ${s.v || 1}/${s.t || 1})`,
+    icon: '✨',
+    tag: 'Dạng đã vững',
+    color: '#16A34A',
+  }))
+
+  // 3. Cách giảng con hợp
+  const defaultStyles = [
+    { id: 'style_1', type: 'style', label: 'Dùng đồ vật thật trong nhà khi con kẹt', icon: '🧸', tag: 'Cách giảng hợp', color: '#7C3AED' },
+    { id: 'style_2', type: 'style', label: 'Vẽ sơ đồ đoạn thẳng cho toán lời văn', icon: '🎨', tag: 'Cách giảng hợp', color: '#7C3AED' },
+    { id: 'style_3', type: 'style', label: 'Giữ buổi học dưới 15 phút, giải lao 5 phút', icon: '⏰', tag: 'Cách giảng hợp', color: '#7C3AED' },
+  ]
+  const customStyles = child.customTeachingStyles || defaultStyles
+
+  const deletedIds = new Set(child.deletedMemoryIds || [])
+  const allItems = [...weakList, ...strongList, ...customStyles].filter((item) => !deletedIds.has(item.id))
+
+  const handleDeleteItem = (id, label) => {
+    const next = new Set(deletedIds)
+    next.add(id)
+    const updatedChildren = S.children.map((c) => (c.id === child.id ? { ...c, deletedMemoryIds: Array.from(next) } : c))
+    patch({ children: updatedChildren })
+    toast(`Gấu đã quên: "${label}" 🗑️`)
+  }
+
+  const handleClearAll = () => {
+    const allIds = [...weakList, ...strongList, ...customStyles].map((i) => i.id)
+    const next = new Set(allIds)
+    const updatedChildren = S.children.map((c) => (c.id === child.id ? { ...c, deletedMemoryIds: Array.from(next) } : c))
+    patch({
+      children: updatedChildren,
+      stats: {
+        ...(S.stats || {}),
+        [child.id]: {
+          ...(S.stats?.[child.id] || {}),
+          weak: [],
+          strong: [],
+        },
+      },
+    })
+    setShowClearConfirm(false)
+    toast(`Đã xoá hết những gì Gấu nhớ về ${child.name}. Gấu sẽ quan sát lại từ đầu! 🧹`)
+  }
+
+  return (
+    <div className="card" style={{ padding: '16px', marginBottom: 12, border: '1.5px solid var(--c-line)' }} data-testid="card-bear-memory">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 22 }}>🧠 🐻</span>
+          <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Những gì Gấu nhớ về {child.name}</b>
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+          <span>{memoryEnabled ? 'Đang bật' : 'Tắt'}</span>
+          <input
+            type="checkbox"
+            checked={memoryEnabled}
+            onChange={(e) => {
+              const updated = S.children.map((c) => (c.id === child.id ? { ...c, bearMemory: e.target.checked } : c))
+              patch({ children: updated })
+              toast(e.target.checked ? `Đã bật ghi nhớ cho ${child.name}` : `Đã tắt ghi nhớ cho ${child.name}`)
+            }}
+            style={{ width: 18, height: 18, accentColor: 'var(--c-accent)' }}
+          />
+        </label>
+      </div>
+
+      <p className="xs" style={{ color: 'var(--c-text-2)', margin: '0 0 10px', lineHeight: 1.45 }}>
+        Gấu quan sát qua các buổi học để nhớ dạng bài {child.name} hay kẹt, dạng đã vững và cách giảng con hợp nhất.
+      </p>
+
+      {allItems.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '16px', background: 'var(--c-surface-2)', borderRadius: 12, color: 'var(--c-text-2)', fontSize: 13 }}>
+          🐻 Gấu chưa lưu điều nào về {child.name}. Sau các bài học, Gấu sẽ tự động ghi nhớ tại đây!
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {allItems.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                background: 'var(--c-surface-2)',
+                borderRadius: 10,
+                fontSize: 13,
+                gap: 8,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                <span>{item.icon}</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: item.color, display: 'block' }}>
+                    {item.tag}
+                  </span>
+                  <span style={{ color: 'var(--c-text)', fontWeight: 600 }}>{item.label}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDeleteItem(item.id, item.label)}
+                title="Xoá mục này"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94A3B8',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {allItems.length > 0 && (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            className="btn ghost btn-sm danger"
+            onClick={() => setShowClearConfirm(true)}
+            data-testid="btn-clear-bear-memory"
+          >
+            🗑 Xoá hết
+          </button>
+        </div>
+      )}
+
+      {showClearConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 9999,
+            display: 'grid',
+            placeItems: 'center',
+            padding: 16,
+          }}
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: 360, width: '100%', background: '#fff', padding: 20, borderRadius: 16 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <b style={{ fontSize: 16, color: '#991B1B', display: 'block', marginBottom: 8 }}>
+              Xoá toàn bộ những gì Gấu nhớ?
+            </b>
+            <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.5, margin: '0 0 16px' }}>
+              Gấu sẽ quên toàn bộ dạng bài hay kẹt, dạng đã vững và cách giảng của {child.name}. Mẹ có chắc chắn không?
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn ghost btn-sm"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="btn solid btn-sm"
+                style={{ background: '#DC2626', color: '#fff' }}
+                onClick={handleClearAll}
+              >
+                Xác nhận xoá
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Profile() {
   const { S, stats, patch, go, openSheet, toast, logout, familyName, openAdmin, soundOn, toggleSound } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
@@ -6510,6 +6740,8 @@ export function Profile() {
 
       {/* ===== Nhóm 1 · Con ===== */}
       <h2 className="pg-section-title">Con</h2>
+      {/* ĐỢT 22 · CHẶNG 0: MỤC RIÊNG NHỮNG GÌ GẤU NHỚ VỀ CON */}
+      <BearMemorySection child={child} S={S} stats={stats} patch={patch} toast={toast} />
       {/* Đợt 20 · Chặng 4: Nhận lời khuyên cách kèm */}
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
