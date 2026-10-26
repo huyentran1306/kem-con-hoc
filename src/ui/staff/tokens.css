@@ -139,14 +139,24 @@ button.sk-card { width: 100%; font: inherit; }
 .sk-tab-count { font-size: 10.5px; font-weight: 900; padding: 1px 7px; border-radius: 999px; background: var(--s-accent-tint); color: var(--s-accent-ink); }
 
 /* Ô nhập */
-.sk-input-wrap { display: flex; align-items: center; gap: 6px; border: 2px solid var(--s-line); border-radius: var(--s-radius-input); background: var(--s-surface); padding: 0 12px; }
-.sk-input-wrap:focus-within { border-color: var(--s-accent); }
-.sk-input-wrap .sk-input { border: none; padding: 9px 0; background: transparent; }
+.sk-input-wrap { display: flex; align-items: center; gap: 6px; border: 2px solid var(--s-line); border-radius: var(--s-radius-input); background: var(--s-surface); padding: 0 12px; transition: border-color .15s, box-shadow .15s; }
+.sk-input-wrap:focus-within { border-color: var(--s-accent); box-shadow: 0 0 0 3px rgba(246, 166, 35, 0.18); }
+.sk-input-wrap .sk-input { border: none; padding: 9px 0; background: transparent; outline: none !important; }
 .sk-input-prefix { color: var(--s-text-2); }
 .sk-input {
   width: 100%; font-family: var(--s-font-body); font-size: 13.5px; color: var(--s-text);
   border: 2px solid var(--s-line); border-radius: var(--s-radius-input); background: var(--s-surface);
-  padding: 9px 12px; outline: none;
+  padding: 9px 12px; outline: none !important; transition: border-color .15s, box-shadow .15s;
+}
+.staff-root .sk-input-wrap input:focus,
+.staff-root .sk-input-wrap input:focus-visible,
+.staff-root input.sk-input:focus,
+.staff-root input.sk-input:focus-visible,
+.sk-input-wrap input:focus,
+.sk-input-wrap input:focus-visible,
+.sk-input:focus,
+.sk-input:focus-visible {
+  outline: none !important;
 }
 .sk-input::placeholder { color: #A08467; }
 .sk-textarea { resize: vertical; line-height: 1.5; }
