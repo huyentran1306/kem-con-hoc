@@ -106,7 +106,6 @@ export function SeasonHomeLayer() {
   // Lời khen từ mẹ tự xoá sau 7 ngày
   useEffect(() => {
     if (S?.praiseNote && isPraiseExpired(S.praiseNote, today)) patch({ praiseNote: null })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [today])
 
   if (!S || !S.onboarded || isTrial) return null

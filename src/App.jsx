@@ -606,7 +606,7 @@ export default function App() {
   }
   const closeSheet = () => setSheet(null)
 
-  const rawStats = S?.stats?.[S?.activeId] || defaultStats(S?.activeId)
+  const rawStats = { ...defaultStats(S?.activeId), ...(S?.stats?.[S?.activeId] || {}) }
   const stats = useMemo(() => {
     const calmHist = rawStats.calmHistory || []
     if (calmHist.length === 0) return rawStats

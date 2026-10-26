@@ -71,14 +71,22 @@ async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeade
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), timeoutMs)
   const token = getAdminToken() || getAuthToken()
-  const headers = { 'Content-Type': 'application/json', ...extraHeaders }
-  if (token && !headers['Authorization']) {
-    headers['Authorization'] = `Bearer ${token}`
+  const safeHeaders = { 'Content-Type': 'application/json' }
+  if (extraHeaders && typeof extraHeaders === 'object') {
+    for (const [k, v] of Object.entries(extraHeaders)) {
+      if (v != null) {
+        const strVal = String(v)
+        safeHeaders[k] = Array.from(strVal).some((c) => c.charCodeAt(0) > 255) ? encodeURIComponent(strVal) : strVal
+      }
+    }
+  }
+  if (token && !safeHeaders['Authorization']) {
+    safeHeaders['Authorization'] = `Bearer ${token}`
   }
   try {
     const r = await fetch(baseUrl + path, {
       method: 'POST',
-      headers,
+      headers: safeHeaders,
       body: JSON.stringify(body),
       signal: ctrl.signal,
     })
@@ -360,7 +368,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
             model: modelId,
           },
           10000,
-          { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
+          { 'X-Prompt-Id': targetPromptId, 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Family-Id': encodeURIComponent(options.familyId || '') }
         );
         j = await Promise.race([aiPromise, demoTimeoutPromise]);
       } catch (dErr) {
@@ -384,7 +392,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         EXPLAIN_TIMEOUT_MS,
-        { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
+        { 'X-Prompt-Id': targetPromptId, 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Family-Id': encodeURIComponent(options.familyId || '') }
       );
     }
     let data = extractJson(j.response ?? j)
@@ -406,7 +414,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         remainingMs,
-        { 'X-Prompt-Id': targetPromptId, 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '', 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Grade': String(grade || ''), 'X-Book-Series': String(book || ''), 'X-Subject': String(classification.mon || ''), 'X-Bypass-Cache': (options.bypassCache || options.isRegen) ? '1' : '0' }
+        { 'X-Prompt-Id': targetPromptId, 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Family-Id': encodeURIComponent(options.familyId || '') }
       )
       data = extractJson(retryResp.response ?? retryResp)
     }

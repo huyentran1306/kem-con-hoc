@@ -575,8 +575,8 @@ export function Home() {
     <div>
       <p className="lbl mut" style={{ marginBottom: 8 }}>Tuần này {child.name} hay vướng</p>
       <div className="chips">
-        {stats.weak.length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng.</span>}
-        {stats.weak.map((w) => (
+        {(stats.weak || []).length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng.</span>}
+        {(stats.weak || []).map((w) => (
           <button key={w.n} className="chip" onClick={() => { pendingToy = weakToy(w.n); go('game') }}>
             {w.n} ›
           </button>
@@ -602,8 +602,8 @@ export function Home() {
     true,
     <div className="card">
       <span className="lbl plum">Gần đây</span>
-      {stats.history.length === 0 && <span className="sub">Chưa có buổi học nào. Chụp bài đầu tiên nhé!</span>}
-      {[...stats.history].reverse().slice(0, 4).map((h, i) => (
+      {(stats.history || []).length === 0 && <span className="sub">Chưa có buổi học nào. Chụp bài đầu tiên nhé!</span>}
+      {[...(stats.history || [])].reverse().slice(0, 4).map((h, i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <span className="sub">• {h.txt}</span>
           <span className="pill g" style={{ flexShrink: 0 }}>{h.when}</span>
@@ -4477,7 +4477,7 @@ export function SnapToy() {
       </div>
       <div className="card sky">
         <span className="lbl sky">AI ưu tiên ôn</span>
-        {stats.weak.map((w) => (
+        {(stats.weak || []).map((w) => (
           <span key={w.n} className="sub">• {w.n}</span>
         ))}
       </div>
