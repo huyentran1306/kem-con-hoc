@@ -119,7 +119,9 @@
 .aip-bubble { background: #FFF6E3; border: 1.5px solid #F6D8A0; border-radius: 16px 16px 16px 4px; padding: 9px 12px; font-size: 13px; line-height: 1.45; color: var(--s-text); box-shadow: 0 2px 0 #F3E1BF; }
 .aip-bubble.empty { color: var(--s-text-2); font-style: italic; }
 .aip-samples { display: grid; gap: 8px; }
-.aip-sample { text-align: left; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; border: 1.5px solid var(--s-line); background: #FFFDF8; cursor: pointer; font: inherit; color: var(--s-text); }
+.aip-sample { text-align: left; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; border: 1.5px solid var(--s-line); background: #FFFDF8; cursor: pointer; font: inherit; color: var(--s-text); }
+.aip-sample-dl { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 8px; background: #FFF3DB; color: #8C5300; border: 1px solid #F0DDC2; font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.15s ease; user-select: none; }
+.aip-sample-dl:hover { background: #FFE8BF; color: #6B3E00; border-color: #E6C594; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(140,83,0,0.12); }
 .aip-sample.on { border-color: var(--s-accent); background: var(--s-accent-tint); }
 .aip-sample img { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; border: 1px solid var(--s-line); background: #fff; }
 .aip-two { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }

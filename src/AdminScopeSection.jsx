@@ -166,6 +166,93 @@ function Bubble({ text }) {
   )
 }
 
+export async function downloadScopeSampleImage(imagePath, name, format = 'png') {
+  try {
+    const filenameBase = (name || 'mau-thu')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+
+    const res = await fetch(imagePath)
+    if (!res.ok) throw new Error('Không tải được file ảnh mẫu')
+    const svgText = await res.text()
+
+    if (format === 'svg') {
+      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${filenameBase}.svg`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      staffToast(`Đã tải file SVG: ${filenameBase}.svg`)
+      return
+    }
+
+    // Tải định dạng PNG nét cao (2x) cho tester upload thử nghiệm
+    const img = new Image()
+    const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(svgBlob)
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        const scale = 2
+        canvas.width = (img.naturalWidth || 600) * scale
+        canvas.height = (img.naturalHeight || 700) * scale
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        URL.revokeObjectURL(url)
+
+        canvas.toBlob((blob) => {
+          if (!blob) throw new Error('Không tạo được PNG blob')
+          const pngUrl = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = pngUrl
+          a.download = `${filenameBase}.png`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(pngUrl)
+          staffToast(`Đã tải ảnh PNG: ${filenameBase}.png`)
+        }, 'image/png')
+      } catch (e) {
+        URL.revokeObjectURL(url)
+        downloadDirect(imagePath, `${filenameBase}.svg`)
+      }
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      downloadDirect(imagePath, `${filenameBase}.svg`)
+    }
+
+    img.src = url
+  } catch (err) {
+    console.error('Lỗi khi tải ảnh mẫu:', err)
+    downloadDirect(imagePath, `${name || 'mau-thu'}.svg`)
+  }
+}
+
+function downloadDirect(url, filename) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.target = '_blank'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  staffToast(`Đang tải file: ${filename}`)
+}
+
+
 export function AdminScopeSection() {
   const [rules, setRules] = useState(() => normalizeRules(getActiveScopeRules()))
   const [saved, setSaved] = useState(() => normalizeRules(getActiveScopeRules()))
@@ -282,6 +369,17 @@ export function AdminScopeSection() {
     const res = runOne(sample, asImage)
     setTestResult({ ...res, asImage, expected: asImage || testText === sample.rawText ? sample.expectedAction : null, at: new Date().toLocaleTimeString('vi-VN') })
   }
+  const downloadAllSamples = () => {
+    staffToast('Bắt đầu tải trọn bộ 6 ảnh mẫu thử nghiệm (PNG)...')
+    SAMPLE_SCOPE_CASES.forEach((s, idx) => {
+      if (s.imagePath) {
+        setTimeout(() => {
+          downloadScopeSampleImage(s.imagePath, s.name, 'png')
+        }, idx * 350)
+      }
+    })
+  }
+
   const runAll = () => {
     setBatch(
       SAMPLE_SCOPE_CASES.map((s) => {
@@ -448,6 +546,14 @@ export function AdminScopeSection() {
               <h3 className="aip-h3">Mẫu thử</h3>
               <span className="aip-small aip-muted">chạy ngay trên máy bạn với luật đang sửa, không gọi AI</span>
               <span className="aip-spacer" />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={downloadAllSamples}
+                title="Tải cả bộ 6 ảnh mẫu về máy (PNG nét cao) để test"
+              >
+                📥 Tải cả {SAMPLE_SCOPE_CASES.length} ảnh mẫu
+              </Button>
               <Button variant="secondary" size="sm" onClick={runAll}>
                 Chạy cả {SAMPLE_SCOPE_CASES.length} mẫu
               </Button>
@@ -464,16 +570,95 @@ export function AdminScopeSection() {
                     setTestResult(null)
                   }}
                 >
-                  {s.imagePath ? <img src={s.imagePath} alt="" /> : <span />}
-                  <span style={{ minWidth: 0 }}>
+                  {s.imagePath ? <img src={s.imagePath} alt={s.name} /> : <span />}
+                  <span style={{ minWidth: 0, flex: 1 }}>
                     <b style={{ display: 'block', fontSize: 13 }}>{s.name.replace(/^\d+\.\s*/, '')}</b>
                     <span className="aip-small aip-muted">
                       Kỳ vọng: {ACTION_LABELS[s.expectedAction] || s.expectedAction} · {s.description}
                     </span>
                   </span>
+                  {s.imagePath && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className="aip-sample-dl"
+                      title={`Tải ảnh ${s.name} (PNG) về máy để test`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        downloadScopeSampleImage(s.imagePath, s.name, 'png')
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation()
+                          downloadScopeSampleImage(s.imagePath, s.name, 'png')
+                        }
+                      }}
+                    >
+                      📥 Tải ảnh
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+
+            {sample?.imagePath && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  padding: '12px 14px',
+                  borderRadius: 14,
+                  background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF3DB 100%)',
+                  border: '1.5px solid #F0DDC2',
+                  marginTop: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <img
+                    src={sample.imagePath}
+                    alt={sample.name}
+                    style={{
+                      width: 52,
+                      height: 52,
+                      objectFit: 'cover',
+                      borderRadius: 10,
+                      border: '1px solid #E2D0B6',
+                      background: '#fff',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 13.5, color: '#4B3621' }}>
+                      Ảnh mẫu: {sample.name.replace(/^\d+\.\s*/, '')}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#8C6D46' }}>
+                      Tải ảnh về máy để upload vào app test thử hoặc trình diễn cho Ban Giám Khảo
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Button
+                    size="sm"
+                    onClick={() => downloadScopeSampleImage(sample.imagePath, sample.name, 'png')}
+                    title="Tải ảnh PNG nét cao (2x) để upload test trên app"
+                  >
+                    📥 Tải PNG nét cao
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => downloadScopeSampleImage(sample.imagePath, sample.name, 'svg')}
+                    title="Tải file vector SVG gốc"
+                  >
+                    📄 Tải file SVG
+                  </Button>
+                </div>
+              </div>
+            )}
             <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
               <Field label="Nội dung đề (sửa thoải mái)">
                 <Textarea rows={4} value={testText} onChange={(e) => setTestText(e.target.value)} />

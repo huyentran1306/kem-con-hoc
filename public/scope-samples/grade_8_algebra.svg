@@ -4,7 +4,7 @@
   <rect x="40" y="40" width="520" height="55" rx="8" fill="#FEF2F2"/>
   <text x="60" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#991B1B">ĐỀ THI HỌC SINH GIỎI TOÁN LỚP 8 — THCS</text>
 
-  <text x="50" y="140" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1E293B">Bài 1 (3.0 điểm): Phương trình bậc hai & Hệ phương trình</text>
+  <text x="50" y="140" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1E293B">Bài 1 (3.0 điểm): Phương trình bậc hai &amp; Hệ phương trình</text>
   <text x="70" y="180" font-family="sans-serif" font-size="16" fill="#334155">Giải phương trình bậc hai một ẩn sau:</text>
   
   <rect x="70" y="210" width="460" height="70" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
