@@ -18,6 +18,7 @@ export const ADMIN_PAGES = [
   { id: 'sessions', slug: 'buoi-hoc', label: 'Buổi học & AI', icon: '📚', group: 'monitor', kind: 'tab', keywords: ['buoi hoc', 'nhat ky hoc', 'phien hoc'] },
   { id: 'reports', slug: 'bao-cao', label: 'Báo cáo & NPS', icon: '💛', group: 'monitor', kind: 'tab', keywords: ['bao cao', 'nps', 'danh gia'] },
   { id: 'teachers', slug: 'giao-vien', label: 'Giáo viên & lớp', icon: '🍎', group: 'monitor', kind: 'tab', keywords: ['giao vien', 'lop', 'co giao'] },
+  { id: 'analytics', slug: 'phan-tich', label: 'Phân tích học tập', icon: '📈', group: 'monitor', kind: 'tab', keywords: ['phan tich', 'hoc tap', 'thong ke'] },
 
   { id: 'model', slug: 'mo-hinh', label: 'Mô hình & tham số', icon: '🧠', group: 'ai', kind: 'config', sub: 'model', restricted: true, keywords: ['mo hinh', 'tham so', 'model'] },
   { id: 'prompts', slug: 'prompt-studio', label: 'Prompt Studio', icon: '✍️', group: 'ai', kind: 'config', sub: 'prompts', restricted: true, keywords: ['prompt', 'studio'] },
@@ -41,6 +42,7 @@ export const ADMIN_ROUTE_TABLE = {
   '/admin/buoi-hoc': 'sessions',
   '/admin/bao-cao': 'reports',
   '/admin/giao-vien': 'teachers',
+  '/admin/phan-tich': 'analytics',
   '/admin/mo-hinh': 'model',
   '/admin/prompt-studio': 'prompts',
   '/admin/router': 'router',
