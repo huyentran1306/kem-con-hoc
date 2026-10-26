@@ -325,15 +325,22 @@ export default function App() {
   useEffect(() => {
     const classJoin = getClassJoinFromUrl()
     if (classJoin) {
-      setPendingJoin(classJoin.code, classJoin.type)
       if (session && getAuthToken()) {
+        setPendingJoin(classJoin.code, classJoin.type)
         openSheet('familyClasses', { code: classJoin.code, joinType: classJoin.type })
       } else {
         fetchClassPreview(classJoin.code).then((res) => {
           if (res?.ok && res.class) {
+            setPendingJoin(classJoin.code, classJoin.type)
             setClassJoinBanner(res.class)
+          } else {
+            clearPendingJoin()
+            setClassJoinBanner({ error: true, message: 'Mã lớp không còn dùng được' })
           }
-        }).catch(() => {})
+        }).catch(() => {
+          clearPendingJoin()
+          setClassJoinBanner({ error: true, message: 'Mã lớp không còn dùng được' })
+        })
       }
     } else {
       const pending = getPendingJoin()
@@ -345,8 +352,14 @@ export default function App() {
           fetchClassPreview(pending.code).then((res) => {
             if (res?.ok && res.class) {
               setClassJoinBanner(res.class)
+            } else {
+              clearPendingJoin()
+              setClassJoinBanner({ error: true, message: 'Mã lớp không còn dùng được' })
             }
-          }).catch(() => {})
+          }).catch(() => {
+            clearPendingJoin()
+            setClassJoinBanner({ error: true, message: 'Mã lớp không còn dùng được' })
+          })
         }
       }
     }
@@ -664,14 +677,12 @@ export default function App() {
 
   const handleScrollFab = (e) => {
     const top = e.currentTarget.scrollTop
-    const last = lastScrollTopRef.current
     lastScrollTopRef.current = top
-    if (top < 40) {
+    if (top > 40) {
+      if (!fabCompact) setFabCompact(true)
+    } else {
       if (fabCompact) setFabCompact(false)
-      return
     }
-    if (top > last + 4 && !fabCompact) setFabCompact(true)
-    else if (top < last - 4 && fabCompact) setFabCompact(false)
   }
 
   const wipe = async (opts = {}) => {

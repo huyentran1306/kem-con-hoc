@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, Component } from 'react'
 import { GATEWAY } from './api'
 import { onToast } from './utils'
 import {
@@ -82,6 +82,49 @@ async function checkAdminSession() {
     return { status: 'error' }
   } catch (e) {
     return { status: 'error' }
+  }
+}
+
+
+class AdminPageErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, errorInfo) {
+    console.warn("Admin page crashed caught by boundary:", error, errorInfo)
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.pageId !== this.props.pageId && this.state.hasError) {
+      this.setState({ hasError: false, error: null })
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 32, textAlign: "center", maxWidth: 480, margin: "40px auto" }} className="card warn">
+          <div style={{ fontSize: 36, marginBottom: 8 }} aria-hidden="true">⚠️</div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px", color: "var(--c-text, #4B3621)" }}>
+            Trang gặp sự cố hiển thị dữ liệu
+          </h3>
+          <p className="sub" style={{ margin: "0 0 16px", fontSize: 13, lineHeight: 1.5 }}>
+            {this.state.error?.message || "Dữ liệu trang này bị thiếu hoặc phản hồi từ máy chủ không đúng định dạng."}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <Button variant="secondary" onClick={() => this.setState({ hasError: false, error: null })}>
+              Thử tải lại
+            </Button>
+            <Button onClick={() => this.props.onNavigate?.("overview")}>
+              Về Tổng quan
+            </Button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
   }
 }
 
@@ -409,7 +452,9 @@ export default function AdminPortal({ onExit }) {
             onExit={onExit}
           />
           <main className="kadm-content" id="kadm-content">
-            {renderPage()}
+            <AdminPageErrorBoundary pageId={page.id} onNavigate={navigate}>
+              {renderPage()}
+            </AdminPageErrorBoundary>
           </main>
         </div>
       </div>

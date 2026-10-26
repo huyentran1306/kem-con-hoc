@@ -92,7 +92,7 @@ export default function ModelParamsPage({ adminProfile }) {
     })
   }
 
-  const leakLabel = leaked === undefined ? 'Đang đọc…' : leaked === null ? '·' : `${leaked.toLocaleString('vi-VN')} lần lộ đáp án lọt tới con`
+  const leakLabel = leaked === undefined ? 'Đang đọc…' : leaked === null ? '·' : `${Number(leaked || 0).toLocaleString('vi-VN')} lần lộ đáp án lọt tới con`
 
   return (
     <div className="sys-page">
@@ -179,7 +179,7 @@ export default function ModelParamsPage({ adminProfile }) {
             </div>
             {guardTotal !== null && guardTotal !== undefined && (
               <p className="sys-muted" style={{ margin: '8px 2px 0' }}>
-                Bộ chặn đã can thiệp {guardTotal.toLocaleString('vi-VN')} lần trong 7 ngày (nguồn: nhật ký bộ chặn).
+                Bộ chặn đã can thiệp {Number(guardTotal || 0).toLocaleString('vi-VN')} lần trong 7 ngày (nguồn: nhật ký bộ chặn).
               </p>
             )}
           </Card>

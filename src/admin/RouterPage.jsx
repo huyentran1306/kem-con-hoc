@@ -279,7 +279,7 @@ export default function RouterPage() {
     const rate = u && u.rated > 0 ? `${Math.round((u.selfSolved / u.rated) * 100)}% con tự làm được` : 'tỉ lệ con tự làm: ·'
     return (
       <span>
-        <b>{n.toLocaleString('vi-VN')}</b> buổi trong 30 ngày · {rate}
+        <b>{Number(n || 0).toLocaleString('vi-VN')}</b> buổi trong 30 ngày · {rate}
         {rule.enabled === false && ' · đang tắt'}
       </span>
     )
@@ -352,7 +352,7 @@ export default function RouterPage() {
       {stats && stats.totalSessions > 0 && usage.size === 0 && (
         <Banner
           type="info"
-          message={`Có ${stats.totalSessions.toLocaleString('vi-VN')} buổi học trong 30 ngày nhưng chưa buổi nào ghi luật đã dùng, nên mức dùng theo luật đang để “·”.`}
+          message={`Có ${Number(stats?.totalSessions || 0).toLocaleString('vi-VN')} buổi học trong 30 ngày nhưng chưa buổi nào ghi luật đã dùng, nên mức dùng theo luật đang để “·”.`}
         />
       )}
 
@@ -417,7 +417,7 @@ export default function RouterPage() {
 
       <div className="aip-row">
         <span className="aip-small aip-muted">
-          {stats === null ? 'Chưa đọc được số liệu buổi học từ máy chủ, mức dùng hiện “·”.' : stats ? `Số liệu từ ${stats.totalSessions.toLocaleString('vi-VN')} buổi học 30 ngày qua.` : ''}
+          {stats === null ? 'Chưa đọc được số liệu buổi học từ máy chủ, mức dùng hiện “·”.' : stats ? `Số liệu từ ${Number(stats?.totalSessions || 0).toLocaleString('vi-VN')} buổi học 30 ngày qua.` : ''}
         </span>
         <span className="aip-spacer" />
         <Button variant="ghost" size="sm" onClick={resetDefault}>Đưa về bộ luật gốc</Button>

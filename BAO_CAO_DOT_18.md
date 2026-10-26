@@ -371,3 +371,44 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `scripts/test-dot18-chang-7.mjs`: **6/6 kiểm thử đạt (100% - bao gồm 99 tổ hợp SVG linh vật)**
 - `npm test`: **Toàn bộ test suite dự án đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch (315ms)**
+
+---
+
+## CHẶNG 8: LỖI GIAO DIỆN CÒN LẠI
+
+### 1. Các hạng mục đã thực hiện
+- **1.1 Bảng trượt (Sheet) cố định theo màn hình:**
+  - Cập nhật `.sheet` trong `src/styles.css` sang `position: fixed; inset: 0; z-index: 50;` giúp các bảng trượt ("Thành viên gia đình", "Lớp học của con", "Vào lớp",...) luôn hiển thị trên màn hình, không bị trượt ra ngoài khi trang dài và nằm phía trên thanh tab (`z-index: 8`).
+  - Đảm bảo các nút đóng đều có nhãn trợ năng `aria-label="Đóng"`.
+- **1.2 Xử lý link vào lớp sai (/vao-lop/<mã sai>):**
+  - Trong `src/App.jsx`: Khi mở link vào lớp sai và chưa đăng nhập, nếu kiểm tra mã thất bại, lập tức xoá `pendingJoin` khỏi bộ nhớ và chuyển cờ báo lỗi `error: true`.
+  - Trong `src/Login.jsx`: Hiển thị thông báo "⚠️ Mã lớp không còn dùng được" ngay trên trang đăng nhập.
+  - Sau khi phụ huynh đăng nhập, bảng Vào lớp không còn tự động bật lên ngoài màn hình.
+- **1.3 Nút nổi "Mẹ bình tĩnh" & khoảng đệm cuối trang:**
+  - Bổ sung khoảng đệm cuối trang `padding-bottom: calc(184px + env(safe-area-inset-bottom))` để nút nổi không che nội dung cuối trang và lưới theo dõi học đều.
+  - Cập nhật hàm `handleScrollFab`: Khi cuộn xuống quá 40px, nút nổi tự động thu gọn thành nút tròn mềm mại (`fabCompact`) để tránh che bài tập; khi cuộn lên đầu trang, nút mở lại dạng đầy đủ "Mẹ bình tĩnh".
+- **1.4 Tăng cường độ ổn định Admin (Chống sập trắng & Error Boundary):**
+  - Khắc phục lỗi gọi `.toLocaleString()` trên giá trị `undefined` trong `src/admin/RouterPage.jsx` và `ModelParamsPage.jsx` bằng cách bọc fallback an toàn `Number(val || 0).toLocaleString(vi-VN)`.
+  - Bổ sung lớp bắt lỗi `AdminPageErrorBoundary` cho từng trang trong `src/Admin.jsx`, đảm bảo nếu một trang admin gặp lỗi dữ liệu cũng không làm trắng cả khung admin và phụ huynh/quản trị viên có thể bấm "Thử tải lại" hoặc "Về Tổng quan".
+- **1.5 Gợi ý mùa 1/6:**
+  - Cập nhật `getSeasonSuggestCopy` trong `src/seasons/SeasonHomeLayer.jsx`: Đúng ngày 1/6 hiển thị tiêu đề "🎈 Hôm nay là 1/6! Cả nhà thử bộ Cầu Vồng 1/6 không?", các ngày trước ngày 1/6 hiển thị "🎈 Sắp tới 1/6 rồi! Cả nhà thử bộ Cầu Vồng 1/6 không?".
+- **1.6 Cổng giáo viên - Bộ icon menu riêng biệt:**
+  - Thiết kế lại toàn bộ 6 icon menu trong `src/TeacherBearIcons.jsx` thành các biểu tượng SVG trực quan riêng biệt (Lớp: Ngôi trường/Lớp học; Bài tập: Quyển vở mở; Học sinh: Nhóm học sinh; Thông báo: Chuông rung; Kết quả: Biểu đồ cột; Cài đặt: Bánh răng; Mã QR: Thẻ QR).
+  - Không còn tình trạng 6 mục menu đều dùng chung một mặt gấu gây khó phân biệt.
+
+### 2. Files đã chỉnh sửa
+- `src/styles.css`
+- `src/FamilyClassSheet.jsx`
+- `src/App.jsx`
+- `src/Login.jsx`
+- `src/admin/RouterPage.jsx`
+- `src/admin/ModelParamsPage.jsx`
+- `src/Admin.jsx`
+- `src/seasons/SeasonHomeLayer.jsx`
+- `src/TeacherBearIcons.jsx`
+- `package.json`
+- `scripts/test-dot18-chang-8.mjs` (Tạo mới 6 nhóm kiểm thử)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-8.mjs`: **6/6 kiểm thử đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch (336ms)**

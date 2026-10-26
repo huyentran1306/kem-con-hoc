@@ -55,6 +55,20 @@ const SUGGEST_COPY = {
   },
 }
 
+
+export function getSeasonSuggestCopy(themeId, today) {
+  if (themeId === "thieunhi") {
+    const isJune1st = today && (today.endsWith("-06-01") || today.slice(5) === "06-01");
+    return {
+      title: isJune1st
+        ? "🎈 Hôm nay là 1/6! Cả nhà thử bộ Cầu Vồng 1/6 không?"
+        : "🎈 Sắp tới 1/6 rồi! Cả nhà thử bộ Cầu Vồng 1/6 không?",
+      desc: "Bóng bay, cánh diều, mỗi tối học bơm thêm một quả bóng.",
+    };
+  }
+  return SUGGEST_COPY[themeId];
+}
+
 const END_ICON = { noel: '❄', tet: '🌼', thieunhi: '🎈' }
 const KEEP_LABEL = { noel: 'Giữ bộ Noel', tet: 'Giữ bộ Tết', thieunhi: 'Giữ bộ Cầu Vồng' }
 
@@ -244,9 +258,9 @@ export function SeasonHomeLayer() {
           <div className="season-sheet" role="dialog" aria-modal="true" aria-labelledby="season-sheet-title">
             <div className="season-grab" />
             <SeasonMiniPreview themeId={active.themeId} currentId={theme} />
-            <h4 id="season-sheet-title">{SUGGEST_COPY[active.themeId].title}</h4>
+            <h4 id="season-sheet-title">{getSeasonSuggestCopy(active.themeId, today).title}</h4>
             <p className="sub">
-              {SUGGEST_COPY[active.themeId].desc} Đổi lại {getTheme(theme).name} lúc nào cũng được.
+              {getSeasonSuggestCopy(active.themeId, today).desc} Đổi lại {getTheme(theme).name} lúc nào cũng được.
             </p>
             <div className="season-row2">
               <button type="button" className="btn ghost" onClick={onLater}>Để sau</button>

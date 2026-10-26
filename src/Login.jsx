@@ -51,21 +51,29 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
           {classJoinBanner && (
             <div
               style={{
-                backgroundColor: 'var(--c-hint1-bg, #FFF1D6)',
-                border: '2px solid var(--c-warn-line, #F6C56A)',
+                backgroundColor: classJoinBanner.error ? 'var(--c-err-bg, #FFF1F2)' : 'var(--c-hint1-bg, #FFF1D6)',
+                border: classJoinBanner.error ? '2px solid var(--c-err-line, #FECDD3)' : '2px solid var(--c-warn-line, #F6C56A)',
                 borderRadius: 18,
                 padding: '12px 16px',
                 marginBottom: 12,
                 textAlign: 'center',
-                boxShadow: '0 4px 12px rgba(246, 166, 35, 0.15)',
+                boxShadow: classJoinBanner.error ? '0 4px 12px rgba(225, 29, 72, 0.12)' : '0 4px 12px rgba(246, 166, 35, 0.15)',
               }}
             >
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--c-text, #4B3621)' }}>
-                🏫 Đăng nhập để vào <b>{formatClassName(classJoinBanner.className || classJoinBanner.class_name || classJoinBanner.name) || 'lớp của cô'}</b> của <b>{formatTeacherName(classJoinBanner.teacherName || classJoinBanner.teacher_name, { lower: true })}</b>
-              </div>
-              <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #8A6A4A)', marginTop: 3 }}>
-                Đăng nhập xong, mình quay lại đúng màn vào lớp nhé
-              </div>
+              {classJoinBanner.error ? (
+                <div style={{ fontWeight: 800, fontSize: 13.5, color: '#BE123C' }}>
+                  ⚠️ Mã lớp không còn dùng được
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--c-text, #4B3621)' }}>
+                    🏫 Đăng nhập để vào <b>{formatClassName(classJoinBanner.className || classJoinBanner.class_name || classJoinBanner.name) || 'lớp của cô'}</b> của <b>{formatTeacherName(classJoinBanner.teacherName || classJoinBanner.teacher_name, { lower: true })}</b>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #8A6A4A)', marginTop: 3 }}>
+                    Đăng nhập xong, mình quay lại đúng màn vào lớp nhé
+                  </div>
+                </>
+              )}
             </div>
           )}
 

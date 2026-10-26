@@ -348,7 +348,7 @@ textarea.field{resize:none;line-height:1.6}
 
 /* ---------- Sheet ---------- */
 .sheet{
-  position:absolute;inset:0;z-index:30;
+  position:fixed;inset:0;z-index:50;
   background:rgba(42,34,51,.48);
   display:flex;align-items:flex-end;justify-content:center;
   animation:fadeIn .2s both;
@@ -838,7 +838,7 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   .app.parent-shell { height: 100dvh; }
 }
 /* Khoảng đệm cuối trang = chiều cao nút "Mẹ bình tĩnh" + thanh tab */
-.app.parent-shell > .scroll { padding-bottom: calc(172px + env(safe-area-inset-bottom)); }
+.app.parent-shell > .scroll { padding-bottom: calc(184px + env(safe-area-inset-bottom)); }
 
 /* 6.1 Nút nổi "Mẹ bình tĩnh": thu thành nút tròn khi cuộn xuống */
 .calm-fab { bottom: calc(86px + env(safe-area-inset-bottom)); min-height: 48px; transition: transform .15s, box-shadow .2s, padding .2s, width .2s; }

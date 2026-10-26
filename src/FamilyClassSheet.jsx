@@ -312,7 +312,7 @@ export function FamilyClassSheet({
             </p>
           </div>
         </div>
-        <button style={styles.closeBtn} onClick={onClose}><X size={18} /></button>
+        <button style={styles.closeBtn} onClick={onClose} aria-label="Đóng"><X size={18} /></button>
       </div>
 
       {/* Navigation tabs */}
