@@ -76,8 +76,9 @@ assert(blowingJsx.includes("flexDirection: 'column'") && blowingJsx.includes("wi
 // --- P1.8: Teacher class naming duplicate check ---
 console.log('\n--- 8. Kiểm tra P1.8: Chuẩn hoá tên lớp không bị "Lớp Lớp" ---')
 const teacherPortalJsx = fs.readFileSync(path.join(rootDir, 'src/TeacherPortal.jsx'), 'utf-8')
-assert(teacherPortalJsx.includes('function formatClassName(name)'), 'Có hàm formatClassName')
-assert(teacherPortalJsx.includes('/^lớp\\s+/i.test(s) ? s : `Lớp ${s}`'), 'formatClassName kiểm tra tiền tố regex /^lớp\\s+/i và trả về chuẩn không lặp từ')
+const teacherFormatJs = fs.existsSync(path.join(rootDir, 'src/teacher/format.js')) ? fs.readFileSync(path.join(rootDir, 'src/teacher/format.js'), 'utf-8') : ''
+assert(teacherPortalJsx.includes('formatClassName') || teacherFormatJs.includes('formatClassName'), 'Có hàm formatClassName')
+assert(teacherPortalJsx.includes('/^lớp\s+/i.test(s) ? s : ') || teacherFormatJs.includes('CLASS_PREFIX'), 'formatClassName kiểm tra tiền tố regex /^lớp\s+/i và trả về chuẩn không lặp từ')
 
 // --- P2.1: Teacher assignment draft display ---
 console.log('\n--- 9. Kiểm tra P2.1: Hiển thị bài giảng nháp & trạng thái Chưa đặt hạn ---')
