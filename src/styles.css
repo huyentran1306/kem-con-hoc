@@ -1434,3 +1434,82 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   line-height: 1.45;
   margin: 4px 0;
 }
+
+/* ==========================================================
+ * ĐỢT 19 · CHẶNG 2: GẤU GỢI Ý HUY HIỆU THEO VIỆC CON LÀM
+ * ========================================================== */
+.badge-sg {
+  width: 100%;
+  text-align: left;
+  border: 2px solid #2a78d6;
+  background: #F4F8FE;
+  display: grid;
+  gap: 10px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  box-sizing: border-box;
+}
+.badge-sg .kk {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+  color: #64748B;
+  text-transform: uppercase;
+}
+.badge-sg .kk.ink {
+  color: #1E40AF;
+}
+.badge-sg .bs {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.badge-sg .bs b {
+  font-size: 16px;
+  color: #1E293B;
+  display: block;
+}
+.badge-sg .bi {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+.badge-sg .bo {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.badge-sg .bo button {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: #fff;
+  border: 1.5px solid #CBD5E1;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.badge-sg .bo button:hover {
+  background: #F8FAFC;
+}
+.badge-sg .bo button.active {
+  border-color: #2a78d6;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  box-shadow: 0 2px 6px rgba(42, 120, 214, 0.2);
+}
+.badge-sg .xs {
+  font-size: 12.5px;
+  color: #64748B;
+  line-height: 1.45;
+  margin: 0;
+}

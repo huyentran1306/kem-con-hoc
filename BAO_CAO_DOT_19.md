@@ -4,8 +4,8 @@
 
 | Chặng | Tên chặng | Trạng thái | Commit | Bản preview | Ghi chú |
 |---|---|---|---|---|---|
-| **Chặng 1** | Lưu lịch sử thành dữ liệu thật | **ĐẠT** | (pending) | Local / Preview | Đã tạo bảng D1, API badge_events & reward_events, gỡ week ghi cứng, chuyển dữ liệu cũ an toàn |
-| **Chặng 2** | Gấu gợi ý huy hiệu theo việc con làm | Đang làm | - | - | Sắp thực hiện rule engine gợi ý phẩm chất từ hành động của con |
+| **Chặng 1** | Lưu lịch sử thành dữ liệu thật | **ĐẠT** | `8ee7d73` | Local / Preview | Đã tạo bảng D1, API badge_events & reward_events, gỡ week ghi cứng, chuyển dữ liệu cũ an toàn |
+| **Chặng 2** | Gấu gợi ý huy hiệu theo việc con làm | **ĐẠT** | (pending) | Local / Preview | Rule engine tính bằng code theo 4 phẩm chất, lý do có số thật, tie-breaker 2 tuần, fallback an toàn |
 | **Chặng 3** | Báo cáo bố mẹ: biểu đồ và AI tìm nguyên nhân | Chưa | - | - | Biểu đồ cột chồng 4 màu chuẩn, heatmap kỹ năng kẹt, AI prompt p19_trait_analysis |
 | **Chặng 4** | Admin: trang "Phân tích học tập" | Chưa | - | - | Route /admin/phan-tich, bảng analytics_daily, ẩn danh < 5 gia đình |
 | **Chặng 5** | Riêng tư và dữ liệu | Chưa | - | - | Xoá gia đình cascade, xoá lịch sử huy hiệu có ConfirmDialog, cô giáo không thấy |

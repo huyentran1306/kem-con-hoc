@@ -5,6 +5,7 @@ import {
   ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CHAT_REPLIES, CALM_LINES,
   AVAILABLE_STICKERS, WAITING_QUIZZES, SCHEDULE_DEFAULT,
 } from './data'
+import { computeSuggestedBadge, TRAIT_COLORS, TRAIT_ICONS, TRAIT_BADGE_INFO } from './badgeRules'
 import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper, Switch, useWide } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
@@ -3100,6 +3101,53 @@ export function Done() {
   // Đợt 15 P1: chỉ còn 1 bộ đánh giá (mẹ chốt mức hiểu bài trong thẻ Con dạy lại)
   const result = S.flow.result || (S.flow.teachBack === 'guided' ? 'weak' : S.flow.teachBack ? 'ok' : null)
   const [stkIdx, setStkIdx] = useState(0)
+
+  // Đợt 19 Chặng 2: Tính huy hiệu Gấu gợi ý theo hành động của con
+  const recentBadges2Weeks = useMemo(() => {
+    const twoWeeksAgo = Date.now() - 14 * 86400000
+    return (stats?.stickerHistory || [])
+      .filter((s) => !s.sample && (Number(s.timestamp) || 0) >= twoWeeksAgo)
+      .map((s) => s.trait)
+  }, [stats?.stickerHistory])
+
+  const sessionData = useMemo(() => {
+    const steps = (problem?.steps || []).map((st, idx) => ({
+      stepNo: idx + 1,
+      skill: st.skill || (idx === 0 ? 'doc_hieu_de' : idx === (problem.steps.length - 1) ? 'kiem_tra_lai' : 'tinh_toan'),
+      stuckCount: S?.flow?.step === idx ? (S?.flow?.stuck || 0) : 0,
+      usedStuck: S?.flow?.step === idx && Boolean(S?.flow?.stuck),
+      usedMicroStep: Boolean(st.usedMicroStep),
+      selfSolved: Boolean(st.selfSolved !== false),
+      revealedAnswer: Boolean(S?.flow?.unlocked),
+    }))
+
+    return {
+      steps,
+      durationMinutes: 15,
+      maxInactivityMinutes: 0,
+      stepsSeamless: true,
+      teachBackOwnWay: S?.flow?.teachBack === 'ok',
+      didBrotherProblem: Boolean(adaptiveBrother || problem?.brotherProblem || problem?.bai_anh_em),
+      playedMiniGame: Boolean(problem?.fiveMinGame),
+      aiRecognizedAlternativeWay: Boolean(problem?.alternativeWayRecognized),
+      isCheckWork: Boolean(problem?.ocr && !problem?.steps),
+      presentationClean: true,
+    }
+  }, [problem, S?.flow, adaptiveBrother])
+
+  const suggestedBadge = useMemo(() => {
+    return computeSuggestedBadge({
+      childName: child?.name || 'Con',
+      sessionData,
+      recentBadges2Weeks,
+    })
+  }, [child?.name, sessionData, recentBadges2Weeks])
+
+  const [pickedTrait, setPickedTrait] = useState(null)
+  const currentTrait = pickedTrait || suggestedBadge.trait
+  const currentBadgeInfo = TRAIT_BADGE_INFO[currentTrait] || TRAIT_BADGE_INFO['Kiên nhẫn']
+  const isSuggested = currentTrait === suggestedBadge.trait
+  const currentReason = isSuggested ? suggestedBadge.reason : `${child?.name || 'Con'} được chọn huy hiệu ${currentTrait}.`
   const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
   const stkOwned = (stats.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
 
@@ -3140,17 +3188,28 @@ export function Done() {
       return
     }
     soundPop(600)
-    const found = AVAILABLE_STICKERS.find((s) => s.id === e || s.e === e) || {
-      id: 's' + Date.now(),
-      e,
-      n: 'Huy hiệu',
-      trait: 'Kiên nhẫn',
-      fa: 'fa-solid fa-award',
-      color: '#7C3AED',
-      bg: '#F5F3FF',
-      border: '#DDD6FE',
-      desc: 'Con làm bài rất nỗ lực',
+    let found = null
+    let customSource = 'chon_khac'
+    let customReason = 'Con làm bài rất nỗ lực'
+
+    if (e && typeof e === 'object') {
+      found = { ...e }
+      if (e.source) customSource = e.source
+      if (e.reason) customReason = e.reason
+    } else {
+      found = AVAILABLE_STICKERS.find((s) => s.id === e || s.e === e) || {
+        id: 's' + Date.now(),
+        e,
+        n: 'Huy hiệu',
+        trait: 'Kiên nhẫn',
+        fa: 'fa-solid fa-award',
+        color: '#7C3AED',
+        bg: '#F5F3FF',
+        border: '#DDD6FE',
+        desc: 'Con làm bài rất nỗ lực',
+      }
     }
+
     const oldList = stats.stickersList || []
     const newList = [...oldList, { ...found, when: 'Hôm nay' }]
 
@@ -3158,13 +3217,15 @@ export function Done() {
     const oldHistory = stats.stickerHistory || []
     const newHistoryItem = {
       id: 'h_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      stickerId: found.id,
-      name: found.n,
+      stickerId: found.id || found.stickerId || 's1',
+      name: found.n || found.name || 'Huy hiệu',
       trait: found.trait || 'Kiên nhẫn',
       fa: found.fa || 'fa-solid fa-award',
-      color: found.color || '#F59E0B',
+      color: found.color || '#2a78d6',
       subject: problem?.mon || 'Toán',
       problemType: problem?.dang_bai || problem?.type || 'Bài tập rèn luyện',
+      source: customSource,
+      reason: customReason,
       timestamp: Date.now(),
       dateStr: new Date().toLocaleDateString('vi-VN'),
     }
@@ -3172,17 +3233,17 @@ export function Done() {
 
     setStats({ stickers: newList.length, stickersList: newList, stickerHistory: newHistory })
 
-    // Đợt 19 Chặng 1: Lưu bảng badge_events không bao giờ mất khi đổi quà
+    // Đợt 19 Chặng 1 & 2: Lưu bảng badge_events với source (goi_y / chon_khac) và reason có số thật
     recordBadgeEvent({
       id: newHistoryItem.id,
       child_id: child.id,
       session_id: S?.currentSessionId || null,
       trait: newHistoryItem.trait,
-      sticker_id: found.id,
+      sticker_id: newHistoryItem.stickerId,
       subject: newHistoryItem.subject,
       problem_type: newHistoryItem.problemType,
-      source: 'chon_khac',
-      reason: 'Con làm bài rất nỗ lực',
+      source: customSource,
+      reason: customReason,
       created_at: new Date(newHistoryItem.timestamp).toISOString(),
       timestamp: newHistoryItem.timestamp,
     }).catch(() => {})
@@ -3513,6 +3574,70 @@ export function Done() {
           </button>
         </div>
       )}
+
+{/* ĐỢT 19 · CHẶNG 2: GẤU GỢI Ý HUY HIỆU THEO VIỆC CON LÀM */}
+      <div className="badge-sg" data-testid="card-suggested-badge">
+        <div className="kk ink">GẤU GỢI Ý HUY HIỆU</div>
+        <div className="bs">
+          <span className="bi" style={{ background: currentBadgeInfo.color }}>
+            {currentBadgeInfo.icon}
+          </span>
+          <div>
+            <b>{currentBadgeInfo.name} ({currentBadgeInfo.trait})</b>
+            <p className="xs">{currentReason}</p>
+          </div>
+        </div>
+        <div className="kk">HOẶC CHỌN HUY HIỆU KHÁC</div>
+        <div className="bo" role="radiogroup" aria-label="Chọn phẩm chất khác">
+          {['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'].map((tr) => {
+            const info = TRAIT_BADGE_INFO[tr]
+            const active = currentTrait === tr
+            return (
+              <button
+                key={tr}
+                type="button"
+                className={active ? 'active' : ''}
+                onClick={() => {
+                  soundPop(450)
+                  setPickedTrait(tr)
+                }}
+                data-testid={`btn-pick-trait-${tr}`}
+              >
+                {info.icon} {tr}
+              </button>
+            )
+          })}
+        </div>
+        <p className="xs">
+          Gợi ý theo việc {child.name} làm trong buổi. Chọn khác cũng được, Gấu ghi lại để phân tích đúng hơn.
+        </p>
+        <button
+          className="btn solid"
+          style={{
+            width: '100%',
+            background: currentBadgeInfo.color,
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: 15,
+            marginTop: 4,
+          }}
+          onClick={() => {
+            const found = AVAILABLE_STICKERS.find((s) => s.id === currentBadgeInfo.stickerId || s.trait === currentTrait) || currentBadgeInfo
+            pickSticker({
+              ...found,
+              id: currentBadgeInfo.stickerId,
+              n: currentBadgeInfo.name,
+              trait: currentBadgeInfo.trait,
+              color: currentBadgeInfo.color,
+              source: isSuggested ? 'goi_y' : 'chon_khac',
+              reason: currentReason,
+            })
+          }}
+          data-testid="btn-grant-suggested-badge"
+        >
+          🏅 Tặng huy hiệu {currentBadgeInfo.name}
+        </button>
+      </div>
 
       <div className="card sun">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
