@@ -9,7 +9,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -3165,13 +3165,27 @@ export function Done() {
       color: found.color || '#F59E0B',
       subject: problem?.mon || 'Toán',
       problemType: problem?.dang_bai || problem?.type || 'Bài tập rèn luyện',
-      week: 'Tuần này',
       timestamp: Date.now(),
       dateStr: new Date().toLocaleDateString('vi-VN'),
     }
     const newHistory = [...oldHistory, newHistoryItem]
 
     setStats({ stickers: newList.length, stickersList: newList, stickerHistory: newHistory })
+
+    // Đợt 19 Chặng 1: Lưu bảng badge_events không bao giờ mất khi đổi quà
+    recordBadgeEvent({
+      id: newHistoryItem.id,
+      child_id: child.id,
+      session_id: S?.currentSessionId || null,
+      trait: newHistoryItem.trait,
+      sticker_id: found.id,
+      subject: newHistoryItem.subject,
+      problem_type: newHistoryItem.problemType,
+      source: 'chon_khac',
+      reason: 'Con làm bài rất nỗ lực',
+      created_at: new Date(newHistoryItem.timestamp).toISOString(),
+      timestamp: newHistoryItem.timestamp,
+    }).catch(() => {})
     soundSuccess()
     boom()
     buddyReact('cheer')

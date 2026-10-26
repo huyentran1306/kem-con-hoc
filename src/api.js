@@ -1880,3 +1880,106 @@ export async function fetchAiAdaptiveBrother({
     return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
   }
 }
+
+
+// ==========================================================
+// ĐỢT 19: LỊCH SỬ PHẨM CHẤT & ĐỔI QUÀ (BADGE & REWARD EVENTS)
+// ==========================================================
+
+export async function recordBadgeEvent(event) {
+  if (isTrialActive()) return { ok: true, offline: true };
+  try {
+    return await post("/api/v1/family/badge-events", event);
+  } catch (err) {
+    console.warn("recordBadgeEvent error:", err);
+    return { error: err.message };
+  }
+}
+
+export async function fetchBadgeEvents({ childId = "", limit = 1000 } = {}) {
+  if (isTrialActive()) {
+    return { ok: true, count: 0, events: [] };
+  }
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    const token = getAdminToken() || getAuthToken();
+    const headers = {};
+    if (token) headers["Authorization"] = "Bearer " + token;
+    const query = new URLSearchParams();
+    if (childId) query.set("child_id", childId);
+    if (limit) query.set("limit", String(limit));
+    const res = await fetch(`${GATEWAY}/api/v1/family/badge-events?${query.toString()}`, {
+      headers,
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return { ok: false, count: 0, events: [] };
+    return await res.json();
+  } catch (err) {
+    console.warn("fetchBadgeEvents error:", err);
+    return { ok: false, count: 0, events: [] };
+  }
+}
+
+export async function deleteBadgeEvents(childId) {
+  if (isTrialActive() || !childId) return { ok: true };
+  try {
+    const token = getAdminToken() || getAuthToken();
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = "Bearer " + token;
+    const res = await fetch(`${GATEWAY}/api/v1/family/badge-events?child_id=${encodeURIComponent(childId)}`, {
+      method: "DELETE",
+      headers,
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("deleteBadgeEvents error:", err);
+    return { error: err.message };
+  }
+}
+
+export async function recordRewardEvent(event) {
+  if (isTrialActive()) return { ok: true, offline: true };
+  try {
+    return await post("/api/v1/family/reward-events", event);
+  } catch (err) {
+    console.warn("recordRewardEvent error:", err);
+    return { error: err.message };
+  }
+}
+
+export async function fetchRewardEvents({ childId = "" } = {}) {
+  if (isTrialActive()) {
+    return { ok: true, count: 0, events: [] };
+  }
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    const token = getAdminToken() || getAuthToken();
+    const headers = {};
+    if (token) headers["Authorization"] = "Bearer " + token;
+    const query = new URLSearchParams();
+    if (childId) query.set("child_id", childId);
+    const res = await fetch(`${GATEWAY}/api/v1/family/reward-events?${query.toString()}`, {
+      headers,
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return { ok: false, count: 0, events: [] };
+    return await res.json();
+  } catch (err) {
+    console.warn("fetchRewardEvents error:", err);
+    return { ok: false, count: 0, events: [] };
+  }
+}
+
+export async function migrateLegacyBadges(payload = {}) {
+  if (isTrialActive()) return { ok: true, scanned_states: 0, badges_migrated: 0, rewards_migrated: 0 };
+  try {
+    return await post("/api/v1/family/migrate-legacy-badges", payload);
+  } catch (err) {
+    console.warn("migrateLegacyBadges error:", err);
+    return { error: err.message };
+  }
+}

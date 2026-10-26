@@ -5,7 +5,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory, recordRewardEvent } from './api'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
@@ -2163,6 +2163,16 @@ function RedeemRewardSheet() {
       rewardHistory: newHistory,
       history: generalHistory,
     })
+
+    // Đợt 19 Chặng 1: Lưu bảng reward_events
+    recordRewardEvent({
+      child_id: child.id,
+      round,
+      title: finalReward,
+      sticker_count: 10,
+      created_at: new Date().toISOString(),
+      timestamp: Date.now(),
+    }).catch(() => {})
 
     soundFanfare()
     boom()
