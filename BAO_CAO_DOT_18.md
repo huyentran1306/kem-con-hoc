@@ -296,3 +296,38 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `scripts/test-dot18-chang-5.mjs`: **16/16 kiểm thử đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch (217ms)**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
+
+---
+
+## CHI TIẾT CHẶNG 6: BÀI ANH EM THÍCH ỨNG (PROMPT 18 CHẶNG 6)
+
+### 1. Việc đã làm
+- **1.1 Backend Worker API (`POST /api/v1/ai/brother`):**
+  - Xây dựng endpoint hỗ trợ prompt `p18_brother` với model `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, timeout 12s.
+  - Tạo bài toán mới cùng dạng, đổi nhân vật/đồ vật và số liệu, tập trung rèn luyện đúng kỹ năng mà con vừa bị kẹt trong buổi học (`stuck_skill`).
+  - Toàn bộ bài toán và đáp án đi qua máy tính độc lập `correctLessonMath` đảm bảo 100% chính xác về phép tính toán học (`math_verified = true`).
+  - Giới hạn lời giải thích cho mẹ `vi_sao_cho_me` tối đa 20 từ.
+- **1.2 Cơ chế gọi AI thông minh:**
+  - Nếu buổi học có bất kỳ bậc nào con cần gợi ý (`can_goi_y`) hoặc mẹ dẫn (`me_dan`): kích hoạt tạo bài anh em thích ứng nhắm đúng kỹ năng vừa kẹt.
+  - Nếu con tự làm hết (`tu_lam` 100%): dùng bài anh em có sẵn trong bài giảng, không gọi AI để tiết kiệm token và giữ trọn vẹn kết quả.
+- **1.3 Giao diện Xong bài (`Done` trong `src/screens.jsx` & `src/styles.css`):**
+  - Thẻ `GẤU KHEN ĐÚNG CHỖ`: tổng hợp lời khen cụ thể theo từng bậc học của con (ví dụ: Bậc 1 con đổi đơn vị nhanh, bậc 3 con tự giác kiểm tra lại).
+  - Thẻ `BÀI ANH EM CHO [TÊN CON] · 5 PHÚT`:
+    - Dòng định hướng: `Luyện đúng chỗ vừa kẹt: [Kỹ năng con kẹt]`.
+    - Đề bài toán mới trong ngoặc kép rõ ràng.
+    - Huy hiệu uy tín: `✓ Gấu đã kiểm phép tính`.
+    - Nút bấm `Làm thử`: tự động mở một bài ngắn theo đúng luồng hỏi con từng bậc.
+
+### 2. Files đã chỉnh sửa
+- `../study-en/ai-gateway-worker/src/v1_routes.js`
+- `../study-en/ai-gateway-worker/src/index.js`
+- `src/api.js`
+- `src/screens.jsx`
+- `src/styles.css`
+- `package.json`
+- `scripts/test-dot18-chang-6.mjs` (Tạo mới 14 tests)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-6.mjs`: **14/14 kiểm thử đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch (220ms)**
+- `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**

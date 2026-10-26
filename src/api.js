@@ -1839,3 +1839,44 @@ export async function fetchAiJudgeAnswer({
     return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
   }
 }
+
+export async function fetchAiAdaptiveBrother({
+  problemText = '',
+  stuckSkill = 'tinh_toan',
+  grade = 3,
+  bookSeries = 'Kết nối tri thức',
+  childName = 'Bé',
+} = {}) {
+  if (isTrialActive()) {
+    return {
+      ok: true,
+      brother: {
+        de: `Bố hái 2 chục quả cam, đã biếu bà 6 quả. Hỏi bố còn bao nhiêu quả cam?`,
+        ky_nang_nham: stuckSkill,
+        vi_sao_cho_me: `Luyện tập kỹ năng ${stuckSkill} với bài toán cùng dạng.`,
+        dap_an_cho_me: `2 chục = 20. 20 - 6 = 14 quả cam.`,
+      },
+      math_verified: true,
+      latency_ms: 100,
+    };
+  }
+
+  try {
+    const res = await post(
+      '/api/v1/ai/brother',
+      {
+        problem_text: problemText,
+        stuck_skill: stuckSkill,
+        grade,
+        book_series: bookSeries,
+        child_name: childName,
+      },
+      12000,
+      AI_GATEWAY
+    );
+    return res;
+  } catch (err) {
+    console.warn('fetchAiAdaptiveBrother error:', err);
+    return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
+  }
+}

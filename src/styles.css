@@ -1405,3 +1405,32 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   color: #B91C1C;
   animation: pulse 1.2s infinite;
 }
+
+/* Đợt 18 · Chặng 6: Bài anh em thích ứng & Khen đúng chỗ */
+.card.praise {
+  width: 100%;
+  text-align: left;
+  border: 2px solid #6DAA7A;
+  background: var(--c-surface-2);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 8px 0;
+}
+.card.bro {
+  width: 100%;
+  text-align: left;
+  border: 2px solid #F6A623;
+  background: var(--c-surface-2);
+  display: grid;
+  gap: 6px;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 8px 0;
+}
+.card.bro .q2 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-text);
+  line-height: 1.45;
+  margin: 4px 0;
+}

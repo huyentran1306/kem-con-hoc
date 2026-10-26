@@ -9,7 +9,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -3090,6 +3090,37 @@ export function Done() {
   const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
   const stkOwned = (stats.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
 
+  // State Bài anh em thích ứng (Đợt 18 · Chặng 6)
+  const [adaptiveBrother, setAdaptiveBrother] = useState(null)
+  const [loadingBrother, setLoadingBrother] = useState(false)
+  const hadStuckStep = Boolean(S.flow?.stuck > 0 || S.flow?.teachBack === 'hint' || S.flow?.teachBack === 'guided')
+  const stuckSkill = S.flow?.lastStuckSkill || 'tinh_toan'
+
+  useEffect(() => {
+    let cancelled = false
+    if (hadStuckStep) {
+      setLoadingBrother(true)
+      fetchAiAdaptiveBrother({
+        problemText: problem.text || problem.problem_text || '',
+        stuckSkill,
+        grade: child?.grade || 3,
+        childName: child?.name || 'Con',
+      })
+        .then((res) => {
+          if (!cancelled && res && res.ok && res.brother) {
+            setAdaptiveBrother(res.brother)
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (!cancelled) setLoadingBrother(false)
+        })
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [hadStuckStep, stuckSkill, child?.name, child?.grade, problem.text, problem.problem_text])
+
   const pickSticker = (e) => {
     if (problem?.isSample) {
       toast('Bài mẫu không tính sticker nhé ⭐')
@@ -3353,19 +3384,71 @@ export function Done() {
         </div>
       )}
 
-      {problem.brotherProblem && (
-        <div className="card mint pop" style={{ padding: '12px 14px', border: '1.5px solid #A7F3D0', background: '#ECFDF5' }}>
-          <span className="pill g">🎯 Bài anh em (Cùng dạng, đổi số)</span>
-          <div style={{ fontSize: 13.5, color: '#065F46', margin: '6px 0 4px', lineHeight: 1.45, fontWeight: 600 }}>
-            {problem.brotherProblem.de || problem.brotherProblem.text || ''}
+      {/* Thẻ Gấu khen đúng chỗ (Đợt 18 · Chặng 6) */}
+      {(() => {
+        const stepPraises = (problem.steps || []).map((s, idx) => s.loi_khen || s.praise).filter(Boolean)
+        const praiseSummary = stepPraises.length > 0
+          ? stepPraises.slice(0, 2).map((p, i) => `Bậc ${i + 1}: ${p}`).join(' ')
+          : `Bậc 1: ${child.name} đọc kỹ đề rất tốt. Bậc cuối: con tính toán chính xác và tự tin.`
+        return (
+          <div className="card praise fadeIn" data-testid="card-praise-exact">
+            <div className="lbl plum" style={{ margin: 0, color: '#2E7D32' }}>GẤU KHEN ĐÚNG CHỖ</div>
+            <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '4px 0 0', lineHeight: 1.45 }}>
+              {praiseSummary}
+            </p>
           </div>
-          {problem.brotherProblem.dap_an_cho_me && (
-            <div style={{ fontSize: 12, color: '#047857', opacity: 0.9 }}>
-              Đáp án đối chiếu: <b>{problem.brotherProblem.dap_an_cho_me}</b>
+        )
+      })()}
+
+      {/* Thẻ Bài anh em thích ứng (Đợt 18 · Chặng 6) */}
+      {(() => {
+        const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
+        if (!bro) return null
+        const deText = bro.de || bro.text || ''
+        const isAdaptive = Boolean(adaptiveBrother)
+        return (
+          <div className="card bro fadeIn" data-testid="card-adaptive-brother">
+            <div className="lbl plum" style={{ margin: 0, color: '#92400E' }}>
+              BÀI ANH EM CHO {child.name.toUpperCase()} · 5 PHÚT
             </div>
-          )}
-        </div>
-      )}
+            {isAdaptive ? (
+              <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '2px 0' }}>
+                <b>Luyện đúng chỗ vừa kẹt:</b> {bro.ky_nang_nham || 'kỹ năng tính toán'}.
+              </p>
+            ) : (
+              <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '2px 0' }}>
+                <b>Rèn luyện thêm:</b> Cùng dạng bài, đổi số liệu.
+              </p>
+            )}
+            <p className="q2">"{deText}"</p>
+            <div className="mr-row" style={{ marginTop: 6 }}>
+              <span className="tagm ok">✓ Gấu đã kiểm phép tính</span>
+              <button
+                className="mini-btn"
+                onClick={() => {
+                  patch({
+                    problem: {
+                      text: deText,
+                      steps: [
+                        { question: 'Con đọc kỹ đề bài mới nhé?', answer: 'Đọc kỹ đề', praise: 'Giỏi lắm!' },
+                        { question: 'Bài này mình cần làm phép tính gì con nhỉ?', answer: bro.dap_an_cho_me || 'Phép tính', praise: 'Đúng hướng rồi!' },
+                        { question: 'Con tính ra kết quả là bao nhiêu?', answer: bro.dap_an_cho_me || 'Đáp số', praise: 'Xuất sắc!' },
+                      ],
+                      brotherProblem: null,
+                    },
+                    flow: { step: 0, stuck: 0, unlocked: false },
+                  })
+                  toast(`Bắt đầu làm thử bài anh em cùng ${child.name}! 🎯`)
+                  go('explain')
+                }}
+                data-testid="btn-try-brother"
+              >
+                Làm thử
+              </button>
+            </div>
+          </div>
+        )
+      })()}
 
       {stats.stickers >= 10 && (
         <div
