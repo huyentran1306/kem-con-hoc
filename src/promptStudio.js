@@ -100,7 +100,7 @@ Nếu không tìm thấy đề bài, trả về đúng văn bản gốc.`,
     id: 'p3_explain',
     name: '3. Soạn bài giảng gợi mở (Scaffold Socratic)',
     desc: 'Định tuyến phương pháp sư phạm, gợi ý 4 bậc, mức 1 vật thật, mức 2 hình vẽ, bài anh em & trò chơi 5p',
-    variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}'],
+    variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}', '{{ho_so_con}}'],
     requiredVars: ['{{de_bai}}'],
     template: `Bạn là cố vấn sư phạm tiểu học, nói chuyện với PHỤ HUYNH (không nói với trẻ).
 Nhiệm vụ: giúp phụ huynh dẫn con TỰ tìm ra đáp án bằng câu hỏi gợi mở Socratic.
@@ -109,6 +109,7 @@ THÔNG TIN
 - Môn: {{mon}}. Lớp: {{lop}}. Bộ sách: {{sach}}.
 - Dạng bài: {{dang_bai}}. Lỗi trẻ hay gặp: {{loi_hay_gap}}.
 - Đề bài: """{{de_bai}}"""
+- Hồ sơ học của con (Gấu nhớ con): {{ho_so_con}}
 {{khung_ghi_chu}}
 
 PHƯƠNG PHÁP ÁP DỤNG (chỉ dùng các phương pháp này):
@@ -179,7 +180,7 @@ CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON THEO ĐÚNG SCHEMA TRÊN, KHÔN
     id: 'p3_explain_v2',
     name: '3 (v2 Bản mới). Soạn bài kèm lý do sư phạm (Prompt 14)',
     desc: 'Bổ sung trường cac_bac[].ly_do_cho_me (tối đa 30 từ, không lộ đáp án), minh bạch lý do hỏi cho phụ huynh',
-    variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}'],
+    variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}', '{{ho_so_con}}'],
     requiredVars: ['{{de_bai}}'],
     template: `Bạn là cố vấn sư phạm tiểu học, nói chuyện với PHỤ HUYNH (không nói với trẻ).
 Nhiệm vụ: giúp phụ huynh dẫn con TỰ tìm ra đáp án bằng câu hỏi gợi mở Socratic.
@@ -188,6 +189,7 @@ THÔNG TIN
 - Môn: {{mon}}. Lớp: {{lop}}. Bộ sách: {{sach}}.
 - Dạng bài: {{dang_bai}}. Lỗi trẻ hay gặp: {{loi_hay_gap}}.
 - Đề bài: """{{de_bai}}"""
+- Hồ sơ học của con (Gấu nhớ con): {{ho_so_con}}
 {{khung_ghi_chu}}
 
 PHƯƠNG PHÁP ÁP DỤNG (chỉ dùng các phương pháp này):
@@ -209,6 +211,7 @@ QUY TẮC BẮT BUỘC
 11. Tạo 1 câu "con_day_lai_me": mời con đóng vai thầy/cô giảng lại bước quan trọng nhất cho bố mẹ.
 12. Mỗi bậc BẮT BUỘC có "ky_nang" thuộc danh sách: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
 13. Mỗi bậc BẮT BUỘC có "loi_khen" (tối đa 15 từ, khen đúng việc của bậc đó, không nhắc kết quả các bậc sau).
+14. Nếu có hồ sơ học "ho_so_con" (khác "chưa có"): ưu tiên hỏi kỹ, chẻ nhỏ ở kỹ năng con hay kẹt, giảm gợi ý ở kỹ năng con đã vững.
 
 VÍ DỤ MẪU HOÀN CHỈNH (FEW-SHOT):
 Đề: "Mẹ có 15 chiếc kẹo, chia đều cho 3 bạn nhỏ. Hỏi mỗi bạn được mấy chiếc kẹo?"

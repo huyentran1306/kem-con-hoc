@@ -9,7 +9,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, recordLearningEvent, fetchLearnerProfile, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -1747,6 +1747,24 @@ export function Analyze() {
 /* ============================================================
    5. AI GIẢNG CHO MẸ
    ============================================================ */
+
+export const SKILL_LABELS = {
+  doc_hieu_de: "Đọc hiểu đề",
+  don_vi: "Đổi đơn vị",
+  chon_phep_tinh: "Chọn phép tính",
+  tinh_toan: "Tính toán",
+  viet_loi_giai: "Lời giải",
+  kiem_tra_lai: "Kiểm tra lại",
+  doc_hieu: "Đọc hiểu",
+  tu_vung: "Từ vựng",
+  chinh_ta: "Chính tả",
+  dat_cau: "Đặt câu",
+  tu_vung_en: "Từ vựng Tiếng Anh",
+  nghe: "Nghe",
+  ngu_phap: "Ngữ pháp",
+  phat_am: "Phát âm",
+}
+
 // "Lớp 3" → "lớp 3" (tránh "CÁCH LỚP LỚP 3")
 function gradeLabel(g) {
   const t = String(g || '').trim()
@@ -1757,8 +1775,12 @@ function gradeLabel(g) {
 export function Explain() {
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
   const [showMathList, setShowMathList] = useState(false)
+  const [ignoreMemory, setIgnoreMemory] = useState(false)
+  const [showMemDetails, setShowMemDetails] = useState(false)
   const child = S.children.find((c) => c.id === S.activeId)
   const mathInfo = useMemo(() => problem?.mathVerified || problem?.math_verified || validateAllLessonMath(problem), [problem])
+  const learnerProfile = problem?.learnerProfile || child?.learnerProfile || null
+  const hasMemory = !ignoreMemory && child?.bearMemory !== false && learnerProfile && learnerProfile.profile && learnerProfile.profile !== "chưa có" 
   const explainText =
     `Đây là dạng bài ${problem.type}. ${problem.summary} ` +
     `${S.parent.toLowerCase()} lưu ý: ${problem.warning} ` +
@@ -1806,6 +1828,34 @@ export function Explain() {
         </div>
       )}
       <div className="photo">{problem.ocr}</div>
+
+      {hasMemory && (
+        <div className="card mem" id="bear-memory-card">
+          <div className="mem-h">
+            <span className="bear" style={{ fontSize: 26, width: 42, height: 42, borderRadius: "50%", background: "#FFE7B8", display: "grid", placeItems: "center", flexShrink: 0 }}>🐻</span>
+            <div>
+              <div className="kk ink">GẤU NHỚ NÈ</div>
+              <b>{learnerProfile.headline || learnerProfile.profile}</b>
+            </div>
+          </div>
+          <p className="sm" style={{ margin: "2px 0 0", color: "var(--c-text-muted, #4A3B2C)", fontSize: 13 }}>
+            {learnerProfile.advice || "Bài này Gấu hỏi kỹ bước con hay kẹt, các bước sau giữ như thường."}
+          </p>
+          <div className="mem-a">
+            <span className="lnk" onClick={() => setShowMemDetails(!showMemDetails)}>
+              Vì sao Gấu biết? ›
+            </span>
+            <span className="tg" onClick={() => setIgnoreMemory(!ignoreMemory)} style={{ cursor: "pointer" }}>
+              Lần này không dùng <span className={`sw ${ignoreMemory ? "on" : ""}`} />
+            </span>
+          </div>
+          {showMemDetails && (
+            <div style={{ background: "#FFF6E2", border: "1px solid #F0D9A8", borderRadius: 10, padding: "8px 12px", fontSize: 12.5, color: "#452A0A", marginTop: 4 }}>
+              Gấu dựa trên lịch sử học 30 ngày gần đây của {child?.name || "bé"}, thấy các bước con hay cần gợi ý để soạn câu hỏi sát với con hơn. Mẹ có thể gạt công tắc để tắt cho riêng bài này.
+            </div>
+          )}
+        </div>
+      )}
 
       {mathInfo && mathInfo.verifiedCount > 0 && (
         <>
@@ -1877,6 +1927,52 @@ export function Explain() {
         <div className="card sun">
           <span className="lbl sun">⚠️ {S.parent} lưu ý</span>
           <span style={{ fontSize: 14 }}>{problem.warning}</span>
+        </div>
+      )}
+
+      {Array.isArray(problem.steps) && problem.steps.length > 0 && (
+        <div className="card" style={{ padding: "12px 14px" }}>
+          <span className="lbl plum">{problem.steps.length} BẬC GẤU ĐÃ SOẠN</span>
+          <div className="steps" style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            {problem.steps.map((st, i) => {
+              const skillName = SKILL_LABELS[st.ky_nang] || st.ky_nang || ""
+              const isStuckSkill = hasMemory && (
+                learnerProfile?.stuckSkills?.some(s => s.toLowerCase() === skillName.toLowerCase() || (st.ky_nang && s.includes(st.ky_nang)))
+              )
+              return (
+                <div
+                  key={i}
+                  className={`st ${isStuckSkill ? "hot" : ""}`}
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    alignItems: "center",
+                    padding: "8px 10px",
+                    borderRadius: 10,
+                    fontSize: 13.5,
+                    border: "1px solid var(--c-line, #E2E8F0)",
+                  }}
+                >
+                  <b style={{ width: 22, height: 22, borderRadius: "50%", background: isStuckSkill ? "#F59E0B" : "var(--c-surface-2, #E2E8F0)", color: isStuckSkill ? "#fff" : "var(--c-text, #1E293B)", display: "grid", placeItems: "center", fontSize: 12, flexShrink: 0 }}>
+                    {i + 1}
+                  </b>
+                  <span style={{ color: "var(--c-text, #334155)", lineHeight: 1.4, flex: 1 }}>
+                    {st.question || st.q}
+                  </span>
+                  {skillName && (
+                    <span style={{ fontSize: 11, color: "#64748B", background: "#F1F5F9", padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>
+                      {skillName}
+                    </span>
+                  )}
+                  {isStuckSkill && (
+                    <em style={{ flexShrink: 0, fontStyle: "normal", fontSize: 11, fontWeight: 800, background: "#FEF3C7", color: "#92400E", padding: "2px 6px", borderRadius: 4 }}>
+                      {child?.name || "Bé"} hay kẹt
+                    </em>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -1999,6 +2095,20 @@ export function Scaffold() {
     const curStep = steps[step]
     const praiseText = curStep?.loi_khen || curStep?.praise || `Giỏi quá! Lên bậc ${step + 2} nào`
     const ns = step + 1
+
+    // Đợt 18 · Chặng 2: Ghi nhận sự kiện học từng bước cho Gấu nhớ con
+    recordLearningEvent({
+      child_id: child?.id,
+      session_id: S.flow?.sessionId || (`sess_${Date.now()}`),
+      subject: problem?.subject || "Toán",
+      problem_type: problem?.type || "",
+      step_no: step + 1,
+      skill: curStep?.ky_nang || "tinh_toan",
+      result: stuck === 0 ? "tu_lam" : (stuck === 1 ? "can_goi_y" : "me_dan"),
+      hints_used: stuck,
+      micro_steps: 0,
+    }).catch(() => {})
+
     patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
     if (ns >= steps.length) {
       boom()
@@ -2016,6 +2126,19 @@ export function Scaffold() {
   }
 
   const onOpen = () => {
+    const curStep = steps[step]
+    recordLearningEvent({
+      child_id: child?.id,
+      session_id: S.flow?.sessionId || (`sess_${Date.now()}`),
+      subject: problem?.subject || "Toán",
+      problem_type: problem?.type || "",
+      step_no: step + 1,
+      skill: curStep?.ky_nang || "tinh_toan",
+      result: "me_dan",
+      hints_used: Math.max(stuck, 2),
+      micro_steps: 0,
+    }).catch(() => {})
+
     patch({ flow: { ...S.flow, unlocked: true } })
     boom()
     toast('Đáp án đã mở, chỉ cho ' + S.parent.toLowerCase() + ' đối chiếu thôi nhé')

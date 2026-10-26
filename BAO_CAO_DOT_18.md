@@ -11,7 +11,7 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 |---|---|---|---|---|
 | **Chặng 0** | **Sửa nền AI** | **ĐẠT (100%)** | `dot18-chang-0` | 16/16 unit test `test-dot18-chang-0.mjs` đạt, 28/28 test suites xanh, 46/46 E2E đạt |
 | **Chặng 1** | **Máy kiểm phép tính** | **ĐẠT (100%)** | `dot18-chang-1` | 33/33 tests `test-dot18-chang-1.mjs` đạt, tự sửa 30 - 8 = 23 thành 22, huy hiệu .chk trên UI |
-| Chặng 2 | Gấu nhớ con | Chưa | | Chờ điểm dừng bắt buộc 1 (D1 migration) |
+| **Chặng 2** | **Gấu nhớ con** | **ĐẠT (100%)** | `dot18-chang-2` | D1 migration live remote & local, 36/36 tests test-dot18-chang-2.mjs đạt, thẻ Gấu nhớ nè & cài đặt bé |
 | Chặng 3 | Phân tích tiến bộ trung thực | Chưa | | |
 | Chặng 4 | Câu hỏi nhỏ hơn | Chưa | | |
 | Chặng 5 | Gấu nghe con trả lời | Chưa | | |
@@ -113,3 +113,52 @@ Môi trường: Node.js, Vite 8.3.3, Cloudflare Pages, Cloudflare Worker + Worke
 - `npm test`: **29/29 test suites đạt (100%)**
 - `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**
 - `npm run build`: **Bản build sản xuất sạch, không lỗi**
+
+---
+
+## CHI TIẾT CHẶNG 2: GẤU NHỚ CON (PROMPT 17 CHẶNG 2 & 3)
+
+### 1. Việc đã làm
+- **Điểm dừng bắt buộc 1: Migration D1 remote & local:**
+  - Tạo file `study-en/ai-gateway-worker/migrations/0006_dot18_tables.sql`.
+  - Tạo bảng `learning_events` (có chỉ mục `(family_id, child_id, created_at)` và `(family_id, child_id, skill)`, ràng buộc `UNIQUE(session_id, step_no)` chống ghi trùng).
+  - Tạo bảng `progress_reports` (có chỉ mục `(family_id, child_id, created_at)`).
+  - Đã chạy và kiểm tra xác nhận thành công 100% trên cả database thật Cloudflare D1 `ai-gateway-db` (ID `76611f4f-2e43-4dbb-b36c-858ff81298a3`) và local D1.
+- **Thuật toán phân tích hồ sơ con 30 ngày (buildLearnerProfile):**
+  - Đọc `learning_events` trong 30 ngày gần nhất:
+    - Kỹ năng hay kẹt: tỉ lệ kẹt > 30% trên ít nhất 3 lần gặp.
+    - Kỹ năng đã vững: làm đúng không cần gợi ý (`tu_lam`, `hints_used == 0`) 3 lần liên tiếp.
+  - Tự động tạo hồ sơ ngắn gọn <= 300 ký tự (ví dụ: `Mít hay kẹt ở bước đổi đơn vị; đã vững tính toán. Hãy hỏi kỹ bước đổi đơn vị.`).
+  - Chưa có lịch sử: ghi `chưa có`.
+- **Hệ thống Backend Worker API:**
+  - `POST /api/v1/family/learning-events`: ghi nhận sự kiện từng bước kèm UPSERT chống trùng lặp theo `session_id + step_no`.
+  - `GET /api/v1/family/learning-events`: đọc lịch sử và hồ sơ học 30 ngày của bé.
+  - `DELETE /api/v1/family/learning-events`: xoá dữ liệu học tập của riêng bé.
+  - Tự động chèn hồ sơ con vào biến `{{ho_so_con}}` của prompt `p3_explain_v2` khi gọi `/chat`.
+  - Quyền riêng tư: API Giáo viên tuyệt đối không truy vấn hoặc trả về `learning_events`.
+- **Prompt Studio (p3_explain_v2):**
+  - Khai báo biến `{{ho_so_con}}`.
+  - Bổ sung quy tắc 14: AI ưu tiên hỏi kỹ, chẻ nhỏ ở kỹ năng con hay kẹt, giảm bớt gợi ý ở kỹ năng con đã vững.
+- **Giao diện người dùng:**
+  - Thẻ "Gấu nhớ nè" (`#bear-memory-card`) ở màn Trước khi giảng (`Explain`): hiển thị tóm tắt chỗ hay kẹt và đã vững của con, link "Vì sao Gấu biết?", công tắc "Lần này không dùng" để tạm tắt cho riêng bài này.
+  - Nhãn kỹ năng chuẩn tiểu học (`SKILL_LABELS`) ở từng bậc câu hỏi: `Đọc hiểu đề`, `Đổi đơn vị`, `Chọn phép tính`, `Tính toán`, `Lời giải`, `Kiểm tra lại`.
+  - Bậc thuộc kỹ năng con hay kẹt được làm nổi bật với viền cam và nhãn `{Tên con} hay kẹt`.
+  - Cài đặt bé (`EditChildSheet`): bổ sung công tắc "Bật Gấu nhớ con" và nút "Xoá lịch sử học của bé" kèm hộp thoại xác nhận.
+  - Màn Hỏi con từng bước (`Scaffold`): tự động ghi nhận sự kiện học từng bước qua `recordLearningEvent`.
+
+### 2. Files đã chỉnh sửa
+- `../study-en/ai-gateway-worker/migrations/0006_dot18_tables.sql`
+- `../study-en/ai-gateway-worker/src/v1_routes.js`
+- `../study-en/ai-gateway-worker/src/index.js`
+- `src/promptStudio.js`
+- `src/api.js`
+- `src/App.jsx`
+- `src/screens.jsx`
+- `src/styles.css`
+- `package.json`
+- `scripts/test-dot18-chang-2.mjs` (Tạo mới 36 tests)
+
+### 3. Kết quả kiểm thử
+- `scripts/test-dot18-chang-2.mjs`: **36/36 kiểm thử đạt (100%)**
+- `npm run build`: **Bản build sản xuất sạch, không lỗi**
+- `npm run e2e`: **46/46 kịch bản Playwright đạt (100%)**

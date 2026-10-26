@@ -1062,3 +1062,108 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   color: #34D399;
   background: rgba(52, 211, 153, 0.12);
 }
+
+/* ============================================================
+   Prompt 18 · Chặng 2: Thẻ Gấu nhớ con (card mem) & Kỹ năng
+   ============================================================ */
+.card.mem {
+  border: 2px solid #F6A623;
+  background: #FFFBF2;
+  display: grid;
+  gap: 8px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.mem-h {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.mem-h b {
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: #3A2410;
+}
+.mem-h .kk {
+  font-size: 11px;
+  font-weight: 800;
+  color: #B45309;
+  letter-spacing: 0.5px;
+}
+.mem-a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.mem-a .lnk {
+  font-size: 13px;
+  font-weight: 800;
+  color: #B45309;
+  cursor: pointer;
+}
+.mem-a .tg {
+  font-size: 12px;
+  font-weight: 700;
+  color: #78350F;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sw {
+  width: 36px;
+  height: 20px;
+  border-radius: 99px;
+  background: #E5D3BA;
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+.sw::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  transition: transform 0.2s ease;
+}
+.sw.on {
+  background: #3F7A3E;
+}
+.sw.on::after {
+  transform: translateX(16px);
+}
+.st.hot {
+  border-left: 3px solid #F6A623 !important;
+  background: #FFFBF2 !important;
+}
+.st.hot em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-left: auto;
+}
+[data-theme="midnight"] .card.mem,
+[data-theme="dark"] .card.mem {
+  background: #2D1E0F;
+  border-color: #B45309;
+}
+[data-theme="midnight"] .mem-h b,
+[data-theme="dark"] .mem-h b {
+  color: #FEF3C7;
+}
+[data-theme="midnight"] .st.hot,
+[data-theme="dark"] .st.hot {
+  background: #261B0E !important;
+}

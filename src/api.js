@@ -245,7 +245,7 @@ export function fastClassifyProblem(deBai = '', lop = 'Lớp 2') {
    🧠 AI GIẢNG BÀI — Scaffold Socratic theo Router phương pháp
    Hỗ trợ 4 bậc câu hỏi, mức 1 vật thật, mức 2 hình vẽ, bài anh em & 5p game
    ============================================================ */
-export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = false) {
+export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = false, options = {}) {
   if (isTrialActive()) {
     // Đợt 15 P1: Dùng thử chỉ có 3 đề mẫu, đề khác thì nói rõ (không trả bài vịt cho mọi đề)
     const trial = matchTrialLesson(ocr)
@@ -263,6 +263,9 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const useV1 = aiCfg?.prompt_version === 'v1' || aiCfg?.p3_version === 'v1';
   const targetPromptId = useV1 ? 'p3_explain' : 'p3_explain_v2';
 
+  const learnerProfile = options.learnerProfile || child?.learnerProfile || null
+  const hoSoConText = (child?.bearMemory !== false && learnerProfile?.profile) ? learnerProfile.profile : 'chưa có'
+
   const sys = renderPrompt(targetPromptId, {
     mon: classification.mon,
     lop: grade,
@@ -274,6 +277,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     de_bai: ocr,
     ghi_chu: parentNote,
     isStuck,
+    ho_so_con: hoSoConText,
   })
 
   const isValidExplain = (d) => {
@@ -304,7 +308,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
         model: modelId,
       },
       EXPLAIN_TIMEOUT_MS,
-      { 'X-Prompt-Id': 'p3_explain' }
+      { 'X-Prompt-Id': 'p3_explain', 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '' }
     )
     let data = extractJson(j.response ?? j)
 
@@ -325,7 +329,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         remainingMs,
-        { 'X-Prompt-Id': 'p3_explain' }
+        { 'X-Prompt-Id': 'p3_explain', 'X-Child-Id': child?.id || '', 'X-Family-Id': options.familyId || '' }
       )
       data = extractJson(retryResp.response ?? retryResp)
     }
@@ -1574,4 +1578,56 @@ export async function closeAiFeedback(feedbackId) {
     headers,
   })
   return res.json()
+}
+/* ============================================================
+   🐻 GẤU NHỚ CON — SỰ KIỆN HỌC VÀ HỒ SƠ 30 NGÀY (PROMPT 18 CHẶNG 2)
+   ============================================================ */
+export async function recordLearningEvent(event) {
+  if (isTrialActive()) return { ok: true, offline: true }
+  try {
+    return await post('/api/v1/family/learning-events', event)
+  } catch (err) {
+    console.warn('recordLearningEvent error:', err)
+    return { error: err.message }
+  }
+}
+
+export async function fetchLearnerProfile(childId, childName = 'Bé', days = 30) {
+  if (isTrialActive() || !childId) {
+    return { ok: true, profile: 'chưa có', stuckSkills: [], solidSkills: [], count: 0, hasHistory: false }
+  }
+  try {
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), 10000)
+    const token = getAdminToken() || getAuthToken()
+    const headers = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(
+      `${GATEWAY}/api/v1/family/learning-events?child_id=${encodeURIComponent(childId)}&days=${days}&child_name=${encodeURIComponent(childName)}`,
+      { headers, signal: ctrl.signal }
+    )
+    clearTimeout(t)
+    if (!res.ok) return { ok: false, profile: 'chưa có', stuckSkills: [], solidSkills: [] }
+    return await res.json()
+  } catch (err) {
+    console.warn('fetchLearnerProfile error:', err)
+    return { ok: false, profile: 'chưa có', stuckSkills: [], solidSkills: [] }
+  }
+}
+
+export async function clearLearnerHistory(childId) {
+  if (isTrialActive() || !childId) return { ok: true }
+  try {
+    const token = getAdminToken() || getAuthToken()
+    const headers = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(`${GATEWAY}/api/v1/family/learning-events?child_id=${encodeURIComponent(childId)}`, {
+      method: 'DELETE',
+      headers,
+    })
+    return await res.json()
+  } catch (err) {
+    console.warn('clearLearnerHistory error:', err)
+    return { error: err.message }
+  }
 }

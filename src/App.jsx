@@ -5,7 +5,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory } from './api'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
@@ -1693,7 +1693,7 @@ function AddChildSheet() {
   )
 }
 
-/* ---------- SỬA HỒ SƠ CON ĐANG CHỌN (Đợt 15 · 6.4) ---------- */
+/* ---------- SỬA HỒ SƠ CON ĐANG CHỌN (Đợt 15 · 6.4 & Đợt 18 · Chặng 2) ---------- */
 function EditChildSheet() {
   const { S, patch, closeSheet, toast } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
@@ -1701,11 +1701,22 @@ function EditChildSheet() {
   const [emoji, setEmoji] = useState(child?.emoji || '🐰')
   const [grade, setGrade] = useState(child?.grade || GRADES[0])
   const [book, setBook] = useState(child?.book || BOOKS[0])
+  const [bearMemory, setBearMemory] = useState(child?.bearMemory !== false)
+
+  const handleClearHistory = async () => {
+    if (!child) return
+    const ok = await appConfirm(`Xoá toàn bộ lịch sử học tập và ghi nhớ của ${child.name}? Gấu sẽ bắt đầu lại từ đầu cho bé.`)
+    if (!ok) return
+    await clearLearnerHistory(child.id)
+    const kids = S.children.map((c) => (c.id === child.id ? { ...c, learnerProfile: null } : c))
+    patch({ children: kids })
+    toast(`Đã xoá lịch sử học của ${child.name}`)
+  }
 
   const save = () => {
     if (!child) { closeSheet(); return }
     if (!name.trim()) { toast('Đặt biệt danh cho con nhé 🐣'); return }
-    const kids = S.children.map((c) => (c.id === child.id ? { ...c, name: name.trim(), emoji, grade, book } : c))
+    const kids = S.children.map((c) => (c.id === child.id ? { ...c, name: name.trim(), emoji, grade, book, bearMemory } : c))
     patch({ children: kids })
     closeSheet()
     toast(`Đã lưu hồ sơ của ${name.trim()} ${emoji}`)
@@ -1756,6 +1767,36 @@ function EditChildSheet() {
             <button key={x} type="button" className={`opt col ${book === x ? 'on' : ''}`} onClick={() => setBook(x)}>{x}</button>
           ))}
         </div>
+      </div>
+      <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <b style={{ fontSize: 14 }}>🐻 Bật Gấu nhớ con</b>
+          <p style={{ fontSize: 12, color: 'var(--c-text-muted)', margin: '2px 0 0' }}>AI ghi nhớ chỗ hay kẹt và đã vững để hỏi sát hơn</p>
+        </div>
+        <span
+          id="toggle-bear-memory"
+          className={`sw ${bearMemory ? 'on' : ''}`}
+          onClick={() => setBearMemory(!bearMemory)}
+          style={{ cursor: 'pointer' }}
+          role="switch"
+          aria-checked={bearMemory}
+        />
+      </div>
+
+      <div className="card" style={{ border: '1.5px dashed #FCA5A5', background: '#FEF2F2' }}>
+        <b style={{ fontSize: 13.5, color: '#991B1B' }}>Xoá lịch sử học của {child?.name || 'bé'}</b>
+        <p style={{ fontSize: 12, color: '#7F1D1D', margin: '3px 0 8px' }}>
+          Xoá các sự kiện học tập và hồ sơ hay kẹt/đã vững của riêng bé này trên hệ thống.
+        </p>
+        <button
+          type="button"
+          id="btn-clear-child-history"
+          className="btn ghost btn-sm danger"
+          onClick={handleClearHistory}
+          style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+        >
+          🗑 Xoá lịch sử học của bé
+        </button>
       </div>
       <div className="btns">
         <button type="button" className="btn ghost" onClick={closeSheet}>Huỷ</button>
