@@ -344,6 +344,7 @@ export default function PromptStudioTab() {
   const [runOut, setRunOut] = useState(null) // { raw, seconds, result }
   const [pasted, setPasted] = useState('')
   const [pastedResult, setPastedResult] = useState(null)
+  const [wrap, setWrap] = useState(false)
   const editorWrapRef = useRef(null)
 
   const publishedTpl = (k) => published[k]?.template || DEFAULT_PROMPTS[k].template
@@ -758,11 +759,14 @@ export default function PromptStudioTab() {
             {draft !== def.template && (
               <Button variant="ghost" size="sm" onClick={resetToDefault}>Về bản gốc</Button>
             )}
+            <Button variant="ghost" size="sm" onClick={() => setWrap((w) => !w)} title="Bật hoặc tắt tự động xuống dòng">
+              {wrap ? '↔ Giữ nguyên dòng' : '↩ Tự xuống dòng'}
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setFilledOpen(true)}>Xem bản điền biến</Button>
           </div>
 
           <div ref={editorWrapRef}>
-            <CodeEditor value={draft} onChange={setDraft} minRows={18} maxHeight={640} ariaLabel={`Nội dung prompt ${name}`} />
+            <CodeEditor value={draft} onChange={setDraft} minRows={16} maxHeight={520} wrap={wrap} ariaLabel={`Nội dung prompt ${name}`} />
           </div>
 
           {validation.error && (

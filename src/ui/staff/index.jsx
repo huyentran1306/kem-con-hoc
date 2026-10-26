@@ -127,6 +127,7 @@ export const Button = React.forwardRef(function Button({
   if (variant === 'secondary') {
     bg = 'var(--s-accent-tint)';
     color = 'var(--s-accent-ink)';
+    border = '1.5px solid var(--s-line)';
     shadow = 'none';
   } else if (variant === 'danger') {
     bg = 'var(--s-bad-bg)';
@@ -136,8 +137,24 @@ export const Button = React.forwardRef(function Button({
   } else if (variant === 'ghost') {
     bg = '#FFFFFF';
     color = 'var(--s-text)';
-    border = '1px solid var(--s-line)';
+    border = '1.5px solid var(--s-line)';
     shadow = '0 2px 0 var(--s-line)';
+  }
+
+  if (disabled) {
+    if (variant === 'primary') {
+      bg = '#F6C56A';
+      color = '#8A5800';
+      border = '1.5px solid #E8B958';
+    } else if (variant === 'secondary') {
+      bg = '#FFF8EC';
+      color = '#A08467';
+      border = '1.5px solid #F0DDC2';
+    } else if (variant === 'ghost') {
+      bg = '#FAF6F0';
+      color = '#A08467';
+      border = '1.5px solid #F0DDC2';
+    }
   }
 
   return (

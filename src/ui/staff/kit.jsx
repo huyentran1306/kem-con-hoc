@@ -366,7 +366,7 @@ function escapeHtml(s) {
 export function highlightTemplate(src) {
   return escapeHtml(String(src || '')).replace(/\{\{\s*[\w.\-]+\s*\}\}/g, (m) => `<mark class="sk-var">${m}</mark>`) + '\n'
 }
-export function CodeEditor({ value = '', onChange, readOnly = false, minRows = 8, maxHeight = 520, ariaLabel = 'Nội dung prompt', style = {} }) {
+export function CodeEditor({ value = '', onChange, readOnly = false, minRows = 8, maxHeight = 520, wrap = false, ariaLabel = 'Nội dung prompt', style = {} }) {
   const taRef = useRef(null)
   const preRef = useRef(null)
   const gutRef = useRef(null)
@@ -388,10 +388,10 @@ export function CodeEditor({ value = '', onChange, readOnly = false, minRows = 8
         ))}
       </div>
       <div className="sk-code-body">
-        <pre ref={preRef} className="sk-code-hl" aria-hidden="true" dangerouslySetInnerHTML={{ __html: highlightTemplate(value) }} />
+        <pre ref={preRef} className={`sk-code-hl ${wrap ? "wrap" : ""}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: highlightTemplate(value) }} />
         <textarea
           ref={taRef}
-          className="sk-code-ta"
+          className={`sk-code-ta ${wrap ? "wrap" : ""}`}
           value={value}
           readOnly={readOnly}
           spellCheck={false}
