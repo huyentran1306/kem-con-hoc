@@ -1,3 +1,4 @@
+import { computeCoachAdvice, isCoachAdviceEnabled } from "./coachRules.js"
 import { Fragment, useContext, useEffect, useRef, useState, useMemo } from 'react'
 import { AppCtx } from './ctx'
 import {
@@ -3158,6 +3159,20 @@ export function Done() {
   const stkOwned = (stats.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
 
   // State Bài anh em thích ứng (Đợt 18 · Chặng 6)
+  const [isCoachOpen, setIsCoachOpen] = useState(true)
+  const coachAdviceEnabled = isCoachAdviceEnabled(child)
+  const coachAdviceList = useMemo(() => {
+    return computeCoachAdvice({
+      sessionData,
+      child,
+      extra: {
+        stepRevealTimes: S?.flow?.stepRevealTimes || [],
+        calmClickCount: S?.flow?.calmCount || S?.flow?.calmClickCount || 0,
+        durationMinutes: S?.flow?.durationMinutes || 12,
+        teachBackLevel: S?.flow?.teachBack === "ok" ? "self" : (S?.flow?.teachBack === "guided" ? "guided" : "hint"),
+      }
+    })
+  }, [sessionData, child, S?.flow])
   const [adaptiveBrother, setAdaptiveBrother] = useState(null)
   const [loadingBrother, setLoadingBrother] = useState(false)
   const hadStuckStep = Boolean(S.flow?.stuck > 0 || S.flow?.teachBack === 'hint' || S.flow?.teachBack === 'guided')
@@ -3420,6 +3435,67 @@ export function Done() {
           ⚠️ Đây là bài mẫu, không phải bài của con (bài mẫu không tính vào lọ kẹo)
         </div>
       )}
+      {/* Đợt 20 · Chặng 4: Gấu góp ý cách kèm (chỉ mẹ thấy, gấp mở được, 0 token) */}
+      {coachAdviceEnabled && coachAdviceList.length > 0 && (
+        <div
+          className="card"
+          data-testid="coach-advice-card"
+          style={{
+            background: "#FFFBEB",
+            border: "1.5px solid #FDE68A",
+            borderRadius: 14,
+            padding: "14px 16px",
+            margin: "12px 0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+            onClick={() => setIsCoachOpen(!isCoachOpen)}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 18 }}>🐻</span>
+              <b style={{ fontSize: 14, color: "#92400E" }}>Gấu góp ý cách kèm (Dành riêng cho {S.parent.toLowerCase()})</b>
+            </div>
+            <span style={{ fontSize: 12, color: "#B45309", fontWeight: 700 }}>
+              {isCoachOpen ? "Thu gọn ▲" : "Xem góp ý ▼"}
+            </span>
+          </div>
+
+          {isCoachOpen && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              {coachAdviceList.map((adv, idx) => (
+                <div
+                  key={adv.id || idx}
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #FEF3C7",
+                    borderRadius: 10,
+                    padding: "10px 12px",
+                    fontSize: 13,
+                    color: "#78350F",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>{adv.icon}</span> {adv.action}
+                  </div>
+                  <div>{adv.message}</div>
+                </div>
+              ))}
+              <div style={{ fontSize: 11, color: "#92400E", textAlign: "right", marginTop: 2, fontStyle: "italic" }}>
+                💡 Chỉ {S.parent.toLowerCase()} thấy mục này · Tắt được trong trang Con tôi
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {(problem.answer || problem.answerLine || problem.dap_an_cuoi_cho_me) && (
         <div className="card mint">
           <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
@@ -6433,6 +6509,26 @@ export function Profile() {
 
       {/* ===== Nhóm 1 · Con ===== */}
       <h2 className="pg-section-title">Con</h2>
+      {/* Đợt 20 · Chặng 4: Nhận lời khuyên cách kèm */}
+      <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 22 }}>🐻</span>
+          <div>
+            <b style={{ fontSize: 14 }}>Nhận lời khuyên cách kèm</b>
+            <div className="sub" style={{ fontSize: 12 }}>Gấu phân tích nhịp học và góp ý sư phạm sau mỗi bài</div>
+          </div>
+        </div>
+        <input
+          type="checkbox"
+          checked={child.receiveCoachAdvice !== false}
+          onChange={(e) => {
+            const updatedChildren = S.children.map(c => c.id === child.id ? { ...c, receiveCoachAdvice: e.target.checked } : c)
+            patch({ children: updatedChildren })
+            toast(e.target.checked ? "Đã bật lời khuyên cách kèm" : "Đã tắt lời khuyên cách kèm")
+          }}
+          style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#F59E0B" }}
+        />
+      </div>
       <div className="pg-grid2">
         <div className="card plum">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

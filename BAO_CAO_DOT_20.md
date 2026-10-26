@@ -8,7 +8,7 @@
 | **Chặng 1** | Cắt chỗ phí token | **ĐẠT** | (pending) | Local / Preview | lesson_cache 30 ngày, rút gọn p3_explain_v2 giảm 50% token vào, bỏ p2_clean thừa, câu hạ hoả offline 32 câu, hạn mức 30 bài/ngày |
 | **Chặng 2** | Kiểm tra trước demo và chế độ trình diễn | **ĐẠT** | (pending) | Local / Preview | Trang /admin/truoc-demo, nút Chạy kiểm tra 5 mục (~3.800 tokens), công tắc Chế độ trình diễn fallback > 10s minh bạch giờ soạn |
 | **Chặng 3** | Bảng điểm AI | **ĐẠT** | (pending) | Local / Preview | Trang /admin/bang-diem, 8 thẻ chỉ số chất lượng, xem chi tiết từng ca, xuất ảnh slide 1920x1080 |
-| **Chặng 4** | Gấu góp ý cách kèm | Chưa | - | - | Tính bằng code từ learning_events và thời gian từng bậc, không tốn token, chỉ mẹ thấy, tắt được |
+| **Chặng 4** | Gấu góp ý cách kèm | **ĐẠT** | (pending) | Local / Preview | Thư viện 20 quy tắc sư phạm tính bằng code JS (0 token), chỉ mẹ thấy trên màn Done, tắt được ở Con tôi |
 | **Chặng 5** | Trợ lý gấu cho cô giáo | Chưa | - | - | Tab Kết quả cổng giáo viên khi >= 5 gia đình, prompt p20_class_insight model nhỏ <= 300 token |
 | **Chặng 6** | Kiểm thử và báo cáo | Chưa | - | - | Bảng trước & sau, ai-eval 30 đề, test bộ nhớ, hạn mức, dùng thử 0 gọi AI |
 
@@ -69,3 +69,14 @@ Kính gửi chủ dự án kết quả đo lường và kiểm thử ai-eval tr�
    - Nút "Chạy lại toàn bộ (80 ca)" chạy theo lô với thanh tiến độ, báo trước chi phí ~5.400 tokens, không tự chạy theo lịch.
 2. **Xuất ảnh cho Slide (1920x1080):**
    - Modal hiển thị chuẩn tỉ lệ 16:9 với nền tối sang trọng, làm nổi bật 8 chỉ số vàng và thông điệp tiết kiệm 50% token vào cho ban giám khảo vòng chung kết.
+
+---
+
+## 7. TỔNG KẾT CHẶNG 4: GẤU GÓP Ý CÁCH KÈM (0 TOKEN)
+1. **Thư viện 20 quy tắc sư phạm (`src/coachRules.js`):**
+   - Đánh giá từ thời gian từng bậc (mở đáp án < 30s nhắc kiên nhẫn, kẹt bậc 1 gợi ý đồ vật thật, làm nhanh < 5p gợi ý bài anh em, buổi học kéo dài > 30p nhắc uống nước nghỉ ngơi, bấm Mẹ bình tĩnh ghi nhận sự kiên nhẫn).
+   - Điền số thực tế vào từng lời khuyên (số giây, số phút, số lần).
+   - Hoàn toàn bằng code JavaScript, **tiêu tốn 0 token AI**.
+2. **Giao diện tinh tế trên màn Xong bài (Done):**
+   - Hộp gấp mở "Gấu góp ý cách kèm (Dành riêng cho mẹ)" - mặc định mở hoặc gấp lại khi con ngồi cạnh để bảo vệ tâm lý con.
+   - Công tắc "Nhận lời khuyên cách kèm" trong trang Con tôi để mẹ chủ động bật/tắt.
