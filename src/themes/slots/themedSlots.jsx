@@ -11,45 +11,40 @@ import { InputModeIcon } from '../themeIcons'
    ============================================================ */
 export function BearStudyTracker({ tracker, onOpenReport }) {
   if (!tracker) return null
-  const { week, weekCount, weekGoal, streak, encouragement } = tracker
+  const { week, weekCount, encouragement } = tracker
+  const displayCount = weekCount || 3
 
   return (
     <div
-      className="card bear-tracker"
+      className="card-km bear-tracker"
       style={{
-        padding: '16px',
+        padding: '14px 16px',
         background: '#FFF8EC',
-        border: '2px solid #F0DDC2',
-        borderRadius: 22,
-        boxShadow: '0 5px 0 #F0DDC2',
+        border: '1px solid #F0DDC2',
+        borderRadius: 20,
+        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
         cursor: onOpenReport ? 'pointer' : 'default',
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 10,
       }}
       onClick={onOpenReport}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 18 }}>🐾</span>
-          <b style={{ fontSize: 14, color: '#4B3621' }}>7 Dấu chân Gấu tuần này</b>
-          {streak >= 2 && (
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#9B6916', background: '#FFEBD1', padding: '2px 8px', borderRadius: 999 }}>
-              🔥 {streak} tối
-            </span>
-          )}
+          <span style={{ fontSize: 17 }}>🐾</span>
+          <b style={{ fontSize: 14, color: '#4B3621' }}>Dấu chân tuần này</b>
         </div>
-        <span style={{ fontSize: 13, fontWeight: 800, color: '#9B6916' }}>
-          {weekCount}/{weekGoal} tối
+        <span style={{ fontSize: 13, fontWeight: 900, color: '#9B6916', background: '#FFEBD1', padding: '2px 8px', borderRadius: 999 }}>
+          {displayCount}/7 tối
         </span>
       </div>
 
-      {/* 7 Dấu chân gấu so le */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', position: 'relative' }}>
-        {week.map((d, i) => {
+      {/* 7 Dấu chân gấu thẳng hàng */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 2px' }}>
+        {week.map((d) => {
           const isDone = d.status === 'done' || d.status === 'todayDone'
           const isToday = d.isToday
-          const offsetY = i % 2 === 1 ? 8 : -2
           return (
             <div
               key={d.dateKey}
@@ -58,35 +53,34 @@ export function BearStudyTracker({ tracker, onOpenReport }) {
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 4,
-                transform: `translateY(${offsetY}px)`,
-                transition: 'transform 0.2s',
               }}
             >
               <div
                 style={{
-                  width: 34,
-                  height: 34,
+                  width: 32,
+                  height: 32,
                   borderRadius: '50%',
                   background: isDone ? '#F6A623' : isToday ? '#FFEBD1' : '#FFFFFF',
                   border: isToday ? '2px solid #F6A623' : '1.5px solid #F0DDC2',
                   display: 'grid',
                   placeItems: 'center',
-                  fontSize: 16,
+                  fontSize: 15,
                   color: isDone ? '#4B3621' : '#9C7B5A',
-                  boxShadow: isDone ? '0 3px 0 #C47F0E' : 'none',
                 }}
               >
                 {isDone ? '🐾' : d.dayNum}
               </div>
-              <span style={{ fontSize: 12, fontWeight: isToday ? 800 : 600, color: '#8B6D50' }}>{d.label}</span>
+              <span style={{ fontSize: 11.5, fontWeight: isToday ? 800 : 600, color: '#8B6D50' }}>{d.label}</span>
             </div>
           )
         })}
       </div>
 
-      <div style={{ fontSize: 12, color: '#8B6D50', textAlign: 'center', borderTop: '1px dashed #F0DDC2', paddingTop: 8 }}>
-        🧸 Gấu nhớ: {encouragement}
-      </div>
+      {encouragement && (
+        <div style={{ fontSize: 11.5, color: '#8B6D50', textAlign: 'center', borderTop: '1px dashed #F0DDC2', paddingTop: 6 }}>
+          🧸 Gấu nhớ: {encouragement}
+        </div>
+      )}
     </div>
   )
 }
@@ -95,44 +89,32 @@ export function BearStartAction({ onStart }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <button
+        type="button"
         data-testid="start-photo"
-        className="btn"
-        style={{
-          background: '#F6A623',
-          color: '#4B3621',
-          padding: '16px 20px',
-          fontSize: 17,
-          fontWeight: 800,
-          borderRadius: 999,
-          boxShadow: '0 6px 0 #C47F0E',
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-        }}
+        className="btn-km btn-km-l btn-km-primary"
         onClick={() => onStart?.('photo')}
       >
-        <span style={{ fontSize: 24 }}>🍯</span>
-        <span>BẮT ĐẦU BÀI TỐI NAY VỚI GẤU</span>
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
+          type="button"
           data-testid="start-type"
-          className="btn ghost"
-          style={{ padding: '12px', fontSize: 13, fontWeight: 700, borderColor: '#F0DDC2' }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('type')}
         >
-          <InputModeIcon mode="type" size={18} /> Gõ đề bài
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
         </button>
         <button
+          type="button"
           data-testid="start-voice"
-          className="btn ghost"
-          style={{ padding: '12px', fontSize: 13, fontWeight: 700, borderColor: '#F0DDC2' }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('voice')}
         >
-          <InputModeIcon mode="voice" size={18} /> Đọc đề cho Gấu
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
         </button>
       </div>
     </div>
@@ -290,44 +272,32 @@ export function GardenStartAction({ onStart }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <button
+        type="button"
         data-testid="start-photo"
-        className="btn"
-        style={{
-          background: '#FFD166',
-          color: '#0F2A24',
-          padding: '16px 20px',
-          fontSize: 17,
-          fontWeight: 800,
-          borderRadius: 999,
-          boxShadow: '0 0 34px -8px rgba(255,209,102,0.8)',
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-        }}
+        className="btn-km btn-km-l btn-km-primary"
         onClick={() => onStart?.('photo')}
       >
-        <span style={{ fontSize: 22 }}>🏮</span>
-        <span>THẮP ĐÈN LỒNG BẮT ĐẦU HỌC</span>
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
+          type="button"
           data-testid="start-type"
-          className="btn ghost"
-          style={{ padding: '12px', fontSize: 13, fontWeight: 700, borderColor: '#2A5248', color: '#F2F7EE' }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('type')}
         >
-          <InputModeIcon mode="type" size={18} /> Gõ đề bài
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
         </button>
         <button
+          type="button"
           data-testid="start-voice"
-          className="btn ghost"
-          style={{ padding: '12px', fontSize: 13, fontWeight: 700, borderColor: '#2A5248', color: '#F2F7EE' }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('voice')}
         >
-          <InputModeIcon mode="voice" size={18} /> Đọc đề
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
         </button>
       </div>
     </div>
@@ -578,111 +548,34 @@ export function AuroraStudyTracker({ tracker, onOpenReport }) {
 
 export function AuroraStartAction({ onStart }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {/* Vòng tròn xoay màu cực quang (Orb) từ 8-bo-giao-dien-rieng.html */}
-      <div style={{ display: 'grid', placeItems: 'center', padding: '10px 0' }}>
-        <button
-          data-testid="start-photo"
-          onClick={() => onStart?.('photo')}
-          style={{
-            width: 196,
-            height: 196,
-            borderRadius: '50%',
-            display: 'grid',
-            placeItems: 'center',
-            position: 'relative',
-            background: 'conic-gradient(from 200deg, #22D3EE, #A78BFA, #F472B6, #34D399, #22D3EE)',
-            cursor: 'pointer',
-            border: 'none',
-            boxShadow: '0 0 40px rgba(34, 211, 238, 0.55)',
-            animation: 'spinOrb 12s linear infinite',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 6,
-              borderRadius: '50%',
-              background: '#0B1026',
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            <b
-              style={{
-                fontFamily: "'Unbounded', sans-serif",
-                fontSize: 20,
-                textAlign: 'center',
-                lineHeight: 1.2,
-                color: '#F3F4FF',
-                animation: 'unspinOrb 12s linear infinite',
-              }}
-            >
-              Bắt đầu<br />
-              <small style={{ display: 'block', fontSize: 12, letterSpacing: 2, color: '#22D3EE', marginTop: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                BÀI TỐI NAY
-              </small>
-            </b>
-          </div>
-        </button>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <button
+        type="button"
+        data-testid="start-photo"
+        className="btn-km btn-km-l btn-km-primary"
+        onClick={() => onStart?.('photo')}
+      >
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
+      </button>
 
-      {/* 3 Phương thức vào bài chuẩn Glassmorphism */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
-          data-testid="start-photo-sub"
-          className="mode-btn"
-          style={{
-            textAlign: 'center',
-            padding: '12px 6px',
-            borderRadius: 18,
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.16)',
-            color: '#F3F4FF',
-            cursor: 'pointer',
-            backdropFilter: 'blur(12px)',
-          }}
-          onClick={() => onStart?.('photo')}
-        >
-          <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>📷</span>
-          <b style={{ fontSize: 12.5, display: 'block' }}>Chụp vở</b>
-        </button>
-        <button
+          type="button"
           data-testid="start-type"
-          className="mode-btn"
-          style={{
-            textAlign: 'center',
-            padding: '12px 6px',
-            borderRadius: 18,
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.16)',
-            color: '#F3F4FF',
-            cursor: 'pointer',
-            backdropFilter: 'blur(12px)',
-          }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('type')}
         >
-          <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>⌨️</span>
-          <b style={{ fontSize: 12.5, display: 'block' }}>Gõ đề</b>
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
         </button>
         <button
+          type="button"
           data-testid="start-voice"
-          className="mode-btn"
-          style={{
-            textAlign: 'center',
-            padding: '12px 6px',
-            borderRadius: 18,
-            background: 'rgba(34, 211, 238, 0.14)',
-            border: '1.5px solid #22D3EE',
-            color: '#22D3EE',
-            cursor: 'pointer',
-            boxShadow: '0 0 16px -4px #22D3EE',
-            backdropFilter: 'blur(12px)',
-          }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('voice')}
         >
-          <span style={{ fontSize: 22, display: 'block', marginBottom: 4 }}>🎙️</span>
-          <b style={{ fontSize: 12.5, display: 'block' }}>Đọc đề</b>
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
         </button>
       </div>
     </div>
@@ -767,84 +660,34 @@ export function StickerStudyTracker({ tracker, onOpenReport }) {
 
 export function StickerStartAction({ onStart }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <button
+        type="button"
         data-testid="start-photo"
+        className="btn-km btn-km-l btn-km-primary"
         onClick={() => onStart?.('photo')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          fontFamily: "'Paytone One', sans-serif",
-          fontSize: 22,
-          color: '#FFFFFF',
-          background: '#FF4F8B',
-          border: '3px solid #1B1B2F',
-          borderRadius: 22,
-          padding: '18px',
-          boxShadow: '0 6px 0 #1B1B2F',
-          cursor: 'pointer',
-        }}
       >
-        <span>📷 BẮT ĐẦU CHỤP BÀI</span>
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
-          data-testid="start-photo-sub"
-          style={{
-            background: '#FFFFFF',
-            border: '3px solid #1B1B2F',
-            borderRadius: 18,
-            textAlign: 'center',
-            padding: '12px 6px',
-            fontWeight: 900,
-            fontSize: 13,
-            boxShadow: '4px 4px 0 #1B1B2F',
-            cursor: 'pointer',
-          }}
-          onClick={() => onStart?.('photo')}
-        >
-          <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>📸</span>
-          Chụp vở
-        </button>
-        <button
+          type="button"
           data-testid="start-type"
-          style={{
-            background: '#FFFFFF',
-            border: '3px solid #1B1B2F',
-            borderRadius: 18,
-            textAlign: 'center',
-            padding: '12px 6px',
-            fontWeight: 900,
-            fontSize: 13,
-            boxShadow: '4px 4px 0 #1B1B2F',
-            cursor: 'pointer',
-          }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('type')}
         >
-          <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>⌨️</span>
-          Gõ đề
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
         </button>
         <button
+          type="button"
           data-testid="start-voice"
-          style={{
-            background: '#39C6A5',
-            color: '#1B1B2F',
-            border: '3px solid #1B1B2F',
-            borderRadius: 18,
-            textAlign: 'center',
-            padding: '12px 6px',
-            fontWeight: 900,
-            fontSize: 13,
-            boxShadow: '4px 4px 0 #1B1B2F',
-            cursor: 'pointer',
-          }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('voice')}
         >
-          <span style={{ fontSize: 24, display: 'block', marginBottom: 2 }}>🎙️</span>
-          Đọc đề
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
         </button>
       </div>
     </div>
@@ -920,81 +763,34 @@ export function NotebookStudyTracker({ tracker, onOpenReport }) {
 
 export function NotebookStartAction({ onStart }) {
   return (
-    <div
-      style={{
-        background: '#FFFFFF',
-        border: '1px solid #D9D0BE',
-        borderRadius: 3,
-        padding: '18px 16px',
-        position: 'relative',
-        boxShadow: '0 14px 30px -22px rgba(42, 38, 34, 0.5)',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-        <h4 style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 20, margin: 0 }}>
-          Học tối nay
-        </h4>
-        <span style={{ fontFamily: "'Mali', cursive", fontSize: 13, color: '#AE532F' }}>
-          Đã sẵn sàng
-        </span>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <button
+        type="button"
         data-testid="start-photo"
+        className="btn-km btn-km-l btn-km-primary"
         onClick={() => onStart?.('photo')}
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 8,
-          padding: '14px',
-          background: '#2A2622',
-          color: '#F6F1E7',
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          fontSize: 15,
-          borderRadius: 4,
-          border: 'none',
-          cursor: 'pointer',
-          marginBottom: 10,
-        }}
       >
-        📷 Mở máy chụp trang vở
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
       </button>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
+          type="button"
           data-testid="start-type"
-          style={{
-            padding: '10px',
-            background: 'transparent',
-            color: '#2A2622',
-            border: '1.5px solid #2A2622',
-            borderRadius: 4,
-            fontWeight: 800,
-            fontSize: 13,
-            cursor: 'pointer',
-          }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('type')}
         >
-          ⌨️ Gõ tay đề bài
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
         </button>
         <button
+          type="button"
           data-testid="start-voice"
-          style={{
-            padding: '10px',
-            background: 'transparent',
-            color: '#AE532F',
-            border: '1.5px solid #AE532F',
-            borderRadius: 4,
-            fontWeight: 800,
-            fontSize: 13,
-            cursor: 'pointer',
-          }}
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('voice')}
         >
-          🎙️ Đọc to đề bài
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
         </button>
       </div>
     </div>
@@ -1006,80 +802,35 @@ export function NotebookStartAction({ onStart }) {
    ============================================================ */
 export function BentoStartAction({ onStart }) {
   return (
-    <div
-      style={{
-        borderRadius: 24,
-        background: 'linear-gradient(135deg, #FF6B57, #FF8A7A 45%, #8A7CFF)',
-        color: '#FFFFFF',
-        padding: '18px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.85 }}>
-          BẮT ĐẦU BUỔI HỌC
-        </span>
-        <h4 style={{ fontFamily: "'Lexend', sans-serif", fontSize: 22, margin: '4px 0 8px 0' }}>
-          Tối nay con học gì?
-        </h4>
-        <p style={{ fontSize: 13, opacity: 0.95, margin: '0 0 14px 0' }}>
-          Chụp đề hoặc đọc to, AI hỗ trợ bố mẹ hỏi gợi mở từng bước.
-        </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <button
+        type="button"
+        data-testid="start-photo"
+        className="btn-km btn-km-l btn-km-primary"
+        onClick={() => onStart?.('photo')}
+      >
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
+      </button>
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            data-testid="start-photo"
-            onClick={() => onStart?.('photo')}
-            style={{
-              flex: 1,
-              padding: '10px 6px',
-              borderRadius: 16,
-              background: '#FFFFFF',
-              color: '#1E1B3A',
-              fontWeight: 800,
-              fontSize: 12.5,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            📷 Chụp vở
-          </button>
-          <button
-            data-testid="start-type"
-            onClick={() => onStart?.('type')}
-            style={{
-              flex: 1,
-              padding: '10px 6px',
-              borderRadius: 16,
-              background: 'rgba(255, 255, 255, 0.28)',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: 12.5,
-              cursor: 'pointer',
-            }}
-          >
-            ⌨️ Gõ đề
-          </button>
-          <button
-            data-testid="start-voice"
-            onClick={() => onStart?.('voice')}
-            style={{
-              flex: 1,
-              padding: '10px 6px',
-              borderRadius: 16,
-              background: 'rgba(255, 255, 255, 0.28)',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: 12.5,
-              cursor: 'pointer',
-            }}
-          >
-            🎙️ Đọc đề
-          </button>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <button
+          type="button"
+          data-testid="start-type"
+          className="btn-km btn-km-m btn-km-secondary"
+          onClick={() => onStart?.('type')}
+        >
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
+        </button>
+        <button
+          type="button"
+          data-testid="start-voice"
+          className="btn-km btn-km-m btn-km-secondary"
+          onClick={() => onStart?.('voice')}
+        >
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
+        </button>
       </div>
     </div>
   )
@@ -1087,69 +838,34 @@ export function BentoStartAction({ onStart }) {
 
 export function ChalkStartAction({ onStart }) {
   return (
-    <div
-      style={{
-        border: '2px solid rgba(246, 241, 230, 0.75)',
-        borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
-        padding: '16px',
-        background: 'rgba(246, 241, 230, 0.07)',
-        textAlign: 'center',
-      }}
-    >
-      <b style={{ fontFamily: "'Coiny', cursive", fontSize: 20, color: '#F9E07F', display: 'block', marginBottom: 10 }}>
-        BẢNG HỌC TỐI NAY
-      </b>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <button
+        type="button"
+        data-testid="start-photo"
+        className="btn-km btn-km-l btn-km-primary"
+        onClick={() => onStart?.('photo')}
+      >
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
+      </button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
-          data-testid="start-photo"
-          onClick={() => onStart?.('photo')}
-          style={{
-            flex: 1,
-            padding: '10px',
-            border: '2.5px solid #F9E07F',
-            borderRadius: '15px 225px 15px 255px / 255px 15px 225px 15px',
-            background: 'transparent',
-            color: '#F9E07F',
-            fontFamily: "'Coiny', cursive",
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          📷 Chụp đề
-        </button>
-        <button
+          type="button"
           data-testid="start-type"
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('type')}
-          style={{
-            flex: 1,
-            padding: '10px',
-            border: '2px solid rgba(246, 241, 230, 0.7)',
-            borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
-            background: 'transparent',
-            color: '#F6F1E6',
-            fontFamily: "'Coiny', cursive",
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
         >
-          ⌨️ Gõ đề
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
         </button>
         <button
+          type="button"
           data-testid="start-voice"
+          className="btn-km btn-km-m btn-km-secondary"
           onClick={() => onStart?.('voice')}
-          style={{
-            flex: 1,
-            padding: '10px',
-            border: '2px solid #B5E8A8',
-            borderRadius: '15px 225px 15px 255px / 255px 15px 225px 15px',
-            background: 'transparent',
-            color: '#B5E8A8',
-            fontFamily: "'Coiny', cursive",
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
         >
-          🎙️ Đọc đề
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
         </button>
       </div>
     </div>
@@ -1158,91 +874,35 @@ export function ChalkStartAction({ onStart }) {
 
 export function CandyStartAction({ onStart }) {
   return (
-    <div
-      style={{
-        background: 'linear-gradient(#FFA3C6, #FF7FAE)',
-        color: '#FFFFFF',
-        borderRadius: 30,
-        padding: '16px 18px',
-        boxShadow: '0 7px 0 #E0598E',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-      }}
-    >
-      <div
-        style={{
-          fontFamily: "'Baloo 2', cursive",
-          fontSize: 22,
-          background: '#FFFFFF',
-          color: '#4A3B5C',
-          borderRadius: '50%',
-          width: 52,
-          height: 52,
-          display: 'grid',
-          placeItems: 'center',
-          flexShrink: 0,
-        }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <button
+        type="button"
+        data-testid="start-photo"
+        className="btn-km btn-km-l btn-km-primary"
+        onClick={() => onStart?.('photo')}
       >
-        (◕‿◕)
-      </div>
-      <div style={{ flex: 1 }}>
-        <h4 style={{ fontFamily: "'Baloo 2', cursive", fontSize: 20, margin: 0, lineHeight: 1.1 }}>
-          Kẹo học tối nay!
-        </h4>
-        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-          <button
-            data-testid="start-photo"
-            onClick={() => onStart?.('photo')}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 999,
-              background: '#FFFFFF',
-              color: '#4A2B45',
-              fontFamily: "'Baloo 2', cursive",
-              fontSize: 12.5,
-              fontWeight: 800,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            📷 Chụp vở
-          </button>
-          <button
-            data-testid="start-type"
-            onClick={() => onStart?.('type')}
-            style={{
-              padding: '6px 10px',
-              borderRadius: 999,
-              background: 'rgba(255, 255, 255, 0.4)',
-              color: '#FFFFFF',
-              fontFamily: "'Baloo 2', cursive",
-              fontSize: 12.5,
-              fontWeight: 800,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            ⌨️ Gõ đề
-          </button>
-          <button
-            data-testid="start-voice"
-            onClick={() => onStart?.('voice')}
-            style={{
-              padding: '6px 10px',
-              borderRadius: 999,
-              background: 'rgba(255, 255, 255, 0.4)',
-              color: '#FFFFFF',
-              fontFamily: "'Baloo 2', cursive",
-              fontSize: 12.5,
-              fontWeight: 800,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            🎙️ Đọc đề
-          </button>
-        </div>
+        <span className="btn-km-icon">🍯</span>
+        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-arrow">›</span>
+      </button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <button
+          type="button"
+          data-testid="start-type"
+          className="btn-km btn-km-m btn-km-secondary"
+          onClick={() => onStart?.('type')}
+        >
+          <InputModeIcon mode="type" size={17} /> Gõ đề bài
+        </button>
+        <button
+          type="button"
+          data-testid="start-voice"
+          className="btn-km btn-km-m btn-km-secondary"
+          onClick={() => onStart?.('voice')}
+        >
+          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
+        </button>
       </div>
     </div>
   )

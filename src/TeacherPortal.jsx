@@ -810,7 +810,25 @@ function TeacherClassesList({
       </Card>
 
       {loading ? (
-        <p style={{ color: 'var(--s-text-2)' }}>Đang tải lớp học...</p>
+        <div style={styles.classesGrid} data-testid="classes-skeleton-loading">
+          {[1, 2, 3].map((n) => (
+            <div
+              key={n}
+              style={{
+                ...styles.classCard,
+                opacity: 0.75,
+                background: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                cursor: 'default',
+              }}
+            >
+              <div style={{ height: 14, width: 90, background: '#E2E8F0', borderRadius: 6, marginBottom: 10 }} />
+              <div style={{ height: 20, width: 150, background: '#CBD5E1', borderRadius: 6, marginBottom: 18 }} />
+              <div style={{ height: 14, width: '85%', background: '#F1F5F9', borderRadius: 6, marginBottom: 8 }} />
+              <div style={{ height: 14, width: '60%', background: '#F1F5F9', borderRadius: 6 }} />
+            </div>
+          ))}
+        </div>
       ) : classes.length === 0 ? (
         <EmptyState
           mood="nudge"

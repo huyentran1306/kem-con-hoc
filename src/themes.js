@@ -18,6 +18,8 @@ export const THEMES = [
     googleFont: 'Baloo+2:wght@700;800&family=Nunito:wght@600;700;800;900',
     swatches: ['#FF8FB8', '#B9A3FF', '#7FD8C4', '#FFD36E', '#FFF4F8'],
     vars: {
+      '--c-ok-bg': '#4FC4A9',
+      '--c-ok-text': '#1F3D36',
       '--c-bg': '#FFF4F8',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#EDE4FF',
@@ -92,12 +94,14 @@ export const THEMES = [
     desc: 'Mật ong ấm áp, dấu chân gấu, bạn đồng hành dịu dàng',
     icon: '🧸',
     isDark: false,
-    fontHead: "'Mitr', sans-serif",
+    fontHead: "'Be Vietnam Pro', sans-serif",
     fontBody: "'Nunito', sans-serif",
-    fontHand: "'Mitr', sans-serif",
-    googleFont: 'Mitr:wght@500;700&family=Nunito:wght@600;700;800',
+    fontHand: "'Be Vietnam Pro', sans-serif",
+    googleFont: 'Be+Vietnam+Pro:wght@500;600;700;800&family=Nunito:wght@600;700;800',
     swatches: ['#F6A623', '#7FB7F5', '#8CC98B', '#FFEBD1', '#FFF8EC'],
     vars: {
+      '--c-ok-bg': '#7DBB4C',
+      '--c-ok-text': '#22360F',
       '--c-bg': '#FFF8EC',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#FFEBD1',
@@ -178,6 +182,8 @@ export const THEMES = [
     googleFont: 'Lexend:wght@500;700;800&family=Inter:wght@400;500;600;700',
     swatches: ['#FF7A66', '#8A7CFF', '#22B07D', '#1E1B3A', '#F7F7FA'],
     vars: {
+      '--c-ok-bg': '#1FA06A',
+      '--c-ok-text': '#FFFFFF',
       '--c-bg': '#F7F7FA',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#F1EEFF',
@@ -258,6 +264,8 @@ export const THEMES = [
     googleFont: 'Paytone+One&family=Nunito:wght@600;700;800;900',
     swatches: ['#FF4F8B', '#FFC928', '#39C6A5', '#5667F2', '#1B1B2F'],
     vars: {
+      '--c-ok-bg': '#2DBE98',
+      '--c-ok-text': '#1B1B2F',
       '--c-bg': '#FFF7E6',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#FFF1C9',
@@ -338,6 +346,8 @@ export const THEMES = [
     googleFont: 'Playfair+Display:ital,wght@0,700;0,900;1,600&family=Lora:ital,wght@0,400;0,600;1,400&family=Mali:wght@500;700',
     swatches: ['#B85B37', '#7D9A6B', '#D8A334', '#2A2622', '#F6F1E7'],
     vars: {
+      '--c-ok-bg': '#6A8A57',
+      '--c-ok-text': '#FFFFFF',
       '--c-bg': '#F6F1E7',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#EFE8DA',
@@ -418,6 +428,8 @@ export const THEMES = [
     googleFont: 'Comfortaa:wght@500;700&family=Nunito:wght@600;700;800',
     swatches: ['#0F2A24', '#163B33', '#FFD166', '#6EE7B7', '#F2F7EE'],
     vars: {
+      '--c-ok-bg': '#3FD6A0',
+      '--c-ok-text': '#0F2A24',
       '--c-bg': '#0F2A24',
       '--c-surface': '#163B33',
       '--c-surface-2': '#1C4A3F',
@@ -498,6 +510,8 @@ export const THEMES = [
     googleFont: 'Unbounded:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800',
     swatches: ['#0B1026', '#22D3EE', '#A78BFA', '#34D399', '#F3F4FF'],
     vars: {
+      '--c-ok-bg': '#22C3A6',
+      '--c-ok-text': '#0B1026',
       '--c-bg': '#0B1026',
       '--c-surface': 'rgba(255, 255, 255, .08)',
       '--c-surface-2': 'rgba(167, 139, 250, .2)',
@@ -578,6 +592,8 @@ export const THEMES = [
     googleFont: 'Coiny&family=Itim&family=Nunito:wght@600;700;800',
     swatches: ['#2F4A41', '#F9E07F', '#F7A1C4', '#9AD0F5', '#F6F1E6'],
     vars: {
+      '--c-ok-bg': '#93D985',
+      '--c-ok-text': '#22351F',
       '--c-bg': '#2F4A41',
       '--c-surface': 'rgba(246, 241, 230, .07)',
       '--c-surface-2': 'rgba(154, 208, 245, .14)',
@@ -663,6 +679,8 @@ export const THEMES = [
     googleFont: 'Pacifico&family=Nunito:wght@500;600;700;800;900',
     swatches: ['#F3F8FC', '#C8283F', '#1E6B4C', '#F2C14E', '#14304A'],
     vars: {
+      '--c-ok-bg': '#1B7343',
+      '--c-ok-text': '#FFFFFF',
       '--c-bg': '#F3F8FC',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#E7F1F8',
@@ -747,6 +765,8 @@ export const THEMES = [
     googleFont: 'Lobster&family=Be+Vietnam+Pro:wght@400;500;600;700;800',
     swatches: ['#FFF5E6', '#C8102E', '#F6C344', '#23793F', '#4A1A0C'],
     vars: {
+      '--c-ok-bg': '#1E7F41',
+      '--c-ok-text': '#FFFFFF',
       '--c-bg': '#FFF5E6',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#FFE9C7',
@@ -831,6 +851,8 @@ export const THEMES = [
     googleFont: 'Baloo+2:wght@600;700;800&family=Itim&family=Nunito:wght@500;600;700;800;900',
     swatches: ['#F2F8FF', '#2F62E0', '#FF9F1C', '#FFD23F', '#1FA98F'],
     vars: {
+      '--c-ok-bg': '#169A80',
+      '--c-ok-text': '#FFFFFF',
       '--c-bg': '#F2F8FF',
       '--c-surface': '#FFFFFF',
       '--c-surface-2': '#E6F0FF',

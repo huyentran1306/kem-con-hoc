@@ -168,12 +168,19 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
     return <span style={{ padding: '2px 8px', borderRadius: 99, background: '#F1F5F9', color: '#64748B', fontSize: 11, fontWeight: 700 }}>Chỉ xem</span>
   }
 
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
-    <div className="sheet" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet-content" style={{ maxHeight: '88vh', overflowY: 'auto' }}>
+    <div className="sheet" style={{ zIndex: 9999, background: 'rgba(20, 12, 4, 0.42)' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="sheet-t5-card pn" style={{ maxHeight: '88vh', overflowY: 'auto', background: 'var(--c-surface, #FFFFFF)', color: 'var(--c-text, #1E293B)', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 460, padding: '12px 18px 24px' }}>
+        <div className="sheet-t5-grab" style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--c-line, #CBD5E1)', margin: '0 auto 12px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <p className="title" style={{ margin: 0 }}>👨‍👩‍👧 Thành viên gia đình</p>
-          <button className="round-btn" onClick={onClose} aria-label="Đóng">✕</button>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--c-text)' }}>👨‍👩‍👧 Thành viên gia đình</h3>
+          <button className="btn-km-circle" style={{ width: 32, height: 32, fontSize: 13 }} onClick={onClose} aria-label="Đóng">✕</button>
         </div>
 
         {/* Tab chuyển đổi */}

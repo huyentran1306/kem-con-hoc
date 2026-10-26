@@ -5,6 +5,7 @@ import { DialogHost } from './dialog'
 import './styles.css'
 import './themes.css'
 import './themes/motion.css'
+import './themes/khuon-moi.css'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

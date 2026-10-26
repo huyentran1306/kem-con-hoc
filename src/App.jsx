@@ -24,6 +24,7 @@ initClientErrorLogging()
 const LoginScreen = lazy(() => import('./Login'))
 const AdminPortal = lazy(() => import('./Admin'))
 const TeacherPortal = lazy(() => import('./TeacherPortal'))
+const DevUiKitPage = lazy(() => import('./admin/DevUiKitPage'))
 const FamilyMembersSheet = lazy(() => import('./FamilyMembersSheet').then(m => ({ default: m.FamilyMembersSheet })))
 const JoinFamilyView = lazy(() => import('./JoinFamilyView').then(m => ({ default: m.JoinFamilyView })))
 const PublicReportView = lazy(() => import('./PublicReportView').then(m => ({ default: m.PublicReportView })))
@@ -47,6 +48,13 @@ const isTeacherRoute = () => {
   const p = window.location.pathname.toLowerCase()
   const h = window.location.hash.toLowerCase()
   return p === '/teacher' || p.startsWith('/teacher/') || h === '#teacher' || h.startsWith('#teacher')
+}
+
+const isDevUiKitRoute = () => {
+  if (typeof window === 'undefined') return false
+  const p = window.location.pathname.toLowerCase()
+  const h = window.location.hash.toLowerCase()
+  return p === '/dev/ui-kit' || h === '#/dev/ui-kit' || h === '#dev/ui-kit'
 }
 
 const getJoinCodeFromUrl = () => {
@@ -272,6 +280,7 @@ export default function App() {
   const [session, setSession] = useState(readSession)
   const [showAdmin, setShowAdmin] = useState(isAdminRoute)
   const [showTeacher, setShowTeacher] = useState(isTeacherRoute)
+  const [showDevUiKit, setShowDevUiKit] = useState(isDevUiKitRoute)
   const [joinCode, setJoinCode] = useState(getJoinCodeFromUrl)
   const [reportToken, setReportToken] = useState(getReportTokenFromUrl)
   const famId = session ? session.id : null
@@ -304,6 +313,7 @@ export default function App() {
     const onHash = () => {
       if (isAdminRoute()) setShowAdmin(true)
       if (isTeacherRoute()) setShowTeacher(true)
+      if (isDevUiKitRoute()) setShowDevUiKit(true)
     }
     window.addEventListener('hashchange', onHash)
     window.addEventListener('popstate', onHash)
@@ -748,6 +758,14 @@ export default function App() {
     ? ServerStateGate
     : Scr[screen === 'onb' ? 'Onboarding' : TAB_CAP[screen]] || Scr.Home
 
+  if (showDevUiKit || isDevUiKitRoute()) {
+    return (
+      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp UI Kit...</div>}>
+        <DevUiKitPage />
+      </Suspense>
+    )
+  }
+
   if (showAdmin) {
     return (
       <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp Quản trị...</div>}>
@@ -849,24 +867,28 @@ export default function App() {
       <div className="stage">
         <div className="app parent-shell">
           {session?.isTrial && !trialCollapsed && (
-            <div className="trial-top-banner" role="region" aria-label="Chế độ dùng thử">
-              <div className="trial-txt">
-                <span aria-hidden="true">✨</span>
-                <span>Đang dùng thử · Tạo gia đình để lưu</span>
-              </div>
-              <div className="trial-actions">
-                <button type="button" className="trial-cta" onClick={startRegisterFromTrial}>
+            <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử">
+              <span>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  type="button"
+                  className="btn-km btn-km-s btn-km-primary"
+                  style={{ height: 26, fontSize: 11.5, padding: '0 8px' }}
+                  onClick={() => {
+                    setSession(null)
+                    removeAuthToken()
+                    try { localStorage.removeItem('kem-con-hoc:session') } catch (e) {}
+                    setLoginMode('register')
+                  }}
+                >
                   Tạo tài khoản
-                </button>
-                <button type="button" className="trial-exit" onClick={exitTrial}>
-                  Thoát
                 </button>
                 <button
                   type="button"
-                  className="trial-x"
+                  style={{ background: 'none', border: 'none', color: 'inherit', fontSize: 13, cursor: 'pointer', padding: '0 4px' }}
                   onClick={() => setTrialCollapsed(true)}
-                  title="Thu gọn dải dùng thử"
-                  aria-label="Thu gọn dải dùng thử"
+                  title="Thu gọn"
+                  aria-label="Thu gọn"
                 >
                   ✕
                 </button>
@@ -894,7 +916,7 @@ export default function App() {
             </div>
           </div>
 
-          {S.onboarded && (
+          {S.onboarded && !['snap', 'analyze', 'explain', 'scaffold', 'checkWork', 'check_work', 'check'].includes(screen) && (
             <nav className="tabs">
               {[
                 ['home', BookOpen, 'Học tối nay'],
@@ -918,16 +940,7 @@ export default function App() {
           {S.onboarded && <BuddyPopLayer />}
           {S.onboarded && <MotionLayer />}
 
-          {S.onboarded && (
-            <button
-              className={`calm-fab ${['explain', 'scaffold', 'done', 'snap', 'analyze'].includes(screen) ? 'mini' : ''} ${fabCompact ? 'compact' : ''}`}
-              onClick={() => openSheet('calm')}
-              title={calmLabel}
-              aria-label={calmLabel}
-            >
-              <span className="calm-fab-ic" aria-hidden="true">😮‍💨</span> <span className="calm-fab-label">{calmLabel}</span>
-            </button>
-          )}
+          {/* Prompt 23: Nút 😮‍💨 chuyển lên top bar 36px của mọi màn, bỏ nút nổi đè góc dưới */}
 
           {S.onboarded && session?.isTrial && trialCollapsed && (
             <button type="button" className="trial-mini" onClick={() => setTrialCollapsed(false)} aria-label="Mở lại dải dùng thử">
@@ -1799,9 +1812,17 @@ function EditChildSheet() {
       </div>
       <div className="card">
         <span className="lbl plum">Bộ sách</span>
-        <div className="opt-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
           {BOOKS.map((x) => (
-            <button key={x} type="button" className={`opt col ${book === x ? 'on' : ''}`} onClick={() => setBook(x)}>{x}</button>
+            <button
+              key={x}
+              type="button"
+              className={`btn-km btn-km-s ${book === x ? 'btn-km-primary' : 'btn-km-secondary'}`}
+              style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+              onClick={() => setBook(x)}
+            >
+              {x}
+            </button>
           ))}
         </div>
       </div>
@@ -1820,38 +1841,7 @@ function EditChildSheet() {
         />
       </div>
 
-      {/* ĐỢT 19 · CHẶNG 5: NHỮNG GÌ GẤU NHỚ - LỊCH SỬ HUY HIỆU */}
-      <div className="card" style={{ border: '1.5px dashed #F59E0B', background: '#FFFBEB' }}>
-        <b style={{ fontSize: 13.5, color: '#B45309' }}>Những gì Gấu nhớ · Lịch sử huy hiệu</b>
-        <p style={{ fontSize: 12, color: '#92400E', margin: '3px 0 8px' }}>
-          Lịch sử huy hiệu: <b>{childBadges.length} huy hiệu</b> {childBadges.length > 0 ? `từ ${earliestDate}` : ''}.
-        </p>
-        <button
-          type="button"
-          id="btn-clear-child-badges"
-          className="btn ghost btn-sm"
-          onClick={handleClearBadgeHistory}
-          style={{ color: '#D97706', borderColor: '#FCD34D' }}
-        >
-          🗑 Xoá lịch sử huy hiệu của {child?.name || 'bé'}
-        </button>
-      </div>
 
-      <div className="card" style={{ border: '1.5px dashed #FCA5A5', background: '#FEF2F2' }}>
-        <b style={{ fontSize: 13.5, color: '#991B1B' }}>Xoá lịch sử học của {child?.name || 'bé'}</b>
-        <p style={{ fontSize: 12, color: '#7F1D1D', margin: '3px 0 8px' }}>
-          Xoá các sự kiện học tập và hồ sơ hay kẹt/đã vững của riêng bé này trên hệ thống.
-        </p>
-        <button
-          type="button"
-          id="btn-clear-child-history"
-          className="btn ghost btn-sm danger"
-          onClick={handleClearHistory}
-          style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
-        >
-          🗑 Xoá lịch sử học của bé
-        </button>
-      </div>
       <div className="btns">
         <button type="button" className="btn ghost" onClick={closeSheet}>Huỷ</button>
         <button type="button" className="btn solid" onClick={save}>Lưu</button>
@@ -1908,48 +1898,89 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
   const handleVoiceInput = (speechText) => {
     soundSuccess()
     setText((prev) => (prev ? prev + ' ' + speechText : speechText))
-    toast('🎙️ Đã nhận diện giọng nói: "' + speechText + '"')
+    toast('🎙️ Đã nhận diện: "' + speechText + '"')
   }
 
   return (
     <Sheet>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <p className="title" style={{ margin: 0 }}>Gõ hoặc Đọc đề bài</p>
-      </div>
-      <p className="sub" style={{ margin: '4px 0 10px' }}>Ba mẹ có thể gõ hoặc bấm nút mic để đọc đề trực tiếp.</p>
-
-      <div style={{ marginBottom: 12 }}>
-        <VoiceInputBtn onResult={handleVoiceInput} placeholder="Bấm mic & Đọc đề bài" autoStart={autoMic} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--c-text)' }}>Đề bài hôm nay</h3>
+        <button className="btn-km-circle" style={{ width: 32, height: 32, fontSize: 13 }} onClick={closeSheet} aria-label="Đóng">✕</button>
       </div>
 
-      {isTrial && (
-        <div data-testid="trial-sample-picker" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-          <span className="lbl mut" style={{ fontSize: 12 }}>Dùng thử có 3 đề mẫu, mẹ chọn một đề:</span>
-          {PRELOADED_TRIAL_LESSONS.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              className={`opt ${text === l.de_bai ? 'on' : ''}`}
-              style={{ textAlign: 'left', padding: '8px 10px', fontSize: 12.5, lineHeight: 1.4 }}
-              onClick={() => {
-                setActiveTrialLesson(l.id)
-                setText(l.de_bai)
-              }}
-            >
-              <b>{l.subject} · {l.grade}</b> · {l.de_bai}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* 1. Ô nhập lên đầu */}
       <textarea
-        className="field"
-        rows={4}
+        className="ta big"
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          background: 'var(--c-bg)',
+          border: '1.5px solid var(--c-line)',
+          borderRadius: 14,
+          padding: 12,
+          fontSize: 14.5,
+          fontFamily: 'inherit',
+          color: 'var(--c-text)',
+          minHeight: 110,
+          resize: 'none',
+        }}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Nội dung đề bài toán..."
+        placeholder="Gõ hoặc dán đề bài của con..."
       />
-      <div className="btns" style={{ marginTop: 8 }}>
-        <button className="btn solid" onClick={save}>🚀 AI đọc đề này</button>
+
+      {/* 2. Đề mẫu thành 3 chip Toán, Tiếng Việt, Tiếng Anh */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)' }}>Thử đề mẫu:</span>
+        <button
+          type="button"
+          className={`btn-km btn-km-s btn-km-chip ${text === PRELOADED_TRIAL_LESSONS[0].de_bai ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTrialLesson(PRELOADED_TRIAL_LESSONS[0].id)
+            setText(PRELOADED_TRIAL_LESSONS[0].de_bai)
+          }}
+        >
+          Toán
+        </button>
+        <button
+          type="button"
+          className={`btn-km btn-km-s btn-km-chip ${text === PRELOADED_TRIAL_LESSONS[1].de_bai ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTrialLesson(PRELOADED_TRIAL_LESSONS[1].id)
+            setText(PRELOADED_TRIAL_LESSONS[1].de_bai)
+          }}
+        >
+          Tiếng Việt
+        </button>
+        <button
+          type="button"
+          className={`btn-km btn-km-s btn-km-chip ${text === PRELOADED_TRIAL_LESSONS[2].de_bai ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTrialLesson(PRELOADED_TRIAL_LESSONS[2].id)
+            setText(PRELOADED_TRIAL_LESSONS[2].de_bai)
+          }}
+        >
+          Tiếng Anh
+        </button>
+      </div>
+
+      {/* 3. Nút Đọc cho Gấu nghe */}
+      <div style={{ marginBottom: 12 }}>
+        <VoiceInputBtn onResult={handleVoiceInput} placeholder="🎙 Đọc cho Gấu nghe" autoStart={autoMic} />
+      </div>
+
+      {/* 4. Nút dính đáy Lớn 56px */}
+      <div style={{ margin: '8px -20px -20px', padding: '12px 18px 20px', background: 'var(--c-surface)', borderTop: '1px solid var(--c-line)' }}>
+        <button
+          type="button"
+          className="btn-km btn-km-l btn-km-primary"
+          onClick={save}
+          data-testid="btn-submit-type-problem"
+        >
+          <span className="btn-km-icon">🔎</span>
+          <span className="btn-km-text">Gấu đọc đề này</span>
+          <span className="btn-km-arrow">›</span>
+        </button>
       </div>
     </Sheet>
   )
@@ -1991,6 +2022,27 @@ function StickerBookSheet() {
             </span>
           )}
         </span>
+      </div>
+
+      {/* Thanh tiến độ tới quà (Prompt 23 P3) */}
+      <div className="card-km" style={{ padding: '10px 14px', marginBottom: 12, background: 'var(--c-surface)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <b style={{ fontSize: 13, color: 'var(--c-text)' }}>Tiến độ đổi quà chặng này</b>
+          <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--c-primary)' }}>
+            {Math.min(10, curStats.stickers || list.length || 0)}/10 sticker
+          </span>
+        </div>
+        <div style={{ width: '100%', height: 8, background: 'var(--c-line)', borderRadius: 99, overflow: 'hidden' }}>
+          <div
+            style={{
+              width: `${Math.min(100, (curStats.stickers || list.length || 0) * 10)}%`,
+              height: '100%',
+              background: 'var(--c-accent, #F6A623)',
+              borderRadius: 99,
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
       </div>
 
       {/* 10 Stickers milestone celebration card */}

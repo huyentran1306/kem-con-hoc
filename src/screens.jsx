@@ -1,3 +1,4 @@
+import { TopBarT3, TopBarT4, Progress4, HoldBtn, BtnKm, CardKm } from './ui/KhuonMoi'
 import { computeCoachAdvice, isCoachAdviceEnabled } from "./coachRules.js"
 import { Fragment, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { AppCtx } from './ctx'
@@ -323,85 +324,88 @@ export function Home() {
   const greet = hour < 11 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
   const parentLower = S.parent.toLowerCase()
 
-  // C2: Dải nhắc trực ca buổi tối trên màn chính (19:30 - 21:30)
-  const curMinutes = hour * 60 + minute
-  const isEveningShift = curMinutes >= 19 * 60 + 30 && curMinutes <= 21 * 60 + 30
   const dayCodeMap = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
   const todayCode = dayCodeMap[now.getDay()]
-  const todayDuty = (S.schedule || []).find((d) => d.day === todayCode)?.owner || S.parent
-  // Đợt 15 · 6.2: dòng ngày rút gọn "CN 25/10 · Lớp 3"
-  const shortDate = `${todayCode} ${now.getDate()}/${now.getMonth() + 1}`
+  const shortDate = `${todayCode} ${now.getDate()}/${now.getMonth() + 1} · Lớp ${child.grade}`
 
   const hero = (
-    <div className="hero-band">
-      <div className="home-meta">
-        <p className="sub">
-          {shortDate} · {child.grade}
-        </p>
-        <button
-          className={`sound-pill-btn ${!soundOn ? 'off' : ''}`}
-          onClick={toggleSound}
-          aria-pressed={Boolean(soundOn)}
-          aria-label={soundOn ? 'Tiếng đang bật, bấm để tắt' : 'Tiếng đang tắt, bấm để bật'}
-          title={soundOn ? 'Tiếng đang bật, bấm để tắt' : 'Tiếng đang tắt, bấm để bật'}
-          data-no-sound
-        >
-          <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
-        </button>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div className="home-hero-km" style={{ marginBottom: 12 }}>
+      <TopBarT3
+        dateText={shortDate}
+        soundOn={soundOn}
+        onToggleSound={toggleSound}
+        onOpenCalm={() => openSheet('calm')}
+      />
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 8, padding: '0 4px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p className="title">{greet}, {parentLower}!</p>
-          <p className="title" style={{ fontSize: 19 }}>Tối nay {child.name} học gì?</p>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--c-sub, #6E5D4E)' }}>{greet}, {parentLower}!</p>
+          <h2 style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 800, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
+            Tối nay {child.name} học gì?
+          </h2>
         </div>
-        <BuddyGreeter size={68} />
+        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <BuddyGreeter size={60} />
+          <button
+            type="button"
+            onClick={() => openSheet('stickerBook')}
+            className="sticker-badge-mascot"
+            style={{
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              background: 'var(--c-accent, #F6A623)',
+              color: 'var(--c-on-accent, #fff)',
+              fontSize: 11,
+              fontWeight: 900,
+              padding: '2px 6px',
+              borderRadius: 999,
+              border: '2px solid var(--c-surface, #fff)',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+            title="Mở sổ dán sticker"
+          >
+            <span>⭐</span>
+            <span>{stats.stickers || 0}</span>
+          </button>
+        </div>
       </div>
-      <div className="chips" style={{ marginTop: 6, gap: 8, alignItems: 'center' }}>
-        {S.children.length > 1 &&
-          S.children.map((c) => {
-            const isOtherKid = c.id !== S.activeId
-            const hasNotice = isOtherKid && ((c.unreadTeacherTasks || 0) > 0 || c.hasReminderNotice)
+
+      {S.children.length > 1 && (
+        <div className="seg-km" style={{ marginTop: 10, width: '100%', height: 36 }}>
+          {S.children.map((c) => {
+            const active = c.id === S.activeId
             return (
               <button
                 key={c.id}
-                className={`chip ${c.id === S.activeId ? 'on' : ''}`}
-                style={{ position: 'relative' }}
-                aria-pressed={c.id === S.activeId}
-                onClick={() => { patch({ activeId: c.id }); toast(`Đổi sang ${/^bé\s/i.test(c.name) ? c.name : "bé " + c.name} ${c.emoji}`) }}
+                type="button"
+                className={`seg-km-item ${active ? 'active' : ''}`}
+                style={{ height: 32 }}
+                onClick={() => {
+                  patch({ activeId: c.id })
+                  toast(`Đổi sang ${/^bé\s/i.test(c.name) ? c.name : "bé " + c.name} ${c.emoji}`)
+                }}
               >
-                {c.emoji} {c.name}
-                {hasNotice && (
-                  <span
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      backgroundColor: 'var(--c-danger, #EF4444)',
-                      display: 'inline-block',
-                      marginLeft: 4,
-                      verticalAlign: 'middle',
-                    }}
-                    title="Bé có bài tập mới hoặc lời nhắc của cô"
-                  />
-                )}
+                <span>{c.emoji}</span>
+                <span>{c.name}</span>
               </button>
             )
           })}
-        <button onClick={() => openSheet('stickerBook')} className="sticker-chip" style={{ marginLeft: S.children.length > 1 ? 'auto' : 0 }}>
-          <span aria-hidden="true">📖</span> Sổ sticker: <b>{stats.stickers}</b>
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   )
 
-  // Mỗi khối: side = true thì nằm cột phải trên màn rộng. Thứ tự mảng = thứ tự trên điện thoại.
   const blocks = []
   const add = (key, side, node) => { if (node) blocks.push({ key, side, node }) }
 
-  // Đợt 16: thẻ hết mùa, gợi ý đầu mùa, thẻ ngày đặc biệt (chỉ ở màn chính, tự ẩn khi không có gì)
   add('season', false, <SeasonHomeLayer />)
 
-  // 1. Màn đầu: nút Bắt đầu bài tối nay + Gõ đề, Đọc đề
+  // 1. Nút chính Bắt đầu bài tối nay (Lớn 56px) + Gõ đề, Đọc đề (Phụ 44px)
   add(
     'start',
     false,
@@ -421,25 +425,17 @@ export function Home() {
           }}
         />
       </div>
-    ) : (
-      <button className="big-card plum" onClick={() => go('snap')}>
-        <span className="ic">📷</span>
-        <span className="lbl plum">Có bài tập</span>
-        <b>Chụp bài con đang làm</b>
-        <span className="sub">AI chỉ {parentLower} cách giảng, không đưa đáp án cho con</span>
-      </button>
-    )
+    ) : null
   )
 
-  // Thẻ Làm tiếp bài hôm qua (Prompt 08 Mục 6)
+  // Làm tiếp bài hôm qua
   add(
     'resume',
     false,
     S.pendingProblemResume && (
       <div
-        className="card pop"
+        className="card-km card-km-action"
         style={{
-          border: 'var(--border-w, 2px) solid var(--c-accent)',
           padding: '14px 16px',
           display: 'flex',
           flexDirection: 'row',
@@ -449,14 +445,14 @@ export function Home() {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <b style={{ color: 'var(--c-text)', fontSize: 15, display: 'block' }}>📖 Làm tiếp bài hôm qua</b>
-          <span style={{ color: 'var(--c-text-2)', fontSize: 13 }}>
+          <b style={{ color: 'var(--c-text)', fontSize: 14.5, display: 'block' }}>📖 Làm tiếp bài hôm qua</b>
+          <span style={{ color: 'var(--c-sub, #6E5D4E)', fontSize: 12.5 }}>
             Đang ở bậc {(S.pendingProblemResume.step || 0) + 1} · {S.pendingProblemResume.problem?.dang_bai || S.pendingProblemResume.problem?.type || 'Bài tập'}
           </span>
         </div>
         <button
-          className="btn solid btn-sm"
-          style={{ fontWeight: 800 }}
+          className="btn-km btn-km-s btn-km-primary"
+          style={{ minHeight: 34, padding: '0 12px' }}
           onClick={() => {
             patch({
               problem: S.pendingProblemResume.problem,
@@ -477,7 +473,7 @@ export function Home() {
     )
   )
 
-  // 2. Cô nhắc (nếu có): thẻ Cô nhắc việc, hộp thông báo, bài cô giao
+  // Cô nhắc
   add(
     'teacher',
     true,
@@ -488,47 +484,7 @@ export function Home() {
     </>
   )
 
-  add(
-    'evening',
-    true,
-    isEveningShift && (
-      <div
-        className="card pop"
-        style={{ padding: '10px 14px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }}
-      >
-        <span style={{ fontSize: 24 }} aria-hidden="true">🌙</span>
-        <div>
-          <b style={{ color: 'var(--c-text)', fontSize: 14 }}>
-            Tối nay {todayDuty} trực ca kèm {child.name}
-          </b>
-          <div style={{ fontSize: 13, color: 'var(--c-text-2)', marginTop: 1 }}>
-            Giữ bình tĩnh, đặt câu hỏi gợi mở và khen ngợi nỗ lực của con nhé!
-          </div>
-        </div>
-      </div>
-    )
-  )
-
-  add(
-    'reward',
-    true,
-    stats.stickers >= 10 && (
-      <div className="card pop" style={{ border: 'var(--border-w, 2px) solid var(--c-accent)', textAlign: 'center', padding: '12px 14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 2 }}>
-          <span style={{ fontSize: 24 }} aria-hidden="true">🏆</span>
-          <b style={{ color: 'var(--c-text)', fontSize: 15 }}>{child.name} đã tích đủ 10 sticker!</b>
-        </div>
-        <p style={{ color: 'var(--c-text-2)', fontSize: 13, margin: '2px 0 10px', lineHeight: 1.4 }}>
-          Con đã hoàn thành 10 bài học nỗ lực. {S.parent} mở phiếu đổi quà để thưởng cho con nhé!
-        </p>
-        <button className="btn solid" style={{ fontWeight: 700, fontSize: 14 }} onClick={() => openSheet('redeem')}>
-          🎁 Mở phiếu đổi quà cho con
-        </button>
-      </div>
-    )
-  )
-
-  // 3. Chấm vở con đã làm (Prompt 14 Phần A Mục 2.1)
+  // Thẻ Chấm vở con đã làm (Thẻ hành động T2)
   add(
     'check',
     false,
@@ -539,7 +495,7 @@ export function Home() {
     )
   )
 
-  // 4. Dấu chân tuần (Prompt 07 Phần B)
+  // Thẻ "Tối nay" gộp ca trực và 7 dấu chân/ngày thẳng hàng, hiển thị 1 con số duy nhất 3/7 tối
   add(
     'tracker',
     true,
@@ -550,98 +506,75 @@ export function Home() {
     )
   )
 
-  // Lựa chọn phụ: Ôn đồ chơi & Hẹn giờ
+  // Ôn đồ chơi & Hẹn giờ
   add(
     'extras',
     false,
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-      <button className="big-card sun" style={{ margin: 0, padding: '12px 14px' }} onClick={() => go('toy')}>
-        <span className="ic" style={{ fontSize: 22, display: 'flex', marginBottom: 2 }} aria-hidden="true">🧸</span>
-        <b style={{ fontSize: 14, display: 'block' }}>Chụp đồ chơi</b>
-        <span className="sub">Ôn vui 10 phút</span>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <button
+        type="button"
+        className="card-km"
+        style={{ margin: 0, padding: '12px', textAlign: 'left', cursor: 'pointer', background: 'var(--c-surface)' }}
+        onClick={() => go('toy')}
+      >
+        <span style={{ fontSize: 20, display: 'block', marginBottom: 2 }} aria-hidden="true">🧸</span>
+        <b style={{ fontSize: 13.5, display: 'block', color: 'var(--c-text)' }}>Chụp đồ chơi</b>
+        <span style={{ fontSize: 11.5, color: 'var(--c-sub)' }}>Ôn vui 10 phút</span>
       </button>
 
-      <button className="big-card sky" style={{ margin: 0, padding: '12px 14px' }} onClick={() => openSheet('timer')}>
-        <span className="ic" style={{ fontSize: 22, display: 'flex', marginBottom: 2 }} aria-hidden="true">⏱</span>
-        <b style={{ fontSize: 14, display: 'block' }}>Hẹn giờ học</b>
-        <span className="sub">15 phút vừa đủ</span>
+      <button
+        type="button"
+        className="card-km"
+        style={{ margin: 0, padding: '12px', textAlign: 'left', cursor: 'pointer', background: 'var(--c-surface)' }}
+        onClick={() => openSheet('timer')}
+      >
+        <span style={{ fontSize: 20, display: 'block', marginBottom: 2 }} aria-hidden="true">⏱</span>
+        <b style={{ fontSize: 13.5, display: 'block', color: 'var(--c-text)' }}>Hẹn giờ học</b>
+        <span style={{ fontSize: 11.5, color: 'var(--c-sub)' }}>15 phút vừa đủ</span>
       </button>
     </div>
   )
 
-  // 5. Hay vướng
-  add(
-    'weak',
-    false,
-    <div>
-      <p className="lbl mut" style={{ marginBottom: 8 }}>Tuần này {child.name} hay vướng</p>
-      <div className="chips">
-        {(stats.weak || []).length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng.</span>}
-        {(stats.weak || []).map((w) => (
-          <button key={w.n} className="chip" onClick={() => { pendingToy = weakToy(w.n); go('game') }}>
-            {w.n} ›
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-
+  // Gợi ý cho mẹ
   add(
     'tip',
     false,
-    <div className="card mint">
-      <span className="lbl mint">💡 Gợi ý cho {parentLower}</span>
-      <span style={{ fontSize: 14 }}>
+    <div className="card-km card-km-note" style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-primary)', letterSpacing: '.04em', marginBottom: 2 }}>
+        💡 GỢI Ý CHO {parentLower.toUpperCase()}
+      </div>
+      <span style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.4 }}>
         Hôm nay để con tự làm trước 10 phút, {parentLower} chỉ vào khi con gọi. Ít nói hơn, con nhớ lâu hơn.
       </span>
     </div>
   )
 
-  // 6. Gần đây
-  add(
-    'recent',
-    true,
-    <div className="card">
-      <span className="lbl plum">Gần đây</span>
-      {(stats.history || []).length === 0 && <span className="sub">Chưa có buổi học nào. Chụp bài đầu tiên nhé!</span>}
-      {[...(stats.history || [])].reverse().slice(0, 4).map((h, i) => (
-        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <span className="sub">• {h.txt}</span>
-          <span className="pill g" style={{ flexShrink: 0 }}>{h.when}</span>
-        </div>
-      ))}
-    </div>
-  )
-
-  add(
-    'calm',
-    true,
-    <button className="btn ghost" onClick={() => openSheet('calm')}>😮‍💨 Hôm nay hơi mệt? Thở cùng mình</button>
-  )
-
   const renderBlocks = (list) => list.map((b) => <Fragment key={b.key}>{b.node}</Fragment>)
 
   return (
-    <>
+    <div className="home-container-km" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {hero}
       {wide ? (
         <div className="pg-cols">
-          <div className="pg-col">{renderBlocks(blocks.filter((b) => !b.side))}</div>
-          <div className="pg-col">{renderBlocks(blocks.filter((b) => b.side))}</div>
+          <div className="pg-col" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {renderBlocks(blocks.filter((b) => !b.side))}
+          </div>
+          <div className="pg-col" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {renderBlocks(blocks.filter((b) => b.side))}
+          </div>
         </div>
       ) : (
-        renderBlocks(blocks)
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {renderBlocks(blocks)}
+        </div>
       )}
-    </>
+    </div>
   )
 }
 
 /* ============================================================
    3. CHỤP BÀI TẬP
    ============================================================ */
-let pendingShot = null
-let pendingToy = null
-
 export function SnapHomework() {
   const { go, openSheet, toast } = useContext(AppCtx)
   const fileRef = useRef(null)
@@ -1226,37 +1159,221 @@ export function Analyze() {
     }
   }, [])
 
+  const subjectDetected = detectSubject(editedText || ocrText || S.flow.ocr || '')
+  const subjectLabel = subjectDetected === 'tieng_viet' ? 'Tiếng Việt' : 'Toán'
+
   return (
-    <>
-      <Header title="AI đang đọc bài…" />
-      <div className="cam" style={{ minHeight: 170 }}>
-        {shotImg ? (
-          <>
-            <img
-              src={shotImg}
-              alt="Bài tập của con"
-              decoding="async"
-              onClick={() => setZoomOpen(true)}
-              style={{ width: '82%', borderRadius: 12, maxHeight: 260, objectFit: 'contain', cursor: 'zoom-in' }}
+    <div className="analyze-container-km" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative', paddingBottom: 80 }}>
+      {/* 1. TRẠNG THÁI ĐANG ĐỌC (T7 Chờ AI) */}
+      {(aiState === 'loading' || aiState === 'cleaning') && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="card-km card-km-ai" style={{ textAlign: 'center', padding: '24px 16px' }}>
+            <div style={{ marginBottom: 12, display: 'inline-block' }} className="mascot-bounce-km">
+              <BuddyGreeter size={76} />
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px', color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
+              Gấu đang đọc đề bài…
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--c-sub, #6E5D4E)', margin: 0 }}>
+              Đang làm sạch và phân tích cấu trúc bài tập của {child?.name || 'con'}
+            </p>
+
+            <div className="loader" style={{ marginTop: 16 }}>
+              {CHECKLIST.map((c, i) => (
+                <div key={c} className={`li ${i < done ? 'ok' : ''}`}>
+                  <span className="dot">{i < done ? '✓' : i + 1}</span>
+                  {c}
+                </div>
+              ))}
+            </div>
+
+            {explainSecs >= 3 && (
+              <div style={{ fontSize: 12, color: 'var(--c-sub)', marginTop: 8 }}>
+                ⏳ Đã phân tích {explainSecs} giây
+              </div>
+            )}
+          </div>
+
+          {/* Câu hỏi 0: hỏi con ngay */}
+          <div className="card-km card-km-note" style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-primary)', letterSpacing: '.05em', marginBottom: 4 }}>
+              ❓ CÂU HỎI 0 · HỎI CON NGAY
+            </div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.45, marginBottom: 4 }}>
+              {QUESTION_ZERO[subjectDetected].replace('{parent}', S.parent.toLowerCase())}
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>
+              Hỏi con trong lúc AI đang đọc đề để con rèn thói quen quan sát đề bài trước.
+            </span>
+          </div>
+
+          {/* Đố vui 5 giây */}
+          <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-primary)' }}>🎲 Đố vui 5 giây</span>
+              <button
+                type="button"
+                className="btn-km-ghost"
+                style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                onClick={() => { soundPop(500); setQuizIdx((i) => (i + 1) % WAITING_QUIZZES.length) }}
+              >
+                Đổi câu 🎲
+              </button>
+            </div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)' }}>
+              {WAITING_QUIZZES[quizIdx % WAITING_QUIZZES.length]}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. TRẠNG THÁI ĐỌC XONG (Review - Đề chỉ hiện 1 lần trong ô sửa được) */}
+      {aiState === 'review' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 2px' }}>
+            <BuddyGreeter size={48} />
+            <div>
+              <h2 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
+                Gấu đọc được đề này!
+              </h2>
+              <span style={{ fontSize: 12.5, color: 'var(--c-sub)' }}>
+                Mẹ xem lại xem số liệu có cần sửa không nhé
+              </span>
+            </div>
+          </div>
+
+          {/* Chip môn học, lớp, dạng bài */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <span className="btn-km-chip" style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 800 }}>
+              📖 {subjectLabel}
+            </span>
+            <span className="btn-km-chip" style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 800 }}>
+              🎒 {child?.grade || 'Lớp 3'}
+            </span>
+            <span className="btn-km-chip" style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 800 }}>
+              📐 Bài tập
+            </span>
+          </div>
+
+          {reAskReason && (
+            <div className="card-km card-km-note" style={{ background: '#FFF1F2', borderColor: '#FECDD3' }}>
+              <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 700 }}>
+                ⚠️ Đề có chỗ chưa rõ: {reAskReason}. {S.parent} sửa lại giúp con nhé.
+              </span>
+            </div>
+          )}
+
+          {/* Ô sửa đề bài duy nhất */}
+          <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface)' }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', marginBottom: 6 }}>
+              NỘI DUNG ĐỀ BÀI (CHẠM ĐỂ CHỈNH SỬA)
+            </label>
+            <textarea
+              className="field"
+              rows={5}
+              value={editedText}
+              onChange={(e) => {
+                setEditedText(e.target.value)
+                setReAskReason(null)
+              }}
+              placeholder="Nhập hoặc sửa lại nội dung đề bài..."
+              style={{
+                width: '100%',
+                fontSize: 14.5,
+                lineHeight: 1.5,
+                fontFamily: 'var(--font-body)',
+                border: '1.5px solid var(--c-line, #EADFCF)',
+                borderRadius: 12,
+                padding: '10px 12px',
+                background: 'var(--c-bg)',
+                color: 'var(--c-text)',
+                boxSizing: 'border-box',
+              }}
             />
+            {shotImg && (
+              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setZoomOpen(true)}
+                  className="btn-km-ghost"
+                  style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  🔍 Xem lại ảnh gốc chụp
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Nút dính đáy */}
+          <div
+            className="bottom-action-bar-km"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '10px 16px',
+              background: 'var(--c-surface, #fff)',
+              borderTop: '1px solid var(--c-line, #EADFCF)',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1.6fr',
+              gap: 10,
+              zIndex: 90,
+              boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
+            }}
+          >
             <button
               type="button"
-              onClick={() => setZoomOpen(true)}
-              style={{ position: 'absolute', top: 10, right: 10, zIndex: 3, border: 'none', borderRadius: 999, padding: '5px 10px', fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,.92)', color: '#3B2A45' }}
+              className="btn-km btn-km-m btn-km-secondary"
+              onClick={() => { soundPop(500); go('snap') }}
             >
-              🔍 Phóng to
+              Chụp lại
             </button>
-          </>
-        ) : (
-          <div className="photo" style={{ width: '82%' }}>{S.flow.ocr}</div>
-        )}
-        {hasCamBuddy ? (
-          <AnalyzeBuddy aiState={aiState} done={done} />
-        ) : (
-          <div className="scanline" style={{ pointerEvents: 'none' }} />
-        )}
-      </div>
+            <button
+              type="button"
+              className="btn-km btn-km-m btn-km-primary"
+              onClick={() => {
+                const t = (editedText || '').trim()
+                if (!t) { toast('Đề bài đang trống, hãy nhập đề nhé ✏️'); return }
+                soundTap()
+                patch({ flow: { ...S.flow, ocr: t } })
+                startExplain(t, redirectNote)
+              }}
+            >
+              <span>Đúng rồi, soạn bài</span>
+              <span>›</span>
+            </button>
+          </div>
+        </div>
+      )}
 
+      {/* Cảnh báo phạm vi ngoài luồng (nếu có) */}
+      {aiState === 'scope_blocked' && scopeResult && (
+        <div className="card-km" style={{ border: '2px solid #EF4444', background: '#FEF2F2' }}>
+          <b style={{ fontSize: 15, color: '#991B1B' }}>Ngoài phạm vi bài tập</b>
+          <p style={{ fontSize: 13.5, color: '#7F1D1D', margin: '4px 0 12px' }}>{scopeResult.message}</p>
+          <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={() => go('snap')}>
+            Chụp lại ảnh khác
+          </button>
+        </div>
+      )}
+
+      {aiState === 'scope_warn' && scopeResult && (
+        <div className="card-km" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
+          <b style={{ fontSize: 15, color: '#92400E' }}>Lưu ý về bài tập</b>
+          <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>{scopeResult.message}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={() => go('snap')}>
+              Chụp lại
+            </button>
+            <button type="button" className="btn-km btn-km-m btn-km-primary" onClick={handleContinueWarn}>
+              Vẫn tiếp tục ›
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal phóng to ảnh gốc */}
       {zoomOpen && shotImg && (
         <div
           onClick={() => setZoomOpen(false)}
@@ -1296,455 +1413,7 @@ export function Analyze() {
           </div>
         </div>
       )}
-
-      <div className="loader">
-        {CHECKLIST.map((c, i) => (
-          <div key={c} className={`li ${i < done ? 'ok' : ''}`}>
-            <span className="dot">{i < done ? '✓' : i + 1}</span>
-            {c}
-          </div>
-        ))}
-      </div>
-
-      {aiState === 'cleaning' && (
-        <div className="card sky pop" style={{ border: '1.5px dashed #38BDF8', background: '#F0F9FF' }}>
-          <span className="sub">🔍 Đang làm sạch đề bài (sửa chính tả, giữ nguyên số liệu)…</span>
-        </div>
-      )}
-
-      {/* Feature 3: Câu hỏi 0 — xuất hiện ngay, không cần chờ AI */}
-      {(aiState === 'loading' || aiState === 'cleaning') && (
-        <div className="card plum pop" style={{ border: '2px solid var(--plum)', margin: '10px 0' }}>
-          <span className="pill p">❓ Câu hỏi 0: hỏi con ngay</span>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--plum-deep)', margin: '6px 0 2px', lineHeight: 1.5 }}>
-            {QUESTION_ZERO[detectSubject(editedText || ocrText || S.flow.ocr)].replace('{parent}', S.parent.toLowerCase())}
-          </div>
-          <span className="sub" style={{ fontSize: 12 }}>
-            Hỏi con trong lúc AI đang xử lý để con đọc hiểu đề trước.
-          </span>
-          {aiState === 'loading' && done >= 3 && (
-            <span className="sub" style={{ display: 'block', marginTop: 6, fontSize: 12.5, fontWeight: 700 }}>
-              ⏳ AI đang soạn bài giảng · {explainSecs} giây
-              {explainSecs >= 25 ? '. Bài này AI soạn kỹ, thường mất 20 đến 40 giây.' : ''}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* SCOPE BLOCKED (Ảnh nhạy cảm, Không phải bài tập, Ảnh mờ) */}
-      {aiState === 'scope_blocked' && scopeResult && (
-        <div className="card sun pop" style={{ border: '2px solid #EF4444', background: '#FEF2F2', margin: '12px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 22 }}>{scopeResult.category === 'nhay_cam' ? '🛡️' : scopeResult.category === 'anh_mo' ? '📷' : '⚠️'}</span>
-            <span style={{ fontWeight: 800, fontSize: 16, color: '#991B1B' }}>
-              {scopeResult.category === 'nhay_cam' ? 'Bảo mật & Quyền riêng tư' : scopeResult.category === 'anh_mo' ? 'Ảnh chưa rõ nét' : 'Ngoài phạm vi bài tập'}
-            </span>
-          </div>
-          <p style={{ fontSize: 14, color: '#7F1D1D', lineHeight: 1.5, margin: '4px 0 14px' }}>
-            {scopeResult.message}
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {scopeResult.isToyCandidate && (
-              <button
-                className="btn solid"
-                style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1)', color: '#fff', padding: '11px' }}
-                onClick={() => { soundTap(); go('toy') }}
-              >
-                🧸 Sang Chơi với đồ vật (Nhận diện đồ chơi)
-              </button>
-            )}
-            <button
-              className="btn solid"
-              style={{ padding: '11px' }}
-              onClick={() => { soundPop(500); go('snap') }}
-            >
-              📷 Chụp lại trang bài tập
-            </button>
-            <button
-              className="btn ghost"
-              style={{ background: '#fff', padding: '10px' }}
-              onClick={() => { soundTap(); openSheet('typeProblem') }}
-            >
-              ⌨️ Gõ nhanh đề bài của con
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* SCOPE PICK ONE (Ảnh có nhiều bài tập) */}
-      {aiState === 'scope_pick_one' && scopeResult && (
-        <div className="card sky pop" style={{ border: '2px solid #0284C7', background: '#F0F9FF', margin: '12px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 20 }}>📑</span>
-            <span style={{ fontWeight: 800, fontSize: 16, color: '#0369A1' }}>
-              Trong ảnh có {scopeResult.so_bai || (scopeResult.cac_bai?.length || 2)} bài tập
-            </span>
-          </div>
-          <p style={{ fontSize: 13.5, color: '#0C4A6E', margin: '2px 0 12px' }}>
-            {scopeResult.message}
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {(scopeResult.cac_bai && scopeResult.cac_bai.length > 0
-              ? scopeResult.cac_bai
-              : [scopeResult.de_bai || 'Bài tập 1']
-            ).map((cau, idx) => (
-              <div
-                key={idx}
-                onClick={() => handleSelectExercise(cau)}
-                style={{
-                  background: '#FFFFFF',
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  border: '1.5px solid #BAE6FD',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <span style={{ background: '#0284C7', color: '#fff', fontSize: 12, fontWeight: 800, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>
-                  Câu {idx + 1}
-                </span>
-                <span style={{ fontSize: 14, color: '#1E293B', lineHeight: 1.45, flex: 1 }}>
-                  {cau}
-                </span>
-              </div>
-            ))}
-          </div>
-          <button
-            className="btn ghost"
-            style={{ width: '100%', marginTop: 10, background: '#fff', borderColor: '#93C5FD' }}
-            onClick={() => { soundPop(500); go('snap') }}
-          >
-            📷 Chụp lại ảnh khác
-          </button>
-        </div>
-      )}
-
-      {/* SCOPE WARN (Lệch lớp, Ngoài chương trình, Môn chưa hỗ trợ) */}
-      {aiState === 'scope_warn' && scopeResult && (
-        <div className="card sun pop" style={{ border: '2px solid #F59E0B', background: '#FFFBEB', margin: '12px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 22 }}>💡</span>
-            <span style={{ fontWeight: 800, fontSize: 16, color: '#92400E' }}>
-              {scopeResult.category === 'lech_lop' ? 'Độ khó lệch với lớp của con' : scopeResult.category === 'ngoai_chuong_trinh' ? 'Ngoài phạm vi tiểu học' : 'Lưu ý về môn học'}
-            </span>
-          </div>
-          <p style={{ fontSize: 14, color: '#78350F', lineHeight: 1.5, margin: '4px 0 14px' }}>
-            {scopeResult.message}
-          </p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {scopeResult.category === 'lech_lop' ? (
-              <button
-                className="btn ghost"
-                style={{ flex: 1, padding: '10px 8px', fontSize: 13, background: '#fff' }}
-                onClick={() => { soundTap(); openSheet('childSelect') }}
-              >
-                ✏️ Sửa hồ sơ con
-              </button>
-            ) : scopeResult.category === 'ngoai_chuong_trinh' ? (
-              <button
-                className="btn ghost"
-                style={{ flex: 1, padding: '10px 8px', fontSize: 13, background: '#fff' }}
-                onClick={() => { soundPop(500); go('snap') }}
-              >
-                📷 Chụp lại
-              </button>
-            ) : (
-              <button
-                className="btn ghost"
-                style={{ flex: 1, padding: '10px 8px', fontSize: 13, background: '#fff' }}
-                onClick={() => { soundTap(); openSheet('typeProblem') }}
-              >
-                ⌨️ Gõ đề khác
-              </button>
-            )}
-            <button
-              className="btn solid"
-              style={{ flex: 1.4, padding: '10px 12px', fontSize: 13.5 }}
-              onClick={handleContinueWarn}
-            >
-              Vẫn tiếp tục ➔
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Feature 2: Xác nhận OCR — chỉ khi bấm "Tiếp tục" mới gọi AI */}
-      {aiState === 'review' && (
-        <div className="card mint pop" style={{ border: '2px solid #10B981', margin: '10px 0' }}>
-          {reAskReason && (
-            <div style={{ background: '#FEF2F2', border: '1px solid #FECDD3', padding: '8px 12px', borderRadius: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 700 }}>
-                ⚠️ Đề có chỗ chưa rõ: {reAskReason}. {S.parent} xem lại và chỉnh sửa đề bài giúp con nhé.
-              </span>
-            </div>
-          )}
-          {(() => {
-            const n = (editedText.match(/\[\?\]/g) || []).length
-            if (!n && !uncertain.length) return null
-            return (
-              <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', padding: '8px 12px', borderRadius: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 13, color: '#92400E', fontWeight: 700, lineHeight: 1.5 }}>
-                  🔍 {n ? `Có ${n} chỗ AI đọc chưa chắc (đánh dấu [?]).` : 'AI đọc chưa chắc vài chữ/số.'} {S.parent} bấm 🔍 Phóng to ảnh rồi sửa giúp con nhé.
-                </span>
-                {uncertain.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                    {uncertain.map((u, i) => (
-                      <span key={i} style={{ background: '#fff', border: '1px solid #FCD34D', borderRadius: 999, padding: '2px 10px', fontSize: 12.5, color: '#78350F' }}>
-                        {u}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })()}
-          <span className="pill g">✅ AI nhận diện đề bài như sau</span>
-          <div style={{ marginTop: 8 }}>
-            <textarea
-              className="field"
-              rows={5}
-              value={editedText}
-              onChange={(e) => {
-                setEditedText(e.target.value)
-                setReAskReason(null)
-              }}
-              placeholder="Sửa lại số liệu nếu camera chụp bị mờ hoặc sai..."
-              style={{ fontSize: 14.5, lineHeight: 1.5 }}
-            />
-            <span className="sub" style={{ fontSize: 11.5, marginTop: 4 }}>
-              ✏️ Bạn có thể sửa, xoá hoặc nhập lại đề. Chỉ khi bấm "Tiếp tục", AI mới soạn bài giảng.
-            </span>
-            {childWork && (
-              <details style={{ marginTop: 8, fontSize: 13 }}>
-                <summary style={{ cursor: 'pointer', color: 'var(--plum-deep)', fontWeight: 700 }}>
-                  ✍️ Phần con đã viết (AI tách riêng, không đưa vào đề)
-                </summary>
-                <div style={{ whiteSpace: 'pre-wrap', marginTop: 6, padding: '8px 10px', background: '#fff', borderRadius: 8, border: '1px dashed #CBD5E1', lineHeight: 1.5 }}>
-                  {childWork}
-                </div>
-              </details>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
-              className="btn ghost"
-              style={{ flex: 1, padding: '9px 12px', fontSize: 13, borderColor: '#F59E0B', color: '#B45309', background: '#FFFBEB' }}
-              onClick={() => { soundPop(500); go('snap') }}
-            >
-              📷 Chụp lại đề
-            </button>
-            <button
-              className="btn solid"
-              style={{ flex: 1.4, padding: '9px 12px', fontSize: 13.5 }}
-              onClick={() => {
-                const t = (editedText || '').trim()
-                if (!t) { toast('Đề bài đang trống, hãy nhập đề hoặc chụp lại nhé ✏️'); return }
-                const unsure = (t.match(/\[\?\]/g) || []).length
-                if (unsure) {
-                  toast(`Còn ${unsure} chỗ [?], ${S.parent} sửa theo ảnh rồi bấm Tiếp tục nhé 🔍`)
-                  return
-                }
-                
-                // Chạy lại luật kiểm tra đề chữ trước khi gửi AI
-                const textScope = evaluateTextScope(t, {
-                  childGrade: child?.grade,
-                  childName: child?.name,
-                  parentRole: S.parent,
-                })
-                if (textScope.action === 'block') {
-                  toast(`⚠️ ${textScope.message}`)
-                  return
-                }
-
-                let noteToSend = redirectNote
-                if (textScope.category === 'lam_ho') {
-                  noteToSend = 'Phụ huynh muốn làm hộ: chỉ gợi ý dàn ý và câu hỏi, không viết sẵn bài'
-                }
-
-                soundTap()
-                patch({ flow: { ...S.flow, ocr: t } })
-                startExplain(t, noteToSend)
-              }}
-            >
-              Tiếp tục ➔
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Waiting Quiz for child while waiting */}
-      {aiState === 'loading' && (
-        <div className="card sky pop" style={{ border: '1.5px dashed #38BDF8', background: '#F0F9FF', margin: '10px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span className="pill b">🎲 Đố vui 5 giây cho {child.name}</span>
-            <button
-              className="pill p"
-              style={{ cursor: 'pointer', border: 'none' }}
-              onClick={() => { soundPop(500); setQuizIdx((i) => (i + 1) % WAITING_QUIZZES.length) }}
-            >
-              Đổi câu 🎲
-            </button>
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0369A1', margin: '4px 0 6px', lineHeight: 1.4 }}>
-            {WAITING_QUIZZES[quizIdx % WAITING_QUIZZES.length]}
-          </div>
-          <span className="sub" style={{ fontSize: 12 }}>
-            Hỏi nhanh con trong lúc đợi AI đọc bài để con hào hứng và không sốt ruột {S.parent.toLowerCase()} nhé!
-          </span>
-        </div>
-      )}
-
-      {aiState === 'ocr_failed' ? (
-        <div className="card sun" style={{ borderColor: 'var(--sun)' }}>
-          <span className="lbl sun">⚠️ Ảnh chưa rõ hoặc thiếu chữ</span>
-          <span className="sub" style={{ marginBottom: 12 }}>
-            AI không nhận diện rõ chữ từ ảnh vừa chụp. Bạn có thể gõ nhanh đề bài hoặc dùng bài tập mẫu nhé!
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button className="btn solid" onClick={() => openSheet('typeProblem')}>
-              ⌨️ Gõ đề bài ngay (10 giây)
-            </button>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn ghost" style={{ flex: 1 }} onClick={useSampleProblem}>
-                📖 Dùng bài mẫu
-              </button>
-              <button className="btn ghost" style={{ flex: 1 }} onClick={() => go('snap')}>
-                📷 Chụp lại
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : aiState === 'done' ? (
-        <div className="card mint pop">
-          <span className="lbl mint">✅ AI đã soạn bài giảng</span>
-          <span className="sub">Sẵn sàng hướng dẫn {S.parent.toLowerCase()} đặt 4 câu hỏi gợi mở cho con.</span>
-        </div>
-      ) : aiState === 'trial_limit' ? (
-        <div className="card sun pop" data-testid="trial-limit" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
-          <span className="lbl sun">🧸 Dùng thử chỉ có 3 đề mẫu</span>
-          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
-            Mẹ chọn một đề bên dưới để xem AI giảng, chấm vở và nghe con giảng lại nhé. Đăng ký tài khoản để AI giảng mọi đề.
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {PRELOADED_TRIAL_LESSONS.map((l) => (
-              <button
-                key={l.id}
-                className="btn ghost"
-                style={{ width: '100%', padding: '10px 12px', textAlign: 'left', fontSize: 13 }}
-                onClick={() => {
-                  setActiveTrialLesson(l.id)
-                  patch({ flow: { ...S.flow, ocr: l.de_bai } })
-                  startExplain(l.de_bai)
-                }}
-              >
-                <b>{l.subject} · {l.grade}</b>
-                <span style={{ display: 'block', color: 'var(--c-text-2)', marginTop: 2 }}>{l.de_bai}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : aiState === 'format_error' ? (
-        <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
-          <span className="lbl sun">⚠️ AI trả lời chưa đúng định dạng, mẹ thử lại nhé</span>
-          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
-            AI đã xử lý nhưng câu trả lời chưa đúng định dạng chuẩn. Mẹ bấm Thử lại để AI soạn lại nhé!
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button
-              className="btn solid"
-              style={{ width: '100%', padding: '12px' }}
-              onClick={() => {
-                const textToUse = (editedText || ocrText || S.flow.ocr || '').trim()
-                startExplain(textToUse)
-              }}
-            >
-              🔄 Thử lại
-            </button>
-          </div>
-        </div>
-      ) : (aiState === 'ai_slow' || aiState === 'ai_error') ? (
-        <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
-          <span className="lbl sun">
-            {aiState === 'ai_slow' ? '⏳ AI đang soạn lâu hơn thường lệ' : '⚠️ AI đang bận, chưa soạn xong bài'}
-          </span>
-          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
-            {aiState === 'ai_slow'
-              ? 'Đề bài vẫn được giữ nguyên. Mẹ bấm Thử lại, thường lần sau AI soạn nhanh hơn.'
-              : 'Máy chủ AI đang quá tải hoặc tạm lỗi. Mẹ thử lại sau ít phút nhé.'}
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button
-              className="btn solid"
-              style={{ width: '100%', padding: '12px' }}
-              onClick={() => {
-                const textToUse = (editedText || ocrText || S.flow.ocr || '').trim()
-                startExplain(textToUse)
-              }}
-            >
-              🔄 Thử lại
-            </button>
-          </div>
-        </div>
-      ) : (aiState === 'network_slow' || aiState === 'error') ? (
-        <div className="card sun pop" style={{ border: '2px solid #F59E0B', margin: '12px 0' }}>
-          <span className="lbl sun">⚠️ Chưa kết nối được máy chủ</span>
-          <span className="sub" style={{ display: 'block', margin: '6px 0 12px', fontSize: 13.5 }}>
-            Điện thoại đang mất mạng hoặc mạng chập chờn. Mẹ kiểm tra kết nối rồi thử lại, hoặc xem bài mẫu để làm quen.
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button
-              className="btn solid"
-              style={{ width: '100%', padding: '12px' }}
-              onClick={() => {
-                const textToUse = (editedText || ocrText || S.flow.ocr || '').trim()
-                startExplain(textToUse)
-              }}
-            >
-              🔄 Thử lại
-            </button>
-            <button
-              className="btn ghost"
-              style={{ width: '100%', padding: '12px', background: '#fff' }}
-              onClick={useSampleProblem}
-            >
-              📖 Xem bài mẫu để làm quen
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {showSkip && aiState === 'loading' && (
-        <button
-          className="btn ghost"
-          style={{ width: '100%', borderColor: 'var(--plum)', color: 'var(--plum)', fontWeight: 600, margin: '6px 0' }}
-          onClick={useSampleProblem}
-        >
-          ⏩ Chờ lâu? Xem ngay bài giảng mẫu
-        </button>
-      )}
-
-      <div className="card">
-        <span className="lbl plum">AI đọc được</span>
-        <span style={{ fontSize: 14 }}>
-          {ocrText || (shotImg ? '⏳ Đang đọc chữ từ ảnh…' : S.flow.ocr)}
-        </span>
-        <button
-          className="sub"
-          style={{ textAlign: 'left', color: 'var(--plum)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          onClick={() => openSheet('typeProblem')}
-        >
-          ✏️ Đề đọc chưa đúng? Bấm vào đây để sửa ngay
-        </button>
-      </div>
-
-      <p className="notice">
-        Đang giảng cho {child.name} ({child.grade} · {child.book})…
-      </p>
-    </>
+    </div>
   )
 }
 
@@ -1779,204 +1448,181 @@ function gradeLabel(g) {
 export function Explain() {
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
   const [showMathList, setShowMathList] = useState(false)
-  const [ignoreMemory, setIgnoreMemory] = useState(false)
-  const [showMemDetails, setShowMemDetails] = useState(false)
+  const [showFullOcr, setShowFullOcr] = useState(false)
   const child = S.children.find((c) => c.id === S.activeId)
   const mathInfo = useMemo(() => problem?.mathVerified || problem?.math_verified || validateAllLessonMath(problem), [problem])
-  const learnerProfile = problem?.learnerProfile || child?.learnerProfile || null
-  const hasMemory = !ignoreMemory && child?.bearMemory !== false && learnerProfile && learnerProfile.profile && learnerProfile.profile !== "chưa có" 
+  const stepsCount = Array.isArray(problem.steps) ? problem.steps.length : 4
+
   const explainText =
-    `Đây là dạng bài ${problem.type}. ${problem.summary} ` +
-    `${S.parent.toLowerCase()} lưu ý: ${problem.warning} ` +
-    `Cách ${gradeLabel(child.grade)} đang học: ${problem.method}.`
+    `Đây là dạng bài ${problem.type}. ${problem.summary || ''} ` +
+    `${S.parent.toLowerCase()} lưu ý: ${problem.warning || ''} ` +
+    `Cách ${gradeLabel(child.grade)} đang học: ${problem.method || ''}.`
 
   return (
-    <>
-      <Header title="Trước khi giảng cho con…" back="home" />
-      {problem?.isTeacherAssigned && (
-        <div
+    <div className="explain-container-km" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 88 }}>
+      {/* TopBar T4 */}
+      <TopBarT4
+        title={`Gấu đã soạn ${stepsCount} bậc`}
+        stepText={`Lớp ${child?.grade || '3'}`}
+        onBack={() => go('home')}
+        onOpenCalm={() => openSheet('calm')}
+      />
+
+      {/* Dải đề rút gọn 1 dòng */}
+      <div
+        className="card-km"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 12px',
+          background: 'var(--c-surface)',
+          borderRadius: 14,
+        }}
+      >
+        <span style={{ fontSize: 14 }}>📝</span>
+        <span
           style={{
-            background: '#ECFDF5',
-            color: '#065F46',
-            border: '1.5px solid #A7F3D0',
-            padding: '10px 14px',
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 700,
+            flex: 1,
+            whiteSpace: showFullOcr ? 'normal' : 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: 12.5,
+            color: 'var(--c-sub, #6E5D4E)',
+            lineHeight: 1.4,
+          }}
+        >
+          {problem.ocr}
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowFullOcr(!showFullOcr)}
+          className="btn-km-ghost"
+          style={{
+            fontSize: 12,
+            fontWeight: 800,
+            color: 'var(--c-primary)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            padding: 0,
+          }}
+        >
+          {showFullOcr ? 'Thu gọn' : 'Xem đề ›'}
+        </button>
+      </div>
+
+      {/* Kiểm toán độc lập (nếu có) */}
+      {mathInfo && mathInfo.verifiedCount > 0 && (
+        <div
+          className="card-km card-km-good"
+          onClick={() => setShowMathList(!showMathList)}
+          style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            marginBottom: 12,
-          }}
-        >
-          <span style={{ fontSize: 18 }}>👩‍🏫</span>
-          <span>Theo cách cô {problem.teacherName || 'giáo'} dạy: {problem.teacherMethodNote || 'Bám sát phương pháp lớp'}</span>
-        </div>
-      )}
-      {problem?.isSample && (
-        <div
-          className="sample-banner"
-          style={{
-            background: '#FEF3C7',
-            color: '#92400E',
-            border: '1.5px solid #FCD34D',
+            justifyContent: 'space-between',
             padding: '8px 12px',
-            borderRadius: 10,
-            fontSize: 13,
-            fontWeight: 700,
-            textAlign: 'center',
-            marginBottom: 10,
+            cursor: 'pointer',
           }}
         >
-          ⚠️ Đây là bài mẫu, không phải bài của con
-        </div>
-      )}
-      <div className="photo">{problem.ocr}</div>
-
-      {hasMemory && (
-        <div className="card mem" id="bear-memory-card">
-          <div className="mem-h">
-            <span className="bear" style={{ fontSize: 26, width: 42, height: 42, borderRadius: "50%", background: "#FFE7B8", display: "grid", placeItems: "center", flexShrink: 0 }}>🐻</span>
-            <div>
-              <div className="kk ink">GẤU NHỚ NÈ</div>
-              <b>{learnerProfile.headline || learnerProfile.profile}</b>
-            </div>
-          </div>
-          <p className="sm" style={{ margin: "2px 0 0", color: "var(--c-text-muted, #4A3B2C)", fontSize: 13 }}>
-            {learnerProfile.advice || "Bài này Gấu hỏi kỹ bước con hay kẹt, các bước sau giữ như thường."}
-          </p>
-          <div className="mem-a">
-            <span className="lnk" onClick={() => setShowMemDetails(!showMemDetails)}>
-              Vì sao Gấu biết? ›
-            </span>
-            <span className="tg" onClick={() => setIgnoreMemory(!ignoreMemory)} style={{ cursor: "pointer" }}>
-              Lần này không dùng <span className={`sw ${ignoreMemory ? "on" : ""}`} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}>
+            <span style={{ color: 'var(--c-good, #2F7D4F)', fontWeight: 900 }}>✓</span>
+            <span style={{ color: 'var(--c-text)', fontWeight: 700 }}>
+              Đã kiểm lại {mathInfo.verifiedCount} phép tính
             </span>
           </div>
-          {showMemDetails && (
-            <div style={{ background: "#FFF6E2", border: "1px solid #F0D9A8", borderRadius: 10, padding: "8px 12px", fontSize: 12.5, color: "#452A0A", marginTop: 4 }}>
-              Gấu dựa trên lịch sử học 30 ngày gần đây của {child?.name || "bé"}, thấy các bước con hay cần gợi ý để soạn câu hỏi sát với con hơn. Mẹ có thể gạt công tắc để tắt cho riêng bài này.
-            </div>
-          )}
+          <span style={{ fontSize: 11.5, color: 'var(--c-primary)', fontWeight: 800 }}>
+            {showMathList ? 'Đóng' : 'Xem'}
+          </span>
         </div>
       )}
 
-      {mathInfo && mathInfo.verifiedCount > 0 && (
-        <>
-          <div
-            className="chk"
-            id="math-verify-badge"
-            onClick={() => setShowMathList(!showMathList)}
-            style={{ cursor: 'pointer' }}
-            role="button"
-            tabIndex={0}
-          >
-            <span>✓</span>
-            <div>
-              <b>Gấu đã kiểm lại {mathInfo.verifiedCount} phép tính</b>
-              <p className="xs">{mathInfo.summary}</p>
+      {showMathList && mathInfo?.calculations && (
+        <div className="card-km" style={{ padding: '10px 12px', background: 'var(--c-surface)' }}>
+          {mathInfo.calculations.map((c, idx) => (
+            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '4px 0' }}>
+              <b>{c.expr}</b>
+              <span style={{ color: 'var(--c-good)', fontWeight: 800 }}>✓ Đúng</span>
             </div>
-            <em>{showMathList ? 'Đóng' : 'Xem'}</em>
-          </div>
-
-          {showMathList && (
-            <div
-              className="math-verified-list"
-              id="math-verified-list-popup"
-              style={{
-                background: '#F8FAFC',
-                border: '1.5px solid #CBD5E1',
-                borderRadius: 14,
-                padding: '10px 14px',
-                marginTop: -6,
-                marginBottom: 12,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#1E293B' }}>
-                🧮 Danh sách phép tính máy tính độc lập đã kiểm:
-              </div>
-              {mathInfo.calculations.map((c, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '6px 0',
-                    borderBottom: idx < mathInfo.calculations.length - 1 ? '1px dashed #E2E8F0' : 'none',
-                    fontSize: 13,
-                  }}
-                >
-                  <span>
-                    <b style={{ color: '#0F172A' }}>{c.expr.replace(/-/g, '−')}</b>{' '}
-                    {c.stepIndex ? <span style={{ color: '#64748B', fontSize: 12 }}>(Bậc {c.stepIndex})</span> : ''}
-                  </span>
-                  <span style={{ color: '#16A34A', fontWeight: 800, fontSize: 12.5 }}>✓ Chính xác</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {(problem.type || problem.summary) && (
-        <div className="card plum">
-          <span className="lbl plum">Dạng bài</span>
-          <b style={{ fontSize: 15.5 }}>{problem.type}</b>
-          {problem.summary && <span className="sub">{problem.summary}</span>}
+          ))}
         </div>
       )}
 
-      {problem.warning && (
-        <div className="card sun">
-          <span className="lbl sun">⚠️ {S.parent} lưu ý</span>
-          <span style={{ fontSize: 14 }}>{problem.warning}</span>
-        </div>
-      )}
-
+      {/* 4 bậc là danh sách dòng */}
       {Array.isArray(problem.steps) && problem.steps.length > 0 && (
-        <div className="card" style={{ padding: "12px 14px" }}>
-          <span className="lbl plum">{problem.steps.length} BẬC GẤU ĐÃ SOẠN</span>
-          {problem.demo_timestamp && (
-            <div style={{ fontSize: 12, color: "#64748b", fontStyle: "italic", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
-              <span>🕒</span> Bản soạn sẵn lúc {problem.demo_timestamp} (Chế độ trình diễn)
-            </div>
-          )}
-          <div className="steps" style={{ display: "grid", gap: 8, marginTop: 8 }}>
+        <div className="card-km" style={{ padding: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <b style={{ fontSize: 14, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
+              {problem.steps.length} BẬC CÂU HỎI
+            </b>
+            <button
+              type="button"
+              className="btn-km-chip"
+              style={{
+                fontSize: 11.5,
+                fontWeight: 800,
+                padding: '3px 10px',
+                borderRadius: 999,
+                background: 'var(--c-bg)',
+                border: '1px solid var(--c-line)',
+                cursor: 'pointer',
+              }}
+              onClick={() => speak(explainText)}
+            >
+              🔊 Nghe
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {problem.steps.map((st, i) => {
-              const skillName = SKILL_LABELS[st.ky_nang] || st.ky_nang || ""
-              const isStuckSkill = hasMemory && (
-                learnerProfile?.stuckSkills?.some(s => s.toLowerCase() === skillName.toLowerCase() || (st.ky_nang && s.includes(st.ky_nang)))
-              )
+              const skillName = SKILL_LABELS[st.ky_nang] || st.ky_nang || ''
               return (
                 <div
                   key={i}
-                  className={`st ${isStuckSkill ? "hot" : ""}`}
                   style={{
-                    display: "flex",
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: 10,
-                    alignItems: "center",
-                    padding: "8px 10px",
-                    borderRadius: 10,
-                    fontSize: 13.5,
-                    border: "1px solid var(--c-line, #E2E8F0)",
+                    padding: '8px 10px',
+                    borderRadius: 12,
+                    background: 'var(--c-bg)',
+                    border: '1px solid var(--c-line)',
                   }}
                 >
-                  <b style={{ width: 22, height: 22, borderRadius: "50%", background: isStuckSkill ? "#F59E0B" : "var(--c-surface-2, #E2E8F0)", color: isStuckSkill ? "#fff" : "var(--c-text, #1E293B)", display: "grid", placeItems: "center", fontSize: 12, flexShrink: 0 }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: 'var(--c-primary)',
+                      color: 'var(--c-on-primary, #fff)',
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontSize: 12,
+                      fontWeight: 900,
+                      flexShrink: 0,
+                    }}
+                  >
                     {i + 1}
-                  </b>
-                  <span style={{ color: "var(--c-text, #334155)", lineHeight: 1.4, flex: 1 }}>
+                  </span>
+                  <span style={{ flex: 1, fontSize: 13.5, color: 'var(--c-text)', fontWeight: 600, lineHeight: 1.35 }}>
                     {st.question || st.q}
                   </span>
                   {skillName && (
-                    <span style={{ fontSize: 11, color: "#64748B", background: "#F1F5F9", padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--c-sub)',
+                        background: 'var(--c-surface)',
+                        padding: '2px 7px',
+                        borderRadius: 999,
+                        border: '1px solid var(--c-line)',
+                        flexShrink: 0,
+                      }}
+                    >
                       {skillName}
                     </span>
-                  )}
-                  {isStuckSkill && (
-                    <em style={{ flexShrink: 0, fontStyle: "normal", fontSize: 11, fontWeight: 800, background: "#FEF3C7", color: "#92400E", padding: "2px 6px", borderRadius: 4 }}>
-                      {child?.name || "Bé"} hay kẹt
-                    </em>
                   )}
                 </div>
               )
@@ -1985,29 +1631,56 @@ export function Explain() {
         </div>
       )}
 
-      <div className="card">
-        <span className="lbl plum">Cách {gradeLabel(child.grade)} đang học</span>
-        <span style={{ fontSize: 14 }}>{problem.method}</span>
-        {problem.diagram && (problem.isSample || problem.id === 'mock') && (
-          <>
-            <DotDiagram {...problem.diagram} />
-            <span className="sub">Chấm xám = phần đã cho đi</span>
-          </>
-        )}
+      {/* Mẹ lưu ý (1 dòng) */}
+      {problem.warning && (
+        <div className="card-km card-km-note" style={{ padding: '10px 14px' }}>
+          <span style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.4 }}>
+            <b>⚠️ {S.parent} lưu ý:</b> {problem.warning}
+          </span>
+        </div>
+      )}
+
+      {/* Báo Gấu soạn chưa đúng */}
+      <div style={{ textAlign: 'center', marginTop: 2 }}>
+        <button
+          type="button"
+          onClick={() => openSheet('reportIssue')}
+          className="btn-km-ghost"
+          style={{ fontSize: 12, color: 'var(--c-sub)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          Báo Gấu soạn chưa đúng
+        </button>
       </div>
 
-      <div className="btns">
-        <button className="btn ghost" onClick={() => speak(explainText)}>🔊 Nghe</button>
-        <button className="btn ghost" onClick={() => openSheet('reportIssue')}>🚩 Giảng chưa đúng</button>
-      </div>
-
-      <button
-        className="btn solid"
-        onClick={() => { patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false } }); go('scaffold') }}
+      {/* Nút Lớn 56px dính đáy */}
+      <div
+        className="bottom-action-bar-km"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '10px 16px',
+          background: 'var(--c-surface, #fff)',
+          borderTop: '1px solid var(--c-line, #EADFCF)',
+          zIndex: 90,
+          boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
+        }}
       >
-        Bắt đầu hỏi con từng bước
-      </button>
-    </>
+        <button
+          type="button"
+          className="btn-km btn-km-l btn-km-primary"
+          style={{ width: '100%' }}
+          onClick={() => {
+            patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false } })
+            go('scaffold')
+          }}
+        >
+          <span>Bắt đầu hỏi con</span>
+          <span className="btn-km-arrow">›</span>
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -2404,325 +2077,427 @@ export function Scaffold() {
     toast('Đáp án đã mở, chỉ cho ' + S.parent.toLowerCase() + ' đối chiếu thôi nhé')
   }
 
+  const [showMomDrawer, setShowMomDrawer] = useState(false)
+  const [showFullOcr, setShowFullOcr] = useState(false)
+  const [showWhyModal, setShowWhyModal] = useState(false)
+  const curStep = steps[step] || {}
+
+  // Kiểm tra hoàn thành bài
+  if (step >= steps.length) {
+    return (
+      <div className="card-km" style={{ textAlign: 'center', padding: '32px 16px', margin: '20px 0' }}>
+        <div style={{ fontSize: 44, marginBottom: 8 }}>🎉 🐻 🏆</div>
+        <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 8px', color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
+          {child.name} đã hoàn thành cả {steps.length} bậc!
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--c-sub)', margin: '0 0 20px' }}>
+          Tuyệt vời lắm! Mẹ cùng con nhận huy hiệu và tổng kết bài học nhé.
+        </p>
+        <button
+          type="button"
+          data-testid="btn-finish-lesson"
+          className="btn-km btn-km-l btn-km-primary"
+          style={{ width: '100%' }}
+          onClick={() => go('done')}
+        >
+          Hoàn thành bài ›
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <>
-      <Header title="Hỏi con từng bước" back="explain" />
-      {problem?.isSample && (
-        <div
-          className="sample-banner"
+    <div className="scaffold-container-km" style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 110 }}>
+      {/* 1. TOP BAR T4 & TIẾN ĐỘ 4 KHÚC */}
+      <TopBarT4
+        title="Hỏi con từng bước"
+        stepText={`Bước ${step + 1}/${steps.length}`}
+        onBack={() => go('explain')}
+        onOpenCalm={() => openSheet('calm')}
+      />
+
+      <Progress4 total={steps.length} current={step} />
+
+      {/* 2. DẢI ĐỀ RÚT GỌN 1 DÒNG */}
+      <div
+        className="card-km"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '6px 12px',
+          background: 'var(--c-surface)',
+          borderRadius: 12,
+        }}
+      >
+        <span style={{ fontSize: 13 }}>📝</span>
+        <span
           style={{
-            background: '#FEF3C7',
-            color: '#92400E',
-            border: '1.5px solid #FCD34D',
-            padding: '8px 12px',
-            borderRadius: 10,
-            fontSize: 13,
-            fontWeight: 700,
-            textAlign: 'center',
-            marginBottom: 10,
+            flex: 1,
+            whiteSpace: showFullOcr ? 'normal' : 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: 12,
+            color: 'var(--c-sub, #6E5D4E)',
           }}
         >
-          ⚠️ Đây là bài mẫu, không phải bài của con
-        </div>
-      )}
-      <p className="sub">
-        Đọc to câu in đậm cho {child.name} nghe · bậc {Math.min(step + 1, steps.length)}/{steps.length}
-      </p>
-      <Bar pct={(step / steps.length) * 100} color="var(--mint)" />
-
-      {S.flow?.lowering && (
-        <div className="card sunset pop" style={{ textAlign: 'center', padding: '18px 14px', margin: '12px 0', border: '1.5px solid #F59E0B' }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>🪜 ⚡ 🧠</div>
-          <b style={{ fontSize: 15, color: '#92400E' }}>AI đang hạ độ khó câu hỏi cho con...</b>
-          <p className="sub" style={{ margin: '4px 0 0', fontSize: 13 }}>
-            Tạm đổi sang bài toán số nhỏ hơn để con hiểu bản chất rồi tự tin làm lại bài gốc!
-          </p>
-        </div>
-      )}
-
-      <SeasonStepProgress total={steps.length} current={step} />
-
-      {steps.map((s, i) => {
-        if (i < step)
-          return (
-            <div className="card mint fadeIn" key={i}>
-              <div className="step-row">
-                <span className="n ok">✓</span>
-                <b style={{ fontSize: 14.5 }}>{s.q || s.question}</b>
-              </div>
-              <span className="sub">{s.loi_khen || s.praise}</span>
-              {(s.answer || s.hint) && (
-                <div className="ok-ans">✔ {s.answer || s.hint}</div>
-              )}
-            </div>
-          )
-        if (i === step)
-          return (
-            <div className="card plum fadeIn" key={i}>
-              <div className="step-row" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <ThemeBuddy state={buddyState} size={48} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span className="n" style={{ marginRight: 6 }}>{i + 1}</span>
-                  <b style={{ fontSize: 15 }}>{s.q || s.question}</b>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <SpeakBtn text={s.q || s.question} />
-                <span className="sub">Đọc cho {child.name} nghe</span>
-                <WhyChip
-                  reason={s.ly_do_cho_me}
-                  onReport={() => openSheet('aiFeedback', {
-                    promptId: 'p3_explain',
-                    step: i + 1,
-                    questionText: s.q || s.question,
-                  })}
-                />
-              </div>
-
-              {hasMicSupport && (
-                <div style={{ margin: '6px 0' }}>
-                  <button
-                    className={`voice-listen-btn ${voiceState.listening ? 'active' : ''}`}
-                    onClick={startVoiceListen}
-                    data-testid="btn-voice-listen"
-                  >
-                    <i className="fa-solid fa-microphone" style={{ color: voiceState.listening ? '#EF4444' : '#F6A623' }} />
-                    {voiceState.listening ? 'Đang nghe con nói… (tối đa 15s)' : '🎙 Con trả lời, Gấu nghe'}
-                  </button>
-                </div>
-              )}
-
-              {voiceState.transcript && (
-                <div className="card-said fadeIn" data-testid="card-child-said">
-                  <span className="said-mic" aria-hidden="true">🎙</span>
-                  <div>
-                    <span className="lbl plum" style={{ fontSize: 11, margin: 0 }}>{child.name.toUpperCase()} NÓI</span>
-                    <p style={{ margin: '2px 0 0', fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)' }}>
-                      "{voiceState.transcript}"
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {voiceState.loading && (
-                <div className="card verdict fadeIn">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <i className="fa-solid fa-spinner fa-spin" style={{ color: '#E9A13B' }} />
-                    <span style={{ fontSize: 13.5, color: 'var(--c-text)' }}>Gấu đang đánh giá câu trả lời của con…</span>
-                  </div>
-                </div>
-              )}
-
-              {voiceState.verdict && !voiceState.loading && (
-                <div className={`card verdict fadeIn ${voiceState.verdict.danh_gia}`} data-testid="card-voice-verdict">
-                  <div className="vh-row">
-                    <span className={`vb-badge ${voiceState.verdict.danh_gia}`}>
-                      {voiceState.verdict.danh_gia === 'dung'
-                        ? '✓ Đúng rồi'
-                        : voiceState.verdict.danh_gia === 'gan_dung'
-                        ? '⚡ Gần đúng'
-                        : voiceState.verdict.danh_gia === 'sai_huong'
-                        ? '⚠️ Sai hướng nhẹ'
-                        : '❓ Chưa nghe rõ'}
-                    </span>
-                    <span style={{ fontSize: 11.5, color: 'var(--c-text-2)' }}>Gấu nghe được, không lưu giọng nói</span>
-                  </div>
-                  <p style={{ fontSize: 13.5, color: 'var(--c-text)', margin: '4px 0', lineHeight: 1.45 }}>
-                    {voiceState.verdict.nhan_xet_cho_me}
-                  </p>
-                  <div className="say-box">
-                    <span className="lbl plum" style={{ fontSize: 11, margin: 0 }}>MẸ NÓI TIẾP</span>
-                    <p style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)', margin: '2px 0 0' }}>
-                      "{voiceState.verdict.cau_me_noi_tiep}"
-                    </p>
-                  </div>
-                  {voiceState.verdict.danh_gia === 'dung' && (
-                    <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}>
-                      <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }} onClick={stepOk} data-testid="btn-voice-confirm-ok">
-                        ✓ Mẹ chốt: Con làm được rồi!
-                      </button>
-                    </div>
-                  )}
-                  {voiceState.verdict.danh_gia === 'sai_huong' && (
-                    <div className="row2" style={{ marginTop: 6 }}>
-                      <button className="btn g" style={{ fontSize: 13, padding: '6px 10px' }} onClick={startVoiceListen}>
-                        🎙 Con nói lại
-                      </button>
-                      <button className="btn" style={{ fontSize: 13, padding: '6px 10px' }} onClick={() => triggerMicroStep(1)}>
-                        Chẻ nhỏ câu hỏi
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {stuck >= 2 && (
-                <div className="stuck-badge" data-testid="stuck-badge-2">
-                  <span aria-hidden="true">🙈</span> Con chưa nghĩ ra · lần {stuck}
-                </div>
-              )}
-
-              {loadingMicro && (
-                <div className="card micro fadeIn" data-testid="card-micro-loading">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <i className="fa-solid fa-spinner fa-spin" style={{ color: '#F6A623', fontSize: 18 }} />
-                    <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Gấu đang chẻ nhỏ câu hỏi cho {child.name}…</b>
-                  </div>
-                </div>
-              )}
-
-              {microStep && !loadingMicro && (
-                <div className="card micro fadeIn" data-testid="card-micro-step">
-                  <div className="lbl plum" style={{ margin: 0, color: '#92400E' }}>GẤU CHẺ NHỎ CÂU HỎI</div>
-                  <p style={{ fontSize: 15.5, fontWeight: 700, margin: '4px 0', color: 'var(--c-text)', lineHeight: 1.45 }}>
-                    "{microStep.cau_hoi_nho}"
-                  </p>
-                  <div className="mr-row">
-                    <span className="tagm">Câu nhỏ {microStep.micro_index || microCount}/2</span>
-                    <button className="lnk-btn" onClick={() => setShowMicroWhy(!showMicroWhy)}>
-                      Vì sao câu này? ›
-                    </button>
-                  </div>
-                  {showMicroWhy && (
-                    <div style={{ background: 'var(--c-surface)', borderRadius: 10, padding: '8px 10px', marginTop: 4, fontSize: 13, color: 'var(--c-text-2)', border: '1px solid var(--c-line)' }}>
-                      💡 <b>Lý do cho mẹ:</b> {microStep.ly_do_cho_me}
-                      <div style={{ marginTop: 4, fontWeight: 700, color: 'var(--c-text)' }}>
-                        Đáp án đợi con: {microStep.dap_an_cho_me}
-                      </div>
-                    </div>
-                  )}
-                  <div className="row2" style={{ marginTop: 8 }}>
-                    <button className="btn g" onClick={handleMicroStillStuck} data-testid="btn-micro-stuck">
-                      🙈 Vẫn chưa ra
-                    </button>
-                    <button className="btn" onClick={handleMicroSolved} data-testid="btn-micro-solved">
-                      🎉 Con ra rồi!
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {stuck > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0' }}>
-                  {s.hint && (
-                    <div className="card sun pop" style={{ padding: '10px 12px' }}>
-                      <span className="lbl sun" style={{ fontSize: 11 }}>🧸 Mức 1: Dùng đồ vật thật trong nhà</span>
-                      <span style={{ fontSize: 13.5, lineHeight: 1.45, marginTop: 4, display: 'block' }}>{s.hint}</span>
-                    </div>
-                  )}
-                  {s.hint2 && stuck >= 2 && (
-                    <div className="card plum pop" style={{ padding: '10px 12px', border: '1.5px solid #E9D5FF', background: '#FAF5FF' }}>
-                      <span className="lbl plum" style={{ fontSize: 11, color: '#7E22CE' }}>🎨 Mức 2: Vẽ hình hoặc sơ đồ đoạn thẳng</span>
-                      <span style={{ fontSize: 13.5, lineHeight: 1.45, marginTop: 4, display: 'block', color: '#581C87' }}>{s.hint2}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Trợ lý sư phạm tức thì cho Mẹ khi kèm con */}
-              <div style={{ margin: '8px 0', padding: '10px 12px', background: '#FFF7ED', borderRadius: 12, border: '1.5px solid #FFEDD5' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#9A3412' }}>💡 {S.parent} cần AI gợi ý thêm cách giảng?</span>
-                </div>
-                <div style={{ fontSize: 12, color: '#C2410C', marginBottom: 8, lineHeight: 1.4 }}>
-                  Nếu con chưa hiểu hoặc thắc mắc, {S.parent.toLowerCase()} có thể đọc hoặc gõ câu hỏi để AI tư vấn ngay mẹo giải thích!
-                </div>
-                <div style={{ marginBottom: 8 }}>
-                  <input
-                    className="field"
-                    style={{ fontSize: 13, padding: '7px 10px', background: '#fff', border: '1px solid #FED7AA' }}
-                    placeholder="Gõ hoặc nói câu hỏi (VD: con chưa học phép nhân)..."
-                    maxLength={200}
-                    value={parentNote}
-                    onChange={(e) => setParentNote(e.target.value.slice(0, 200))}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    className="btn ghost"
-                    style={{ flex: 1, padding: '8px 10px', fontSize: 12.5, borderColor: '#F97316', color: '#EA580C', background: '#fff' }}
-                    onClick={() => {
-                      patch({ parentNoteChat: parentNote.trim() })
-                      go('ask')
-                    }}
-                  >
-                    💬 Hỏi AI cách giảng
-                  </button>
-                  <div style={{ flex: 1.2 }}>
-                    <VoiceInputBtn
-                      placeholder="Nói câu hỏi..."
-                      onResult={(text) => {
-                        const clean = (text || '').slice(0, 200)
-                        setParentNote(clean)
-                        toast(`Đã nhận: "${clean}" 🎙️`)
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <ParentAnswer key={'pa-' + i} text={s.answerForParent || s.answer || s.hint} parent={S.parent} />
-              
-              <div style={{ marginTop: 12, marginBottom: 8 }}>
-                <ScaffoldActionsSlot onStuck={stepStuck} onAnswered={stepOk} />
-              </div>
-
-              <div className="btns" style={{ marginTop: 8 }}>
-                <button className="btn soft" onClick={() => setShowAns(!showAns)}>
-                  {showAns ? '🙈 Đóng đáp án' : '👀 Xem đáp án gợi ý'}
-                </button>
-              </div>
-              {showAns && (
-                <div className="card mint pop" style={{ marginTop: 8 }}>
-                  <span className="lbl mint">Đáp án gợi ý ({S.parent.toLowerCase()} đối chiếu)</span>
-                  <span style={{ fontSize: 14 }}>{s.answer || s.hint}</span>
-                </div>
-              )}
-            </div>
-          )
-        return (
-          <div className="card dimmed" key={i}>
-            <div className="step-row">
-              <span className="n off">{i + 1}</span>
-              <span style={{ fontSize: 14 }}>{s.q || s.question}</span>
-            </div>
-          </div>
-        )
-      })}
-
-      <div className="card coral">
-        <span className="lbl coral">Câu động viên</span>
-        <span style={{ fontSize: 14 }}>"Con nghĩ lâu vậy là đang cố đó. Mình thử vẽ ra nhé."</span>
+          {problem.ocr}
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowFullOcr(!showFullOcr)}
+          className="btn-km-ghost"
+          style={{
+            fontSize: 11.5,
+            fontWeight: 800,
+            color: 'var(--c-primary)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            padding: 0,
+          }}
+        >
+          {showFullOcr ? 'Thu gọn' : 'Xem đề ›'}
+        </button>
       </div>
 
-      <HoldReveal locked={false} onOpen={onOpen} />
+      {/* 3. THẺ CÂU HỎI CHÍNH (HERO CARD theo hoi-con-gon-gang.html) */}
+      <div
+        className="card-km hero-question-km"
+        style={{
+          padding: '16px 14px',
+          background: 'var(--c-surface)',
+          borderRadius: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BuddyGreeter size={38} />
+            <span style={{ fontSize: 11.5, fontWeight: 900, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--c-sub)' }}>
+              BẬC {step + 1}
+            </span>
+          </div>
+          {curStep?.ky_nang && (
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-sub)', background: 'var(--c-bg)', padding: '2px 8px', borderRadius: 999 }}>
+              {SKILL_LABELS[curStep.ky_nang] || curStep.ky_nang}
+            </span>
+          )}
+        </div>
 
-      {unlocked && (problem.answer || problem.answerLine) && (
-        <div className="card mint pop">
-          <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
-          <b style={{ fontSize: 16 }}>{problem.answer}</b>
-          {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
+        {/* CÂU HỎI CHỮ TO 22-23px */}
+        <h2
+          style={{
+            fontSize: 22,
+            lineHeight: 1.35,
+            fontWeight: 800,
+            color: 'var(--c-text)',
+            fontFamily: 'var(--font-head)',
+            margin: 0,
+          }}
+        >
+          {microStep?.cau_hoi_nho || curStep.q || curStep.question}
+        </h2>
+
+        {/* 2 CHIP: ĐỌC TO & VÌ SAO HỎI */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn-km-chip"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: 12,
+              fontWeight: 800,
+              padding: '4px 10px',
+              borderRadius: 999,
+              background: 'var(--c-bg)',
+              border: '1px solid var(--c-line)',
+              cursor: 'pointer',
+            }}
+            onClick={() => speak(microStep?.cau_hoi_nho || curStep.q || curStep.question)}
+          >
+            <span>🔊</span>
+            <span>Đọc to</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn-km-chip"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: 12,
+              fontWeight: 800,
+              padding: '4px 10px',
+              borderRadius: 999,
+              background: 'var(--c-bg)',
+              border: '1px solid var(--c-line)',
+              cursor: 'pointer',
+            }}
+            onClick={() => setShowWhyModal(!showWhyModal)}
+          >
+            <span>💡</span>
+            <span>Vì sao hỏi?</span>
+          </button>
+        </div>
+
+        {showWhyModal && (curStep.ly_do_cho_me || microStep?.ly_do_cho_me) && (
+          <div style={{ background: 'var(--c-bg)', padding: '8px 12px', borderRadius: 10, fontSize: 12.5, color: 'var(--c-sub)', lineHeight: 1.4 }}>
+            💡 <b>Mục tiêu sư phạm:</b> {microStep?.ly_do_cho_me || curStep.ly_do_cho_me}
+          </div>
+        )}
+
+        {/* MIC TRÒN TO: CÁCH TRẢ LỜI CHÍNH */}
+        {hasMicSupport && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <button
+              type="button"
+              className={`mic-round-btn ${voiceState.listening ? 'on' : ''}`}
+              onClick={startVoiceListen}
+              data-testid="btn-voice-listen"
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: voiceState.listening ? 'var(--c-text)' : 'var(--c-accent, #F6A623)',
+                color: voiceState.listening ? 'var(--c-surface)' : 'var(--c-on-accent, #fff)',
+                border: 'none',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: 22,
+                cursor: 'pointer',
+                boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+              }}
+            >
+              <i className="fa-solid fa-microphone" />
+            </button>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--c-sub)' }}>
+              {voiceState.listening ? 'Đang nghe con nói…' : 'Chạm để con trả lời'}
+            </span>
+          </div>
+        )}
+
+        {/* Lời con nói & AI nhận xét */}
+        {voiceState.transcript && (
+          <div style={{ background: 'var(--c-bg)', padding: '8px 12px', borderRadius: 12, fontSize: 13 }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-sub)' }}>CON NÓI:</span>
+            <div style={{ fontWeight: 700, color: 'var(--c-text)', marginTop: 2 }}>"{voiceState.transcript}"</div>
+          </div>
+        )}
+
+        {voiceState.verdict && !voiceState.loading && (
+          <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', padding: '8px 12px', borderRadius: 12, fontSize: 13 }}>
+            <b style={{ color: '#166534' }}>{voiceState.verdict.danh_gia === 'dung' ? '✓ Đúng rồi' : '⚡ Gợi ý tiếp:'}</b>
+            <p style={{ margin: '2px 0 0', color: '#14532D' }}>{voiceState.verdict.nhan_xet_cho_me}</p>
+          </div>
+        )}
+
+        {/* GỢI Ý NHỎ HIỆN TỪNG CÁI MỘT (gợi ý đã dùng thu gọn 1 dòng) */}
+        {stuck >= 1 && (
+          <div style={{ borderTop: '1.5px dashed var(--c-line)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {stuck >= 2 && curStep.hint && (
+              <div style={{ fontSize: 11.5, color: 'var(--c-sub)', fontStyle: 'italic' }}>
+                ✓ Gợi ý 1: {curStep.hint}
+              </div>
+            )}
+            <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-primary)' }}>
+              GỢI Ý {stuck >= 2 ? '2' : '1'}
+            </div>
+            <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)', margin: 0, lineHeight: 1.4 }}>
+              {stuck >= 2 ? (curStep.hint2 || curStep.hint) : curStep.hint}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* 4. CHỈ MỜI NGHỈ KHI ĐÃ HẾT 2 GỢI Ý MÀ VẪN KẸT (Nằm trong luồng, không đè nút) */}
+      {stuck >= 2 && showNudge && (
+        <div
+          className="card-km"
+          style={{
+            background: '#FEF3C7',
+            border: '1.5px solid #FCD34D',
+            padding: '12px 14px',
+            borderRadius: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 24 }}>😮‍💨</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <b style={{ fontSize: 13.5, color: '#92400E', display: 'block' }}>Nghỉ 1 phút cùng con nhé?</b>
+            <span style={{ fontSize: 11.5, color: '#78350F' }}>Con đang cố hết sức rồi, hít thở một chút sẽ sáng dạ hơn!</span>
+          </div>
+          <button
+            type="button"
+            className="btn-km btn-km-s btn-km-primary"
+            style={{ minHeight: 32, padding: '0 10px', fontSize: 11.5 }}
+            onClick={() => { setShowNudge(false); openSheet('calm') }}
+          >
+            Thở 1p
+          </button>
         </div>
       )}
-      {/* Đợt 15 P1: xong bậc cuối là hiện nút, mở đáp án chỉ là tuỳ chọn */}
-      {(unlocked || step >= steps.length) && (
-        <button className="btn mint solid" data-testid="btn-finish-lesson" onClick={() => go('done')} style={{ position: 'relative', zIndex: 1000 }}>Hoàn thành bài ›</button>
+
+      {/* 5. NGĂN DÀNH CHO MẸ (KÉO LÊN TỪ ĐÁY) */}
+      {showMomDrawer && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 98,
+            display: 'flex',
+            alignItems: 'flex-end',
+          }}
+          onClick={() => setShowMomDrawer(false)}
+        >
+          <div
+            className="sheet-t5-card"
+            style={{
+              width: '100%',
+              background: 'var(--c-surface, #fff)',
+              borderRadius: '24px 24px 0 0',
+              padding: '16px 18px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+              maxHeight: '75vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--c-line)', alignSelf: 'center', marginBottom: 4 }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <b style={{ fontSize: 16, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>🔒 Dành riêng cho mẹ</b>
+              <button
+                type="button"
+                className="sheet-t5-close"
+                onClick={() => setShowMomDrawer(false)}
+                style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--c-bg)', fontSize: 14, cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Đáp án đối chiếu: Nút Giữ có vòng chạy */}
+            <div style={{ marginTop: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', display: 'block', marginBottom: 6 }}>
+                ĐÁP ÁN ĐỐI CHIẾU
+              </label>
+              <HoldBtn
+                label={`Giữ 1.5s xem đáp án cho ${S.parent.toLowerCase()}`}
+                onHoldComplete={onOpen}
+              />
+              {unlocked && (
+                <div style={{ background: 'var(--c-bg)', padding: '10px 12px', borderRadius: 12, marginTop: 8, fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>
+                  ✓ {curStep.answerForParent || curStep.answer || curStep.hint || 'Hoàn thành bước'}
+                </div>
+              )}
+            </div>
+
+            {/* Hỏi Gấu cách giảng */}
+            <div style={{ marginTop: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', display: 'block', marginBottom: 6 }}>
+                HỎI GẤU CÁCH GIẢNG NHANH
+              </label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  className="field"
+                  style={{ flex: 1, fontSize: 13, padding: '8px 12px', borderRadius: 10, border: '1px solid var(--c-line)', background: 'var(--c-bg)' }}
+                  placeholder="VD: con chưa học chia hết..."
+                  value={parentNote}
+                  onChange={(e) => setParentNote(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn-km btn-km-s btn-km-primary"
+                  onClick={() => {
+                    patch({ parentNoteChat: parentNote.trim() })
+                    setShowMomDrawer(false)
+                    go('ask')
+                  }}
+                >
+                  Hỏi Gấu
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {showNudge && (
-        <CalmNudgeCard
-          childName={child?.name || 'con'}
-          reasonText={nudgeReason}
-          onAccept={() => {
-            setShowNudge(false)
-            openSheet('calm')
+      {/* 6. THANH ĐÁY CỐ ĐỊNH: TAY KÉO MẸ + 2 NÚT 48px */}
+      <div
+        className="bottom-action-bar-km"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'var(--c-surface, #fff)',
+          borderTop: '1px solid var(--c-line, #EADFCF)',
+          borderRadius: '20px 20px 0 0',
+          boxShadow: '0 -4px 14px rgba(0,0,0,0.06)',
+          zIndex: 90,
+          padding: '6px 14px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
+        {/* Tay kéo: 🔒 Dành cho mẹ ▲ */}
+        <button
+          type="button"
+          onClick={() => setShowMomDrawer(true)}
+          style={{
+            alignSelf: 'center',
+            background: 'none',
+            border: 'none',
+            padding: '2px 10px',
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
           }}
-          onSnooze={() => {
-            setShowNudge(false)
-            setSnoozeUntil(Date.now() + 10 * 60 * 1000)
-          }}
-        />
-      )}
-    </>
+        >
+          <span style={{ width: 28, height: 3, borderRadius: 99, background: 'var(--c-line)' }} />
+          <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--c-sub)' }}>
+            🔒 Dành cho mẹ ▲
+          </span>
+        </button>
+
+        {/* 2 Nút: Phụ 'Chưa nghĩ ra' & Thành công 'Con làm được!' cùng 48px */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 8 }}>
+          <button
+            type="button"
+            className="btn-km btn-km-m btn-km-secondary"
+            style={{ minHeight: 48, fontSize: 13 }}
+            onClick={stepStuck}
+          >
+            Chưa nghĩ ra
+          </button>
+
+          <button
+            type="button"
+            className="btn-km btn-km-m btn-km-ok"
+            style={{ minHeight: 48, fontSize: 13.5 }}
+            onClick={stepOk}
+          >
+            <span>Con làm được!</span>
+            <span>✓</span>
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -3413,209 +3188,264 @@ export function Done() {
   }
 
   return (
-    <>
-      <Header title="Xong bài rồi! 🎉" back="home" />
-      <SeasonDoneArt />
-      {!isSeasonalTheme(S?.theme) && (
-        <div className="card sunset fadeIn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 14px', margin: '12px 0', textAlign: 'center' }} data-testid="done-buddy-art">
-          <ThemeBuddy state={S.flow?.teachBack ? 'love' : 'cheer'} size={96} />
-          <h3 style={{ margin: '10px 0 4px', fontSize: 18, fontWeight: 800 }}>
-            {S.flow?.teachBack ? `Thương ${child.name} ghê! 💕` : `Hoan hô ${child.name}! 🎉`}
-          </h3>
-          <p className="sub" style={{ margin: 0, textAlign: 'center' }}>
-            {S.flow?.teachBack ? `${child.name} đã giảng lại cho ${S.parent.toLowerCase()} nghe thật cừ!` : 'Con đã xuất sắc hoàn thành bài học hôm nay!'}
-          </p>
+    <div className="done-container-km" style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 80 }}>
+      {/* TopBar T4 */}
+      <TopBarT4
+        title="Xong bài rồi! 🎉"
+        stepText="Hoàn thành"
+        onBack={() => go('home')}
+        onOpenCalm={() => openSheet('calm')}
+      />
+
+      {/* 1. PHẦN CHO CON */}
+      <div
+        className="card-km"
+        style={{
+          padding: '18px 16px',
+          background: 'var(--c-surface)',
+          borderRadius: 22,
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 10,
+        }}
+        data-testid="done-section-kid"
+      >
+        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
+          PHẦN CHO CON
+        </span>
+
+        <div className="mascot-bounce-km">
+          <ThemeBuddy state={S.flow?.teachBack ? 'love' : 'cheer'} size={80} />
         </div>
-      )}
-      {problem?.isSample && (
+
+        <h2 style={{ fontSize: 20, fontWeight: 800, margin: '2px 0 0', color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
+          {S.flow?.teachBack ? `Thương ${child.name} ghê! 💕` : `Hoan hô ${child.name}! 🎉`}
+        </h2>
+        <p style={{ fontSize: 13.5, color: 'var(--c-sub)', margin: 0 }}>
+          Con đã xuất sắc vượt qua các bậc bài tập tối nay!
+        </p>
+
+        {/* CHỌN VÀ TẶNG HUY HIỆU Ở MỘT CHỖ DUY NHẤT */}
         <div
-          className="sample-banner"
           style={{
-            background: '#FEF3C7',
-            color: '#92400E',
-            border: '1.5px solid #FCD34D',
-            padding: '8px 12px',
-            borderRadius: 10,
-            fontSize: 13,
-            fontWeight: 700,
-            textAlign: 'center',
-            marginBottom: 10,
+            width: '100%',
+            background: 'var(--c-bg)',
+            border: '1px solid var(--c-line)',
+            borderRadius: 16,
+            padding: '12px 14px',
+            marginTop: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
           }}
+          data-testid="card-suggested-badge"
         >
-          ⚠️ Đây là bài mẫu, không phải bài của con (bài mẫu không tính vào lọ kẹo)
-        </div>
-      )}
-      {/* Đợt 20 · Chặng 4: Gấu góp ý cách kèm (chỉ mẹ thấy, gấp mở được, 0 token) */}
-      {coachAdviceEnabled && coachAdviceList.length > 0 && (
-        <div
-          className="card"
-          data-testid="coach-advice-card"
-          style={{
-            background: "#FFFBEB",
-            border: "1.5px solid #FDE68A",
-            borderRadius: 14,
-            padding: "14px 16px",
-            margin: "12px 0",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-            onClick={() => setIsCoachOpen(!isCoachOpen)}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 18 }}>🐻</span>
-              <b style={{ fontSize: 14, color: "#92400E" }}>Gấu góp ý cách kèm (Dành riêng cho {S.parent.toLowerCase()})</b>
-            </div>
-            <span style={{ fontSize: 12, color: "#B45309", fontWeight: 700 }}>
-              {isCoachOpen ? "Thu gọn ▲" : "Xem góp ý ▼"}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-primary)' }}>
+              HUY HIỆU NỖ LỰC
+            </span>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--c-sub)' }}>
+              Đã có {stats.stickers}/10 ⭐
             </span>
           </div>
 
-          {isCoachOpen && (
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-              {coachAdviceList.map((adv, idx) => (
-                <div
-                  key={adv.id || idx}
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #FEF3C7",
-                    borderRadius: 10,
-                    padding: "10px 12px",
-                    fontSize: 13,
-                    color: "#78350F",
-                    lineHeight: 1.45,
-                  }}
-                >
-                  <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                    <span>{adv.icon}</span> {adv.action}
-                  </div>
-                  <div>{adv.message}</div>
-                </div>
-              ))}
-              <div style={{ fontSize: 11, color: "#92400E", textAlign: "right", marginTop: 2, fontStyle: "italic" }}>
-                💡 Chỉ {S.parent.toLowerCase()} thấy mục này · Tắt được trong trang Con tôi
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+            <span
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: currentBadgeInfo.color,
+                color: '#fff',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: 22,
+                flexShrink: 0,
+              }}
+            >
+              {currentBadgeInfo.icon}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ fontSize: 14.5, color: 'var(--c-text)', display: 'block' }}>
+                {currentBadgeInfo.name} ({currentBadgeInfo.trait})
+              </b>
+              <p style={{ fontSize: 12, color: 'var(--c-sub)', margin: '2px 0 0', lineHeight: 1.35 }}>
+                {currentReason}
+              </p>
             </div>
-          )}
-        </div>
-      )}
-
-      {(problem.answer || problem.answerLine || problem.dap_an_cuoi_cho_me) && (
-        <div className="card mint">
-          <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
-          <b style={{ fontSize: 16 }}>{problem.answer || problem.dap_an_cuoi_cho_me}</b>
-          {problem.answerLine && <span className="sub">{problem.answerLine}</span>}
-        </div>
-      )}
-
-      {/* Lời mời chấm vở sau khi hoàn thành bài học (Prompt 14 Mục 2.1) */}
-      <div
-        className="card"
-        data-testid="done-check-work-invite"
-        style={{
-          padding: '12px 14px',
-          border: '1.5px dashed var(--c-primary, #7C3AED)',
-          background: 'var(--c-surface-2, rgba(124, 58, 237, 0.05))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-          cursor: 'pointer',
-          borderRadius: 14,
-        }}
-        onClick={() => {
-          patch({
-            checkWorkInit: {
-              sessionId: S.sessionId || `sess_${Date.now()}`,
-              problemText: problem?.ocr || problem?.text || problem?.de_bai || '',
-            },
-          })
-          go('check')
-        }}
-      >
-        <div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-primary, #7C3AED)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            📝 Chấm vở AI
-          </span>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)', marginTop: 2 }}>
-            {child.name} làm vào vở chưa? <b>Chụp để AI xem lại ›</b>
           </div>
+
+          {/* 4 Chip chọn nhanh phẩm chất khác */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+            {['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'].map((tr) => {
+              const active = currentTrait === tr
+              const info = TRAIT_BADGE_INFO[tr]
+              return (
+                <button
+                  key={tr}
+                  type="button"
+                  className={`btn-km btn-km-s ${active ? 'btn-km-primary' : 'btn-km-secondary'}`}
+                  style={{ minHeight: 30, padding: '0 4px', fontSize: 11, fontWeight: 800 }}
+                  onClick={() => {
+                    soundPop(450)
+                    setPickedTrait(tr)
+                  }}
+                  data-testid={`btn-pick-trait-${tr}`}
+                >
+                  {info.icon} {tr}
+                </button>
+              )
+            })}
+          </div>
+
+          <button
+            type="button"
+            className="btn-km btn-km-m btn-km-ok"
+            style={{ width: '100%', minHeight: 46, fontSize: 14 }}
+            onClick={() => {
+              const found = AVAILABLE_STICKERS.find((s) => s.id === currentBadgeInfo.stickerId || s.trait === currentTrait) || currentBadgeInfo
+              pickSticker({
+                ...found,
+                id: currentBadgeInfo.stickerId,
+                n: currentBadgeInfo.name,
+                trait: currentBadgeInfo.trait,
+                color: currentBadgeInfo.color,
+                source: isSuggested ? 'goi_y' : 'chon_khac',
+                reason: currentReason,
+              })
+            }}
+            data-testid="btn-grant-suggested-badge"
+          >
+            <span>Tặng huy hiệu {currentBadgeInfo.name}</span>
+            <span>⭐</span>
+          </button>
         </div>
-        <span style={{ fontSize: 22 }}>📷</span>
       </div>
 
-      {/* Feature 4: Con dạy lại mẹ — Đo mức độ tự chủ & Rubric 4 tiêu chí (Prompt 14 Phần B) */}
-      <TeachBackCard
-        problem={problem}
-        child={child}
-        parent={S.parent}
-        currentChoice={S.flow.teachBack}
-        sessionId={S.sessionId}
-        toast={toast}
-        onPickChoice={(v, tbId) => {
-          pickTeachBack(v)
-          if (tbId) {
-            teachBackConfirm({ teachBackId: tbId, finalLevel: v === 'ok' ? 'self' : v }).catch(() => {})
-          }
+      {/* 2. PHẦN CHO MẸ */}
+      <div
+        className="card-km"
+        style={{
+          padding: '16px',
+          background: 'var(--c-surface)',
+          borderRadius: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
         }}
-      />
+        data-testid="done-section-parent"
+      >
+        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
+          DÀNH CHO {S.parent.toUpperCase()}
+        </span>
 
-      {problem.fiveMinGame && (
-        <div className="card sun pop" style={{ padding: '12px 14px', border: '1.5px solid #FDE68A', background: '#FEFCE8' }}>
-          <span className="pill y">🎲 Trò chơi 5 phút ôn bài</span>
-          <div style={{ fontSize: 13.5, color: '#854D0E', margin: '6px 0 2px', lineHeight: 1.45, fontWeight: 600 }}>
-            {problem.fiveMinGame}
+        {/* Tự chấm nhanh: nút gạt 3 mục */}
+        <div>
+          <label style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text)', display: 'block', marginBottom: 6 }}>
+            Mức độ tự chủ của con hôm nay:
+          </label>
+          <div className="seg-km" style={{ width: '100%', height: 36 }}>
+            {[
+              { v: 'ok', label: 'Tự làm được' },
+              { v: 'hint', label: 'Cần gợi ý' },
+              { v: 'guided', label: 'Cần hướng dẫn' },
+            ].map((opt) => {
+              const active = (S.flow.teachBack || result) === opt.v
+              return (
+                <button
+                  key={opt.v}
+                  type="button"
+                  className={`seg-km-item ${active ? 'active' : ''}`}
+                  style={{ height: 32, fontSize: 12 }}
+                  onClick={() => pickTeachBack(opt.v)}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
           </div>
         </div>
-      )}
 
-      {/* Thẻ Gấu khen đúng chỗ (Đợt 18 · Chặng 6) */}
-      {(() => {
-        const stepPraises = (problem.steps || []).map((s, idx) => s.loi_khen || s.praise).filter(Boolean)
-        const praiseSummary = stepPraises.length > 0
-          ? stepPraises.slice(0, 2).map((p, i) => `Bậc ${i + 1}: ${p}`).join(' ')
-          : `Bậc 1: ${child.name} đọc kỹ đề rất tốt. Bậc cuối: con tính toán chính xác và tự tin.`
-        return (
-          <div className="card praise fadeIn" data-testid="card-praise-exact">
-            <div className="lbl plum" style={{ margin: 0, color: '#2E7D32' }}>GẤU KHEN ĐÚNG CHỖ</div>
-            <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '4px 0 0', lineHeight: 1.45 }}>
-              {praiseSummary}
-            </p>
-          </div>
-        )
-      })()}
-
-      {/* Thẻ Bài anh em thích ứng (Đợt 18 · Chặng 6) */}
-      {(() => {
-        const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
-        if (!bro) return null
-        const deText = bro.de || bro.text || ''
-        const isAdaptive = Boolean(adaptiveBrother)
-        return (
-          <div className="card bro fadeIn" data-testid="card-adaptive-brother">
-            <div className="lbl plum" style={{ margin: 0, color: '#92400E' }}>
-              BÀI ANH EM CHO {child.name.toUpperCase()} · 5 PHÚT
+        {/* Góp ý của Gấu: 1 dòng mở được */}
+        {coachAdviceEnabled && coachAdviceList.length > 0 && (
+          <div
+            style={{
+              background: '#FFFBEB',
+              border: '1px solid #FDE68A',
+              borderRadius: 12,
+              padding: '10px 12px',
+            }}
+          >
+            <div
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              onClick={() => setIsCoachOpen(!isCoachOpen)}
+            >
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#92400E' }}>
+                🐻 Gấu góp ý cách kèm ({coachAdviceList.length} ý)
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#B45309' }}>
+                {isCoachOpen ? 'Thu gọn ▲' : 'Xem ngay ▼'}
+              </span>
             </div>
-            {isAdaptive ? (
-              <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '2px 0' }}>
-                <b>Luyện đúng chỗ vừa kẹt:</b> {bro.ky_nang_nham || 'kỹ năng tính toán'}.
-              </p>
-            ) : (
-              <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '2px 0' }}>
-                <b>Rèn luyện thêm:</b> Cùng dạng bài, đổi số liệu.
-              </p>
+            {isCoachOpen && (
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {coachAdviceList.map((adv, idx) => (
+                  <div key={idx} style={{ fontSize: 12.5, color: '#78350F', lineHeight: 1.35 }}>
+                    <b>{adv.icon} {adv.action}:</b> {adv.message}
+                  </div>
+                ))}
+              </div>
             )}
-            <p className="q2">"{deText}"</p>
-            <div className="mr-row" style={{ marginTop: 6 }}>
-              <span className="tagm ok">✓ Gấu đã kiểm phép tính</span>
+          </div>
+        )}
+      </div>
+
+      {/* 3. PHẦN LÀM TIẾP */}
+      <div
+        className="card-km"
+        style={{
+          padding: '16px',
+          background: 'var(--c-surface)',
+          borderRadius: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
+        data-testid="done-section-next"
+      >
+        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
+          LÀM TIẾP
+        </span>
+
+        {/* Bài anh em */}
+        {(() => {
+          const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
+          if (!bro) return null
+          const deText = bro.de || bro.text || ''
+          return (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+                padding: '10px 12px',
+                borderRadius: 12,
+                background: 'var(--c-bg)',
+                border: '1px solid var(--c-line)',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>🎯 Bài anh em (5 phút)</b>
+                <span style={{ fontSize: 12, color: 'var(--c-sub)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                  {deText}
+                </span>
+              </div>
               <button
-                className="mini-btn"
+                type="button"
+                className="btn-km btn-km-s btn-km-primary"
                 onClick={() => {
                   patch({
                     problem: {
@@ -3629,253 +3459,105 @@ export function Done() {
                     },
                     flow: { step: 0, stuck: 0, unlocked: false },
                   })
-                  toast(`Bắt đầu làm thử bài anh em cùng ${child.name}! 🎯`)
                   go('explain')
                 }}
-                data-testid="btn-try-brother"
               >
-                Làm thử
+                Làm thử ›
               </button>
             </div>
-          </div>
-        )
-      })()}
+          )
+        })()}
 
-      {stats.stickers >= 10 && (
+        {/* Chấm vở */}
         <div
-          className="card sun pop"
           style={{
-            border: '2px solid #F59E0B',
-            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-            textAlign: 'center',
-            padding: '14px 12px',
-            boxShadow: '0 6px 18px rgba(245, 158, 11, 0.28)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+            padding: '10px 12px',
+            borderRadius: 12,
+            background: 'var(--c-bg)',
+            border: '1px solid var(--c-line)',
           }}
         >
-          <div style={{ fontSize: 38, marginBottom: 4 }}>🎁 🏆 🍦</div>
-          <b style={{ color: '#78350F', fontSize: 16 }}>🎉 ĐỦ 10 HUY HIỆU RỒI, ĐỔI QUÀ THÔI!</b>
-          <div style={{ color: '#92400E', fontSize: 13, margin: '6px 0 12px', lineHeight: 1.4 }}>
-            Chúc mừng {child.name} đã tích lũy đủ 10 sticker nỗ lực! {S.parent} bấm để mở phiếu đổi quà và bắt đầu chặng mới nhé.
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>📝 Chấm vở con đã viết</b>
+            <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>Chụp vở để AI tìm bước sai cho con tự sửa</span>
           </div>
           <button
-            className="btn solid"
-            style={{ width: '100%', background: '#D97706', fontWeight: 700, fontSize: 14.5, boxShadow: '0 4px 12px rgba(217,119,6,0.3)' }}
-            onClick={() => openSheet('redeem')}
-          >
-            🎁 Mở phiếu đổi quà cho con
-          </button>
-        </div>
-      )}
-
-{/* ĐỢT 19 · CHẶNG 2: GẤU GỢI Ý HUY HIỆU THEO VIỆC CON LÀM */}
-      <div className="badge-sg" data-testid="card-suggested-badge">
-        <div className="kk ink">GẤU GỢI Ý HUY HIỆU</div>
-        <div className="bs">
-          <span className="bi" style={{ background: currentBadgeInfo.color }}>
-            {currentBadgeInfo.icon}
-          </span>
-          <div>
-            <b>{currentBadgeInfo.name} ({currentBadgeInfo.trait})</b>
-            <p className="xs">{currentReason}</p>
-          </div>
-        </div>
-        <div className="kk">HOẶC CHỌN HUY HIỆU KHÁC</div>
-        <div className="bo" role="radiogroup" aria-label="Chọn phẩm chất khác">
-          {['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'].map((tr) => {
-            const info = TRAIT_BADGE_INFO[tr]
-            const active = currentTrait === tr
-            return (
-              <button
-                key={tr}
-                type="button"
-                className={active ? 'active' : ''}
-                onClick={() => {
-                  soundPop(450)
-                  setPickedTrait(tr)
-                }}
-                data-testid={`btn-pick-trait-${tr}`}
-              >
-                {info.icon} {tr}
-              </button>
-            )
-          })}
-        </div>
-        <p className="xs">
-          Gợi ý theo việc {child.name} làm trong buổi. Chọn khác cũng được, Gấu ghi lại để phân tích đúng hơn.
-        </p>
-        <button
-          className="btn solid"
-          style={{
-            width: '100%',
-            background: currentBadgeInfo.color,
-            color: '#fff',
-            fontWeight: 800,
-            fontSize: 15,
-            marginTop: 4,
-          }}
-          onClick={() => {
-            const found = AVAILABLE_STICKERS.find((s) => s.id === currentBadgeInfo.stickerId || s.trait === currentTrait) || currentBadgeInfo
-            pickSticker({
-              ...found,
-              id: currentBadgeInfo.stickerId,
-              n: currentBadgeInfo.name,
-              trait: currentBadgeInfo.trait,
-              color: currentBadgeInfo.color,
-              source: isSuggested ? 'goi_y' : 'chon_khac',
-              reason: currentReason,
-            })
-          }}
-          data-testid="btn-grant-suggested-badge"
-        >
-          🏅 Tặng huy hiệu {currentBadgeInfo.name}
-        </button>
-      </div>
-
-      <div className="card sun">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <span className="lbl sun">Cho {child.name} chọn huy hiệu</span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: stkCur.bg || '#FFFBEB', color: stkCur.color || '#D97706', border: `1px solid ${stkCur.border || '#FDE68A'}` }}>
-            <i className={`${stkCur.fa || 'fa-solid fa-award'} fa-fw`} style={{ marginRight: 4 }} />
-            {stkCur.trait || 'Phẩm chất'}
-          </span>
-        </div>
-        <div className="stk-carousel">
-          <button
-            className="round-btn"
-            aria-label="Sticker trước"
-            disabled={stkIdx === 0}
-            onClick={() => { soundPop(450); setStkIdx((i) => Math.max(0, i - 1)) }}
-          >
-            ‹
-          </button>
-          <button
-            className="stk-pick"
-            onClick={() => pickSticker(stkCur.id || stkCur.e)}
-            style={{
-              padding: '12px 14px',
-              borderRadius: 18,
-              border: `2px solid ${stkCur.border || '#FDE68A'}`,
-              background: `linear-gradient(180deg, #FFFFFF 0%, ${stkCur.bg || '#FFFBEB'} 100%)`,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+            type="button"
+            className="btn-km btn-km-s btn-km-secondary"
+            onClick={() => {
+              patch({
+                checkWorkInit: {
+                  sessionId: S.sessionId || `sess_${Date.now()}`,
+                  problemText: problem?.ocr || problem?.text || '',
+                },
+              })
+              go('check')
             }}
           >
-            <div
-              style={{
-                width: 58,
-                height: 58,
-                borderRadius: 18,
-                background: stkCur.bg || '#FFFBEB',
-                border: `2px solid ${stkCur.border || '#FDE68A'}`,
-                color: stkCur.color || '#D97706',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 26,
-                margin: '0 auto 8px',
-                boxShadow: `0 4px 12px ${stkCur.color}25`,
-                transition: 'transform 0.2s ease',
-              }}
-            >
-              <i className={stkCur.fa || 'fa-solid fa-award'} />
-            </div>
-            <span className="stk-name" style={{ color: stkCur.color || '#78350F', fontWeight: 800 }}>{stkCur.n}</span>
-            <span className="stk-desc" style={{ color: '#64748B', fontSize: 12 }}>{stkCur.desc}</span>
-            <span
-              className="stk-owned"
-              style={{
-                marginTop: 6,
-                padding: '2px 10px',
-                borderRadius: 99,
-                background: stkOwned > 0 ? stkCur.bg : '#F1F5F9',
-                color: stkOwned > 0 ? stkCur.color : '#94A3B8',
-                fontWeight: 700,
-                fontSize: 11,
-                border: `1px solid ${stkOwned > 0 ? stkCur.border : '#E2E8F0'}`,
-              }}
-            >
-              {stkOwned > 0 ? `Đã có ×${stkOwned}` : 'Chưa có trong sổ'}
-            </span>
+            Chấm vở ›
           </button>
-          <button
-            className="round-btn"
-            aria-label="Sticker sau"
-            disabled={stkIdx >= AVAILABLE_STICKERS.length - 1}
-            onClick={() => { soundPop(450); setStkIdx((i) => Math.min(AVAILABLE_STICKERS.length - 1, i + 1)) }}
+        </div>
+
+        {/* Con giảng lại */}
+        {!S.flow?.teachBack && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+              padding: '10px 12px',
+              borderRadius: 12,
+              background: 'var(--c-bg)',
+              border: '1px solid var(--c-line)',
+            }}
           >
-            ›
-          </button>
-        </div>
-        <div className="stk-dots">
-          {AVAILABLE_STICKERS.map((s, i) => (
-            <i key={s.id} className={i === stkIdx ? 'on' : ''} />
-          ))}
-        </div>
-        <span className="sub">
-          Bộ sưu tập chặng: <b>{stats.stickers}/10</b> · {stats.stickers >= 10 ? '✨ Đã đủ 10/10!' : `đủ 10 đổi "${STICKER_REWARD}"`}
-        </span>
-        <Bar pct={Math.min(100, stats.stickers * 10)} color="#E3A62F" />
-        <button
-          className="btn soft"
-          style={{ width: '100%', marginTop: 10, background: '#FEF3C7', border: '1px solid #FCD34D', color: '#92400E', fontWeight: 700 }}
-          onClick={() => openSheet('stickerBook')}
-        >
-          📖 Mở Sổ dán Huy hiệu của {child.name} ({stats.stickers} sticker)
-        </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>🎓 Con dạy lại mẹ</b>
+              <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>Lắng nghe con giảng lại bài vừa giải</span>
+            </div>
+            <button
+              type="button"
+              className="btn-km btn-km-s btn-km-secondary"
+              onClick={() => openSheet('teachBack')}
+            >
+              Nghe con ›
+            </button>
+          </div>
+        )}
       </div>
 
-      <button
-        className="big-card plum"
-        onClick={() => openSheet('practice')}
+      {/* Nút dính đáy: Lưu & về trang chủ */}
+      <div
+        className="bottom-action-bar-km"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '10px 16px',
+          background: 'var(--c-surface, #fff)',
+          borderTop: '1px solid var(--c-line, #EADFCF)',
+          zIndex: 90,
+          boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
+        }}
       >
-        <span className="ic">✏️</span>
-        <span className="lbl plum">Luyện thêm (tùy chọn)</span>
-        <b>1 bài cùng dạng, số khác</b>
-        <span className="sub">AI tạo bài mới để con chắc tay hơn</span>
-      </button>
-
-      <button className="big-card" onClick={() => go('ask')}>
-        <span className="ic">💬</span>
-        <span className="lbl plum">Còn thắc mắc?</span>
-        <b>Hỏi thêm AI về bài này</b>
-        <span className="sub">AI trả lời cho {S.parent.toLowerCase()}, không đưa đáp án cho con</span>
-      </button>
-
-      {problem?.isTeacherAssigned && (
-        <div style={{ textAlign: 'center', margin: '12px 0 6px 0', fontSize: 13, color: '#059669', fontWeight: 600 }}>
-          ✅ Kết quả đã gửi cô (chỉ trạng thái, không gửi bài làm)
-        </div>
-      )}
-
-      {(() => {
-        const totalSessions = (stats.sessionsMom || 0) + (stats.sessionsDad || 0) + (stats.history || []).length
-        let optOut = false
-        try {
-          const status = localStorage.getItem('kem-con-hoc:nps-opt-out')
-          const snooze = parseInt(localStorage.getItem('kem-con-hoc:nps-snooze-until') || '0', 10)
-          if (status === 'never' || status === 'done' || (snooze && totalSessions < snooze)) {
-            optOut = true
-          }
-        } catch (e) {}
-        if (totalSessions >= 10 && !optOut) {
-          return (
-            <NpsSurveyCard
-              familyId={S.familyId || (S.family && S.family.id)}
-              memberId={S.parent}
-              sessionCount={totalSessions}
-            />
-          )
-        }
-        return null
-      })()}
-
-      <button className="btn solid" onClick={saveResult}>Lưu & về trang chủ</button>
-
-    </>
+        <button
+          type="button"
+          className="btn-km btn-km-l btn-km-primary"
+          style={{ width: '100%' }}
+          onClick={saveResult}
+        >
+          Lưu & về trang chủ
+        </button>
+      </div>
+    </div>
   )
 }
-
 /* ============================================================
    8. HỎI THÊM AI
    ============================================================ */
@@ -6740,26 +6422,23 @@ export function Profile() {
 
       {/* ===== Nhóm 1 · Con ===== */}
       <h2 className="pg-section-title">Con</h2>
-      {/* ĐỢT 22 · CHẶNG 0: MỤC RIÊNG NHỮNG GÌ GẤU NHỚ VỀ CON */}
-      <BearMemorySection child={child} S={S} stats={stats} patch={patch} toast={toast} />
-      {/* Đợt 20 · Chặng 4: Nhận lời khuyên cách kèm */}
-      <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", marginBottom: 12 }}>
+      {/* Nhận lời khuyên cách kèm (công tắc switch) */}
+      <div className="card-km" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", marginBottom: 12, background: 'var(--c-surface)' }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 22 }}>🐻</span>
           <div>
-            <b style={{ fontSize: 14 }}>Nhận lời khuyên cách kèm</b>
-            <div className="sub" style={{ fontSize: 12 }}>Gấu phân tích nhịp học và góp ý sư phạm sau mỗi bài</div>
+            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Nhận lời khuyên cách kèm</b>
+            <div style={{ fontSize: 12, color: 'var(--c-sub)' }}>Gấu góp ý sư phạm sau mỗi bài học</div>
           </div>
         </div>
-        <input
-          type="checkbox"
-          checked={child.receiveCoachAdvice !== false}
-          onChange={(e) => {
-            const updatedChildren = S.children.map(c => c.id === child.id ? { ...c, receiveCoachAdvice: e.target.checked } : c)
+        <Switch
+          on={child.receiveCoachAdvice !== false}
+          onChange={(val) => {
+            const updatedChildren = S.children.map(c => c.id === child.id ? { ...c, receiveCoachAdvice: val } : c)
             patch({ children: updatedChildren })
-            toast(e.target.checked ? "Đã bật lời khuyên cách kèm" : "Đã tắt lời khuyên cách kèm")
+            toast(val ? "Đã bật lời khuyên cách kèm" : "Đã tắt lời khuyên cách kèm")
           }}
-          style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#F59E0B" }}
+          label="Nhận lời khuyên cách kèm"
         />
       </div>
       <div className="pg-grid2">
@@ -6813,22 +6492,38 @@ export function Profile() {
           </span>
         </button>
 
-        <div className="card sky pg-span">
-          <span className="lbl sky">Lịch chia ca T2 đến T6</span>
-          {schedule.map((d, i) => (
-            <div className="row" key={d.day}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <b style={{ width: 28 }}>{d.day}</b>
-                <span className={`pill ${d.owner === 'Bố' ? 'b' : 'p'}`}>{d.owner}</span>
-              </div>
-              <Switch
-                on={d.owner === 'Bố'}
-                onChange={() => toggleOwner(i)}
-                label={`Ca ${d.day}: đổi người trực (đang là ${d.owner})`}
-              />
-            </div>
-          ))}
-          <span className="sub">Người trực ca sẽ thấy lời nhắc khi mở app buổi tối · bấm công tắc để đổi mẹ hoặc bố</span>
+        <div className="card-km pg-span" style={{ padding: '14px 16px', background: 'var(--c-surface)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Lịch chia ca T2 đến T6</b>
+            <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>Chạm vào ô để đổi Bố hoặc Mẹ</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, textAlign: 'center' }}>
+            {schedule.slice(0, 5).map((d, i) => {
+              const isDad = d.owner === 'Bố'
+              return (
+                <button
+                  key={d.day}
+                  type="button"
+                  onClick={() => toggleOwner(i)}
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: 12,
+                    background: isDad ? 'var(--c-primary-light, #EFF6FF)' : 'var(--c-surface-2, #FDF2F8)',
+                    border: isDad ? '1.5px solid var(--c-primary, #3B82F6)' : '1.5px solid #F472B6',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                  title={`Ca ${d.day}: ${d.owner} (Chạm để đổi)`}
+                >
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)' }}>{d.day}</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: isDad ? '#1D4ED8' : '#BE185D' }}>{d.owner}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -6890,8 +6585,9 @@ export function Profile() {
         </button>
       </div>
 
-      {/* ===== Nhóm 4 · Riêng tư và an toàn ===== */}
-      <h2 className="pg-section-title">Riêng tư và an toàn</h2>
+      {/* ===== Nhóm 4 · Những gì Gấu nhớ & Riêng tư ===== */}
+      <h2 className="pg-section-title">Những gì Gấu nhớ & Riêng tư</h2>
+      <BearMemorySection child={child} S={S} stats={stats} patch={patch} toast={toast} />
       <div className="pg-grid2">
         <button className="big-card" onClick={() => openSheet('safetyPortal')}>
           <span className="ic" aria-hidden="true">🛡️</span>
@@ -7458,267 +7154,304 @@ export function CheckWork() {
 
       {/* 5. MÀN HÌNH KẾT QUẢ CHO MẸ (CHỈ MẸ THẤY) */}
       {step === 'result_parent' && gradeResult && (
-        <>
-          <Header title="Kết quả cho mẹ" back="home" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 88 }}>
+          <TopBarT4
+            title="Kết quả chấm vở"
+            stepText="Chỉ mẹ thấy"
+            onBack={() => setStep('capture')}
+            onOpenCalm={() => openSheet('calm')}
+          />
 
-          {/* Vở bài làm có đánh dấu */}
-          <div className="check-work-paper" style={{ marginBottom: 14 }}>
+          {/* T6: Tóm tắt 1 dòng trên cùng */}
+          <div
+            className="card-km"
+            style={{
+              padding: '10px 14px',
+              background: 'var(--c-surface)',
+              borderRadius: 14,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--c-text)' }}>
+              {gradeResult.ket_qua === 'dung_het' ? (
+                <span style={{ color: 'var(--c-good, #2F7D4F)' }}>✓ Bài làm đúng hoàn toàn</span>
+              ) : (
+                <span>
+                  Sai ở dòng {gradeResult.dong_sai_dau_tien || 1} ·{' '}
+                  <span style={{ color: '#B4462F' }}>
+                    {gradeResult.loai_loi === 'chon_phep_tinh' ? 'chọn phép tính' : gradeResult.loai_loi === 'tinh_nham' ? 'tính nhẩm' : gradeResult.loai_loi || 'cần sửa'}
+                  </span>
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>{lines.length} dòng</span>
+          </div>
+
+          {/* Vở bài làm có đánh dấu theo T6 */}
+          <div
+            className="card-km"
+            style={{
+              padding: '12px 14px',
+              background: 'var(--c-surface)',
+              borderRadius: 18,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
             {lines.map((ln, idx) => {
               const lineNum = ln.so || idx + 1
               const isWrongLine = lineNum === gradeResult.dong_sai_dau_tien
               const isCorrectLine = gradeResult.ket_qua === 'dung_het' || (gradeResult.dong_sai_dau_tien && lineNum < gradeResult.dong_sai_dau_tien)
 
               return (
-                <div key={idx} className={`ln ${isWrongLine ? 'q' : isCorrectLine ? 'ok' : ''}`}>
-                  {ln.noi_dung}
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    background: isWrongLine ? '#FEF3C7' : isCorrectLine ? '#F0FDF4' : 'var(--c-bg)',
+                    border: isWrongLine ? '1px solid #FCD34D' : isCorrectLine ? '1px solid #BBF7D0' : '1px solid var(--c-line)',
+                    fontSize: 13.5,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', width: 16 }}>
+                      {lineNum}
+                    </span>
+                    <span style={{ color: 'var(--c-text)', fontWeight: isWrongLine ? 700 : 500 }}>
+                      {ln.noi_dung}
+                    </span>
+                  </div>
+
+                  {isCorrectLine && (
+                    <span style={{ color: '#16A34A', fontWeight: 900, fontSize: 14 }}>✓</span>
+                  )}
+                  {isWrongLine && (
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#92400E', background: '#FDE68A', padding: '2px 8px', borderRadius: 999 }}>
+                      {gradeResult.loai_loi === 'chon_phep_tinh' ? 'Chọn phép tính' : 'Tính nhẩm'}
+                    </span>
+                  )}
                 </div>
               )
             })}
           </div>
 
-          {/* Cảnh báo nếu AI chưa chắc */}
-          {gradeResult.ai_uncertain === 1 && (
-            <div
-              className="card"
-              style={{
-                padding: '10px 14px',
-                background: '#FEF3C7',
-                border: '1.5px solid #F59E0B',
-                color: '#92400E',
-                marginBottom: 10,
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
-              ⚠️ AI chưa chắc một số bước giải, mẹ xem giúp nhé!
-            </div>
-          )}
-
-          {/* Thẻ Chỉ mẹ thấy */}
-          <div
-            className="card"
-            style={{
-              padding: '12px 14px',
-              background: 'rgba(124, 58, 237, 0.05)',
-              border: '2px dashed var(--c-primary, #7C3AED)',
-              borderRadius: 16,
-              marginBottom: 10,
-            }}
-          >
-            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-primary, #7C3AED)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              🔒 Chỉ mẹ thấy
-            </span>
-            {gradeResult.ket_qua === 'dung_het' ? (
-              <div style={{ marginTop: 4, fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>
-                🎉 Bài làm đúng hoàn toàn! Không có bước sai nào.
-              </div>
-            ) : (
-              <div style={{ marginTop: 4, fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.5 }}>
-                {Number.isInteger(Number(gradeResult.dong_sai_dau_tien)) && Number(gradeResult.dong_sai_dau_tien) > 0 ? (
-                  <>Bước sai đầu tiên: <b>Dòng {gradeResult.dong_sai_dau_tien}</b>.{' '}</>
-                ) : gradeResult.ket_qua === 'chua_xong' ? (
-                  <>Con chưa làm xong bài.{' '}</>
-                ) : (
-                  <>Có chỗ cần xem lại.{' '}</>
-                )}
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '2px 8px',
-                    borderRadius: 6,
-                    background: '#FEE2E2',
-                    color: '#DC2626',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    marginLeft: 4,
-                  }}
-                >
-                  {gradeResult.loai_loi === 'chon_phep_tinh' ? 'Chọn phép tính' : gradeResult.loai_loi === 'tinh_nham' ? 'Tính nhẩm' : gradeResult.loai_loi || 'Cần xem lại'}
-                </span>
-                <div style={{ marginTop: 6, color: 'var(--c-text-2)' }}>
-                  {gradeResult.giai_thich_cho_me}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Thẻ Điểm sáng để khen */}
+          {/* Điểm sáng nền xanh nhạt */}
           {gradeResult.loi_khen_cu_the && (
             <div
-              className="card"
+              className="card-km card-km-good"
               style={{
                 padding: '12px 14px',
                 background: '#ECFDF5',
-                border: '1.5px solid #10B981',
+                border: '1px solid #A7F3D0',
                 borderRadius: 16,
-                marginBottom: 10,
               }}
             >
-              <b style={{ color: '#065F46', fontSize: 13.5, display: 'block', marginBottom: 2 }}>
+              <b style={{ color: '#065F46', fontSize: 13, display: 'block', marginBottom: 2 }}>
                 🌟 Điểm sáng để khen {childName}
               </b>
-              <div style={{ fontSize: 13, color: '#047857', lineHeight: 1.45 }}>
+              <div style={{ fontSize: 13, color: '#047857', lineHeight: 1.4 }}>
                 {gradeResult.loi_khen_cu_the}
               </div>
             </div>
           )}
 
-          {/* Nút Giữ để xem đáp án đúng (chỉ mẹ) */}
-          <div
-            className="card hold-reveal-card"
-            data-testid="hold-reveal-answer"
-            style={{
-              padding: '14px',
-              textAlign: 'center',
-              border: '1.5px solid var(--c-line)',
-              background: isHoldingAnswer ? '#FEF3C7' : 'var(--c-surface-2)',
-              borderRadius: 14,
-              marginBottom: 16,
-              transition: 'background 0.2s',
-            }}
-            onPointerDown={() => setIsHoldingAnswer(true)}
-            onPointerUp={() => setIsHoldingAnswer(false)}
-            onPointerLeave={() => setIsHoldingAnswer(false)}
-            onMouseDown={() => setIsHoldingAnswer(true)}
-            onMouseUp={() => setIsHoldingAnswer(false)}
-            onMouseLeave={() => setIsHoldingAnswer(false)}
-            onTouchStart={() => setIsHoldingAnswer(true)}
-            onTouchEnd={() => setIsHoldingAnswer(false)}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === ' ' || e.key === 'Spacebar') {
-                e.preventDefault()
-                setIsHoldingAnswer(true)
-              }
-            }}
-            onKeyUp={(e) => {
-              if (e.key === ' ' || e.key === 'Spacebar') {
-                e.preventDefault()
-                setIsHoldingAnswer(false)
-              }
-            }}
-          >
-            {isHoldingAnswer ? (
-              <div>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#92400E', textTransform: 'uppercase' }}>
-                  Đáp án chuẩn (Chỉ mẹ):
-                </span>
-                <div style={{ fontSize: 16, fontWeight: 900, color: '#78350F', marginTop: 2 }}>
-                  {gradeResult.dap_an_dung_cho_me || '19 cây bút'}
-                </div>
+          {/* Đáp án đối chiếu cho mẹ: Nút Giữ có vòng chạy */}
+          <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface)' }}>
+            <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', display: 'block', marginBottom: 6 }}>
+              ĐÁP ÁN ĐỐI CHIẾU (CHỈ MẸ)
+            </label>
+            <HoldBtn
+              label="Giữ 1.5s xem đáp án chuẩn"
+              onHoldComplete={() => setIsHoldingAnswer(true)}
+            />
+            {isHoldingAnswer && (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', padding: '10px 12px', borderRadius: 12, marginTop: 8, fontSize: 14, fontWeight: 800, color: '#92400E' }}>
+                ✓ {gradeResult.dap_an_dung_cho_me || '19 cây bút'}
               </div>
-            ) : (
-              <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text-2)' }}>
-                ✋ Giữ để xem đáp án đúng (chỉ mẹ)
-              </span>
             )}
           </div>
 
-          {gradeResult.ket_qua === 'dung_het' ? (
-            <button
-              className="btn primary"
-              style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800 }}
-              onClick={() => go('home')}
-            >
-              🎉 Con làm đúng hết! Về trang chủ
-            </button>
-          ) : (
-            <button
-              data-testid="btn-view-child-question"
-              className="btn primary"
-              style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800 }}
-              onClick={() => setStep('result_child')}
-            >
-              Xem câu hỏi cho {childName} tự sửa ➔
-            </button>
-          )}
-        </>
+          {/* Nút Lớn dính đáy: Hỏi Na tự sửa (56px) */}
+          <div
+            className="bottom-action-bar-km"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '10px 16px',
+              background: 'var(--c-surface, #fff)',
+              borderTop: '1px solid var(--c-line, #EADFCF)',
+              zIndex: 90,
+              boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
+            }}
+          >
+            {gradeResult.ket_qua === 'dung_het' ? (
+              <button
+                type="button"
+                className="btn-km btn-km-l btn-km-primary"
+                style={{ width: '100%' }}
+                onClick={() => go('home')}
+              >
+                Hoàn thành · Về trang chủ
+              </button>
+            ) : (
+              <button
+                type="button"
+                data-testid="btn-view-child-question"
+                className="btn-km btn-km-l btn-km-primary"
+                style={{ width: '100%' }}
+                onClick={() => setStep('result_child')}
+              >
+                <span>Hỏi {childName} tự sửa</span>
+                <span className="btn-km-arrow">›</span>
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* 6. MÀN HÌNH CÂU HỎI ĐỂ CON TỰ SỬA */}
+      {/* 6. MÀN HÌNH CÂU HỎI ĐỂ CON TỰ SỬA (THEO KHUÔN MỚI) */}
       {step === 'result_child' && gradeResult && (
-        <>
-          <Header title={`Để ${childName} tự phát hiện`} back={() => setStep('result_parent')} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 88 }}>
+          <TopBarT4
+            title={`Để ${childName} tự phát hiện`}
+            stepText="Tự sửa lỗi"
+            onBack={() => setStep('result_parent')}
+            onOpenCalm={() => openSheet('calm')}
+          />
 
-          {/* Bong bóng đọc to câu hỏi mức 1 */}
-          <div className="speech-bubble-container">
-            <div className="speech-bubble-avatar">🐻</div>
-            <div className="speech-bubble-body">
-              <div className="speech-bubble-label">
-                <span>Mẹ đọc to · gợi ý 1</span>
-                <SpeakBtn text={gradeResult.cau_hoi_cho_con?.muc_1} />
+          {/* Câu hỏi gợi mở mức 1 */}
+          <div
+            className="card-km card-km-ai"
+            style={{
+              padding: '16px 14px',
+              background: 'var(--c-surface)',
+              borderRadius: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <BuddyGreeter size={38} />
+                <span style={{ fontSize: 11.5, fontWeight: 900, color: 'var(--c-primary)' }}>
+                  GẤU GỢI Ý CÂU HỎI
+                </span>
               </div>
-              <p className="speech-bubble-text">
-                "{gradeResult.cau_hoi_cho_con?.muc_1 || 'Con đọc lại đề nhé. Phép tính này làm thế nào nhỉ?'}"
-              </p>
+              <button
+                type="button"
+                className="btn-km-chip"
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  padding: '3px 10px',
+                  borderRadius: 999,
+                  background: 'var(--c-bg)',
+                  border: '1px solid var(--c-line)',
+                  cursor: 'pointer',
+                }}
+                onClick={() => speak(gradeResult.cau_hoi_cho_con?.muc_1)}
+              >
+                🔊 Đọc to
+              </button>
             </div>
+
+            <p
+              style={{
+                fontSize: 18,
+                lineHeight: 1.4,
+                fontWeight: 800,
+                color: 'var(--c-text)',
+                fontFamily: 'var(--font-head)',
+                margin: '2px 0 0',
+              }}
+            >
+              "{gradeResult.cau_hoi_cho_con?.muc_1 || 'Con đọc lại đề bài nhé. Phép tính này mình làm thế nào nhỉ?'}"
+            </p>
+            <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>
+              Mẹ đọc to câu trên để con tự nhìn lại bài của mình nhé.
+            </span>
           </div>
 
-          {/* Gợi ý 2 bằng đồ vật (chạm mới mở) */}
+          {/* Gợi ý mức 2 bằng đồ vật/hình vẽ */}
           {gradeResult.cau_hoi_cho_con?.muc_2 && (
             <div
-              className="card"
+              className="card-km"
               style={{
                 padding: '12px 14px',
-                background: 'var(--c-surface-2)',
-                border: '1.5px solid var(--c-line)',
+                background: 'var(--c-surface)',
                 borderRadius: 16,
-                marginBottom: 12,
                 cursor: 'pointer',
               }}
               onClick={() => setExpandHint2(!expandHint2)}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <b style={{ fontSize: 13.5, color: 'var(--c-text)' }}>
-                  💡 Gợi ý 2 (chỉ mở khi con vẫn chưa thấy)
+                <b style={{ fontSize: 13, color: 'var(--c-text)' }}>
+                  💡 Gợi ý mức 2 (chỉ mở khi con vẫn chưa nhận ra)
                 </b>
-                <span style={{ fontSize: 14 }}>{expandHint2 ? '▲' : '▼'}</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-primary)' }}>
+                  {expandHint2 ? 'Thu gọn ▲' : 'Mở xem ▼'}
+                </span>
               </div>
               {expandHint2 && (
-                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--c-text-2)', lineHeight: 1.45, borderTop: '1px solid var(--c-line)', paddingTop: 8 }}>
+                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--c-sub)', lineHeight: 1.4, borderTop: '1px dashed var(--c-line)', paddingTop: 8 }}>
                   {gradeResult.cau_hoi_cho_con.muc_2}
                 </div>
               )}
             </div>
           )}
 
-          {/* Thẻ AI cố ý không làm */}
+          {/* Triết lý sư phạm nhẹ nhàng */}
           <div
-            className="card"
+            className="card-km card-km-note"
             style={{
-              padding: '12px 14px',
-              background: 'var(--c-surface)',
-              border: '1.5px solid var(--c-line)',
-              borderRadius: 16,
-              marginBottom: 12,
+              padding: '10px 14px',
+              borderRadius: 14,
             }}
           >
-            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              AI cố ý không làm
+            <span style={{ fontSize: 12.5, color: 'var(--c-text)', lineHeight: 1.4 }}>
+              ✨ <b>Gấu không chấm sẵn đáp án:</b> Để con tự tìm ra và tự sửa thì mới hiểu sâu và nhớ lâu!
             </span>
-            <div style={{ marginTop: 4, fontSize: 13.5, color: '#64748B' }}>
-              <span style={{ textDecoration: 'line-through', textDecorationColor: '#EF4444', textDecorationThickness: 2 }}>
-                Khoanh đỏ và ghi đáp án đúng
-              </span>
-            </div>
-            <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginTop: 2 }}>
-              Con tự tìm ra và tự sửa thì mới nhớ lâu! ✨
-            </div>
           </div>
 
-          <div style={{ fontSize: 12, color: 'var(--c-text-2)', textAlign: 'center', marginBottom: 14 }}>
-            ✨ Câu hỏi đã qua bộ chặn an toàn: không chứa đáp án trong câu.
-          </div>
-
-          <button
-            data-testid="btn-retake-fixed"
-            className="btn primary"
-            style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 800 }}
-            onClick={() => setStep('retake')}
+          {/* Nút Lớn dính đáy */}
+          <div
+            className="bottom-action-bar-km"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '10px 16px',
+              background: 'var(--c-surface, #fff)',
+              borderTop: '1px solid var(--c-line, #EADFCF)',
+              zIndex: 90,
+              boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
+            }}
           >
-            {childName} sửa xong, chụp lại 📷
-          </button>
-        </>
+            <button
+              type="button"
+              data-testid="btn-retake-fixed"
+              className="btn-km btn-km-l btn-km-primary"
+              style={{ width: '100%' }}
+              onClick={() => setStep('retake')}
+            >
+              <span>{childName} sửa xong, chụp lại</span>
+              <span className="btn-km-arrow">📷</span>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* 7. MÀN HÌNH CHỤP LẠI (RETAKE) */}

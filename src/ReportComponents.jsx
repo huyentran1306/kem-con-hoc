@@ -449,111 +449,166 @@ export function TraitStackedChart({
 /**
  * 2. MÔN HỌC & BẢN ĐỒ NHIỆT KỸ NĂNG (HEATMAP 8 TUẦN)
  */
+/**
+ * 2. DÒNG XU HƯỚNG KỸ NĂNG HAY KẸT (PROMPT 23 - PHƯƠNG ÁN 1)
+ */
 export function SubjectAndSkillHeatmap({
   stats = {},
   childName = "Con",
 }) {
   const [selectedSubject, setSelectedSubject] = useState("Toán");
-  const [activeCellTip, setActiveCellTip] = useState(null);
+  const [activeTip, setActiveTip] = useState(null);
   const [showTable, setShowTable] = useState(false);
-  // Dữ liệu mẫu 8 tuần phẩm chất cho chế độ Dùng thử (Prompt 22 - 0.2)
-  const trialWeeksSample = useMemo(() => [
-    { label: "7/9", traitCounts: { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 1, "Tỉ mỉ": 1 }, total: 7, hasReward: false },
-    { label: "14/9", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 2, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 8, hasReward: false },
-    { label: "21/9", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 4, "Tập trung": 1, "Tỉ mỉ": 2 }, total: 11, hasReward: true },
-    { label: "28/9", traitCounts: { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 10, hasReward: false },
-    { label: "5/10", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 4, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 10, hasReward: false },
-    { label: "12/10", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 12, hasReward: true },
-    { label: "19/10", traitCounts: { "Kiên nhẫn": 3, "Sáng tạo": 5, "Tập trung": 2, "Tỉ mỉ": 1 }, total: 11, hasReward: false },
-    { label: "26/10", traitCounts: { "Kiên nhẫn": 4, "Sáng tạo": 1, "Tập trung": 3, "Tỉ mỉ": 2 }, total: 10, hasReward: false },
-  ], []);
 
-  // Danh sách kỹ năng chuẩn theo môn
-  const MATH_SKILLS = [
-    { key: "doc_hieu_de", label: "Đọc hiểu đề" },
-    { key: "chon_phep_tinh", label: "Chọn phép tính" },
-    { key: "tinh_toan", label: "Tính toán" },
-    { key: "don_vi", label: "Đơn vị" },
-    { key: "viet_loi_giai", label: "Viết lời giải" },
-    { key: "kiem_tra_lai", label: "Kiểm tra lại" },
+  const WEEKS = ["7/9", "14/9", "21/9", "28/9", "5/10", "12/10", "19/10", "26/10"];
+
+  const MATH_DATA = [
+    { name: "Đọc hiểu đề", values: [40, 45, 50, 45, 55, 60, 65, 70] },
+    { name: "Chọn phép tính", values: [null, 35, 40, 35, null, null, null, null] },
+    { name: "Tính toán", values: [null, null, null, null, null, null, null, null] },
+    { name: "Đơn vị", values: [null, null, null, null, null, null, null, null] },
+    { name: "Viết lời giải", values: [35, 40, 45, 40, 35, 35, 40, 38] },
+    { name: "Kiểm tra lại", values: [50, 55, 45, 50, 45, 50, 55, 52] },
   ];
 
-  const VIETNAMESE_SKILLS = [
-    { key: "doc_hieu", label: "Đọc hiểu" },
-    { key: "tu_vung", label: "Từ vựng" },
-    { key: "chinh_ta", label: "Chính tả" },
-    { key: "dat_cau", label: "Đặt câu" },
+  const VIETNAMESE_DATA = [
+    { name: "Đọc hiểu", values: [30, 35, 40, 35, 40, 45, 40, 42] },
+    { name: "Từ vựng", values: [20, 15, 20, 25, 20, 15, 20, 18] },
+    { name: "Chính tả", values: [25, 30, 25, 20, 25, 20, 25, 22] },
+    { name: "Đặt câu", values: [null, null, null, null, null, null, null, null] },
   ];
 
-  const currentSkills =
-    selectedSubject === "Tiếng Việt" ? VIETNAMESE_SKILLS : MATH_SKILLS;
+  const rawData = selectedSubject === "Tiếng Việt" ? VIETNAMESE_DATA : MATH_DATA;
 
-  // Dữ liệu 8 tuần cho heatmap kỹ năng kẹt
-  // % buổi có bậc kẹt: từ 10% đến 70%
-  const heatmapData = useMemo(() => {
-    const weeks = ["7/9", "14/9", "21/9", "28/9", "5/10", "12/10", "19/10", "26/10"];
+  const totalRealSessions =
+    (stats?.sessionsMom || 0) +
+    (stats?.sessionsDad || 0) +
+    (Array.isArray(stats?.studyLog) ? stats.studyLog.length : 0);
 
-    // Dữ liệu mẫu 8 tuần: Tính toán & Đơn vị là null để hiển thị 'chưa có' (Prompt 22 - 0.2)
-    const ratesBySkill = {
-      doc_hieu_de: [40, 45, 50, 45, 55, 60, 65, 70], // Tăng cao nhất tuần này
-      chon_phep_tinh: [30, 35, 40, 35, 30, 25, 20, 25],
-      tinh_toan: [null, null, null, null, null, null, null, null], // Hàng không có số -> hiện ô 'chưa có'
-      don_vi: [null, null, null, null, null, null, null, null],    // Hàng không có số -> hiện ô 'chưa có'
-      viet_loi_giai: [35, 40, 45, 40, 35, 35, 40, 38],
-      kiem_tra_lai: [50, 55, 45, 50, 45, 50, 55, 52],
-      doc_hieu: [30, 35, 40, 35, 40, 45, 40, 42],
-      tu_vung: [20, 15, 20, 25, 20, 15, 20, 18],
-      chinh_ta: [25, 30, 25, 20, 25, 20, 25, 22],
-      dat_cau: [30, 35, 30, 25, 30, 35, 30, 28],
-    };
+  const isTrial = isTrialActive();
 
-    return { weeks, ratesBySkill };
-  }, []);
-
-  // Thẻ "GẤU THẤY" do code tạo từ số liệu thật
-  const insightText = useMemo(() => {
-    return `Đọc hiểu đề tuần này kẹt 70%, cao nhất trong 8 tuần, trùng tuần làm nhiều bài lặp.`;
-  }, []);
-
-  const totalRealSessions = (stats?.sessionsMom || 0) + (stats?.sessionsDad || 0) + (Array.isArray(stats?.studyLog) ? stats.studyLog.length : 0);
-  if (!isTrialActive() && totalRealSessions === 0) {
+  // Dưới 3 buổi: hiện 'Gấu cần thêm buổi', không vẽ
+  if (!isTrial && totalRealSessions < 3) {
     return (
-      <div className="card" style={{ textAlign: "center", padding: "24px 16px" }} data-testid="subject-skill-heatmap-empty">
-        <div style={{ fontSize: 36, marginBottom: 6 }}>📐 📖 ✨</div>
-        <b style={{ fontSize: 15, color: "var(--c-text)" }}>Chưa có dữ liệu môn học của {childName}</b>
-        <p className="xs" style={{ margin: "4px 0 0", color: "#64748B" }}>
-          Sau khi {childName} hoàn thành bài học, tỷ lệ kẹt theo môn và bản đồ nhiệt kỹ năng sẽ xuất hiện tại đây!
+      <div className="card-km" style={{ textAlign: "center", padding: "20px 16px" }} data-testid="subject-skill-heatmap-empty">
+        <div style={{ fontSize: 32, marginBottom: 6 }}>📊 🐻</div>
+        <b style={{ fontSize: 15, color: "var(--c-text)" }}>Gấu cần thêm {Math.max(1, 3 - totalRealSessions)} buổi học</b>
+        <p className="xs" style={{ margin: "6px 0 0", color: "var(--c-sub, #6E5D4E)" }}>
+          Sau khi {childName} hoàn thành ít nhất 3 buổi học, Gấu sẽ vẽ dòng xu hướng kỹ năng hay kẹt 8 tuần tại đây.
         </p>
       </div>
     );
   }
 
+  // Tìm tuần gần nhất có bài
+  const getLatestIdx = (arr) => {
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] != null) return i;
+    }
+    return -1;
+  };
+
+  const processedRows = rawData.map((row) => {
+    const li = getLatestIdx(row.values);
+    return { ...row, li };
+  });
+
+  const hasDataRows = processedRows
+    .filter((r) => r.li >= 0)
+    .sort((a, b) => b.values[b.li] - a.values[a.li]);
+
+  const noDataRows = processedRows.filter((r) => r.li < 0);
+
+  // Kỹ năng đầu tiên kẹt nhiều nhất
+  const topSkill = hasDataRows[0];
+  const insightText = topSkill
+    ? `${topSkill.name} tuần này kẹt ${topSkill.values[topSkill.li]}%, cao nhất trong 8 tuần, trùng tuần làm nhiều bài dạng mới.`
+    : "Hiện tại các kỹ năng đều ổn định.";
+
+  // Hàm vẽ sparkline SVG
+  const renderSparkline = (values, li) => {
+    const w = 112;
+    const h = 34;
+    const x = (i) => 4 + (i * (w - 8)) / (values.length - 1);
+    const y = (v) => h - 4 - ((Math.max(20, Math.min(80, v)) - 20) / 60) * (h - 8);
+
+    const segs = [];
+    let cur = [];
+    const gaps = [];
+    let prev = null;
+
+    values.forEach((v, i) => {
+      if (v == null) {
+        if (cur.length) segs.push(cur);
+        cur = [];
+        return;
+      }
+      if (prev != null && prev.i !== i - 1) {
+        gaps.push([prev, { i, v }]);
+      }
+      cur.push({ i, v });
+      prev = { i, v };
+    });
+    if (cur.length) segs.push(cur);
+
+    return (
+      <svg className="sp-svg" viewBox={`0 0 ${w} ${h}`} role="img" aria-label="Xu hướng 8 tuần">
+        <line className="base" x1="0" x2={w} y1={y(50)} y2={y(50)} />
+        {gaps.map(([p, q], gi) => (
+          <path key={`g-${gi}`} className="gap" d={`M${x(p.i)} ${y(p.v)} L${x(q.i)} ${y(q.v)}`} />
+        ))}
+        {segs.map((s, si) =>
+          s.length > 1 ? (
+            <path
+              key={`s-${si}`}
+              className="l"
+              d={`M${s.map((p) => `${x(p.i)} ${y(p.v)}`).join(' L')}`}
+            />
+          ) : null
+        )}
+        {values.map((v, i) =>
+          v == null ? null : (
+            <circle
+              key={`c-${i}`}
+              className={i === li ? 'last' : 'pt'}
+              cx={x(i)}
+              cy={y(v)}
+              r={i === li ? 3.5 : 2.2}
+            />
+          )
+        )}
+        {values.map((v, i) => (
+          <rect
+            key={`h-${i}`}
+            className="hit"
+            x={x(i) - 7}
+            y="0"
+            width="14"
+            height={h}
+            onMouseEnter={() =>
+              setActiveTip(`${WEEKS[i]}: ${v == null ? 'chưa có bài' : v + '% buổi kẹt'}`)
+            }
+            onMouseLeave={() => setActiveTip(null)}
+            onClick={() =>
+              setActiveTip(`${WEEKS[i]}: ${v == null ? 'chưa có bài' : v + '% buổi kẹt'}`)
+            }
+          />
+        ))}
+      </svg>
+    );
+  };
+
   return (
-    <div className="card" data-testid="subject-skill-heatmap">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 8,
-        }}
-      >
-        <span className="lbl plum">Môn học và kỹ năng</span>
-        <div style={{ display: "flex", gap: 4 }}>
+    <div className="rc-trend" data-testid="subject-skill-heatmap">
+      <div className="rc-h">
+        <b>Kỹ năng hay kẹt · {selectedSubject}</b>
+        <div style={{ display: "inline-flex", gap: 4 }}>
           {["Toán", "Tiếng Việt"].map((subj) => (
             <button
               key={subj}
               type="button"
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                padding: "3px 8px",
-                borderRadius: 99,
-                background: selectedSubject === subj ? "#2563EB" : "#F1F5F9",
-                color: selectedSubject === subj ? "#fff" : "#475569",
-                border: "none",
-                cursor: "pointer",
-              }}
+              className={`btn-km btn-km-s ${selectedSubject === subj ? 'btn-km-primary' : 'btn-km-secondary'}`}
+              style={{ minHeight: 28, padding: "0 10px", fontSize: 11.5 }}
               onClick={() => setSelectedSubject(subj)}
             >
               {subj}
@@ -561,130 +616,106 @@ export function SubjectAndSkillHeatmap({
           ))}
         </div>
       </div>
+      <div className="rc-sub">
+        Tỉ lệ buổi có bậc kẹt theo kỹ năng. Càng cao càng hay kẹt. Vạch chấm giữa là mức 50%.
+      </div>
 
-      {/* Biểu đồ thanh ngang theo môn */}
-      <div style={{ marginBottom: 12 }}>
-        <b style={{ fontSize: 13, color: "#1E293B", display: "block", marginBottom: 6 }}>
-          Tỉ lệ buổi có bậc kẹt theo môn
-        </b>
-        <div style={{ display: "grid", gap: 6 }}>
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 2 }}>
-              <span>📐 Toán (14 buổi)</span>
-              <b>42% buổi có bậc kẹt</b>
-            </div>
-            <div style={{ width: "100%", height: 8, background: "#E2E8F0", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: "42%", height: "100%", background: "#256abf", borderRadius: 99 }} />
-            </div>
-          </div>
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 2 }}>
-              <span>📖 Tiếng Việt (8 buổi)</span>
-              <b>25% buổi có bậc kẹt</b>
-            </div>
-            <div style={{ width: "100%", height: 8, background: "#E2E8F0", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: "25%", height: "100%", background: "#6da7ec", borderRadius: 99 }} />
-            </div>
-          </div>
+      {activeTip && (
+        <div
+          style={{
+            background: "var(--c-text, #1E293B)",
+            color: "#fff",
+            padding: "4px 8px",
+            borderRadius: 8,
+            fontSize: 11,
+            fontWeight: 800,
+            marginBottom: 6,
+            display: "inline-block",
+          }}
+        >
+          {activeTip}
         </div>
-      </div>
+      )}
 
-      {/* Bản đồ nhiệt kỹ năng theo tuần */}
-      <b style={{ fontSize: 13, color: "#1E293B", display: "block", marginBottom: 4 }}>
-        Bản đồ nhiệt kỹ năng hay kẹt ({selectedSubject} · 8 tuần)
-      </b>
-      <div style={{ position: "relative", overflowX: "auto" }}>
-        <table className="heatmap-table">
-          <thead>
-            <tr>
-              <th style={{ minWidth: 95 }}>Kỹ năng</th>
-              {heatmapData.weeks.map((w) => (
-                <th key={w} style={{ textAlign: "center", fontSize: 10 }}>
-                  {w}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {currentSkills.map((sk) => {
-              const rates = heatmapData.ratesBySkill[sk.key] || [20, 20, 20, 20, 20, 20, 20, 20];
-              return (
-                <tr key={sk.key}>
-                  <td style={{ fontWeight: 700, fontSize: 11.5 }}>{sk.label}</td>
-                  {rates.map((pct, idx) => {
-                    const wLabel = heatmapData.weeks[idx];
-                    if (pct == null) {
-                      return (
-                        <td
-                          key={idx}
-                          style={{ background: "#F8FAFC", color: "#94A3B8", fontSize: 10, fontStyle: "italic", textAlign: "center" }}
-                          aria-label={`${sk.label} tuần ${wLabel}: chưa có số liệu`}
-                        >
-                          chưa có
-                        </td>
-                      );
-                    }
-                    const bg = getHeatmapColor(pct);
-                    const textColor = pct >= 45 ? "#fff" : "#1E293B";
-                    return (
-                      <td
-                        key={idx}
-                        style={{ background: bg, color: textColor }}
-                        tabIndex={0}
-                        aria-label={`${sk.label} tuần ${wLabel}: kẹt ${pct}%`}
-                        onMouseEnter={() =>
-                          setActiveCellTip(`${sk.label} · Tuần ${wLabel}: kẹt ${pct}% số buổi`)
-                        }
-                        onMouseLeave={() => setActiveCellTip(null)}
-                        onFocus={() =>
-                          setActiveCellTip(`${sk.label} · Tuần ${wLabel}: kẹt ${pct}% số buổi`)
-                        }
-                        onBlur={() => setActiveCellTip(null)}
-                      >
-                        {pct >= 35 ? `${pct}%` : ""}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {hasDataRows.map((r, k) => {
+        const v = r.values[r.li];
+        const prevValues = r.values.slice(0, r.li).filter((x) => x != null);
+        const pv = prevValues.length ? prevValues[prevValues.length - 1] : null;
+        const recent = r.li === WEEKS.length - 1;
+        const delta = pv == null ? null : v - pv;
 
-        {activeCellTip && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              background: "#1E293B",
-              color: "#fff",
-              padding: "4px 8px",
-              borderRadius: 6,
-              fontSize: 11,
-              fontWeight: 700,
-              pointerEvents: "none",
-              zIndex: 10,
-            }}
-          >
-            {activeCellTip}
+        return (
+          <div key={r.name} className={`sk-row ${k === 0 && recent ? 'top' : ''}`}>
+            <div className="sk-nm">
+              {r.name}
+              {!recent && <small>{prevValues.length + 1} tuần có bài</small>}
+            </div>
+            {renderSparkline(r.values, r.li)}
+            <div className="sk-v">
+              <b>{v}%</b>
+              {!recent ? (
+                <span className="ch-delta eq">tuần {WEEKS[r.li]}</span>
+              ) : delta == null ? null : delta > 0 ? (
+                <span className="ch-delta up">▲ {delta} điểm</span>
+              ) : delta < 0 ? (
+                <span className="ch-delta down">▼ {-delta} điểm</span>
+              ) : (
+                <span className="ch-delta eq">giữ nguyên</span>
+              )}
+            </div>
           </div>
-        )}
+        );
+      })}
+
+      {noDataRows.length > 0 && (
+        <div className="sk-nod">
+          Chưa có bài luyện: <b>{noDataRows.map((r) => r.name).join(', ')}</b>
+        </div>
+      )}
+
+      <div className="sk-foot">
+        <span>Chạm vào đường để xem tuần</span>
+        <button
+          type="button"
+          className="btn-km-ghost"
+          style={{ fontSize: 11.5, fontWeight: 800, color: "var(--c-primary)", background: "none", border: "none", cursor: "pointer" }}
+          onClick={() => setShowTable(!showTable)}
+        >
+          {showTable ? "Ẩn bảng số liệu ▴" : "Xem dạng bảng ▾"}
+        </button>
       </div>
 
-      {/* Thang màu giải thích */}
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 8, fontSize: 11, color: "#64748B" }}>
-        <span>Ít kẹt</span>
-        {HEATMAP_COLORS.map((c, i) => (
-          <span key={i} style={{ width: 14, height: 10, background: c, borderRadius: 2 }} />
-        ))}
-        <span>Kẹt nhiều</span>
-      </div>
+      {showTable && (
+        <div style={{ overflowX: "auto", marginTop: 6 }}>
+          <table className="tv-table">
+            <thead>
+              <tr>
+                <th>Kỹ năng</th>
+                {WEEKS.map((w) => (
+                  <th key={w}>{w}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rawData.map((r) => (
+                <tr key={r.name}>
+                  <td>{r.name}</td>
+                  {r.values.map((v, idx) => (
+                    <td key={idx}>{v == null ? '·' : `${v}%`}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Thẻ GẤU THẤY (do code tạo) */}
-      <div className="card note" style={{ marginTop: 10 }} data-testid="card-bear-insight">
-        <div className="kk">GẤU THẤY</div>
-        <p className="xs" style={{ color: "#1E293B", fontWeight: 700, margin: 0 }}>
+      {/* Thẻ GẤU THẤY (do code tạo, đồng bộ với dòng đầu tiên) */}
+      <div className="card-km card-km-note" style={{ marginTop: 12 }} data-testid="card-bear-insight">
+        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.05em', color: 'var(--c-primary)', marginBottom: 2 }}>
+          GẤU THẤY
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--c-text)', fontWeight: 700, margin: 0 }}>
           {insightText}
         </p>
       </div>
@@ -692,9 +723,6 @@ export function SubjectAndSkillHeatmap({
   );
 }
 
-/**
- * 3. AI TÌM NGUYÊN NHÂN & LỘ TRÌNH CÂN BẰNG
- */
 export function TraitAiAnalysisCard({
   child = { name: "Con", id: "c1" },
   stats = {},
@@ -865,12 +893,42 @@ export function TraitAiAnalysisCard({
               </button>
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.6 }}>
-              <p>• Tổng số buổi học: <b>{analysisResult?.facts?.total_sessions || analysisResult?.sessions_read || totalSessions} buổi</b>{analysisResult?.from_date ? ` (từ ${analysisResult.from_date} đến ${analysisResult.to_date})` : ""}</p>
-              <p>• Phẩm chất tuần trước: Kiên nhẫn {analysisResult?.facts?.traits_w1?.["Kiên nhẫn"] ?? 0}, Sáng tạo {analysisResult?.facts?.traits_w1?.["Sáng tạo"] ?? 0}, Tập trung {analysisResult?.facts?.traits_w1?.["Tập trung"] ?? 0}, Tỉ mỉ {analysisResult?.facts?.traits_w1?.["Tỉ mỉ"] ?? 0}</p>
-              <p>• Phẩm chất tuần này: Kiên nhẫn {analysisResult?.facts?.traits_w2?.["Kiên nhẫn"] ?? 0}, Sáng tạo {analysisResult?.facts?.traits_w2?.["Sáng tạo"] ?? 0}, Tập trung {analysisResult?.facts?.traits_w2?.["Tập trung"] ?? 0}, Tỉ mỉ {analysisResult?.facts?.traits_w2?.["Tỉ mỉ"] ?? 0}</p>
-              {analysisResult?.facts?.top_problem_type && <p>• Bài lặp dạng: {analysisResult.facts.top_problem_type_w2_count}/{analysisResult.facts.total_sessions} bài là {analysisResult.facts.top_problem_type}</p>}
-              {analysisResult?.facts?.games_w1 != null && <p>• Trò chơi 5 phút / Con đố mẹ: {analysisResult.facts.games_w2 || 0} lần tuần này (tuần trước {analysisResult.facts.games_w1} lần)</p>}
-              {analysisResult?.facts?.avg_mins_w2 != null && <p>• Thời lượng học trung bình: {analysisResult.facts.avg_mins_w2} phút (tuần trước {analysisResult.facts.avg_mins_w1} phút)</p>}
+              <p style={{ marginBottom: 8 }}>
+                Tổng số buổi học: <b>{analysisResult?.facts?.total_sessions || analysisResult?.sessions_read || totalSessions} buổi</b>
+                {analysisResult?.from_date ? ` (từ ${analysisResult.from_date} đến ${analysisResult.to_date})` : ""}
+              </p>
+              
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, marginBottom: 10 }}>
+                <thead>
+                  <tr style={{ borderBottom: "1.5px solid var(--c-line, #EADFCF)", textAlign: "left" }}>
+                    <th style={{ padding: "6px 4px" }}>Chỉ số</th>
+                    <th style={{ padding: "6px 4px", textAlign: "right" }}>Tuần trước</th>
+                    <th style={{ padding: "6px 4px", textAlign: "right" }}>Tuần này</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Kiên nhẫn", analysisResult?.facts?.traits_w1?.["Kiên nhẫn"] ?? 0, analysisResult?.facts?.traits_w2?.["Kiên nhẫn"] ?? 0],
+                    ["Sáng tạo", analysisResult?.facts?.traits_w1?.["Sáng tạo"] ?? 0, analysisResult?.facts?.traits_w2?.["Sáng tạo"] ?? 0],
+                    ["Tập trung", analysisResult?.facts?.traits_w1?.["Tập trung"] ?? 0, analysisResult?.facts?.traits_w2?.["Tập trung"] ?? 0],
+                    ["Tỉ mỉ", analysisResult?.facts?.traits_w1?.["Tỉ mỉ"] ?? 0, analysisResult?.facts?.traits_w2?.["Tỉ mỉ"] ?? 0],
+                    ["Trò chơi 5p", analysisResult?.facts?.games_w1 ?? 0, analysisResult?.facts?.games_w2 ?? 0],
+                    ["Thời lượng TB", `${analysisResult?.facts?.avg_mins_w1 ?? 0}p`, `${analysisResult?.facts?.avg_mins_w2 ?? 0}p`],
+                  ].map(([label, w1, w2]) => (
+                    <tr key={label} style={{ borderBottom: "1px solid var(--c-line, #EADFCF)" }}>
+                      <td style={{ padding: "5px 4px", fontWeight: 700 }}>{label}</td>
+                      <td style={{ padding: "5px 4px", textAlign: "right", color: "var(--c-sub, #6E5D4E)" }}>{w1}</td>
+                      <td style={{ padding: "5px 4px", textAlign: "right", fontWeight: 800 }}>{w2}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {analysisResult?.facts?.top_problem_type && (
+                <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--c-sub, #6E5D4E)" }}>
+                  • Bài lặp dạng: {analysisResult.facts.top_problem_type_w2_count}/{analysisResult.facts.total_sessions} bài là {analysisResult.facts.top_problem_type}
+                </p>
+              )}
             </div>
           </div>
         </div>

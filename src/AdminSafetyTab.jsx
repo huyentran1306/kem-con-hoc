@@ -1,3 +1,54 @@
+const PRESET_SAMPLES = [
+  {
+    type: 'leak',
+    label: '🚨 Lộ số (19)',
+    desc: 'Đáp án là 19 cây bút.',
+    problem: 'Bác Ba có 10 cây bút, mua thêm 9 cây bút. Hỏi có tất cả bao nhiêu cây bút?',
+    answer: '19 cây bút',
+    text: 'Đáp án là 19 cây bút.',
+  },
+  {
+    type: 'leak',
+    label: '🚨 Lộ chữ (mười chín)',
+    desc: 'Con lấy mười chín cây bút nhé.',
+    problem: 'Bác Ba có 10 cây bút, mua thêm 9 cây bút. Hỏi có tất cả bao nhiêu cây bút?',
+    answer: '19 cây bút',
+    text: 'Con lấy mười chín cây bút nhé.',
+  },
+  {
+    type: 'leak',
+    label: '🚨 Lộ cụm từ đáp án',
+    desc: 'Kết quả đúng là 19 cây bút.',
+    problem: 'Bác Ba có 10 cây bút, mua thêm 9 cây bút. Hỏi có tất cả bao nhiêu cây bút?',
+    answer: '19 cây bút',
+    text: 'Kết quả đúng là 19 cây bút.',
+  },
+  {
+    type: 'safe',
+    label: '✅ An toàn 1 (đồ vật)',
+    desc: 'Lấy que tính đếm',
+    problem: 'Bác Ba có 10 cây bút, mua thêm 9 cây bút. Hỏi có tất cả bao nhiêu cây bút?',
+    answer: '19 cây bút',
+    text: 'Con thử lấy que tính tượng trưng cho 10 cây bút và 9 cây bút xem nào?',
+  },
+  {
+    type: 'safe',
+    label: '✅ An toàn 2 (phép tính)',
+    desc: 'Hỏi cộng hay trừ',
+    problem: 'Bác Ba có 10 cây bút, mua thêm 9 cây bút. Hỏi có tất cả bao nhiêu cây bút?',
+    answer: '19 cây bút',
+    text: 'Mua thêm thì mình làm phép tính cộng hay phép tính trừ con nhỉ?',
+  },
+  {
+    type: 'safe',
+    label: '✅ An toàn 3 (đọc đề)',
+    desc: 'Hỏi đề yêu cầu gì',
+    problem: 'Bác Ba có 10 cây bút, mua thêm 9 cây bút. Hỏi có tất cả bao nhiêu cây bút?',
+    answer: '19 cây bút',
+    text: 'Con đọc lại câu hỏi xem đề bài hỏi tất cả bao nhiêu cây bút nào?',
+  },
+]
+
 /**
  * src/AdminSafetyTab.jsx — trang "An toàn AI & phản hồi" của admin (Đợt 15 · Chặng 3)
  * 1. Chỉ số an toàn toàn hệ thống (7 ngày) từ /api/v1/admin/safety-summary; chưa có dữ liệu thì KpiCard hiện "·"
@@ -192,6 +243,39 @@ export function AdminSafetyTab({ token }) {
             <div>
               <h3 className="sys-card-title">Thử bộ chặn lộ đáp án</h3>
               <p className="sys-card-desc">Nhập câu AI có thể sinh ra và đáp án cần giấu để xem bộ chặn có bắt được không. Không gọi AI.</p>
+            </div>
+
+            {/* 6 Mẫu thử có sẵn (3 câu lộ, 3 câu an toàn - Prompt 23 Chặng 4.1) */}
+            <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 12, border: '1px solid #E2E8F0' }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: '#475569', display: 'block', marginBottom: 8 }}>
+                📋 Chọn mẫu thử có sẵn (3 câu lộ đáp án, 3 câu an toàn):
+              </span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {PRESET_SAMPLES.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setTestProblem(s.problem)
+                      setTestAnswer(s.answer)
+                      setTestText(s.text)
+                    }}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 99,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      border: s.type === 'leak' ? '1px solid #FECACA' : '1px solid #BBF7D0',
+                      background: s.type === 'leak' ? '#FEF2F2' : '#F0FDF4',
+                      color: s.type === 'leak' ? '#991B1B' : '#166534',
+                      cursor: 'pointer',
+                    }}
+                    title={s.desc}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="sys-grid-2 sys-even">
               <Field label="Prompt">

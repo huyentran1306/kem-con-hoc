@@ -95,6 +95,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 2. THEME CANDY · KẸO BÔNG */
 [data-theme="candy"] {
+  --c-ok-bg: #4FC4A9;
+  --c-ok-text: #1F3D36;
   --c-bg: #FFF4F8;
   --c-surface: #FFFFFF;
   --c-surface-2: #EDE4FF;
@@ -141,6 +143,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 3. THEME BEAR · BẠN GẤU */
 [data-theme="bear"] {
+  --c-ok-bg: #7DBB4C;
+  --c-ok-text: #22360F;
   --c-bg: #FFF8EC;
   --c-surface: #FFFFFF;
   --c-surface-2: #FFEBD1;
@@ -180,13 +184,15 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   --border-w: 2px;
   --shadow-card: 0 6px 0 #F0DDC2;
   --shadow-btn: 0 6px 0 #C47F0E;
-  --font-head: 'Mitr', sans-serif;
+  --font-head: 'Be Vietnam Pro', sans-serif;
   --font-body: 'Nunito', sans-serif;
-  --font-hand: 'Mitr', sans-serif;
+  --font-hand: 'Be Vietnam Pro', sans-serif;
 }
 
 /* 4. THEME BENTO · BENTO MỀM */
 [data-theme="bento"] {
+  --c-ok-bg: #1FA06A;
+  --c-ok-text: #FFFFFF;
   --c-bg: #F7F7FA;
   --c-surface: #FFFFFF;
   --c-surface-2: #F1EEFF;
@@ -233,6 +239,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 5. THEME STICKER · STICKER STUDIO */
 [data-theme="sticker"] {
+  --c-ok-bg: #2DBE98;
+  --c-ok-text: #1B1B2F;
   --c-bg: #FFF7E6;
   --c-surface: #FFFFFF;
   --c-surface-2: #FFF1C9;
@@ -279,6 +287,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 6. THEME NOTEBOOK · SỔ TAY BUỔI TỐI */
 [data-theme="notebook"] {
+  --c-ok-bg: #6A8A57;
+  --c-ok-text: #FFFFFF;
   --c-bg: #F6F1E7;
   --c-surface: #FFFFFF;
   --c-surface-2: #EFE8DA;
@@ -325,6 +335,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 7. THEME GARDEN · KHU VƯỜN ĐÊM (DARK) */
 [data-theme="garden"] {
+  --c-ok-bg: #3FD6A0;
+  --c-ok-text: #0F2A24;
   --c-bg: #0F2A24;
   --c-surface: #163B33;
   --c-surface-2: #1C4A3F;
@@ -371,6 +383,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 8. THEME AURORA · CỰC QUANG (DARK & GLASS) */
 [data-theme="aurora"] {
+  --c-ok-bg: #22C3A6;
+  --c-ok-text: #0B1026;
   --c-bg: #0B1026;
   --c-surface: rgba(255, 255, 255, .08);
   --c-surface-2: rgba(167, 139, 250, .2);
@@ -417,6 +431,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 9. THEME CHALK · BẢNG PHẤN (DARK) */
 [data-theme="chalk"] {
+  --c-ok-bg: #93D985;
+  --c-ok-text: #22351F;
   --c-bg: #2F4A41;
   --c-surface: rgba(246, 241, 230, .07);
   --c-surface-2: rgba(154, 208, 245, .14);
@@ -1176,6 +1192,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
    ============================================================ */
 /* 9. THEME NOEL · ĐÊM TUYẾT (THEO MÙA) */
 [data-theme="noel"] {
+  --c-ok-bg: #1B7343;
+  --c-ok-text: #FFFFFF;
   --c-bg: #F3F8FC;
   --c-surface: #FFFFFF;
   --c-surface-2: #E7F1F8;
@@ -1226,6 +1244,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 10. THEME TET · XUÂN SUM VẦY (THEO MÙA) */
 [data-theme="tet"] {
+  --c-ok-bg: #1E7F41;
+  --c-ok-text: #FFFFFF;
   --c-bg: #FFF5E6;
   --c-surface: #FFFFFF;
   --c-surface-2: #FFE9C7;
@@ -1276,6 +1296,8 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 
 /* 11. THEME THIEUNHI · CẦU VỒNG 1/6 (THEO MÙA) */
 [data-theme="thieunhi"] {
+  --c-ok-bg: #169A80;
+  --c-ok-text: #FFFFFF;
   --c-bg: #F2F8FF;
   --c-surface: #FFFFFF;
   --c-surface-2: #E6F0FF;
