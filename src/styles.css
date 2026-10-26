@@ -475,8 +475,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-wrap:break-word}
 img{max-width:100%;height:auto}
 
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+button:focus-visible, [tabindex]:not(input):not(textarea):not(select):focus-visible{
   outline:2px solid var(--plum);outline-offset:2px;
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border-color: var(--c-accent, var(--plum));
+  box-shadow: 0 0 0 3px var(--c-surface-2, rgba(124, 58, 237, 0.2));
 }
 
 /* Input ≥16px để iOS Safari không tự zoom khi focus */

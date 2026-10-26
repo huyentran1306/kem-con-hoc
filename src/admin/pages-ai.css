@@ -92,7 +92,7 @@
 .aip-setting .big { font-family: var(--s-font-head); font-size: 20px; color: var(--s-text); }
 .aip-setting p { margin: 6px 0 0; font-size: 12px; color: var(--s-text-2); line-height: 1.4; }
 .aip-kw-add { display: inline-flex; align-items: center; gap: 4px; border: 1.5px dashed #E8C98F; border-radius: 999px; padding: 0 4px 0 10px; background: #FFFDF8; }
-.aip-kw-add input { border: none; outline: none; background: transparent; font: 700 12px var(--s-font-body); color: var(--s-text); width: 150px; padding: 5px 0; }
+.aip-kw-add input, .aip-kw-add input:focus, .aip-kw-add input:focus-visible { border: none !important; outline: none !important; outline-offset: 0 !important; box-shadow: none !important; background: transparent; font: 700 12px var(--s-font-body); color: var(--s-text); width: 150px; padding: 5px 0; }
 .aip-kw-add input::placeholder { color: var(--s-text-2); }
 .aip-kw-add button { border: none; background: var(--s-accent); color: var(--s-on-accent); border-radius: 999px; font-weight: 900; padding: 3px 9px; cursor: pointer; font-size: 12px; }
 .aip-scope-head, .aip-scope-row { display: grid; gap: 14px; grid-template-columns: minmax(170px, 1.1fr) minmax(170px, auto) minmax(220px, 1.6fr) minmax(200px, 1.2fr); align-items: start; }
@@ -112,7 +112,7 @@
 .aip-msg:focus-within { border-color: var(--s-accent); }
 .aip-msg pre, .aip-msg textarea { margin: 0; padding: 9px 11px; font: 13px/1.5 var(--s-font-body); white-space: pre-wrap; word-break: break-word; }
 .aip-msg pre { position: absolute; inset: 0; pointer-events: none; color: var(--s-text); overflow: hidden; }
-.aip-msg textarea { position: relative; display: block; width: 100%; min-height: 64px; border: none; outline: none; resize: vertical; background: transparent; color: transparent; caret-color: var(--s-text); }
+.aip-msg textarea, .aip-msg textarea:focus, .aip-msg textarea:focus-visible { position: relative; display: block; width: 100%; min-height: 64px; border: none !important; outline: none !important; outline-offset: 0 !important; box-shadow: none !important; resize: vertical; background: transparent; color: transparent; caret-color: var(--s-text); }
 .aip-msg textarea::selection { background: rgba(246, 166, 35, .35); }
 .aip-bubble-wrap { display: flex; gap: 8px; align-items: flex-end; }
 .aip-bubble-ava { flex: 0 0 30px; height: 30px; border-radius: 50%; background: var(--s-accent-tint); border: 1.5px solid #F6C56A; display: flex; align-items: center; justify-content: center; font-size: 16px; }

@@ -446,10 +446,14 @@
   box-shadow: 0 0 0 3px rgba(246, 166, 35, 0.2);
 }
 
-.stitch-search-input {
-  border: none;
-  background: transparent;
-  outline: none;
+.stitch-search-input,
+.stitch-search-input:focus,
+.stitch-search-input:focus-visible {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
   color: var(--adm-text);
   font-size: 13.5px;
   width: 100%;
@@ -1338,12 +1342,16 @@
   border-color: var(--s-accent, #F6A623);
   box-shadow: 0 0 0 3px rgba(246, 166, 35, 0.18);
 }
-.kadm-search input {
+.kadm-search input,
+.kadm-search input:focus,
+.kadm-search input:focus-visible {
   flex: 1;
   min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
+  border: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
   color: var(--s-text, #4B3621);
   font: inherit;
   font-weight: 600;

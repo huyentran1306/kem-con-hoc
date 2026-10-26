@@ -84,11 +84,35 @@
 /* ============================================================
    ĐỢT 15 · CHẶNG 1 — MẢNH DÙNG CHUNG (sk-*)
    ============================================================ */
-.staff-root :focus-visible,
-.sk-dialog :focus-visible,
-.sk-drawer :focus-visible {
+.staff-root button:focus-visible,
+.staff-root a:focus-visible,
+.staff-root [tabindex]:not(input):not(textarea):not(select):focus-visible,
+.sk-dialog button:focus-visible,
+.sk-dialog a:focus-visible,
+.sk-drawer button:focus-visible,
+.sk-drawer a:focus-visible {
   outline: 3px solid var(--s-accent);
   outline-offset: 2px;
+}
+
+/* Triệt tiêu hoàn toàn khung chữ nhật thô cứng mặc định khi rê chuột / focus vào mọi ô nhập */
+.staff-root input,
+.staff-root textarea,
+.staff-root select,
+.staff-root input:focus,
+.staff-root textarea:focus,
+.staff-root select:focus,
+.staff-root input:focus-visible,
+.staff-root textarea:focus-visible,
+.staff-root select:focus-visible,
+.sk-dialog input,
+.sk-dialog textarea,
+.sk-dialog select,
+.sk-drawer input,
+.sk-drawer textarea,
+.sk-drawer select {
+  outline: none !important;
+  outline-offset: 0 !important;
 }
 
 /* Card dùng chung */
@@ -141,22 +165,33 @@ button.sk-card { width: 100%; font: inherit; }
 /* Ô nhập */
 .sk-input-wrap { display: flex; align-items: center; gap: 6px; border: 2px solid var(--s-line); border-radius: var(--s-radius-input); background: var(--s-surface); padding: 0 12px; transition: border-color .15s, box-shadow .15s; }
 .sk-input-wrap:focus-within { border-color: var(--s-accent); box-shadow: 0 0 0 3px rgba(246, 166, 35, 0.18); }
-.sk-input-wrap .sk-input { border: none; padding: 9px 0; background: transparent; outline: none !important; }
+.sk-input-wrap .sk-input { border: none !important; padding: 9px 0; background: transparent !important; outline: none !important; box-shadow: none !important; }
 .sk-input-prefix { color: var(--s-text-2); }
 .sk-input {
   width: 100%; font-family: var(--s-font-body); font-size: 13.5px; color: var(--s-text);
   border: 2px solid var(--s-line); border-radius: var(--s-radius-input); background: var(--s-surface);
   padding: 9px 12px; outline: none !important; transition: border-color .15s, box-shadow .15s;
 }
+.staff-root .sk-input-wrap input,
 .staff-root .sk-input-wrap input:focus,
 .staff-root .sk-input-wrap input:focus-visible,
-.staff-root input.sk-input:focus,
-.staff-root input.sk-input:focus-visible,
+.sk-input-wrap input,
 .sk-input-wrap input:focus,
-.sk-input-wrap input:focus-visible,
-.sk-input:focus,
-.sk-input:focus-visible {
+.sk-input-wrap input:focus-visible {
+  border: none !important;
   outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.staff-root input.sk-input:not(.sk-input-wrap input):focus,
+.staff-root input.sk-input:not(.sk-input-wrap input):focus-visible,
+.sk-input:not(.sk-input-wrap input):focus,
+.sk-input:not(.sk-input-wrap input):focus-visible,
+.sk-textarea:focus,
+.sk-textarea:focus-visible {
+  outline: none !important;
+  border-color: var(--s-accent) !important;
+  box-shadow: 0 0 0 3px rgba(246, 166, 35, 0.18) !important;
 }
 .sk-input::placeholder { color: #A08467; }
 .sk-textarea { resize: vertical; line-height: 1.5; }
