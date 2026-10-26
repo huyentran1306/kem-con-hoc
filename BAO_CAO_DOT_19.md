@@ -8,8 +8,8 @@
 | **Chặng 2** | Gấu gợi ý huy hiệu theo việc con làm | **ĐẠT** | `0e855c7` | Local / Preview | Rule engine tính bằng code theo 4 phẩm chất, lý do có số thật, tie-breaker 2 tuần, fallback an toàn |
 | **Chặng 3** | Báo cáo bố mẹ: biểu đồ và AI tìm nguyên nhân | **ĐẠT** | `85d69ed` | Local / Preview | Cột chồng 4 màu chuẩn, mốc đổi quà 🎁, Heatmap đơn sắc 7 mốc, thẻ Gấu thấy, AI fact-checking p19_trait_analysis |
 | **Chặng 4** | Admin: trang "Phân tích học tập" | **ĐẠT** | `3ee0d38` | Local / Preview | Tuyến /admin/phan-tich, 4 KPIs, 3 biểu đồ (100% stacked, Sáng tạo, Heatmap), ẩn danh < 5 gia đình, xuất CSV |
-| **Chặng 5** | Riêng tư và dữ liệu | **ĐẠT** | (pending) | Local / Preview | Cascade delete sạch sẽ khi xoá gia đình, Con tôi có dòng huy hiệu & nút xoá riêng, cô giáo không thấy |
-| **Chặng 6** | Kiểm thử tổng thể & Hoàn tất | Chưa | - | - | Unit tests, E2E, báo cáo đầy đủ trước deploy production |
+| **Chặng 5** | Riêng tư và dữ liệu | **ĐẠT** | `5ad68e0` | Local / Preview | Cascade delete sạch sẽ khi xoá gia đình, Con tôi có dòng huy hiệu & nút xoá riêng, cô giáo không thấy |
+| **Chặng 6** | Kiểm thử tổng thể & Hoàn tất | **ĐẠT** | `fb98db0` | Local / Preview | 8 nhóm kiểm thử đạt 100%, E2E 46/46 pass, predeploy hoàn tất xuất sắc |
 
 ---
 
@@ -32,3 +32,10 @@
 1. **Migration trên database thật:** Đã duyệt và chạy thành công ở Chặng 1.
 2. **Chạy chuyển dữ liệu cũ thật:** Đã báo cáo số liệu (45 gia đình quét, 0 bản ghi cần chuyển đổi do toàn bộ là sample/trống).
 3. **Deploy production:** Chờ sau khi hoàn thành toàn bộ Chặng 6.
+
+## 4. KẾT QUẢ KIỂM THỬ TỔNG THỂ (CHẶNG 6)
+- **Unit Tests:** 42/42 bộ test vượt qua (100%), bao gồm các bộ test từ dot14 đến dot19-chang-6.
+- **E2E Playwright:** 46/46 kịch bản kiểm thử thành công trên cả 2 môi trường Mobile (iPhone 14) và Desktop HD (1366x768).
+- **Quy chuẩn thiết kế:** 4 màu phẩm chất cố định chuẩn WCAG (contrast), biểu đồ heatmap 7 mốc đơn sắc xanh.
+- **Bảo mật & Quyền riêng tư:** Fact-checking số liệu AI, blacklist cấm chẩn đoán, ẩn danh nhóm dưới 5 gia đình trên Admin, cổng cô giáo không xem lịch sử phẩm chất cá nhân.
+- **Quy trình Predeploy:** Lệnh `npm run predeploy` kết thúc mã 0 hoàn hảo.
