@@ -94,7 +94,7 @@ ul{padding-left:18px;margin:0}
 @keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 
 /* ---------- Typography ---------- */
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--coral)}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--c-accent-ink, var(--coral))}
 .title{font-size:23px;font-weight:800;color:var(--c-accent-ink, var(--plum-deep));line-height:1.3;letter-spacing:-.01em}
 .sub{font-size:13px;color:var(--c-text-2, var(--muted));line-height:1.5}
 .lbl{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
@@ -1209,7 +1209,7 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
 .facts-grid span {
   font-size: 11.5px;
   font-weight: 800;
-  color: var(--c-text-2);
+  color: var(--c-text);
   text-transform: uppercase;
 }
 .facts-grid b {
@@ -1221,7 +1221,8 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
 .facts-grid em {
   font-style: normal;
   font-size: 11.5px;
-  color: var(--c-text-2);
+  color: var(--c-text);
+  opacity: 0.88;
 }
 .st-card {
   display: flex;

@@ -65,7 +65,7 @@ export function Onboarding() {
 
       <div className="card">
         <span className="lbl plum">Bạn là</span>
-        <div className="opt-grid">
+        <div className="opt-grid" style={{ marginBottom: 16 }}>
           {PARENT_TYPES.map((x) => (
             <button key={x} className={`opt ${S.parent === x ? 'on' : ''}`} onClick={() => patch({ parent: x })}>
               {x}
@@ -2468,7 +2468,7 @@ export function Scaffold() {
               </div>
             )}
             <div style={{ fontSize: 10.5, letterSpacing: '0.04em', color: 'var(--c-text-2)', fontWeight: 800 }}>
-              <b style={{ color: 'var(--c-accent-2, var(--c-accent))', fontWeight: 900 }}>GỢI Ý NHỎ {stuck >= 2 ? '2/2' : '1/2'}</b> · {stuck >= 2 ? 'Vẽ ra giấy' : 'Dùng đồ vật thật'}
+              <b style={{ color: 'var(--c-accent-ink, var(--c-text))', fontWeight: 900 }}>GỢI Ý NHỎ {stuck >= 2 ? '2/2' : '1/2'}</b> · {stuck >= 2 ? 'Vẽ ra giấy' : 'Dùng đồ vật thật'}
             </div>
             <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', margin: '2px 0 0', lineHeight: 1.35 }}>
               {stuck >= 2 ? (curStep.hint2 || curStep.hint) : curStep.hint}
@@ -4168,8 +4168,8 @@ function SnapToyCameraSection() {
         {!shot && !camOn && !camErr && (
           <div style={{ textAlign: 'center', padding: '24px 16px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} data-testid="snap-toy-static-invite">
             <span style={{ fontSize: 52, marginBottom: 8 }}>🧸 📸 🧴</span>
-            <b style={{ fontSize: 16, color: 'var(--c-text)', marginBottom: 6 }}>Chụp đồ vật quanh nhà</b>
-            <p className="xs" style={{ color: 'var(--c-text-2)', maxWidth: 280, margin: 0, lineHeight: 1.45 }}>
+            <b style={{ fontSize: 16, color: '#FFF4E6', marginBottom: 6 }}>Chụp đồ vật quanh nhà</b>
+            <p className="xs" style={{ color: 'rgba(255,244,230,.82)', maxWidth: 280, margin: 0, lineHeight: 1.45 }}>
               Chụp cây lược, bút, chai lọ hoặc đồ chơi để AI gợi ý trò chơi học toán cùng con!
             </p>
           </div>
@@ -4233,7 +4233,7 @@ function SnapToyCameraSection() {
             style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
             data-testid="btn-start-camera"
           >
-            📷 Bật máy ảnh chụp
+            📷 Bật máy ảnh
           </button>
           <button
             type="button"
@@ -4398,7 +4398,7 @@ function SnapToyCameraSection() {
           <input
             className="field"
             style={{ flex: 1 }}
-            placeholder="Gõ tên: cây bút, thước, que kem..."
+            placeholder="Gõ tên đồ vật"
             value={customInput}
             onChange={(e) => setCustomInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && searchCustom()}
@@ -4414,7 +4414,7 @@ function SnapToyCameraSection() {
       </div>
 
       <p className="lbl mut">Hoặc chọn nhanh từ danh sách</p>
-      <div className="opt-grid">
+      <div className="opt-grid" style={{ marginBottom: 16 }}>
         {TOYS.map((t) => (
           <button key={t.n} className="opt" onClick={() => pick(t.n)}>
             <div style={{ fontSize: 26 }}>{t.e}</div>
@@ -5889,24 +5889,24 @@ function WeeklyAiCards({ stats, childName }) {
         </div>
         <div className="facts-grid two-cols">
           <div>
-            <span>Phép tính sai đã bắt</span>
+            <span style={{ color: 'var(--c-text)' }}>Phép tính sai đã bắt</span>
             <b>{isTrialActive() ? 3 : (safety?.dot18_safety?.phep_tinh_sai_da_bat ?? 0)}</b>
-            <em>trước khi tới mẹ</em>
+            <em style={{ color: 'var(--c-text)' }}>trước khi tới mẹ</em>
           </div>
           <div>
-            <span>Bậc bộ chặn sửa lại</span>
+            <span style={{ color: 'var(--c-text)' }}>Bậc bộ chặn sửa lại</span>
             <b>{isTrialActive() ? 2 : (safety?.dot18_safety?.bac_bo_chan_sua_lai ?? blocked)}</b>
-            <em>sửa đúng bậc học</em>
+            <em style={{ color: 'var(--c-text)' }}>sửa đúng bậc học</em>
           </div>
           <div>
-            <span>Câu nhỏ hơn đã tạo</span>
+            <span style={{ color: 'var(--c-text)' }}>Câu nhỏ hơn đã tạo</span>
             <b>{isTrialActive() ? 5 : (safety?.dot18_safety?.cau_nho_hon_da_tao ?? 0)}</b>
-            <em>chia nhỏ khi con kẹt</em>
+            <em style={{ color: 'var(--c-text)' }}>chia nhỏ khi con kẹt</em>
           </div>
           <div>
-            <span>Lần Gấu nghe con</span>
+            <span style={{ color: 'var(--c-text)' }}>Lần Gấu nghe con</span>
             <b>{isTrialActive() ? 8 : (safety?.dot18_safety?.so_lan_gau_nghe_con ?? 0)}</b>
-            <em>lắng nghe con trả lời</em>
+            <em style={{ color: 'var(--c-text)' }}>lắng nghe con trả lời</em>
           </div>
         </div>
         <div style={{ background: 'var(--c-surface)', borderRadius: 10, padding: '8px 10px', marginTop: 8, fontSize: 13, color: 'var(--c-text)' }}>
@@ -6345,7 +6345,7 @@ export function Report() {
           {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {parentLower}!
         </p>
 
-        <div className="switch-row" style={{ borderTop: '1px dashed var(--c-line)', paddingTop: 8 }}>
+        <div className="switch-row" style={{ borderTop: '1px dashed var(--c-line)', padding: '12px 14px 8px 14px' }}>
           <span id="rpt-calm-zalo-lbl" style={{ fontSize: 14, color: 'var(--c-text)' }}>Gửi kèm báo cáo Zalo</span>
           <Switch
             on={Boolean(S?.shareCalmWithZalo)}
@@ -6507,7 +6507,7 @@ function BearMemorySection({ child, S, stats, patch, toast }) {
     label: `${w.n} (vướng ${w.v || 1}/${w.t || 1} lần)`,
     icon: '🧩',
     tag: 'Dạng hay kẹt',
-    color: '#DC2626',
+    color: 'var(--c-danger-ink, #DC2626)',
   }))
 
   // 2. Dạng đã vững
@@ -6517,14 +6517,14 @@ function BearMemorySection({ child, S, stats, patch, toast }) {
     label: `${s.n} (làm chắc chắn ${s.v || 1}/${s.t || 1})`,
     icon: '✨',
     tag: 'Dạng đã vững',
-    color: '#16A34A',
+    color: 'var(--c-good-fg, #15803D)',
   }))
 
   // 3. Cách giảng con hợp
   const defaultStyles = [
-    { id: 'style_1', type: 'style', label: 'Dùng đồ vật thật trong nhà khi con kẹt', icon: '🧸', tag: 'Cách giảng hợp', color: '#7C3AED' },
-    { id: 'style_2', type: 'style', label: 'Vẽ sơ đồ đoạn thẳng cho toán lời văn', icon: '🎨', tag: 'Cách giảng hợp', color: '#7C3AED' },
-    { id: 'style_3', type: 'style', label: 'Giữ buổi học dưới 15 phút, giải lao 5 phút', icon: '⏰', tag: 'Cách giảng hợp', color: '#7C3AED' },
+    { id: 'style_1', type: 'style', label: 'Dùng đồ vật thật trong nhà khi con kẹt', icon: '🧸', tag: 'Cách giảng hợp', color: 'var(--c-accent-ink, #7C3AED)' },
+    { id: 'style_2', type: 'style', label: 'Vẽ sơ đồ đoạn thẳng cho toán lời văn', icon: '🎨', tag: 'Cách giảng hợp', color: 'var(--c-accent-ink, #7C3AED)' },
+    { id: 'style_3', type: 'style', label: 'Giữ buổi học dưới 15 phút, giải lao 5 phút', icon: '⏰', tag: 'Cách giảng hợp', color: 'var(--c-accent-ink, #7C3AED)' },
   ]
   const customStyles = child.customTeachingStyles || defaultStyles
 
@@ -6607,7 +6607,7 @@ function BearMemorySection({ child, S, stats, patch, toast }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
                 <span>{item.icon}</span>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: item.color, display: 'block' }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: item.type === 'style' ? 'var(--c-accent-ink)' : (item.color || 'var(--c-text)'), display: 'block' }}>
                     {item.tag}
                   </span>
                   <span style={{ color: 'var(--c-text)', fontWeight: 600 }}>{item.label}</span>
@@ -6859,8 +6859,8 @@ export function Profile() {
                   style={{
                     padding: '8px 4px',
                     borderRadius: 12,
-                    background: isDad ? 'var(--c-primary-light, #EFF6FF)' : 'var(--c-surface-2, #FDF2F8)',
-                    border: isDad ? '1.5px solid var(--c-primary, #3B82F6)' : '1.5px solid #F472B6',
+                    background: 'var(--c-surface-2)',
+                    border: isDad ? '1.5px solid var(--c-accent)' : '1.5px solid var(--c-line)',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -6869,8 +6869,8 @@ export function Profile() {
                   }}
                   title={`Ca ${d.day}: ${d.owner} (Chạm để đổi)`}
                 >
-                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)' }}>{d.day}</span>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: isDad ? '#1D4ED8' : '#BE185D' }}>{d.owner}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text-2)' }}>{d.day}</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: isDad ? 'var(--c-accent-ink, var(--c-accent))' : 'var(--c-text)' }}>{d.owner}</span>
                 </button>
               )
             })}
@@ -7281,6 +7281,7 @@ export function CheckWork() {
           <div
             className="card"
             style={{
+              marginTop: 12,
               padding: 16,
               background: 'var(--c-surface, #fff)',
               border: '2px solid var(--c-line, #E2E8F0)',

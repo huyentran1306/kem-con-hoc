@@ -79,7 +79,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
 
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
             <div style={{ fontSize: 56, lineHeight: 1.2 }}>{activeTheme.icon}</div>
-            <p className="eyebrow" style={{ marginTop: 8 }}>{activeTheme.name} · Bạn đồng hành dịu dàng</p>
+            <p className="eyebrow" style={{ marginTop: 8, color: "var(--c-accent-ink, var(--c-text))" }}>{activeTheme.name} · Bạn đồng hành dịu dàng</p>
             <p className="title" style={{ fontSize: 30 }}>Kèm Con Học</p>
             <p className="sub" style={{ maxWidth: 300, margin: '8px auto 0' }}>
               AI không giải bài cho con · chỉ cho bố mẹ cách giảng.

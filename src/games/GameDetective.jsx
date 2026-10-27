@@ -221,7 +221,7 @@ export default function GameDetective({ child, onBack, onOpenProfile, isTrial = 
           padding: '12px 14px',
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-accent)', letterSpacing: '0.05em', marginBottom: 2 }}>
+        <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-accent-ink, var(--c-text))', letterSpacing: '0.05em', marginBottom: 2 }}>
           🕵️ NHIỆM VỤ CỦA THÁM TỬ {childName.toUpperCase()}
         </div>
         <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.45 }}>
@@ -264,7 +264,7 @@ export default function GameDetective({ child, onBack, onOpenProfile, isTrial = 
               ) : isCurrent ? (
                 <>
                   <span style={{ fontSize: 20 }}>📷</span>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-accent)', marginTop: 2 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-accent-ink, var(--c-text))', marginTop: 2 }}>
                     Chụp nhóm {idx + 1}
                   </span>
                 </>

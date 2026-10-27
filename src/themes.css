@@ -1406,3 +1406,17 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 [data-theme="noel"] h1, [data-theme="noel"] h2, [data-theme="noel"] .title { font-weight: 900; }
 [data-theme="tet"] h1, [data-theme="tet"] h2, [data-theme="tet"] .title { font-weight: 800; }
 [data-theme="thieunhi"] h1, [data-theme="thieunhi"] h2, [data-theme="thieunhi"] .title { font-weight: 800; }
+
+/* Prompt 23O - B3: Sticker Studio card text contrast */
+[data-theme="sticker"] .card.plum,
+[data-theme="sticker"] .big-card.plum,
+[data-theme="sticker"] .card.sky,
+[data-theme="sticker"] .big-card.sky {
+  color: #FFFFFF !important;
+}
+[data-theme="sticker"] .card.plum *,
+[data-theme="sticker"] .big-card.plum *,
+[data-theme="sticker"] .card.sky *,
+[data-theme="sticker"] .big-card.sky * {
+  color: #FFFFFF !important;
+}

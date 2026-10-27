@@ -337,14 +337,14 @@ export function FamilyClassSheet({
       {mode === 'classes' && (
         <div style={styles.bodyScroll}>
           {loading ? (
-            <p style={{ color: '#8A6A4A', textAlign: 'center', padding: 20 }}>Đang tải danh sách lớp...</p>
+            <p style={{ color: 'var(--c-text-2)', textAlign: 'center', padding: 20 }}>Đang tải danh sách lớp...</p>
           ) : classes.length === 0 ? (
             <div style={styles.emptyCard}>
               <div style={{ fontSize: 44, marginBottom: 8 }}>🎒</div>
-              <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '0 0 6px 0' }}>
+              <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
                 Bé chưa kết nối vào lớp nào
               </h4>
-              <p style={{ fontSize: 13, color: '#8A6A4A', margin: '0 0 16px 0' }}>
+              <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 16px 0' }}>
                 Cô giáo sẽ gửi mã lớp hoặc link vào nhóm Zalo. Mẹ chỉ cần nhập mã hoặc bấm vào link là xong nhé!
               </p>
               <button style={styles.btnPrimary} onClick={() => setMode('join')}>
@@ -361,7 +361,7 @@ export function FamilyClassSheet({
                     {/* Kid Header */}
                     <div style={styles.kidGroupHeader}>
                       <span style={{ fontSize: 22 }}>{kid.emoji || '🧒'}</span>
-                      <strong style={{ fontSize: 15, color: '#4B3621' }}>{kid.name}</strong>
+                      <strong style={{ fontSize: 15, color: 'var(--c-text)' }}>{kid.name}</strong>
                       <span style={styles.kidGradeTag}>{kid.grade || 'Tiểu học'}</span>
                     </div>
 
@@ -379,11 +379,11 @@ export function FamilyClassSheet({
                             <div key={cls.class_student_id} style={styles.classCard}>
                               <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                  <strong style={{ fontSize: 15, color: '#4B3621' }}>
+                                  <strong style={{ fontSize: 15, color: 'var(--c-text)' }}>
                                     {formatClassName(cls.class_name)} · {formatTeacherName(cls.teacher_name, { lower: true })}
                                   </strong>
                                 </div>
-                                <div style={{ fontSize: 12, color: '#8A6A4A' }}>
+                                <div style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
                                   {cls.school_name || 'Trường tiểu học'} · Khối {cls.grade}
                                   {cls.roster_name && ` · Tên: ${cls.roster_name}`}
                                 </div>
@@ -465,19 +465,19 @@ export function FamilyClassSheet({
           {joinSuccess ? (
             <div style={styles.successBox}>
               <div style={{ fontSize: 52, marginBottom: 8 }}>📨</div>
-              <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: '#4B3621', margin: '0 0 6px 0' }}>
+              <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
                 {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi ${formatTeacherName(joinSuccess.teacherName, { lower: true })} duyệt`}
               </h3>
-              <p style={{ fontSize: 13, color: '#8A6A4A', maxWidth: 320, margin: '0 auto 16px auto' }}>
+              <p style={{ fontSize: 13, color: 'var(--c-text-2)', maxWidth: 320, margin: '0 auto 16px auto' }}>
                 Cô duyệt xong, bài cô giao sẽ hiện ở màn chính của <strong>{joinSuccess.childName}</strong>.
               </p>
 
               {/* Sinh đôi / con khác trong nhà prompt */}
               <div style={styles.siblingPromptCard}>
-                <div style={{ fontWeight: 800, color: '#4B3621', fontSize: 13, marginBottom: 4 }}>
+                <div style={{ fontWeight: 800, color: 'var(--c-text)', fontSize: 13, marginBottom: 4 }}>
                   Nhà còn con khác học {formatClassName(joinSuccess.className) || 'lớp này'} không?
                 </div>
-                <div style={{ fontSize: 12, color: '#8A6A4A', marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginBottom: 12 }}>
                   Ví dụ anh chị em sinh đôi hoặc học chung lớp
                 </div>
                 <button
@@ -541,10 +541,10 @@ export function FamilyClassSheet({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <span style={styles.previewTag}>{[classPreview.grade ? `Khối ${classPreview.grade}` : '', classPreview.school_year].filter(Boolean).join(' · ') || 'Lớp học'}</span>
-                      <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '4px 0 2px 0' }}>
+                      <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '4px 0 2px 0' }}>
                         {formatClassName(classPreview.name)} · {formatTeacherName(classPreview.teacher_name, { lower: true })}
                       </h4>
-                      <p style={{ fontSize: 12, color: '#8A6A4A', margin: 0 }}>
+                      <p style={{ fontSize: 12, color: 'var(--c-text-2)', margin: 0 }}>
                         {classPreview.school_name ? `${classPreview.school_name} · ` : ''}Mã: <strong>{classPreview.join_code || code}</strong>
                       </p>
                     </div>
@@ -596,7 +596,7 @@ export function FamilyClassSheet({
                   {/* Inline Add Child Form */}
                   {showInlineAddChild && (
                     <form onSubmit={handleInlineAddChild} style={styles.inlineAddForm}>
-                      <strong style={{ fontSize: 12, color: '#4B3621' }}>Thêm nhanh con vào gia đình:</strong>
+                      <strong style={{ fontSize: 12, color: 'var(--c-text)' }}>Thêm nhanh con vào gia đình:</strong>
                       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                         <input
                           style={{ ...styles.input, flex: 2 }}
@@ -645,8 +645,8 @@ export function FamilyClassSheet({
                         >
                           <span style={{ fontSize: 24 }}>{kid.emoji || '🧒'}</span>
                           <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: 14, color: '#4B3621' }}>{kid.name}</strong>
-                            <div style={{ fontSize: 11.5, color: '#8A6A4A' }}>{kid.grade || 'Lớp 3'}</div>
+                            <strong style={{ fontSize: 14, color: 'var(--c-text)' }}>{kid.name}</strong>
+                            <div style={{ fontSize: 11.5, color: 'var(--c-text-2)' }}>{kid.grade || 'Lớp 3'}</div>
                           </div>
 
                           {isMatch && !alreadyInClass && (
@@ -713,7 +713,7 @@ export function FamilyClassSheet({
                       readOnly={Boolean(classPreview.prefillName)}
                     />
                     {classPreview.prefillName && (
-                      <small style={{ fontSize: 11, color: '#8A6A4A', marginTop: 3, display: 'block' }}>
+                      <small style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 3, display: 'block' }}>
                         🔒 Tên do cô giáo nhập sẵn từ danh sách lớp
                       </small>
                     )}
@@ -723,7 +723,7 @@ export function FamilyClassSheet({
                   <div style={styles.consentCard}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                       <ShieldAlert size={15} color="#9A5B00" />
-                      <strong style={{ fontSize: 11.5, color: '#9A5B00' }}>
+                      <strong style={{ fontSize: 11.5, color: 'var(--c-accent-ink, var(--c-text))' }}>
                         Bảo vệ dữ liệu học tập của con
                       </strong>
                     </div>
@@ -778,10 +778,10 @@ export function FamilyClassSheet({
         <div style={styles.modalBackdrop} onClick={() => setChangingClassStudent(null)}>
           <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 32, marginBottom: 4 }}>🔄</div>
-            <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: '#4B3621', margin: '0 0 6px 0' }}>
+            <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
               Đổi con cho {formatClassName(changingClassStudent.class_name) || 'lớp này'}
             </h4>
-            <p style={{ fontSize: 12.5, color: '#8A6A4A', margin: '0 0 14px 0' }}>
+            <p style={{ fontSize: 12.5, color: 'var(--c-text-2)', margin: '0 0 14px 0' }}>
               Mẹ có thể chuyển lớp này sang con khác trong nhà trong 24 giờ đầu khi chưa nộp bài nào.
             </p>
 
@@ -799,8 +799,8 @@ export function FamilyClassSheet({
                   >
                     <span style={{ fontSize: 24 }}>{kid.emoji || '🧒'}</span>
                     <div style={{ flex: 1 }}>
-                      <strong style={{ fontSize: 14, color: '#4B3621' }}>{kid.name}</strong>
-                      <div style={{ fontSize: 11.5, color: '#8A6A4A' }}>{kid.grade}</div>
+                      <strong style={{ fontSize: 14, color: 'var(--c-text)' }}>{kid.name}</strong>
+                      <div style={{ fontSize: 11.5, color: 'var(--c-text-2)' }}>{kid.grade}</div>
                     </div>
                     {targetChildId === kid.id && <div style={styles.selectedCheck}>✓</div>}
                   </div>
@@ -838,7 +838,7 @@ const styles = {
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    color: '#4B3621',
+    color: 'var(--c-text)',
   },
   header: {
     display: 'flex',
@@ -850,8 +850,8 @@ const styles = {
     width: 36,
     height: 36,
     borderRadius: '50%',
-    backgroundColor: '#FFF1D6',
-    border: '1.5px solid #F0DDC2',
+    backgroundColor: 'var(--c-surface-2, #FFF1D6)',
+    border: '1.5px solid var(--c-line)',
     display: 'grid',
     placeItems: 'center',
     fontSize: 18,
@@ -861,29 +861,29 @@ const styles = {
     fontSize: 18,
     fontWeight: 700,
     margin: 0,
-    color: '#4B3621',
+    color: 'var(--c-text)',
   },
   sub: {
     fontSize: 12,
-    color: '#8A6A4A',
+    color: 'var(--c-text-2)',
     margin: '2px 0 0 0',
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: '50%',
-    border: '1px solid #F0DDC2',
-    backgroundColor: '#FFFFFF',
+    border: '1px solid var(--c-line)',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
     display: 'grid',
     placeItems: 'center',
     cursor: 'pointer',
-    color: '#8A6A4A',
+    color: 'var(--c-text-2)',
   },
   navRow: {
     display: 'flex',
     gap: 8,
     marginBottom: 14,
-    borderBottom: '1px solid #F0DDC2',
+    borderBottom: '1px solid var(--c-line)',
     paddingBottom: 8,
   },
   navTab: {
@@ -891,15 +891,15 @@ const styles = {
     borderRadius: 999,
     fontSize: 12.5,
     fontWeight: 800,
-    border: '1px solid #F0DDC2',
-    backgroundColor: '#FFFFFF',
-    color: '#8A6A4A',
+    border: '1px solid var(--c-line)',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
+    color: 'var(--c-text-2)',
     cursor: 'pointer',
   },
   navTabActive: {
-    backgroundColor: '#4B3621',
-    color: '#FFF8EC',
-    borderColor: '#4B3621',
+    backgroundColor: 'var(--c-accent)',
+    color: 'var(--c-on-accent, #FFFFFF)',
+    borderColor: 'var(--c-accent)',
   },
   bodyScroll: {
     overflowY: 'auto',
@@ -907,17 +907,17 @@ const styles = {
     paddingRight: 4,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
     borderRadius: 18,
     padding: 14,
-    border: '1px solid #F0DDC2',
-    boxShadow: '0 4px 0 #F0DDC2',
+    border: '1px solid var(--c-line)',
+    boxShadow: '0 4px 0 var(--c-line)',
   },
   label: {
     display: 'block',
     fontSize: 11.5,
     fontWeight: 800,
-    color: '#8A6A4A',
+    color: 'var(--c-text-2)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -927,17 +927,17 @@ const styles = {
     boxSizing: 'border-box',
     padding: '9px 12px',
     borderRadius: 12,
-    border: '2px solid #F0DDC2',
+    border: '2px solid var(--c-line)',
     fontSize: 13.5,
     outline: 'none',
-    color: '#4B3621',
+    color: 'var(--c-text)',
     fontWeight: 600,
   },
   checkBtn: {
     padding: '0 16px',
     borderRadius: 12,
     background: '#F6A623',
-    color: '#4B3621',
+    color: 'var(--c-text)',
     fontWeight: 800,
     fontSize: 13,
     border: 'none',
@@ -952,7 +952,7 @@ const styles = {
     marginTop: 6,
   },
   classPreviewCard: {
-    backgroundColor: '#FFF8EC',
+    backgroundColor: 'var(--c-surface-2, #FFF8EC)',
     borderRadius: 18,
     padding: 14,
     border: '2px dashed #F6A623',
@@ -962,13 +962,13 @@ const styles = {
     fontWeight: 800,
     padding: '2px 8px',
     borderRadius: 999,
-    backgroundColor: '#FFF1D6',
-    color: '#9A5B00',
+    backgroundColor: 'var(--c-surface-2, #FFF1D6)',
+    color: 'var(--c-accent-ink, var(--c-text))',
   },
   changeCodeBtn: {
     background: 'none',
     border: 'none',
-    color: '#9A5B00',
+    color: 'var(--c-accent-ink, var(--c-text))',
     fontSize: 12,
     fontWeight: 800,
     cursor: 'pointer',
@@ -984,14 +984,14 @@ const styles = {
   inlineAddBtn: {
     background: 'none',
     border: 'none',
-    color: '#9A5B00',
+    color: 'var(--c-accent-ink, var(--c-text))',
     fontSize: 12,
     fontWeight: 800,
     cursor: 'pointer',
   },
   inlineAddForm: {
-    backgroundColor: '#FFF8EC',
-    border: '1px solid #F0DDC2',
+    backgroundColor: 'var(--c-surface-2, #FFF8EC)',
+    border: '1px solid var(--c-line)',
     borderRadius: 12,
     padding: 10,
     marginBottom: 10,
@@ -1002,14 +1002,14 @@ const styles = {
     gap: 10,
     padding: '10px 12px',
     borderRadius: 14,
-    border: '2px solid #F0DDC2',
-    backgroundColor: '#FFFFFF',
+    border: '2px solid var(--c-line)',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
     cursor: 'pointer',
     transition: 'all 0.15s ease',
   },
   kidCardActive: {
     borderColor: '#F6A623',
-    backgroundColor: '#FFF8EC',
+    backgroundColor: 'var(--c-surface-2, #FFF8EC)',
     boxShadow: '0 0 0 3px rgba(246, 166, 35, 0.2)',
   },
   kidCardDisabled: {
@@ -1039,7 +1039,7 @@ const styles = {
     height: 22,
     borderRadius: '50%',
     backgroundColor: '#F6A623',
-    color: '#4B3621',
+    color: 'var(--c-text)',
     display: 'grid',
     placeItems: 'center',
     fontWeight: 900,
@@ -1055,7 +1055,7 @@ const styles = {
   confirmMismatchBtn: {
     padding: '6px 12px',
     borderRadius: 999,
-    background: '#FFFFFF',
+    background: 'var(--c-surface, #FFFFFF)',
     color: '#92400E',
     border: '2px dashed #FCD34D',
     fontWeight: 800,
@@ -1063,10 +1063,10 @@ const styles = {
     cursor: 'pointer',
   },
   consentCard: {
-    backgroundColor: '#FFF8EC',
+    backgroundColor: 'var(--c-surface-2, #FFF8EC)',
     borderRadius: 14,
     padding: 12,
-    border: '1px solid #F0DDC2',
+    border: '1px solid var(--c-line)',
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
@@ -1077,7 +1077,7 @@ const styles = {
     alignItems: 'flex-start',
     gap: 8,
     fontSize: 12,
-    color: '#4B3621',
+    color: 'var(--c-text)',
     lineHeight: 1.4,
     cursor: 'pointer',
   },
@@ -1085,20 +1085,20 @@ const styles = {
     width: '100%',
     padding: '11px 16px',
     borderRadius: 999,
-    backgroundColor: '#F6A623',
-    color: '#4B3621',
+    backgroundColor: 'var(--c-accent)',
+    color: 'var(--c-on-accent, #FFFFFF)',
     border: 'none',
     fontWeight: 900,
     fontSize: 14,
     cursor: 'pointer',
-    boxShadow: '0 4px 0 #C47F0E',
+    boxShadow: 'none',
     textAlign: 'center',
   },
   btnSecondary: {
     padding: '8px 14px',
     borderRadius: 999,
-    backgroundColor: '#FFF1D6',
-    color: '#9A5B00',
+    backgroundColor: 'var(--c-surface-2, #FFF1D6)',
+    color: 'var(--c-accent-ink, var(--c-text))',
     border: 'none',
     fontWeight: 800,
     fontSize: 12.5,
@@ -1109,8 +1109,8 @@ const styles = {
     padding: '20px 10px',
   },
   siblingPromptCard: {
-    backgroundColor: '#FFF8EC',
-    border: '1px solid #F0DDC2',
+    backgroundColor: 'var(--c-surface-2, #FFF8EC)',
+    border: '1px solid var(--c-line)',
     borderRadius: 16,
     padding: 14,
     margin: '16px 0',
@@ -1118,9 +1118,9 @@ const styles = {
   emptyCard: {
     textAlign: 'center',
     padding: '30px 16px',
-    backgroundColor: '#FFF8EC',
+    backgroundColor: 'var(--c-surface-2, #FFF8EC)',
     borderRadius: 20,
-    border: '1px solid #F0DDC2',
+    border: '1px solid var(--c-line)',
   },
   kidGroup: {
     display: 'flex',
@@ -1138,24 +1138,24 @@ const styles = {
     fontWeight: 800,
     padding: '2px 8px',
     borderRadius: 999,
-    backgroundColor: '#FFF1D6',
-    color: '#9A5B00',
+    backgroundColor: 'var(--c-surface-2, #FFF1D6)',
+    color: 'var(--c-accent-ink, var(--c-text))',
   },
   kidNoClass: {
     padding: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
     borderRadius: 14,
-    border: '1px dashed #F0DDC2',
+    border: '1px dashed var(--c-line)',
     fontSize: 12.5,
-    color: '#8A6A4A',
+    color: 'var(--c-text-2)',
     textAlign: 'center',
   },
   classCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
     borderRadius: 16,
     padding: 12,
-    border: '1px solid #F0DDC2',
-    boxShadow: '0 3px 0 #F0DDC2',
+    border: '1px solid var(--c-line)',
+    boxShadow: '0 3px 0 var(--c-line)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1175,8 +1175,8 @@ const styles = {
     borderColor: '#A7F3D0',
   },
   pillWait: {
-    backgroundColor: '#FFF1D6',
-    color: '#9A5B00',
+    backgroundColor: 'var(--c-surface-2, #FFF1D6)',
+    color: 'var(--c-accent-ink, var(--c-text))',
     borderColor: '#F6C56A',
   },
   pillNo: {
@@ -1188,8 +1188,8 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
-    background: '#FFF1D6',
-    color: '#9A5B00',
+    background: 'var(--c-surface-2, #FFF1D6)',
+    color: 'var(--c-accent-ink, var(--c-text))',
     border: '1px solid #F6C56A',
     borderRadius: 999,
     padding: '4px 8px',
@@ -1227,13 +1227,13 @@ const styles = {
     padding: 16,
   },
   modalCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--c-surface, #FFFFFF)',
     borderRadius: 22,
     padding: 20,
     maxWidth: 380,
     width: '100%',
     textAlign: 'center',
     boxShadow: '0 20px 40px rgba(75, 54, 33, 0.25)',
-    border: '2px solid #F0DDC2',
+    border: '2px solid var(--c-line)',
   },
 };

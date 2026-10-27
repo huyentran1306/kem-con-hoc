@@ -128,7 +128,7 @@ export function TraitStackedChart({
         <b style={{ fontSize: 16, color: "var(--c-text)" }}>
           Chưa có dữ liệu tuần của {childName}
         </b>
-        <p className="xs" style={{ margin: "4px 0 0", color: "#64748B" }}>
+        <p className="xs" style={{ margin: "4px 0 0", color: "var(--c-text-2)" }}>
           Sau khi {childName} hoàn thành bài học và nhận huy hiệu đầu tiên, biểu
           đồ phẩm chất qua các tuần sẽ xuất hiện tại đây!
         </p>
@@ -142,8 +142,8 @@ export function TraitStackedChart({
 
   const getDiffSymbol = (t) => {
     const diff = (thisWeek[t] || 0) - (lastWeek[t] || 0);
-    if (diff > 0) return { sym: `▲ +${diff}`, color: "#166534" };
-    if (diff < 0) return { sym: `▼ ${diff}`, color: "#991B1B" };
+    if (diff > 0) return { sym: `▲ +${diff}`, color: "var(--c-good-fg, #166534)" };
+    if (diff < 0) return { sym: `▼ ${diff}`, color: "var(--c-danger-ink, #991B1B)" };
     return { sym: "=", color: "#64748B" };
   };
 
@@ -165,7 +165,7 @@ export function TraitStackedChart({
         }}
       >
         <span className="lbl plum">Phẩm chất qua các tuần</span>
-        <div className="trait-filters seg-km" role="tablist" style={{ display: "inline-flex", flexWrap: "nowrap", gap: 2, height: 32, padding: 2 }}>
+        <div className="trait-filters seg-km" role="tablist" style={{ display: "inline-flex", flexWrap: "nowrap", gap: 6, height: 32, padding: 2 }}>
           <button
             type="button"
             className={`seg-km-btn ${filter === "8w" ? "active" : ""}`}
@@ -371,7 +371,7 @@ export function TraitStackedChart({
       </div>
 
       {/* Dòng chú thích mốc đổi quà */}
-      <p className="xs" style={{ color: "#92400E", margin: "4px 0 8px" }}>
+      <p className="xs" style={{ color: "var(--c-accent-ink, var(--c-text-2))", margin: "4px 0 8px" }}>
         🎁 Mốc đổi quà. Đổi quà chỉ đặt lại sổ sticker, lịch sử vẫn giữ nguyên.
       </p>
 
@@ -422,7 +422,7 @@ export function TraitStackedChart({
           style={{
             background: "none",
             border: "none",
-            color: "#2563EB",
+            color: "var(--c-accent-ink, var(--c-accent))",
             fontSize: 13,
             fontWeight: 800,
             cursor: "pointer",
@@ -837,9 +837,9 @@ export function TraitAiAnalysisCard({
 
   if (notEnough) {
     return (
-      <div className="card" style={{ border: "1.5px dashed #CBD5E1", background: "#F8FAFC" }} data-testid="trait-ai-not-enough">
+      <div className="card" style={{ border: "1.5px dashed var(--c-line)", background: "var(--c-surface-2)" }} data-testid="trait-ai-not-enough">
         <span className="lbl plum">AI tìm nguyên nhân</span>
-        <p className="xs" style={{ color: "#64748B", margin: "6px 0" }}>
+        <p className="xs" style={{ color: "var(--c-text-2)", margin: "6px 0" }}>
           {notEnough}
         </p>
       </div>

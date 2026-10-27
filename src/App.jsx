@@ -627,6 +627,7 @@ export default function App() {
     setSheet({ type, data })
   }
   const closeSheet = () => setSheet(null)
+  if (typeof window !== "undefined") window.__kchCloseSheet = closeSheet
 
   const rawStats = { ...defaultStats(S?.activeId), ...(S?.stats?.[S?.activeId] || {}) }
   const stats = useMemo(() => {
@@ -877,9 +878,9 @@ export default function App() {
       <div className="stage">
         <div className="app parent-shell">
           {session?.isTrial && !trialCollapsed && (
-            <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử">
-              <span>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử" style={{ minHeight: 32, height: 'auto', padding: '4px 10px', gap: 6 }}>
+              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                 <button
                   type="button"
                   className="btn-km btn-km-s btn-km-primary"

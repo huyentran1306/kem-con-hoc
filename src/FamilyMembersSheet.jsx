@@ -302,11 +302,11 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <b style={{ fontSize: 14.5, color: '#1E293B' }}>{m.relation ? `${m.relation} ` : ''}{m.displayName}</b>
+                            <b style={{ fontSize: 14.5, color: 'var(--c-text)' }}>{m.relation ? `${m.relation} ` : ''}{m.displayName}</b>
                             {isSelf && <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 700 }}>(Bạn)</span>}
                             {roleBadge(m.role)}
                           </div>
-                          <div style={{ fontSize: 12, color: '#64748B' }}>
+                          <div style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
                             {m.sessionsWeek > 0 ? (
                               <span style={{ color: '#059669', fontWeight: 700 }}>🌟 Đã kèm {m.sessionsWeek} buổi tuần này</span>
                             ) : (

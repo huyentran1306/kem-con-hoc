@@ -77,7 +77,7 @@ export function BearStudyTracker({ tracker, onOpenReport }) {
       </div>
 
       {encouragement && (
-        <div style={{ fontSize: 11.5, color: '#8B6D50', textAlign: 'center', borderTop: '1px dashed #F0DDC2', paddingTop: 6 }}>
+        <div style={{ fontSize: 11.5, color: '#8B6D50', textAlign: 'center', borderTop: '1px dashed #F0DDC2', paddingTop: 6, marginTop: 10 }}>
           🧸 Gấu nhớ: {encouragement}
         </div>
       )}
@@ -190,7 +190,7 @@ export function CandyStudyTracker({ tracker, onOpenReport }) {
         })}
       </div>
 
-      <div style={{ fontSize: 12, color: '#786C83', textAlign: 'center', borderTop: '1px dashed #F3D9E6', paddingTop: 8 }}>
+      <div style={{ fontSize: 12, color: '#786C83', textAlign: 'center', borderTop: '1px dashed #F3D9E6', paddingTop: 8, marginTop: 10 }}>
         ☁️ Bạn Mây cổ vũ: {encouragement}
       </div>
     </div>
@@ -261,7 +261,7 @@ export function GardenStudyTracker({ tracker, onOpenReport }) {
         })}
       </div>
 
-      <div style={{ fontSize: 12, color: '#A9C4B5', textAlign: 'center', borderTop: '1px dashed #2A5248', paddingTop: 8 }}>
+      <div style={{ fontSize: 12, color: '#A9C4B5', textAlign: 'center', borderTop: '1px dashed #2A5248', paddingTop: 8, marginTop: 10 }}>
         💡 Đom đóm thắp sáng: {encouragement}
       </div>
     </div>
@@ -370,7 +370,7 @@ export function ChalkStudyTracker({ tracker, onOpenReport }) {
         })}
       </div>
 
-      <div style={{ fontSize: 12, color: '#CFC8B8', textAlign: 'center', borderTop: '1px dashed rgba(246,241,230,0.35)', paddingTop: 8 }}>
+      <div style={{ fontSize: 12, color: '#CFC8B8', textAlign: 'center', borderTop: '1px dashed rgba(246,241,230,0.35)', paddingTop: 8, marginTop: 10 }}>
         Gờ phấn nhắn: {encouragement}
       </div>
     </div>
@@ -651,7 +651,7 @@ export function StickerStudyTracker({ tracker, onOpenReport }) {
         })}
       </div>
 
-      <div style={{ fontSize: 12, fontWeight: 700, color: '#5C5A70', textAlign: 'center', borderTop: '2px dashed #1B1B2F', paddingTop: 8 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#5C5A70', textAlign: 'center', borderTop: '2px dashed #1B1B2F', paddingTop: 8, marginTop: 10 }}>
         ⚡ Lời khen dán sticker: {encouragement}
       </div>
     </div>

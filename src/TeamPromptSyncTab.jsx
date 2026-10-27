@@ -64,7 +64,7 @@ export default function TeamPromptSyncTab() {
         // Đảm bảo không bị mất promptDetail nếu cache trước đó bị lưu nhầm chuỗi ngắn
         list = list.map((item) => {
           const fallback = INITIAL_TEAM_PROMPTS.find((p) => p.id === item.id)
-          if ((!item.promptDetail || item.promptDetail.length < 100) && fallback?.promptDetail) {
+          if ((!item.promptDetail || (typeof item.promptDetail === "string" && item.promptDetail.length < 100)) && fallback?.promptDetail) {
             return { ...item, promptDetail: fallback.promptDetail, title: fallback.title || item.title }
           }
           return item
@@ -117,7 +117,7 @@ export default function TeamPromptSyncTab() {
       if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
         const merged = cloudData.map((item) => {
           const fallback = INITIAL_TEAM_PROMPTS.find((p) => p.id === item.id)
-          if ((!item.promptDetail || item.promptDetail.length < 100) && fallback?.promptDetail) {
+          if ((!item.promptDetail || (typeof item.promptDetail === "string" && item.promptDetail.length < 100)) && fallback?.promptDetail) {
             return { ...item, promptDetail: fallback.promptDetail, title: fallback.title || item.title }
           }
           return item
@@ -811,7 +811,7 @@ export default function TeamPromptSyncTab() {
                   {/* THAO TÁC (Sửa, Xóa, Copy) */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <button
-                      onClick={() => handleCopyPrompt(item.promptDetail, item.title)}
+                      onClick={() => handleCopyPrompt(item.promptDetail || item.summary || "", item.title || "Prompt")}
                       style={{
                         padding: '6px 12px',
                         borderRadius: 8,
@@ -898,7 +898,7 @@ export default function TeamPromptSyncTab() {
                         📄 Nội dung Prompt Detail:
                       </span>
                       <span style={{ fontSize: 11, color: '#A89078' }}>
-                        {item.promptDetail.length} ký tự
+                        {(item.promptDetail || "").length} ký tự
                       </span>
                     </div>
 
@@ -915,10 +915,10 @@ export default function TeamPromptSyncTab() {
                         overflow: 'hidden',
                       }}
                     >
-                      {item.promptDetail}
+                      {item.promptDetail || "(Chưa có nội dung chi tiết)"}
                     </pre>
 
-                    {item.promptDetail.length > 200 && (
+                    {(item.promptDetail || "").length > 200 && (
                       <button
                         type="button"
                         onClick={() => setExpandedMap((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}

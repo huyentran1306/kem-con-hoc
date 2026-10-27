@@ -279,7 +279,7 @@ export function ThemePickerSheet({ onClose }) {
             style={{
               height: 64,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #FFF8EC, #EDE9FE)',
+              background: 'var(--c-surface-2)',
               border: '1px dashed var(--c-accent)',
               padding: 6,
               display: 'flex',

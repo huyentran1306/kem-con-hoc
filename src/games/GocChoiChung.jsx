@@ -332,7 +332,7 @@ export default function GocChoiChung({
 
       {/* Khu "Chụp đồ vật để Gấu nghĩ trò" (Legacy component chuyển xuống dưới) */}
       {SnapToyLegacyComponent && (
-        <div style={{ marginTop: 8, borderTop: '1px dashed var(--c-line)', paddingTop: 16 }}>
+        <div style={{ marginTop: 8, borderTop: '1px solid var(--c-line)', paddingTop: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-sub)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             🧸 Chụp đồ vật quanh nhà
           </div>
