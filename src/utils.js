@@ -25,7 +25,7 @@ export function pickRandom(arr, n) {
 }
 
 /* Nén ảnh xuống maxDim px, trả về { blob, dataUrl } JPEG */
-export function compressImage(file, maxDim = 1200, quality = 0.8) {
+export function compressImage(file, maxDim = 1600, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)

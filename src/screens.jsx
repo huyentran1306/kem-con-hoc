@@ -7018,7 +7018,7 @@ export function CheckWork() {
       let compressedBlob = file
       if (file instanceof File || file instanceof Blob) {
         try {
-          const compRes = await compressImage(file, 1280, 0.8)
+          const compRes = await compressImage(file, 1600, 0.85)
           compressedBlob = compRes.blob
         } catch (e) {
           console.warn('Compress image fallback to original:', e)
@@ -7058,7 +7058,7 @@ export function CheckWork() {
     } catch (err) {
       console.error('Lỗi đọc ảnh:', err)
       if (err.status === 429) {
-        toast('Hôm nay đã dùng hết 10 lượt đọc ảnh. Mẹ và bé quay lại vào ngày mai nhé! 🌙')
+        toast('Hôm nay đã dùng hết 50 lượt đọc ảnh. Mẹ và bé quay lại vào ngày mai nhé! 🌙')
       } else {
         toast('Không thể đọc ảnh, mẹ thử chụp lại hoặc gõ bài làm nhé')
       }
