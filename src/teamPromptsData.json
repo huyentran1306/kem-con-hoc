@@ -313,6 +313,21 @@
     "updatedAt": "2026-10-26 22:00"
   },
   {
+    "id": "prompt-ui-fix-prompt-studio",
+    "title": "Prompt Studio UI: Khắc phục triệt để vỡ giao diện trên màn hình hẹp & Responsive 3 cột",
+    "category": "other",
+    "targetAi": "Antigravity",
+    "author": "Huyền (Tech Lead)",
+    "isRunCompanyAi": true,
+    "runBy": "Antigravity",
+    "runAt": "2026-10-26 23:45",
+    "aiResult": "Đã sửa triệt để min-width .sk-select, bổ sung thanh chuyển 3 tab (Danh sách, Soạn thảo, Bàn thử) khi < 1080px, responsive hoàn hảo 390px, 768px, 1024px, 1280px.",
+    "migrationScript": "",
+    "promptDetail": "# Sửa lỗi bể giao diện Prompt Studio trên màn hình hẹp\n\n## Mục tiêu\nKhắc phục hiện tượng bể layout Cột 3 (Bàn thử), tràn ngang và trôi lệch cạnh trái khi xem trên laptop/tablet hẹp hoặc mobile.\n\n## Yêu cầu kỹ thuật\n1. Bỏ gán cứng min-width 160px trong , chuyển thành min-width: 0; width: 100%.\n2. Thêm thanh Segmented Tab Bar (Danh sách, Soạn thảo, Bàn thử) khi màn hình < 1080px.\n3. Grid Lớp & Môn sử dụng .\n4. Ngăn tràn ngang toàn diện với box-sizing: border-box và min-width: 0.\n",
+    "createdAt": "2026-10-26 23:30",
+    "updatedAt": "2026-10-26 23:45"
+  },
+  {
     "id": "prompt-23b-sua-gap-bai-co-giao",
     "promptNumber": "23B",
     "title": "Prompt 23B: Sửa gấp bài cô giao không mở được, lặp tên cô, biểu đồ dùng thử và gợi ý huy hiệu (27/10/2026)",
@@ -326,6 +341,21 @@
     "aiResult": "Đã sửa hoàn tất 4 lỗi: (1) Sửa go('prep') thành go('explain') + thêm prep vào TAB_CAP + tạo session ghi nhận kết quả cho cô giáo; (2) Dùng formatTeacherName loại bỏ lặp chữ Cô; (3) Bổ sung 8 tuần phẩm chất mẫu cho Bé Na trong Dùng thử; (4) Gộp 1 khối gợi ý duy nhất trên màn Done. Đã build và deploy lên Cloudflare Pages production (index-CJ2MpQZe.js).",
     "promptDetail": "# Prompt 23B · Sửa gấp: bài cô giao không mở được, và 3 lỗi khác\n\n**Bối cảnh:** Kiểm tra trên production build index-6ku-FauC.js (26/10/2026), với lớp thử nghiệm \"3A Thử nghiệm\" (mã 6DVEUJ) và gia đình thử nghiệm đã kết nối bằng mã riêng của Na. Prompt 22 đã lên và đạt. Prompt 23 (giao diện gọn theo bộ khuôn) cần sửa 4 lỗi gấp và deploy production.\n\n### 4 Yêu cầu sửa lỗi:\n\n1. **Bài cô giao không mở được (quan trọng nhất):**\n- Phụ huynh bấm \"Kèm con làm bài cô giao\", bảng hiện câu 1, bấm \"🚀 Kèm con làm câu này\" thì bảng đóng và vẫn đứng ở trang chủ.\n- Nguyên nhân: hàm mở câu gọi go('prep'), nhưng bảng màn hình TAB_CAP không có prep.\n- Sửa: chuyển sang màn \"Trước khi giảng\" (explain), thêm alias prep: 'Explain' vào TAB_CAP.\n- Bài cô giao hiện nhãn \"Theo cách cô dạy\" [data-testid=\"badge-teacher-method\"] và đi tiếp tới \"Bắt đầu hỏi con\" như bài thường.\n- Khi xong bài: gọi updateSession hoàn thành để ghi nhận \"Đã kèm con xong: 1/1 câu\" và phản ánh lên tab Kết quả của cô giáo.\n- Thêm kiểm thử: hàm go() gặp tên màn không có trong bảng thì báo lỗi console và hiển thị toast cảnh báo trong bản preview.\n\n2. **Tên cô bị lặp chữ \"Cô\":**\n- \"📚 Cô Cô Thử Nghiệm giao 1 bài\", \"Cô Cô Thử Nghiệm · Môn Toán\".\n- Sửa: Áp dụng formatTeacherName(), chỉ thêm tiền tố \"Cô\" khi tên chưa bắt đầu bằng \"Cô\" hoặc \"Thầy\".\n\n3. **Báo cáo ở chế độ Dùng thử trống biểu đồ phẩm chất theo tuần:**\n- Thêm dữ liệu mẫu 8 tuần phẩm chất (Kiên nhẫn, Sáng tạo, Tập trung, Tỉ mỉ) trong trialData.js (chỉ trong Dùng thử).\n- Chuẩn hóa đọc timestamp / earnedAt trong ReportComponents.jsx, loại bỏ màn hình trống \"Chưa có dữ liệu tuần của Bé Na\".\n\n4. **Xong bài trên tài khoản thật còn 2 khối \"GẤU GỢI Ý HUY HIỆU\":**\n- Chỉ giữ duy nhất 1 khối gợi ý huy hiệu (card-suggested-badge) cho cả hai đường Dùng thử và tài khoản thật.\n\n### Kiểm thử trên Production:\n- Gia đình thử nghiệm vào lớp 3A Thử nghiệm mở bài cô giao đề \"Mẹ có 18 quả cam...\", hoàn thành bài, cô giáo thấy Na hoàn thành.\n- Không còn \"Cô Cô\". Báo cáo Dùng thử có biểu đồ 8 tuần. Màn Done chỉ có 1 khối gợi ý.",
     "updatedAt": "2026-10-27 06:30"
+  },
+  {
+    "id": "prompt-23d-sua-loi-sau-claude-review",
+    "title": "Prompt 23D: Sửa dứt điểm 8 lỗi giao diện production sau review Claude",
+    "category": "general",
+    "targetAi": "Antigravity",
+    "author": "Huyền (Tech Lead)",
+    "isRunCompanyAi": true,
+    "runBy": "Antigravity",
+    "runAt": "2026-10-27 07:15",
+    "aiResult": "Đã sửa 8 lỗi: pendingShot crash, lặp chữ Lớp Lớp 3, style Hôm nay, nút chọn con, thẻ trò chơi, chấm vở bỏ viền tím, sticky tabs trang báo cáo, nút phẳng mềm không bóng khối 0 6px 0.",
+    "migrationScript": "",
+    "promptDetail": "# Prompt 23D · Sửa dứt điểm 8 lỗi giao diện production sau đợt review của Claude\n\n## Danh sách lỗi cần sửa\n1. P0 · Sập màn soạn bài do ReferenceError: pendingShot is not defined. Khai báo biến module-scoped .\n2. Dòng ngày và TopBarT4 lặp chữ 'Lớp Lớp 3': Viết hàm formatChildGrade(g) chuẩn hoá regex.\n3. Chữ 'Hôm nay' bị lệch: Tách thành 2 dòng chuẩn, 'Hôm nay' dòng trên, 'bài của Na' dòng dưới.\n4. Nút chọn con: Đổi sang nền trắng nổi bật với viền nét đứt.\n5. Thẻ Trò chơi: Bỏ chiều cao cứng 80px, để flex tự nhiên.\n6. Chấm vở: Bỏ viền tím rgb(124, 58, 237), dùng biến màu của bộ var(--c-line).\n7. Trang Báo cáo: Bổ sung dải tab dính trên (Tuần này · Phẩm chất · Môn học · Gấu phân tích).\n8. Nút Zalo và nút 'Quay lại': Bỏ bóng khối 0 6px 0, đổi sang chuẩn nút phẳng mềm T1.\n",
+    "createdAt": "2026-10-27 07:15",
+    "updatedAt": "2026-10-27 07:15"
   },
   {
     "id": "tp_prompt_24_goc_choi_chung",
