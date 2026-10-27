@@ -598,7 +598,10 @@ export default function App() {
     setScreen(id)
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
   }
-  if (typeof window !== 'undefined') window.__kchGo = go
+  if (typeof window !== 'undefined') {
+    window.__kchGo = go
+    window.__kchPatch = (p) => setS((prev) => ({ ...prev, ...(typeof p === 'function' ? p(prev) : p) }))
+  }
   const openSheet = (type, data) => {
     if (type === 'calm') {
       const nowTs = Date.now()

@@ -295,5 +295,86 @@
       "doc_duoc": false,
       "ly_do": "không phải bài làm"
     }
+  },
+  {
+    "id": "vo_21",
+    "name": "Túi kẹo cho bạn (cộng thay vì trừ - đề kẹo)",
+    "grade": "Lớp 3",
+    "problem": "Có 4 túi kẹo, mỗi túi 6 viên, bé cho bạn 7 viên. Hỏi còn lại bao nhiêu viên kẹo?",
+    "child_lines": [
+      "Số kẹo có tất cả là:",
+      "4 x 6 = 24 (viên)",
+      "Số kẹo còn lại là:",
+      "24 + 7 = 31 (viên)",
+      "Đáp số: 31 viên kẹo"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 4,
+      "phan_loai_loi": "chon_phep_tinh"
+    }
+  },
+  {
+    "id": "vo_22",
+    "name": "Vườn hoa hái bớt (cộng thay vì trừ)",
+    "grade": "Lớp 3",
+    "problem": "Có 5 luống hoa, mỗi luống 8 bông. Chị hái bớt 12 bông cắm lọ. Hỏi vườn hoa còn lại bao nhiêu bông hoa?",
+    "child_lines": [
+      "5 x 8 = 40 (bông)",
+      "40 + 12 = 52 (bông)",
+      "Đáp số: 52 bông hoa"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "chon_phep_tinh"
+    }
+  },
+  {
+    "id": "vo_23",
+    "name": "Nuôi chim bồ câu (trừ thay vì cộng)",
+    "grade": "Lớp 3",
+    "problem": "Có 3 chuồng chim, mỗi chuồng 6 con. Bố mua thêm 5 con chim nữa. Hỏi có tất cả bao nhiêu con chim?",
+    "child_lines": [
+      "3 x 6 = 18 (con)",
+      "18 - 5 = 13 (con)",
+      "Đáp số: 13 con chim"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "chon_phep_tinh"
+    }
+  },
+  {
+    "id": "vo_24",
+    "name": "Chia táo đóng hộp (nhân thay vì chia)",
+    "grade": "Lớp 3",
+    "problem": "Có 36 quả táo chia đều vào 4 hộp. Hỏi mỗi hộp có mấy quả táo?",
+    "child_lines": [
+      "36 x 4 = 144 (quả)",
+      "Đáp số: 144 quả táo"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 1,
+      "phan_loai_loi": "chon_phep_tinh"
+    }
+  },
+  {
+    "id": "vo_25",
+    "name": "Thùng dầu lấy ra (cộng thay vì trừ)",
+    "grade": "Lớp 3",
+    "problem": "Có 6 can dầu, mỗi can 5 lít. Người ta lấy ra 8 lít dầu để dùng. Hỏi còn lại bao nhiêu lít dầu?",
+    "child_lines": [
+      "6 x 5 = 30 (lít)",
+      "30 + 8 = 38 (lít)",
+      "Đáp số: 38 lít dầu"
+    ],
+    "ground_truth": {
+      "dung_het": false,
+      "dong_sai_dau_tien": 2,
+      "phan_loai_loi": "chon_phep_tinh"
+    }
   }
 ]

@@ -169,7 +169,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
   const [items, setItems] = useState([])
   const [showItemsModal, setShowItemsModal] = useState(false)
 
-  useEffect(() => {
+  const loadAssignments = useCallback(() => {
     const token = getAuthToken()
     if (!token) return
     fetch(`${GATEWAY}/api/v1/family/assignments`, {
@@ -192,6 +192,21 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
       })
       .catch(() => {})
   }, [child?.id])
+
+  useEffect(() => {
+    loadAssignments()
+    const handleUpdate = () => {
+      loadAssignments()
+      // Tải lại lần 2 sau 400ms để đảm bảo D1 đã ghi xong
+      setTimeout(loadAssignments, 400)
+    }
+    window.addEventListener('kem_assignment_updated', handleUpdate)
+    window.addEventListener('focus', handleUpdate)
+    return () => {
+      window.removeEventListener('kem_assignment_updated', handleUpdate)
+      window.removeEventListener('focus', handleUpdate)
+    }
+  }, [loadAssignments])
 
   if (!assignment) return null
 
@@ -1546,19 +1561,25 @@ export function Explain() {
       {/* Dải đề rút gọn 1 dòng */}
       <div
         className="card-km"
+        data-testid="compact-problem-strip-explain"
         style={{
           display: 'flex',
+          flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
           padding: '8px 12px',
           background: 'var(--c-surface)',
           borderRadius: 14,
+          width: '100%',
+          boxSizing: 'border-box',
+          minWidth: 0,
         }}
       >
-        <span style={{ fontSize: 14 }}>📝</span>
+        <span style={{ fontSize: 13, flexShrink: 0, lineHeight: 1 }}>📝</span>
         <span
           style={{
             flex: 1,
+            minWidth: 0,
             whiteSpace: showFullOcr ? 'normal' : 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -1581,6 +1602,7 @@ export function Explain() {
             border: 'none',
             cursor: 'pointer',
             whiteSpace: 'nowrap',
+            flexShrink: 0,
             padding: 0,
           }}
         >
@@ -1667,16 +1689,18 @@ export function Explain() {
                 >
                   <span
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 24,
+                      height: 24,
                       borderRadius: '50%',
-                      background: 'var(--c-primary)',
-                      color: 'var(--c-on-primary, #fff)',
-                      display: 'grid',
-                      placeItems: 'center',
-                      fontSize: 12,
-                      fontWeight: 900,
+                      background: 'var(--c-surface-2, #EADFCF)',
+                      color: 'var(--c-text, #2D2319)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 12.5,
+                      fontWeight: 800,
                       flexShrink: 0,
+                      lineHeight: 1,
                     }}
                   >
                     {i + 1}
@@ -2157,6 +2181,17 @@ export function Scaffold() {
   const [showWhyModal, setShowWhyModal] = useState(false)
   const curStep = steps[step] || {}
 
+  useEffect(() => {
+    if (!showMomDrawer) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setShowMomDrawer(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showMomDrawer])
+
   // Kiểm tra hoàn thành bài
   if (step >= steps.length) {
     return (
@@ -2196,19 +2231,25 @@ export function Scaffold() {
       {/* 2. DẢI ĐỀ RÚT GỌN 1 DÒNG */}
       <div
         className="card-km"
+        data-testid="compact-problem-strip-scaffold"
         style={{
           display: 'flex',
+          flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
           padding: '6px 12px',
           background: 'var(--c-surface)',
           borderRadius: 12,
+          width: '100%',
+          boxSizing: 'border-box',
+          minWidth: 0,
         }}
       >
-        <span style={{ fontSize: 13 }}>📝</span>
+        <span style={{ fontSize: 13, flexShrink: 0, lineHeight: 1 }}>📝</span>
         <span
           style={{
             flex: 1,
+            minWidth: 0,
             whiteSpace: showFullOcr ? 'normal' : 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -2230,6 +2271,7 @@ export function Scaffold() {
             border: 'none',
             cursor: 'pointer',
             whiteSpace: 'nowrap',
+            flexShrink: 0,
             padding: 0,
           }}
         >
@@ -2425,6 +2467,7 @@ export function Scaffold() {
       {/* 5. NGĂN DÀNH CHO MẸ (KÉO LÊN TỪ ĐÁY) */}
       {showMomDrawer && (
         <div
+          data-testid="mom-drawer-backdrop"
           style={{
             position: 'fixed',
             inset: 0,
@@ -3228,8 +3271,15 @@ export function Done() {
           endedAt: new Date().toISOString(),
           stuckCount: S.flow?.stuck || 0,
           teachBackRating: S.flow?.teachBack || 'self'
+        }).then(() => {
+          try {
+            window.dispatchEvent(new CustomEvent('kem_assignment_updated'))
+          } catch {}
         }).catch(() => {})
       }
+      try {
+        window.dispatchEvent(new CustomEvent('kem_assignment_updated'))
+      } catch {}
     }
 
     if (isSample) {
