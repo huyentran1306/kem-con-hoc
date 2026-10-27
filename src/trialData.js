@@ -170,32 +170,52 @@ export function getTrialInitialState() {
         ],
         stickerHistory: (() => {
           const list = [];
-          const traits = ['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'];
           const names = {
-            'Kiên nhẫn': 'Rùa con kiên trì',
-            'Sáng tạo': 'Ngôi sao Sáng tạo',
-            'Tập trung': 'Tia chớp Tập trung',
-            'Tỉ mỉ': 'Kính lúp Tỉ mỉ'
+            "Kiên nhẫn": "Rùa con kiên trì",
+            "Sáng tạo": "Ngôi sao Sáng tạo",
+            "Tập trung": "Tia chớp Tập trung",
+            "Tỉ mỉ": "Kính lúp Tỉ mỉ"
           };
-          // Tạo dữ liệu trải đều 8 tuần qua
-          for (let w = 7; w >= 0; w--) {
-            const count = 3 + (w % 3);
-            for (let j = 0; j < count; j++) {
-              const tr = traits[(w + j) % 4];
-              const t = now - (w * 7 + (j * 2) % 6) * 86400000;
-              list.push({
-                id: `stk_demo_${w}_${j}`,
-                stickerId: `s${(j % 4) + 1}`,
-                name: names[tr],
-                trait: tr,
-                subject: j % 2 === 0 ? 'Toán' : 'Tiếng Việt',
-                problemType: 'Bài tập rèn luyện',
-                timestamp: t,
-                earnedAt: t,
-                dateStr: new Date(t).toLocaleDateString('vi-VN'),
-              });
+          const d = new Date(now);
+          const day = d.getDay();
+          const diffToMon = (day === 0 ? -6 : 1) - day;
+          const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() + diffToMon).getTime();
+          const oneWeekMs = 7 * 86400000;
+
+          // Bộ dữ liệu chuẩn hoá khớp 100% với Gấu phân tích (Prompt 23K - F10):
+          // Tuần này (w=0): Kiên nhẫn 4, Sáng tạo 1, Tập trung 3, Tỉ mỉ 2
+          // Tuần trước (w=1): Kiên nhẫn 3, Sáng tạo 5, Tập trung 2, Tỉ mỉ 1
+          const weeklyPresets = [
+            { "Kiên nhẫn": 4, "Sáng tạo": 1, "Tập trung": 3, "Tỉ mỉ": 2 }, // w=0 (tuần này)
+            { "Kiên nhẫn": 3, "Sáng tạo": 5, "Tập trung": 2, "Tỉ mỉ": 1 }, // w=1 (tuần trước)
+            { "Kiên nhẫn": 4, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, // w=2
+            { "Kiên nhẫn": 3, "Sáng tạo": 4, "Tập trung": 2, "Tỉ mỉ": 1 }, // w=3
+            { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 3, "Tỉ mỉ": 2 }, // w=4
+            { "Kiên nhẫn": 4, "Sáng tạo": 4, "Tập trung": 1, "Tỉ mỉ": 2 }, // w=5
+            { "Kiên nhẫn": 3, "Sáng tạo": 2, "Tập trung": 2, "Tỉ mỉ": 1 }, // w=6
+            { "Kiên nhẫn": 2, "Sáng tạo": 3, "Tập trung": 1, "Tỉ mỉ": 1 }, // w=7
+          ];
+
+          weeklyPresets.forEach((preset, w) => {
+            let j = 0;
+            for (const [tr, count] of Object.entries(preset)) {
+              for (let k = 0; k < count; k++) {
+                const t = monday - w * oneWeekMs + (1 + (j % 5)) * 86400000 + 36000000;
+                list.push({
+                  id: `stk_demo_${w}_${j}`,
+                  stickerId: `s${(j % 4) + 1}`,
+                  name: names[tr],
+                  trait: tr,
+                  subject: j % 2 === 0 ? "Toán" : "Tiếng Việt",
+                  problemType: "Bài tập rèn luyện",
+                  timestamp: t,
+                  earnedAt: t,
+                  dateStr: new Date(t).toLocaleDateString("vi-VN"),
+                });
+                j++;
+              }
             }
-          }
+          });
           return list;
         })(),
         weak: [{ n: 'Toán lời văn 2 bước', count: 2 }],

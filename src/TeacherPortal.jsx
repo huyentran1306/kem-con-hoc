@@ -1646,6 +1646,7 @@ function TeacherResultsTab({ token, classId, cls, initialAssignmentId, onBackToA
           <StepChart
             title={`Bậc hay vướng · ${latest.title}`}
             steps={stepRowsFrom(stepStats.data)}
+            hasCompleted={Boolean(latestResults?.totalCompleted > 0 || (latest?.completed_count || 0) > 0 || (cls?.completed_students_count || 0) > 0)}
             caption={stepStats.data ? 'Đếm số lần con bấm "Con chưa nghĩ ra" ở từng bậc.' : null}
           />
         </Card>
@@ -1777,6 +1778,7 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
           <StepChart
             title={question === 'all' ? 'Bậc hay vướng nhất (đếm số lần con bí)' : `Bậc hay vướng · Câu ${question}`}
             steps={chartRows}
+            hasCompleted={Boolean(data?.completedCount > 0 || (data?.students || []).some(s => s.status === "completed"))}
           />
           <BearAssistant
             tips={tips}

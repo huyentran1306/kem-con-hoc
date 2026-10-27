@@ -974,8 +974,8 @@ export default function App() {
 const TAB_CAP = {
   home: 'Home', snap: 'SnapHomework', analyze: 'Analyze', explain: 'Explain', prep: 'Explain',
   scaffold: 'Scaffold', done: 'Done', ask: 'AskAI', chat: 'AskAI', toy: 'SnapToy',
-  game: 'Game', report: 'Report', profile: 'Profile',
-  check: 'CheckWork', check_work: 'CheckWork',
+  game: 'Game', games: 'Game', report: 'Report', profile: 'Profile',
+  check: 'CheckWork', check_work: 'CheckWork', checkWork: 'CheckWork',
 }
 
 /* ============================================================

@@ -618,7 +618,7 @@ export function DefaultCheckWorkEntry({ onStart, childName }) {
         <h3 style={{ fontSize: 15.5, fontWeight: 800, margin: '2px 0 4px', color: 'var(--c-text)' }}>
           Chấm vở {childName || 'con'} đã làm
         </h3>
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--c-sub, #6E5D4E)', lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--c-sub, var(--c-text-2))', lineHeight: 1.4 }}>
           Chụp bài làm xong. AI tìm đúng bước sai đầu tiên và đưa mẹ câu hỏi để con <b>tự sửa</b>, không chữa hộ.
         </p>
       </div>

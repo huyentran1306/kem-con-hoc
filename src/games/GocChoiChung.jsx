@@ -115,130 +115,216 @@ export default function GocChoiChung({
 
       {/* Thẻ Hôm nay ôn */}
       <div
-        className="card-km"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 14px',
-          background: 'var(--c-surface, #fff)',
-          border: '1.5px solid var(--c-line)',
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          padding: "10px 12px",
+          background: "color-mix(in srgb, var(--c-accent) 12%, var(--c-surface, #fff))",
+          border: "1px solid var(--c-line)",
           borderRadius: 18,
+          boxSizing: "border-box",
         }}
         data-testid="card-today-focus"
       >
-        <span style={{ fontSize: 28, flexShrink: 0 }}>🎯</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>Hôm nay ôn</b>
-          <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--c-sub)', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <span style={{ fontSize: 24, flexShrink: 0 }}>🎯</span>
+        <div style={{ flex: 1, minWidth: 0, display: "grid" }}>
+          <b style={{ fontSize: 14, color: "var(--c-text)", margin: 0 }}>Hôm nay ôn</b>
+          <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {focusSkill}
           </p>
         </div>
         <span
           style={{
             fontSize: 12,
-            fontWeight: 800,
-            color: timeStatus.isLimitReached ? 'var(--c-danger, #D23A50)' : 'var(--c-text)',
-            background: 'var(--c-surface-2)',
-            padding: '4px 10px',
+            fontWeight: 900,
+            color: timeStatus.isLimitReached ? "var(--c-danger, #D23A50)" : "var(--c-text)",
+            background: "var(--c-surface)",
+            padding: "4px 9px",
             borderRadius: 999,
-            whiteSpace: 'nowrap',
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            border: "1px solid var(--c-line)",
           }}
         >
           ⏱ còn {timeStatus.remainingFormatted}
         </span>
       </div>
 
-      {/* 3 Thẻ Trò chơi (Thẻ hành động T2) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* 3 Thẻ Trò chơi (Làm đúng goc-choi-chung.html: thẻ ngang, icon 52px, không mũi tên) */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {/* Trò 1: Đấu trí */}
         <div
-          className="card-km card-km-action"
+          role="button"
+          tabIndex={0}
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
             gap: 12,
-            padding: '12px 14px',
-            cursor: 'pointer',
-            borderRadius: 18,
+            padding: "10px 12px",
+            background: "var(--c-surface, #fff)",
+            border: "1px solid var(--c-line)",
+            borderRadius: 20,
+            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+            cursor: "pointer",
+            textAlign: "left",
           }}
-          onClick={() => handleStartGame('duel')}
+          onClick={() => handleStartGame("duel")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartGame("duel"); }}
           data-testid="btn-game-duel"
         >
-          <span style={{ fontSize: 26, width: 40, height: 40, borderRadius: 12, background: 'var(--c-surface-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              background: "color-mix(in srgb, var(--c-accent) 22%, var(--c-surface))",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 26,
+              flexShrink: 0,
+            }}
+          >
             ⚔️
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <b style={{ fontSize: 15, color: 'var(--c-text)', display: 'block' }}>Đấu trí hai đầu bàn</b>
-            <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--c-sub)' }}>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: "grid", gap: 1 }}>
+            <b style={{ fontSize: 15.5, color: "var(--c-text)", margin: 0 }}>Đấu trí hai đầu bàn</b>
+            <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35 }}>
               Đặt máy giữa bàn, mỗi người một nửa màn hình
             </p>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-accent)', background: 'color-mix(in srgb, var(--c-accent) 15%, transparent)', padding: '2px 8px', borderRadius: 999 }}>
+          <span
+            style={{
+              fontSize: 10.5,
+              fontWeight: 900,
+              background: "var(--c-surface-2)",
+              color: "var(--c-text)",
+              borderRadius: 999,
+              padding: "4px 9px",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
             2 người
           </span>
-          <span className="btn-km-arrow" style={{ fontSize: 18, color: 'var(--c-sub)' }}>›</span>
         </div>
 
         {/* Trò 2: Leo cây */}
         <div
-          className="card-km card-km-action"
+          role="button"
+          tabIndex={0}
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
             gap: 12,
-            padding: '12px 14px',
-            cursor: 'pointer',
-            borderRadius: 18,
+            padding: "10px 12px",
+            background: "var(--c-surface, #fff)",
+            border: "1px solid var(--c-line)",
+            borderRadius: 20,
+            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+            cursor: "pointer",
+            textAlign: "left",
           }}
-          onClick={() => handleStartGame('tree')}
+          onClick={() => handleStartGame("tree")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartGame("tree"); }}
           data-testid="btn-game-tree"
         >
-          <span style={{ fontSize: 26, width: 40, height: 40, borderRadius: 12, background: 'var(--c-surface-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              background: "color-mix(in srgb, var(--c-good, #2EA043) 22%, var(--c-surface))",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 26,
+              flexShrink: 0,
+            }}
+          >
             🌳
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <b style={{ fontSize: 15, color: 'var(--c-text)', display: 'block' }}>Leo cây mật ong</b>
-            <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--c-sub)' }}>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: "grid", gap: 1 }}>
+            <b style={{ fontSize: 15.5, color: "var(--c-text)", margin: 0 }}>Leo cây mật ong</b>
+            <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35 }}>
               Cùng giúp linh vật leo lên trước khi ong về
             </p>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#15803D', background: '#DCFCE7', padding: '2px 8px', borderRadius: 999 }}>
+          <span
+            style={{
+              fontSize: 10.5,
+              fontWeight: 900,
+              background: "var(--c-surface-2)",
+              color: "var(--c-text)",
+              borderRadius: 999,
+              padding: "4px 9px",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
             cùng phe
           </span>
-          <span className="btn-km-arrow" style={{ fontSize: 18, color: 'var(--c-sub)' }}>›</span>
         </div>
 
         {/* Trò 3: Thám tử đồ vật */}
         <div
-          className="card-km card-km-action"
+          role="button"
+          tabIndex={0}
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
             gap: 12,
-            padding: '12px 14px',
-            cursor: 'pointer',
-            borderRadius: 18,
+            padding: "10px 12px",
+            background: "var(--c-surface, #fff)",
+            border: "1px solid var(--c-line)",
+            borderRadius: 20,
+            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+            cursor: "pointer",
+            textAlign: "left",
           }}
-          onClick={() => handleStartGame('detective')}
+          onClick={() => handleStartGame("detective")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartGame("detective"); }}
           data-testid="btn-game-detective"
         >
-          <span style={{ fontSize: 26, width: 40, height: 40, borderRadius: 12, background: 'var(--c-surface-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              background: "color-mix(in srgb, var(--c-accent-2, #9333EA) 22%, var(--c-surface))",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 26,
+              flexShrink: 0,
+            }}
+          >
             🔍
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <b style={{ fontSize: 15, color: 'var(--c-text)', display: 'block' }}>Thám tử đồ vật</b>
-            <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--c-sub)' }}>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: "grid", gap: 1 }}>
+            <b style={{ fontSize: 15.5, color: "var(--c-text)", margin: 0 }}>Thám tử đồ vật</b>
+            <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35 }}>
               Đi tìm đồ trong nhà cho đủ phép tính
             </p>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#9333EA', background: '#F3E8FF', padding: '2px 8px', borderRadius: 999 }}>
+          <span
+            style={{
+              fontSize: 10.5,
+              fontWeight: 900,
+              background: "var(--c-surface-2)",
+              color: "var(--c-text)",
+              borderRadius: 999,
+              padding: "4px 9px",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
             vận động
           </span>
-          <span className="btn-km-arrow" style={{ fontSize: 18, color: 'var(--c-sub)' }}>›</span>
         </div>
       </div>
-
       {/* Dòng chú thích */}
       <p style={{ margin: '4px 0', fontSize: 12, color: 'var(--c-sub)', lineHeight: 1.4, textAlign: 'center' }}>
         Câu hỏi tạo bằng code từ phần Gấu nhớ, không tốn token. Hết 5 phút thì tự dừng.

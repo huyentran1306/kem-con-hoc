@@ -904,8 +904,8 @@ export function SideNav({
   activeClassId,
   onSelectClass,
   onAddClass,
-  teacherName = '',
-  schoolName = '',
+  teacherName = "",
+  schoolName = "",
   onLogout,
 }) {
   return (
@@ -914,130 +914,133 @@ export function SideNav({
       style={{
         width: 220,
         flexShrink: 0,
-        backgroundColor: '#FFFFFF',
-        borderRight: '1px solid var(--s-line)',
-        padding: '14px 10px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-        height: '100vh',
-        position: 'sticky',
+        backgroundColor: "#FFFFFF",
+        borderRight: "1px solid var(--s-line)",
+        padding: 0,
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        position: "sticky",
         top: 0,
-        overflowY: 'auto',
-        boxSizing: 'border-box',
+        boxSizing: "border-box",
+        zIndex: 45,
       }}
     >
-      {/* Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px 6px 6px' }}>
+      {/* Brand: Cố định đỉnh, logo và tên trường luôn hiển thị trọn vẹn (Prompt 23K - F13) */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 12px 10px 12px", borderBottom: "1px solid var(--s-line)", flexShrink: 0, backgroundColor: "#FFFFFF" }}>
         <BearMascot mood="greeting" size={34} />
-        <div style={{ minWidth: 0 }}>
-          <b style={{ fontFamily: 'var(--s-font-head)', fontSize: 15, color: 'var(--s-text)', display: 'block', lineHeight: 1.15 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <b style={{ fontFamily: "var(--s-font-head)", fontSize: 15, color: "var(--s-text)", display: "block", lineHeight: 1.15 }}>
             Cổng Giáo Viên
           </b>
           {schoolName ? (
-            <small style={{ fontSize: 12, color: 'var(--s-text-2)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <small style={{ fontSize: 12, color: "var(--s-text-2)", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {schoolName}
             </small>
           ) : null}
         </div>
       </div>
 
-      {/* Class Switcher */}
-      {classes.length > 0 && (
-        <ClassSwitcher
-          classes={classes}
-          activeClassId={activeClassId}
-          onSelectClass={onSelectClass}
-          onAddClass={onAddClass}
-        />
-      )}
+      {/* Vùng menu cuộn mượt */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 10px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Class Switcher */}
+        {classes.length > 0 && (
+          <ClassSwitcher
+            classes={classes}
+            activeClassId={activeClassId}
+            onSelectClass={onSelectClass}
+            onAddClass={onAddClass}
+          />
+        )}
 
-      {/* Navigation Items */}
-      <nav aria-label="Menu cổng giáo viên" style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}>
-        {items.map((item) => {
-          const isSel = item.id === activeItem;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              aria-current={isSel ? 'page' : undefined}
-              onClick={() => onSelect(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 9,
-                padding: '8px 10px',
-                minHeight: 42,
-                borderRadius: 12,
-                border: 'none',
-                backgroundColor: isSel ? 'var(--s-accent-tint)' : 'transparent',
-                color: isSel ? 'var(--s-text)' : 'var(--s-text-2)',
-                fontWeight: isSel ? 800 : 700,
-                fontSize: 14,
-                fontFamily: 'var(--s-font-body)',
-                boxShadow: isSel ? 'inset 4px 0 0 var(--s-accent)' : 'none',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span style={{ fontSize: 15, display: 'inline-flex', alignItems: 'center' }} aria-hidden="true">{item.icon}</span>
-              <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {item.label}
-              </span>
-              {item.badge !== undefined && item.badge > 0 && (
-                <span
-                  aria-label={`${item.badge} việc chờ`}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 900,
-                    backgroundColor: 'var(--s-bad)',
-                    color: '#FFFFFF',
-                    borderRadius: 999,
-                    padding: '0 7px',
-                    lineHeight: '18px',
-                  }}
-                >
-                  {item.badge}
+        {/* Navigation Items */}
+        <nav aria-label="Menu cổng giáo viên" style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4 }}>
+          {items.map((item) => {
+            const isSel = item.id === activeItem;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-current={isSel ? "page" : undefined}
+                onClick={() => onSelect(item.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9,
+                  padding: "8px 10px",
+                  minHeight: 42,
+                  borderRadius: 12,
+                  border: "none",
+                  backgroundColor: isSel ? "var(--s-accent-tint)" : "transparent",
+                  color: isSel ? "var(--s-text)" : "var(--s-text-2)",
+                  fontWeight: isSel ? 800 : 700,
+                  fontSize: 14,
+                  fontFamily: "var(--s-font-body)",
+                  boxShadow: isSel ? "inset 4px 0 0 var(--s-accent)" : "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span style={{ fontSize: 15, display: "inline-flex", alignItems: "center" }} aria-hidden="true">{item.icon}</span>
+                <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {item.label}
                 </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span
+                    aria-label={`${item.badge} việc chờ`}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 900,
+                      backgroundColor: "var(--s-bad)",
+                      color: "#FFFFFF",
+                      borderRadius: 999,
+                      padding: "0 7px",
+                      lineHeight: "18px",
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Gấu nhắc quyền riêng tư: ngay dưới menu */}
-      <div
-        style={{
-          marginTop: 6,
-          backgroundColor: 'var(--s-accent-tint)',
-          borderRadius: 14,
-          padding: '10px 10px',
-          display: 'grid',
-          gridTemplateColumns: '28px 1fr',
-          gap: 8,
-          alignItems: 'center',
-          fontSize: 12.5,
-          lineHeight: 1.4,
-          color: 'var(--s-text)',
-        }}
-      >
-        <BearMascot mood="nudge" size={26} />
-        <div>
-          <b>Quyền riêng tư</b>: cô chỉ xem trạng thái bài, không thấy ảnh hay trò chuyện của gia đình.
+        {/* Gấu nhắc quyền riêng tư: ngay dưới menu */}
+        <div
+          style={{
+            marginTop: 6,
+            backgroundColor: "var(--s-accent-tint)",
+            borderRadius: 14,
+            padding: "10px 10px",
+            display: "grid",
+            gridTemplateColumns: "28px 1fr",
+            gap: 8,
+            alignItems: "center",
+            fontSize: 12.5,
+            lineHeight: 1.4,
+            color: "var(--s-text)",
+          }}
+        >
+          <BearMascot mood="nudge" size={26} />
+          <div>
+            <b>Quyền riêng tư</b>: cô chỉ xem trạng thái bài, không thấy ảnh hay trò chuyện của gia đình.
+          </div>
         </div>
       </div>
 
-      {/* Teacher Profile & Logout */}
+      {/* Teacher Profile & Logout: Cố định đáy, luôn thấy đủ tên cô */}
       <div
         style={{
-          marginTop: 'auto',
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           gap: 8,
-          paddingTop: 10,
-          borderTop: '1px solid var(--s-line)',
+          padding: "10px 12px",
+          borderTop: "1px solid var(--s-line)",
+          backgroundColor: "#FFFFFF",
           fontSize: 13,
+          flexShrink: 0,
         }}
       >
         <div
@@ -1045,11 +1048,11 @@ export function SideNav({
           style={{
             width: 32,
             height: 32,
-            borderRadius: '50%',
-            backgroundColor: 'var(--s-accent-tint)',
-            color: 'var(--s-accent-ink)',
-            display: 'grid',
-            placeItems: 'center',
+            borderRadius: "50%",
+            backgroundColor: "var(--s-accent-tint)",
+            color: "var(--s-accent-ink)",
+            display: "grid",
+            placeItems: "center",
             fontWeight: 900,
             fontSize: 13,
             flexShrink: 0,
@@ -1058,10 +1061,10 @@ export function SideNav({
           {teacherInitial(teacherName)}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <strong style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--s-text)' }}>
+          <strong style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--s-text)" }}>
             {formatTeacherName(teacherName)}
           </strong>
-          <span style={{ fontSize: 12, color: 'var(--s-ok)', fontWeight: 800 }}>Giáo viên</span>
+          <span style={{ fontSize: 12, color: "var(--s-ok)", fontWeight: 800 }}>Giáo viên</span>
         </div>
         {onLogout && (
           <button
@@ -1070,16 +1073,16 @@ export function SideNav({
             title="Đăng xuất"
             aria-label="Đăng xuất"
             style={{
-              background: 'none',
-              border: '1px solid var(--s-line)',
+              background: "none",
+              border: "1px solid var(--s-line)",
               borderRadius: 999,
-              color: 'var(--s-text-2)',
+              color: "var(--s-text-2)",
               fontSize: 14,
-              cursor: 'pointer',
+              cursor: "pointer",
               width: 36,
               height: 36,
-              display: 'grid',
-              placeItems: 'center',
+              display: "grid",
+              placeItems: "center",
               flexShrink: 0,
             }}
           >

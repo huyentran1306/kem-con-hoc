@@ -1,3 +1,4 @@
+import { isTrialActive } from "./trialData.js"
 import { appConfirm } from './dialog'
 import React, { useState, useEffect } from 'react'
 import {
@@ -33,11 +34,30 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
 
   const loadData = async () => {
     setLoading(true)
+    const TRIAL_MEMBERS = [
+      { id: "mem_mom", name: "Mẹ (Chủ gia đình)", role: "owner", relation_hint: "Mẹ", email: "me.kemcon@example.com", is_active: true },
+      { id: "mem_dad", name: "Bố (Người giám hộ)", role: "guardian", relation_hint: "Bố", email: "bo.kemcon@example.com", is_active: true },
+    ]
     try {
+      if (isTrialActive()) {
+        setMembers(TRIAL_MEMBERS)
+        setInvites([])
+        setLoading(false)
+        return
+      }
       const [mRes, iRes] = await Promise.all([getFamilyMembers(), getFamilyInvites()])
-      if (mRes.ok) setMembers(mRes.members || [])
-      if (iRes.ok) setInvites(iRes.invites || [])
+      if (mRes && mRes.ok && mRes.members && mRes.members.length > 0) {
+        setMembers(mRes.members)
+      } else if (isTrialActive()) {
+        setMembers(TRIAL_MEMBERS)
+      } else {
+        setMembers(mRes?.members || [])
+      }
+      if (iRes && iRes.ok) setInvites(iRes.invites || [])
     } catch (e) {
+      if (isTrialActive()) {
+        setMembers(TRIAL_MEMBERS)
+      }
       console.warn('load members/invites failed:', e)
     } finally {
       setLoading(false)

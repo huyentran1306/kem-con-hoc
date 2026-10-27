@@ -95,18 +95,30 @@ export function TPill({ variant = 'default', children, label, style = {} }) {
   return <StatusPill status={status} label={text} style={{ fontSize: 12, ...style }} />
 }
 
-/* ---------------- Biểu đồ bậc hay vướng ---------------- */
-export function StepChart({ steps = [], title = 'Bậc hay vướng nhất', caption, emptyTitle = 'Chưa có dữ liệu bậc hay vướng', emptyText }) {
+/* ---------------- Biểu đồ bậc hay vướng (Prompt 23K - F14) ---------------- */
+export function StepChart({
+  steps = [],
+  title = "Bậc hay vướng nhất",
+  caption,
+  emptyTitle = "Chưa có dữ liệu bậc hay vướng",
+  emptyText,
+  hasCompleted = false,
+}) {
   const rows = (steps || []).filter((s) => Number(s.count) > 0)
   if (rows.length === 0) {
+    const isCleanRun = hasCompleted || Boolean(steps && steps.length > 0 && steps.every((s) => Number(s.count) === 0));
     return (
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{ display: "grid", gap: 8 }}>
         <span className="tp-lb">{title}</span>
         <EmptyState
-          mood="nudge"
-          title={emptyTitle}
-          description={emptyText || 'Khi phụ huynh kèm con làm xong bài, Gấu sẽ đếm số lần con bí ở từng bậc để cô biết chỗ cả lớp hay vướng.'}
-          style={{ padding: '20px 14px' }}
+          mood={isCleanRun ? "happy" : "nudge"}
+          title={isCleanRun ? "Chưa bậc nào bị vướng 🎉" : emptyTitle}
+          description={
+            isCleanRun
+              ? "Tất cả học sinh đã làm bài đều tự hoàn thành suôn sẻ, không bị kẹt ở bậc nào!"
+              : (emptyText || "Khi phụ huynh kèm con làm xong bài, Gấu sẽ đếm số lần con bí ở từng bậc để cô biết chỗ cả lớp hay vướng.")
+          }
+          style={{ padding: "20px 14px" }}
         />
       </div>
     )
@@ -115,7 +127,7 @@ export function StepChart({ steps = [], title = 'Bậc hay vướng nhất', cap
   const max = Math.max(...all.map((s) => Number(s.count) || 0), 1)
   const top = Math.max(...all.map((s) => Number(s.count) || 0))
   return (
-    <div style={{ display: 'grid', gap: 10 }}>
+    <div style={{ display: "grid", gap: 10 }}>
       <span className="tp-lb">{title}</span>
       <div className="tp-steps" role="list">
         {all.map((s) => {
@@ -123,8 +135,8 @@ export function StepChart({ steps = [], title = 'Bậc hay vướng nhất', cap
           const isTop = c === top && c > 0
           return (
             <React.Fragment key={s.key ?? s.label}>
-              <span className={isTop ? 'tp-top' : ''} role="listitem">{s.label}</span>
-              <div className={`tp-bar ${isTop ? 'tp-top' : ''}`} aria-hidden="true">
+              <span className={isTop ? "tp-top" : ""} role="listitem">{s.label}</span>
+              <div className={`tp-bar ${isTop ? "tp-top" : ""}`} aria-hidden="true">
                 <i style={{ width: `${Math.round((c / max) * 100)}%` }} />
               </div>
               <b aria-label={`${c} lần`}>{c}</b>
@@ -132,7 +144,7 @@ export function StepChart({ steps = [], title = 'Bậc hay vướng nhất', cap
           )
         })}
       </div>
-      {caption && <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>{caption}</span>}
+      {caption && <span style={{ fontSize: 12, color: "var(--s-text-2)" }}>{caption}</span>}
     </div>
   )
 }

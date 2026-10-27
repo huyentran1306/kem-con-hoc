@@ -165,10 +165,11 @@ export function TraitStackedChart({
         }}
       >
         <span className="lbl plum">Phẩm chất qua các tuần</span>
-        <div className="trait-filters" role="tablist">
+        <div className="trait-filters seg-km" role="tablist" style={{ display: "inline-flex", flexWrap: "nowrap", gap: 2, height: 32, padding: 2 }}>
           <button
             type="button"
-            className={filter === "8w" ? "active" : ""}
+            className={`seg-km-btn ${filter === "8w" ? "active" : ""}`}
+            style={{ padding: "0 8px", fontSize: 12, whiteSpace: "nowrap", height: 28 }}
             onClick={() => setFilter("8w")}
             data-testid="btn-filter-8w"
           >
@@ -176,7 +177,8 @@ export function TraitStackedChart({
           </button>
           <button
             type="button"
-            className={filter === "3m" ? "active" : ""}
+            className={`seg-km-btn ${filter === "3m" ? "active" : ""}`}
+            style={{ padding: "0 8px", fontSize: 12, whiteSpace: "nowrap", height: 28 }}
             onClick={() => setFilter("3m")}
             data-testid="btn-filter-3m"
           >
@@ -184,11 +186,12 @@ export function TraitStackedChart({
           </button>
           <button
             type="button"
-            className={filter === "1y" ? "active" : ""}
+            className={`seg-km-btn ${filter === "1y" ? "active" : ""}`}
+            style={{ padding: "0 8px", fontSize: 12, whiteSpace: "nowrap", height: 28 }}
             onClick={() => setFilter("1y")}
             data-testid="btn-filter-1y"
           >
-            Cả năm
+            Năm
           </button>
         </div>
       </div>

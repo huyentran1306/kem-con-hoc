@@ -5,6 +5,7 @@
 
 /* 1. MẶC ĐỊNH (:root) — Kẹo Bông (Candy) */
 :root {
+  --c-sub: var(--c-text-2);
   --c-bg: #FFF4F8;
   --c-surface: #FFFFFF;
   --c-surface-2: #EDE4FF;

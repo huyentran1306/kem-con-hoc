@@ -384,7 +384,7 @@ export function Home() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 8, padding: '0 4px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--c-sub, #6E5D4E)' }}>{greet}, {parentLower}!</p>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--c-sub, var(--c-text-2))' }}>{greet}, {parentLower}!</p>
           <h2 style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 800, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
             {(hour < 17 ? 'Hôm nay' : 'Tối nay')} {child.name} học gì?
           </h2>
@@ -421,7 +421,7 @@ export function Home() {
       </div>
 
       {S.children.length > 1 && (
-        <div className="seg-km" style={{ marginTop: 10, width: '100%', height: 36 }}>
+        <div className="seg-km" style={{ marginTop: 10, width: '100%', height: 36, background: 'var(--c-surface, rgba(0,0,0,0.1))' }}>
           {S.children.map((c) => {
             const active = c.id === S.activeId
             return (
@@ -433,10 +433,10 @@ export function Home() {
                 style={{
                   height: 32,
                   flex: 1,
-                  background: active ? '#FFFFFF' : 'transparent',
-                  color: active ? 'var(--c-text, #2D241E)' : 'var(--c-text-2, #6E5D4E)',
+                  background: active ? 'var(--c-surface-2, #FFFFFF)' : 'transparent',
+                  color: active ? 'var(--c-text)' : 'var(--c-text-2)',
                   fontWeight: active ? 800 : 600,
-                  boxShadow: active ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: active ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
                   borderRadius: 9,
                   border: 'none',
                   cursor: 'pointer',
@@ -506,7 +506,7 @@ export function Home() {
       >
         <div style={{ minWidth: 0 }}>
           <b style={{ color: 'var(--c-text)', fontSize: 14.5, display: 'block' }}>📖 Làm tiếp bài hôm qua</b>
-          <span style={{ color: 'var(--c-sub, #6E5D4E)', fontSize: 12.5 }}>
+          <span style={{ color: 'var(--c-sub, var(--c-text-2))', fontSize: 12.5 }}>
             Đang ở bậc {(S.pendingProblemResume.step || 0) + 1} · {S.pendingProblemResume.problem?.dang_bai || S.pendingProblemResume.problem?.type || 'Bài tập'}
           </span>
         </div>
@@ -1261,7 +1261,7 @@ export function Analyze() {
             <h2 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px', color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
               Gấu đang đọc đề bài…
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--c-sub, #6E5D4E)', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--c-sub, var(--c-text-2))', margin: 0 }}>
               Đang làm sạch và phân tích cấu trúc bài tập của {child?.name || 'con'}
             </p>
 
@@ -1613,7 +1613,7 @@ export function Explain() {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             fontSize: 12.5,
-            color: 'var(--c-sub, #6E5D4E)',
+            color: 'var(--c-sub, var(--c-text-2))',
             lineHeight: 1.4,
           }}
         >
@@ -2296,7 +2296,7 @@ export function Scaffold() {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             fontSize: 12,
-            color: 'var(--c-sub, #6E5D4E)',
+            color: 'var(--c-sub, var(--c-text-2))',
           }}
         >
           {problem.ocr}
@@ -2461,16 +2461,16 @@ export function Scaffold() {
 
         {/* GỢI Ý NHỎ HIỆN TỪNG CÁI MỘT (gợi ý đã dùng thu gọn 1 dòng) */}
         {stuck >= 1 && (
-          <div style={{ borderTop: '1.5px dashed var(--c-line)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ borderTop: '1.5px dashed var(--c-line)', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {stuck >= 2 && curStep.hint && (
-              <div style={{ fontSize: 11.5, color: 'var(--c-sub)', fontStyle: 'italic' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', borderTop: '1.5px dashed var(--c-line)', paddingTop: 6, marginBottom: 4 }}>
                 ✓ Gợi ý 1: {curStep.hint}
               </div>
             )}
-            <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-primary)' }}>
-              GỢI Ý {stuck >= 2 ? '2' : '1'}
+            <div style={{ fontSize: 10.5, letterSpacing: '0.04em', color: 'var(--c-text-2)', fontWeight: 800 }}>
+              <b style={{ color: 'var(--c-accent-2, var(--c-accent))', fontWeight: 900 }}>GỢI Ý NHỎ {stuck >= 2 ? '2/2' : '1/2'}</b> · {stuck >= 2 ? 'Vẽ ra giấy' : 'Dùng đồ vật thật'}
             </div>
-            <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--c-text)', margin: 0, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', margin: '2px 0 0', lineHeight: 1.35 }}>
               {stuck >= 2 ? (curStep.hint2 || curStep.hint) : curStep.hint}
             </p>
           </div>
@@ -6677,24 +6677,68 @@ export function Profile() {
 
       {/* ===== Nhóm 1 · Con ===== */}
       <h2 className="pg-section-title">Con</h2>
-      {/* Nhận lời khuyên cách kèm (công tắc switch) */}
-      <div className="card-km" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", marginBottom: 12, background: 'var(--c-surface)' }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 22 }}>🐻</span>
-          <div>
-            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Nhận lời khuyên cách kèm</b>
-            <div style={{ fontSize: 12, color: 'var(--c-sub)' }}>Gấu góp ý sư phạm sau mỗi bài học</div>
+      {/* Nhận lời khuyên cách kèm (công tắc switch 40x24 bên phải cùng hàng - F7) */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "12px 16px",
+          marginBottom: 12,
+          background: "var(--c-surface)",
+          border: "1px solid var(--c-line)",
+          borderRadius: 20,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+          <span style={{ fontSize: 22, flexShrink: 0 }}>🐻</span>
+          <div style={{ minWidth: 0 }}>
+            <b style={{ fontSize: 14, color: "var(--c-text)", display: "block" }}>Nhận lời khuyên cách kèm</b>
+            <div style={{ fontSize: 12, color: "var(--c-sub, var(--c-text-2))", marginTop: 1 }}>Gấu góp ý sư phạm sau mỗi bài học</div>
           </div>
         </div>
-        <Switch
-          on={child.receiveCoachAdvice !== false}
-          onChange={(val) => {
-            const updatedChildren = S.children.map(c => c.id === child.id ? { ...c, receiveCoachAdvice: val } : c)
-            patch({ children: updatedChildren })
-            toast(val ? "Đã bật lời khuyên cách kèm" : "Đã tắt lời khuyên cách kèm")
+        <button
+          type="button"
+          role="switch"
+          aria-checked={child.receiveCoachAdvice !== false}
+          aria-label="Nhận lời khuyên cách kèm"
+          style={{
+            width: 40,
+            height: 24,
+            borderRadius: 999,
+            background: (child.receiveCoachAdvice !== false) ? "var(--c-good, #2EA043)" : "var(--c-line)",
+            position: "relative",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            flexShrink: 0,
+            transition: "background 0.15s ease",
           }}
-          label="Nhận lời khuyên cách kèm"
-        />
+          onClick={() => {
+            const val = child.receiveCoachAdvice === false;
+            const updatedChildren = S.children.map(c => c.id === child.id ? { ...c, receiveCoachAdvice: val } : c);
+            patch({ children: updatedChildren });
+            toast(val ? "Đã bật lời khuyên cách kèm 🐻" : "Đã tắt lời khuyên cách kèm");
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: 3,
+              left: (child.receiveCoachAdvice !== false) ? 19 : 3,
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: "#FFFFFF",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+              transition: "left 0.15s ease",
+              display: "block",
+            }}
+          />
+        </button>
       </div>
       <div className="pg-grid2">
         <div className="card plum">
@@ -7239,30 +7283,47 @@ export function CheckWork() {
 
             <button
               data-testid="btn-capture-camera"
-              className="btn primary"
-              style={{ width: '100%', padding: '14px', fontSize: 16, fontWeight: 800 }}
+              className="btn-km btn-km-l btn-km-primary"
+              style={{ width: "100%", justifyContent: "center" }}
               onClick={() => fileInputRef.current?.click()}
             >
-              📷 Chụp ảnh vở
+              <span className="btn-km-icon">📷</span>
+              <span className="btn-km-text" style={{ textAlign: "center", flex: "none" }}>Chụp ảnh vở</span>
             </button>
 
             <button
               data-testid="btn-choose-photo"
-              className="btn ghost"
-              style={{ width: '100%', padding: '12px', fontSize: 14, fontWeight: 700 }}
+              className="btn-km btn-km-m btn-km-secondary"
+              style={{ width: "100%", justifyContent: "center" }}
               onClick={() => fileInputRef.current?.click()}
             >
-              🖼️ Chọn ảnh có sẵn
+              <span>🖼️ Chọn ảnh có sẵn</span>
             </button>
 
-            {trialMode && <button
-              data-testid="btn-sample-photo"
-              className="chip"
-              style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
-              onClick={handleUseSample}
-            >
-              ✨ Dùng bài làm mẫu (Dùng thử)
-            </button>}
+            {trialMode && (
+              <button
+                type="button"
+                data-testid="btn-sample-photo"
+                className="btn-km-ghost"
+                style={{
+                  padding: "8px 12px",
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  color: "var(--c-accent-ink, var(--c-accent))",
+                  textDecoration: "underline",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  margin: "0 auto",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+                onClick={handleUseSample}
+              >
+                <span>⭐ Dùng bài làm mẫu (Dùng thử)</span>
+              </button>
+            )}
           </div>
         </>
       )}

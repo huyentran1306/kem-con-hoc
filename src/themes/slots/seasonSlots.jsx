@@ -218,7 +218,7 @@ function SeasonStart({ theme, emoji, onStart }) {
           onClick={() => onStart?.('voice')}
         >
           <span>🎙️</span>
-          <span>Đọc đề cho AI</span>
+          <span>{theme === "noel" ? "Đọc đề cho Người Tuyết" : theme === "tet" ? "Đọc đề cho Bé Lân" : theme === "thieunhi" ? "Đọc đề cho Bé Diều" : "Đọc đề"}</span>
         </button>
       </div>
     </div>

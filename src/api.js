@@ -1161,6 +1161,15 @@ export async function acceptInvite(code, { displayName, relation, pin }) {
 }
 
 export async function getFamilyMembers() {
+  if (isTrialActive()) {
+    return {
+      ok: true,
+      members: [
+        { id: "mem_mom", name: "Mẹ (Chủ gia đình)", role: "owner", relation_hint: "Mẹ", email: "me.kemcon@example.com", is_active: true },
+        { id: "mem_dad", name: "Bố (Người giám hộ)", role: "guardian", relation_hint: "Bố", email: "bo.kemcon@example.com", is_active: true },
+      ],
+    }
+  }
   const token = getAuthToken()
   const res = await fetch(`${GATEWAY}/api/v1/family/members`, {
     headers: { Authorization: `Bearer ${token}` },

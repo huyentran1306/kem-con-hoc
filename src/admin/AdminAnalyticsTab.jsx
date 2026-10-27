@@ -172,27 +172,37 @@ export function AdminAnalyticsTab({ token }) {
         </div>
       </div>
 
-      {/* 4 Thẻ chỉ số KPIs */}
+      {/* 4 Thẻ chỉ số KPIs (Prompt 23K - F12: khi không có dữ liệu thì dòng phụ là "Chưa có dữ liệu") */}
       <div className="kpis" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12 }}>
         <div style={{ background: "#fff", border: "1.5px solid #F0DDC2", borderRadius: 18, padding: "12px 16px", display: "grid", gap: 2 }}>
           <span style={{ fontSize: 11.5, fontWeight: 900, color: "#8A6A4A" }}>GIA ĐÌNH CÓ DỮ LIỆU</span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "#4B3621" }}>{kpis.active_families || 0}</b>
-          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>từ 3 buổi trong kỳ</em>
+          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>
+            {kpis.active_families ? "từ 3 buổi trong kỳ" : "Chưa có dữ liệu"}
+          </em>
         </div>
         <div style={{ background: "#fff", border: "1.5px solid #F0DDC2", borderRadius: 18, padding: "12px 16px", display: "grid", gap: 2 }}>
           <span style={{ fontSize: 11.5, fontWeight: 900, color: "#8A6A4A" }}>BUỔI HỌC & THỜI LƯỢNG</span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "#4B3621" }}>{kpis.sessions_count || 0} buổi</b>
-          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>trung vị {kpis.median_minutes || 15} phút</em>
+          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>
+            {kpis.sessions_count ? `trung vị ${kpis.median_minutes || 15} phút` : "Chưa có dữ liệu"}
+          </em>
         </div>
         <div style={{ background: "#fff", border: "1.5px solid #F0DDC2", borderRadius: 18, padding: "12px 16px", display: "grid", gap: 2 }}>
           <span style={{ fontSize: 11.5, fontWeight: 900, color: "#8A6A4A" }}>HUY HIỆU ĐÃ TẶNG</span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "#4B3621" }}>{kpis.badges_granted || 0}</b>
-          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>{kpis.suggested_rate || 78}% theo gợi ý Gấu</em>
+          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>
+            {kpis.badges_granted ? `${kpis.suggested_rate || 78}% theo gợi ý Gấu` : "Chưa có dữ liệu"}
+          </em>
         </div>
         <div style={{ background: "#fff", border: "1.5px solid #F0DDC2", borderRadius: 18, padding: "12px 16px", display: "grid", gap: 2 }}>
           <span style={{ fontSize: 11.5, fontWeight: 900, color: "#8A6A4A" }}>KỸ NĂNG HAY KẸT NHẤT</span>
-          <b style={{ fontSize: 18, fontWeight: 800, color: "#4B3621" }}>{kpis.top_stuck_skill || "Đọc hiểu đề"}</b>
-          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>cần tăng cường trợ giúp</em>
+          <b style={{ fontSize: 18, fontWeight: 800, color: "#4B3621" }}>
+            {kpis.sessions_count ? (kpis.top_stuck_skill || "Đọc hiểu đề") : "Chưa có"}
+          </b>
+          <em style={{ fontStyle: "normal", fontSize: 12, color: "#8A6A4A" }}>
+            {kpis.sessions_count && kpis.top_stuck_skill ? "cần tăng cường trợ giúp" : "Chưa có dữ liệu"}
+          </em>
         </div>
       </div>
 
