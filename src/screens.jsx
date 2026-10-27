@@ -28,6 +28,8 @@ import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import { emitMotion } from './MotionLayer'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
+import GocChoiChung from './games/GocChoiChung'
+import { getDailyLimitMinutes, setDailyLimitMinutes } from './games/gameStorage'
 
 // Module-scoped pending shot buffer (Prompt 23D)
 let pendingShot = null
@@ -3908,7 +3910,7 @@ function detectToyItem(text) {
   }
 }
 
-export function SnapToy() {
+function SnapToyCameraSection() {
   const { S, stats, go, toast } = useContext(AppCtx)
   const videoRef = useRef(null)
   const fileRef = useRef(null)
@@ -4278,6 +4280,26 @@ export function SnapToy() {
         ))}
       </div>
     </>
+  )
+}
+
+
+export function SnapToy() {
+  const { S, stats, go, openSheet, patch, session } = useContext(AppCtx)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+  const isTrial = Boolean(session?.isTrial)
+
+  return (
+    <GocChoiChung
+      child={child}
+      stats={stats}
+      S={S}
+      patch={patch}
+      go={go}
+      openSheet={openSheet}
+      isTrial={isTrial}
+      SnapToyLegacyComponent={SnapToyCameraSection}
+    />
   )
 }
 
@@ -6667,6 +6689,46 @@ export function Profile() {
       {/* ===== Nhóm 3 · Cài đặt ===== */}
       <h2 className="pg-section-title">Cài đặt</h2>
       <div className="pg-grid2">
+
+        {/* Cài đặt thời gian chơi chung mỗi ngày (Prompt 24 Chặng 1) */}
+        <div className="card" data-testid="card-game-time-limit">
+          <span className="lbl plum">⏱ Thời gian chơi chung mỗi ngày</span>
+          <b style={{ fontSize: 14, color: 'var(--c-text)', display: 'block', margin: '4px 0 2px' }}>
+            Tự động dừng khi hết giờ chơi
+          </b>
+          <span className="sub" style={{ display: 'block', marginBottom: 10 }}>
+            Mỗi ngày mẹ và {child.name} chơi cùng tối đa bao nhiêu phút?
+          </span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[3, 5, 10, 15].map((mins) => {
+              const active = getDailyLimitMinutes(child.id) === mins
+              return (
+                <button
+                  key={mins}
+                  type="button"
+                  className={`btn-km btn-km-s btn-km-chip ${active ? 'active' : ''}`}
+                  style={{
+                    flex: 1,
+                    height: 36,
+                    borderRadius: 10,
+                    fontWeight: active ? 800 : 600,
+                    background: active ? 'var(--c-accent, #F6A623)' : 'var(--c-surface-2)',
+                    color: active ? 'var(--c-on-accent, #fff)' : 'var(--c-text)',
+                    border: active ? 'none' : '1px solid var(--c-line)',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => {
+                    setDailyLimitMinutes(child.id, mins)
+                    toast(`Đã đặt thời gian chơi chung: ${mins} phút/ngày ⏱`)
+                  }}
+                >
+                  {mins} phút
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="card">
           <span className="lbl plum">Âm thanh và tiếng bấm nút 🎵</span>
           <div className="switch-row">
