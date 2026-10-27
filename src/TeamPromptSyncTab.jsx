@@ -33,6 +33,24 @@ export const COMPANY_AI_MODELS = [
   'Khác (Tùy chọn)',
 ]
 
+// Hàm sắp xếp theo thời gian tăng dần (cũ ở trên, mới ở dưới - chạy từ trên xuống)
+export function comparePromptTimeAsc(a, b) {
+  const parseTime = (p) => {
+    if (!p) return 0
+    const str = p.createdAt || p.updatedAt || ''
+    const t = Date.parse(str)
+    if (!isNaN(t)) return t
+    const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/)
+    if (m) {
+      return new Date(m[1], m[2] - 1, m[3], m[4] || 0, m[5] || 0).getTime()
+    }
+    return 0
+  }
+  const diff = parseTime(a) - parseTime(b)
+  if (diff !== 0) return diff
+  return String(a.id || '').localeCompare(String(b.id || ''))
+}
+
 import INITIAL_TEAM_PROMPTS from './teamPromptsData.json'
 
 export default function TeamPromptSyncTab() {
@@ -51,16 +69,17 @@ export default function TeamPromptSyncTab() {
           }
           return item
         })
-        ;[...INITIAL_TEAM_PROMPTS].reverse().forEach((initPrompt) => {
+        INITIAL_TEAM_PROMPTS.forEach((initPrompt) => {
           if (!list.some((p) => p.id === initPrompt.id)) {
-            list.unshift(initPrompt)
+            list.push(initPrompt)
           }
         })
+        list.sort(comparePromptTimeAsc)
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list))
         return list
       }
     } catch (e) {}
-    return INITIAL_TEAM_PROMPTS
+    return [...INITIAL_TEAM_PROMPTS].sort(comparePromptTimeAsc)
   })
 
   const [loading, setLoading] = useState(false)
@@ -103,11 +122,12 @@ export default function TeamPromptSyncTab() {
           }
           return item
         })
-        ;[...INITIAL_TEAM_PROMPTS].reverse().forEach((initPrompt) => {
+        INITIAL_TEAM_PROMPTS.forEach((initPrompt) => {
           if (!merged.some((p) => p.id === initPrompt.id)) {
-            merged.unshift(initPrompt)
+            merged.push(initPrompt)
           }
         })
+        merged.sort(comparePromptTimeAsc)
         setPrompts(merged)
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged))
         setLastSyncTime(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
@@ -276,7 +296,7 @@ export default function TeamPromptSyncTab() {
         createdAt: nowStr,
         updatedAt: nowStr,
       }
-      updatedList = [newPromptItem, ...prompts]
+      updatedList = [...prompts, newPromptItem].sort(comparePromptTimeAsc)
     }
 
     await savePromptsToCloud(updatedList, editingId ? 'Đã cập nhật prompt thành công! ✨' : 'Đã gửi prompt mới lên bảng sync team! 🚀')
@@ -340,7 +360,7 @@ export default function TeamPromptSyncTab() {
       if (filterRunStatus === 'pending' && p.isRunCompanyAi) return false
 
       return true
-    })
+    }).sort(comparePromptTimeAsc)
   }, [prompts, search, filterCategory, filterRunStatus])
 
   // 🐻 MÀN HÌNH LOADING THƯ VIỆN PROMPT TONE GẤU
