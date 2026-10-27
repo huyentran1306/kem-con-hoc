@@ -28,6 +28,16 @@ import { DefaultScaffoldActions } from './themes/slots/defaultSlots'
 import { CalmNudgeCard } from './CalmNudgeCard'
 import { emitMotion } from './MotionLayer'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
+
+// Module-scoped pending shot buffer (Prompt 23D)
+let pendingShot = null
+
+const formatChildGrade = (g) => {
+  if (!g) return 'Lớp 3'
+  const str = String(g).trim()
+  return /^lớp\s*/i.test(str) ? str : `Lớp ${str}`
+}
+
 import { getStudyDateKey } from './useStudyTracker'
 import { validateAllLessonMath } from './arithmetic.js'
 import { ThemeBuddy, BuddyGreeter, buddyReact, useThemeBuddyId, BUDDY_NAMES } from './themes/buddies/buddySvgs'
@@ -342,7 +352,7 @@ export function Home() {
 
   const dayCodeMap = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
   const todayCode = dayCodeMap[now.getDay()]
-  const shortDate = `${todayCode} ${now.getDate()}/${now.getMonth() + 1} · Lớp ${child.grade}`
+  const shortDate = `${todayCode} ${now.getDate()}/${now.getMonth() + 1} · ${formatChildGrade(child.grade)}`
 
   const hero = (
     <div className="home-hero-km" style={{ marginBottom: 12 }}>
@@ -357,7 +367,7 @@ export function Home() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--c-sub, #6E5D4E)' }}>{greet}, {parentLower}!</p>
           <h2 style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 800, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
-            Tối nay {child.name} học gì?
+            {(hour < 17 ? 'Hôm nay' : 'Tối nay')} {child.name} học gì?
           </h2>
         </div>
         <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -399,8 +409,23 @@ export function Home() {
               <button
                 key={c.id}
                 type="button"
-                className={`seg-km-item ${active ? 'active' : ''}`}
-                style={{ height: 32 }}
+                className={`seg-km-btn ${active ? 'active' : ''}`}
+                aria-pressed={active ? "true" : "false"}
+                style={{
+                  height: 32,
+                  flex: 1,
+                  background: active ? '#FFFFFF' : 'transparent',
+                  color: active ? 'var(--c-text, #2D241E)' : 'var(--c-text-2, #6E5D4E)',
+                  fontWeight: active ? 800 : 600,
+                  boxShadow: active ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                  borderRadius: 9,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6
+                }}
                 onClick={() => {
                   patch({ activeId: c.id })
                   toast(`Đổi sang ${/^bé\s/i.test(c.name) ? c.name : "bé " + c.name} ${c.emoji}`)
@@ -1479,7 +1504,7 @@ export function Explain() {
       {/* TopBar T4 */}
       <TopBarT4
         title={`Gấu đã soạn ${stepsCount} bậc`}
-        stepText={`Lớp ${child?.grade || '3'}`}
+        stepText={formatChildGrade(child?.grade || '3')}
         onBack={() => go('home')}
         onOpenCalm={() => openSheet('calm')}
       />
@@ -3417,7 +3442,7 @@ export function Done() {
                 <button
                   key={opt.v}
                   type="button"
-                  className={`seg-km-item ${active ? 'active' : ''}`}
+                  className={`seg-km-btn ${active ? 'active' : ''}`} aria-pressed={active ? "true" : "false"}
                   style={{ height: 32, fontSize: 12 }}
                   onClick={() => pickTeachBack(opt.v)}
                 >
@@ -4093,9 +4118,11 @@ export function SnapToy() {
             </div>
           </div>
         )}
-        <div className="hint">
-          {shot ? 'Đã chụp, AI đang phân tích đồ vật' : 'Chụp cây lược, bút, thước, chai lọ hoặc đồ vật bất kỳ'}
-        </div>
+        {(camOn || shot) && (
+          <div className="hint">
+            {shot ? 'Đã chụp, AI đang phân tích đồ vật' : 'Chụp cây lược, bút, thước, chai lọ hoặc đồ vật bất kỳ'}
+          </div>
+        )}
       </div>
 
       {!shot ? (
@@ -6174,9 +6201,58 @@ export function Report() {
       <Header title={`Tuần này của ${child.name}`} />
       <p className="sub">{totalSessions} ca · mẹ kèm {momSessions} ca, bố kèm {dadSessions} ca · {stickerHistory.length} mốc dữ liệu phẩm chất</p>
 
+      {/* Dải tab dính trên Báo cáo (Prompt 23 Chặng 3.8 & Prompt 23D) */}
+      <div
+        className="report-sticky-tabs"
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 80,
+          background: 'var(--c-bg, #FFFBF5)',
+          padding: '8px 0',
+          marginBottom: 12,
+          display: 'flex',
+          gap: 6,
+          overflowX: 'auto',
+          borderBottom: '1px solid var(--c-line, #EADFCF)',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {[
+          { id: 'sec-week', label: 'Tuần này' },
+          { id: 'sec-traits', label: 'Phẩm chất' },
+          { id: 'sec-subjects', label: 'Môn học' },
+          { id: 'sec-ai', label: 'Gấu phân tích' }
+        ].map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className="btn-km btn-km-s btn-km-chip"
+            style={{
+              padding: '6px 14px',
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              background: 'var(--c-surface, #fff)',
+              border: '1px solid var(--c-line, #EADFCF)',
+              color: 'var(--c-text, #2D241E)',
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              const el = document.getElementById(t.id);
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+
       <div className="pg-grid2">
         {/* 1. Tóm tắt tuần */}
-        {aiKemCard}
+        <div id="sec-week" style={{ gridColumn: "1 / -1" }}>{aiKemCard}</div>
         {/* Đợt 15 P1: An toàn AI · con giảng lại · tự sửa lỗi (prompt 14 mục 2.7, 3.7, 4.3) */}
         <WeeklyAiCards stats={stats} childName={child.name} />
 
@@ -6185,7 +6261,7 @@ export function Report() {
         {strongSection}
 
         {/* 4. ĐỢT 19 CHẶNG 3: BIỂU ĐỒ CỘT CHỒNG PHẨM CHẤT & AI PHÂN TÍCH */}
-        <div className="pg-span">
+        <div id="sec-traits" className="pg-span">
           <TraitStackedChart
             badges={stats?.stickerHistory || []}
             rewards={stats?.rewardHistory || []}
@@ -6193,14 +6269,14 @@ export function Report() {
           />
         </div>
 
-        <div className="pg-span">
+        <div id="sec-ai" className="pg-span">
           <TraitAiAnalysisCard
             child={child}
             stats={stats}
           />
         </div>
 
-        <div className="pg-span">
+        <div id="sec-subjects" className="pg-span">
           <SubjectAndSkillHeatmap
             stats={stats}
             childName={child.name}
@@ -6216,12 +6292,13 @@ export function Report() {
 
         {/* 7. Gửi Zalo */}
         <button
-          className="btn solid pg-span"
+          type="button"
+          className="btn-km btn-km-primary pg-span"
           onClick={() => {
             soundPop(600)
             setShowZaloReport(true)
           }}
-          style={{ fontWeight: 800, fontSize: 15 }}
+          style={{ width: '100%', height: 48, borderRadius: 16, fontSize: 15, fontWeight: 700 }}
         >
           💬 Gửi báo cáo vào nhóm Zalo gia đình
         </button>
@@ -6951,7 +7028,7 @@ export function CheckWork() {
               style={{
                 width: '100%',
                 height: 180,
-                border: '2px dashed var(--c-primary, #7C3AED)',
+                border: '2px dashed var(--c-line, #CBD5E1)',
                 borderRadius: 14,
                 background: 'var(--c-surface-2, #F8FAFC)',
                 display: 'flex',
@@ -7053,8 +7130,8 @@ export function CheckWork() {
               style={{
                 fontSize: 11,
                 fontWeight: 800,
-                color: 'var(--c-primary, #7C3AED)',
-                background: 'rgba(124, 58, 237, 0.1)',
+                color: 'var(--c-accent, #F6A623)',
+                background: 'var(--c-surface-2, #F1F5F9)',
                 padding: '4px 10px',
                 borderRadius: 999,
               }}

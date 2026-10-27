@@ -203,7 +203,7 @@
   gap: 2px;
 }
 
-.seg-km-btn {
+.seg-km-btn, .seg-km-item {
   height: 32px;
   padding: 0 12px;
   border-radius: 9px;
@@ -216,7 +216,7 @@
   transition: all 0.12s ease;
 }
 
-.seg-km-btn.active {
+.seg-km-btn.active, .seg-km-item.active {
   background: var(--c-surface);
   color: var(--c-text);
   font-weight: 800;

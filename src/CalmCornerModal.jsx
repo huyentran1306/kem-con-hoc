@@ -352,8 +352,9 @@ export function CalmCornerModal({
             </div>
 
             <button
-              className="btn solid"
-              style={{ width: '100%', padding: '12px', fontSize: 14, fontWeight: 700 }}
+              type="button"
+              className="btn-km btn-km-primary"
+              style={{ width: '100%', height: 48, borderRadius: 16, fontSize: 14, fontWeight: 700 }}
               onClick={onClose}
             >
               Quay lại bài đang làm ➔
