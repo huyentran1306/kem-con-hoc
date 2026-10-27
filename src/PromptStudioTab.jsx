@@ -503,7 +503,7 @@ export default function PromptStudioTab() {
       writeDraftStore(store)
       setDraftStore(store)
       const v = await recordVersion('published')
-      staffToast(v ? `Đã xuất bản v${v.version}` : 'Đã xuất bản cho mọi gia đình')
+      staffToast(v ? `Đã xuất bản v${v.version}. Điện thoại phụ huynh nhận bản mới trong tối đa 10 phút.` : 'Đã xuất bản cho mọi gia đình. Điện thoại phụ huynh nhận bản mới trong tối đa 10 phút.')
     } finally {
       setBusy('')
     }

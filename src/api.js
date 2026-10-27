@@ -25,7 +25,7 @@ export function setDemoMode(val) {
    CLIENT GATEWAY — API Service & Database Bridge
    ============================================================ */
 import { PROBLEM } from './data.js'
-import { renderPrompt, getActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
+import { renderPrompt, getActiveAiConfig, setActivePrompts, setActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
 import { getWeekLabel } from './utils.js'
 import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
 import { viNumberWords } from './guard.js'
@@ -348,6 +348,18 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const startedAt = Date.now()
   const modelId = typeof aiCfg.model === 'string' && aiCfg.model.startsWith('@cf/') ? aiCfg.model : undefined
 
+  // Đợt 23P: Gửi đầy đủ thông tin phân loại và định danh con để tính khoá lesson_cache chuẩn xác
+  const explainHeaders = {
+    'X-Prompt-Id': targetPromptId,
+    'X-Problem-Text': encodeURIComponent(ocr || ''),
+    'X-Family-Id': encodeURIComponent(options.familyId || ''),
+    'X-Grade': encodeURIComponent(grade || ''),
+    'X-Book-Series': encodeURIComponent(book || ''),
+    'X-Subject': encodeURIComponent(classification.mon || 'Toán'),
+    'X-Child-Id': encodeURIComponent(child?.id || ''),
+    ...(options.bypassCache ? { 'X-Bypass-Cache': '1' } : {}),
+  }
+
   try {
     let j;
     // Đợt 20 · Chặng 2: Chế độ trình diễn - nếu quá 10s tự động chuyển bản soạn sẵn
@@ -368,7 +380,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
             model: modelId,
           },
           10000,
-          { 'X-Prompt-Id': targetPromptId, 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Family-Id': encodeURIComponent(options.familyId || '') }
+          explainHeaders
         );
         j = await Promise.race([aiPromise, demoTimeoutPromise]);
       } catch (dErr) {
@@ -392,7 +404,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         EXPLAIN_TIMEOUT_MS,
-        { 'X-Prompt-Id': targetPromptId, 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Family-Id': encodeURIComponent(options.familyId || '') }
+        explainHeaders
       );
     }
     let data = extractJson(j.response ?? j)
@@ -414,7 +426,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         remainingMs,
-        { 'X-Prompt-Id': targetPromptId, 'X-Problem-Text': encodeURIComponent(ocr || ''), 'X-Family-Id': encodeURIComponent(options.familyId || '') }
+        explainHeaders
       )
       data = extractJson(retryResp.response ?? retryResp)
     }
@@ -793,6 +805,27 @@ export async function loadPublicConfig(force = false) {
   }
   return publicConfigCache
 }
+
+export async function syncPublicConfig(force = false) {
+  const cfg = await loadPublicConfig(force)
+  if (!cfg) return null
+  try {
+    const currentVer = localStorage.getItem('kem-con-hoc:prompt-config-version') || ''
+    if (cfg.configVersion && cfg.configVersion !== currentVer) {
+      if (cfg.promptStudio && typeof cfg.promptStudio === 'object') {
+        setActivePrompts(cfg.promptStudio)
+      }
+      if (cfg.aiConfig && typeof cfg.aiConfig === 'object') {
+        setActiveAiConfig(cfg.aiConfig)
+      }
+      localStorage.setItem('kem-con-hoc:prompt-config-version', cfg.configVersion)
+    }
+  } catch (e) {
+    console.warn('syncPublicConfig storage error:', e)
+  }
+  return cfg
+}
+
 
 /* ============================================================
    👑 ADMIN API — Quản trị người dùng & D1

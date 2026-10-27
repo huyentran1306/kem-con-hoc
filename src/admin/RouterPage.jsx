@@ -241,7 +241,7 @@ export default function RouterPage() {
       if (ok) {
         setActiveAiConfig(next)
         setSaved(clone(rules))
-        staffToast('Đã lưu Router sư phạm, bài giảng mới dùng luật này ngay')
+        staffToast('Đã lưu Router sư phạm. Điện thoại phụ huynh nhận bản mới trong tối đa 10 phút.')
       } else {
         staffToast('Chưa lưu được lên máy chủ, thử lại sau nhé', { tone: 'bad' })
       }

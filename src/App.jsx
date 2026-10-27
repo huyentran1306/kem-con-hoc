@@ -5,7 +5,7 @@ import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound, onSoundChange } from './audio'
 import { Stepper, VoiceInputBtn } from './ui'
-import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory, recordRewardEvent, deleteBadgeEvents } from './api'
+import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, syncPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory, recordRewardEvent, deleteBadgeEvents } from './api'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
 import { ThemeDecor } from './ThemeDecor'
@@ -381,6 +381,24 @@ export default function App() {
     applyTheme(S.theme || 'bear', S.motion || 'full')
   }, [S.theme, S.motion])
 
+  /* ---------- đồng bộ cấu hình công khai khi app trở lại từ nền sau hơn 10 phút ---------- */
+  useEffect(() => {
+    let lastActive = Date.now()
+    const onVis = () => {
+      if (document.visibilityState === 'visible') {
+        const elapsed = Date.now() - lastActive
+        if (elapsed > 10 * 60 * 1000) {
+          syncPublicConfig(true)
+        }
+        lastActive = Date.now()
+      } else {
+        lastActive = Date.now()
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
   /* ---------- đồng bộ screen theo trạng thái onboarded ---------- */
   useEffect(() => {
     // Đợt 18 · Chặng 0.6: Chỉ hiện màn khai báo sau khi đã tải xong dữ liệu đám mây (hydrated)
@@ -389,9 +407,9 @@ export default function App() {
     else if (S.onboarded && screen === 'onb') setScreen('home')
   }, [S.onboarded, hydrated, famId, session])
 
-  /* ---------- tải cấu hình công khai (Scope rules, Theme mặc định) ---------- */
+  /* ---------- tải cấu hình công khai (Scope rules, Theme mặc định, Prompt Studio, Router) ---------- */
   useEffect(() => {
-    loadPublicConfig(false)
+    syncPublicConfig(false)
       .then((cfg) => {
         const themesCfg = cfg?.themesConfig
         const defaultTheme = themesCfg?.default

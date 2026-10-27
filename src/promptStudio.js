@@ -561,9 +561,19 @@ export function getActivePrompts() {
   return cachedPrompts
 }
 
-/* Cập nhật cache khi quản trị viên Lưu */
+/* Cập nhật cache khi quản trị viên Lưu hoặc app đồng bộ từ máy chủ */
 export function setActivePrompts(newPrompts) {
-  cachedPrompts = { ...DEFAULT_PROMPTS, ...newPrompts }
+  const merged = { ...DEFAULT_PROMPTS }
+  if (newPrompts && typeof newPrompts === 'object') {
+    for (const [k, v] of Object.entries(newPrompts)) {
+      if (v && typeof v === 'object') {
+        merged[k] = { ...(DEFAULT_PROMPTS[k] || {}), ...v }
+      } else if (typeof v === 'string') {
+        merged[k] = { ...(DEFAULT_PROMPTS[k] || {}), template: v }
+      }
+    }
+  }
+  cachedPrompts = merged
   try {
     localStorage.setItem(PROMPT_STORAGE_KEY, JSON.stringify(cachedPrompts))
   } catch (e) {}
@@ -719,7 +729,10 @@ export function getActiveAiConfig() {
 }
 
 export function setActiveAiConfig(newConfig) {
-  cachedAiConfig = { ...DEFAULT_AI_CONFIG, ...newConfig }
+  cachedAiConfig = { ...DEFAULT_AI_CONFIG, ...(newConfig || {}) }
+  if (newConfig?.pedagogy_routing && Array.isArray(newConfig.pedagogy_routing)) {
+    cachedAiConfig.pedagogy_routing = newConfig.pedagogy_routing
+  }
   try {
     localStorage.setItem(PROMPT_AI_CONFIG_KEY, JSON.stringify(cachedAiConfig))
   } catch (e) {}
@@ -825,9 +838,9 @@ export function renderPrompt(promptId, params = {}) {
     }
   }
 
-  // Tự động định tuyến phương pháp sư phạm nếu chưa có doan_phuong_phap
+  // Tự động định tuyến phương pháp sư phạm nếu chưa có doan_phuong_phap cho mọi template có {{doan_phuong_phap}}
   let doanPhuongPhap = params.doan_phuong_phap || ''
-  if (!doanPhuongPhap && (promptId === 'p3_explain' || promptId === 'p4_chat')) {
+  if (!doanPhuongPhap && text.includes('{{doan_phuong_phap}}')) {
     const routed = routePedagogyMethod({
       mon: params.mon || 'Toán',
       lop: params.lop || 'Lớp 2',

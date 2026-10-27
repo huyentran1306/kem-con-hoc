@@ -80,7 +80,7 @@ export default function ModelParamsPage({ adminProfile }) {
     setSaved(next)
     setForm(next)
     setLoadState('ok')
-    staffToast('Đã lưu tham số mô hình', {
+    staffToast('Đã lưu tham số mô hình. Điện thoại phụ huynh nhận bản mới trong tối đa 10 phút.', {
       undo: async () => {
         const u = await adminJson('/api/v1/admin/model-config', { method: 'PUT', body: prev })
         if (u.ok) {

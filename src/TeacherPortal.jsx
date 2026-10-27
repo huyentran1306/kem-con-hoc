@@ -1,3 +1,4 @@
+import { syncPublicConfig } from './api';
 /**
  * CỔNG GIÁO VIÊN BẢN GẤU (PROMPT 11 - PHẦN A, B, C)
  * Thiết kế bản Gấu ấm áp, Mitr + Nunito, WCAG AA, không còn màu xanh dương viết cứng
@@ -63,6 +64,24 @@ function TeacherCardSkeleton({ count = 3 }) {
 export { formatClassName };
 
 export default function TeacherPortal({ onExit }) {
+  useEffect(() => {
+    syncPublicConfig(false);
+    let lastActive = Date.now();
+    const onVis = () => {
+      if (document.visibilityState === 'visible') {
+        const elapsed = Date.now() - lastActive;
+        if (elapsed > 10 * 60 * 1000) {
+          syncPublicConfig(true);
+        }
+        lastActive = Date.now();
+      } else {
+        lastActive = Date.now();
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
   const [token, setToken] = useState(() => localStorage.getItem(TEACHER_TOKEN_KEY) || '');
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
