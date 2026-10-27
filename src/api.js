@@ -1441,10 +1441,18 @@ export async function checkWorkGrade({ checkId, deBai, cacDong, linesEdited, lop
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/${checkId}/grade`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
+  // Prompt 23L: nang thoi gian cho phia app cho buoc cham len 45 giay
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 45000)
+
+  let res
+  let data = {}
+  try {
+    res = await fetch(`${AI_GATEWAY}/api/v1/ai/check-work/${checkId}/grade`, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
       de_bai: deBai,
       cac_dong: cacDong,
       lines_edited: linesEdited,
@@ -1453,7 +1461,19 @@ export async function checkWorkGrade({ checkId, deBai, cacDong, linesEdited, lop
       ten_con: tenCon,
     }),
   })
-  const data = await res.json().catch(() => ({}))
+    data = await res.json().catch(() => ({}))
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      const timeoutErr = new Error('Quá thời gian chấm bài (45s)')
+      timeoutErr.status = 408
+      timeoutErr.code = 'TIMEOUT'
+      throw timeoutErr
+    }
+    throw err
+  } finally {
+    clearTimeout(timeoutId)
+  }
+
   if (!res.ok) {
     const err = new Error(data.message || 'Lỗi chấm bài')
     err.status = res.status

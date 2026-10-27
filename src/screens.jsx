@@ -7067,10 +7067,13 @@ export function CheckWork() {
   }
 
   // Gọi API chấm bài
-  const doGrade = async (idToGrade, probTxt, linesToGrade, editedFlag = linesEdited, isRetake = false) => {
+  // Prompt 23L: khi bước chấm quá thời gian / lỗi, tự gọi lại một lần (cùng check_id) trước khi hiện màn "Chưa chấm xong"; trong lúc chờ vẫn giữ màn "AI đang chấm và kiểm tra phép tính..."
+  const doGrade = async (idToGrade, probTxt, linesToGrade, editedFlag = linesEdited, isRetake = false, attempt = 1) => {
     try {
+      if (attempt === 1) {
+        soundPop()
+      }
       setStep('grading')
-      soundPop()
 
       const res = await checkWorkGrade({
         checkId: idToGrade,
@@ -7083,9 +7086,14 @@ export function CheckWork() {
         recheckOf: isRetake ? checkId : undefined,
       })
 
-      // Đợt 15 P0.B: kết quả thiếu trường → báo lỗi có nút Thử lại, không hiện "Dòng ."
+      // Đợt 15 P0.B & Prompt 23L: kết quả thiếu trường → tự gọi lại lần 2 trước khi báo lỗi
       const missing = missingCheckWorkFields(res)
       if (missing.length) {
+        if (attempt === 1) {
+          console.warn('Kết quả chấm thiếu trường ở lần 1, tự gọi lại lần 2...', missing)
+          await new Promise((r) => setTimeout(r, 400))
+          return await doGrade(idToGrade, probTxt, linesToGrade, editedFlag, isRetake, 2)
+        }
         setGradeError({ message: 'AI chấm chưa xong, mẹ bấm Thử lại giúp mình nhé.', retryArgs: [idToGrade, probTxt, linesToGrade, editedFlag, isRetake] })
         setStep('grade_error')
         return
@@ -7105,7 +7113,13 @@ export function CheckWork() {
         setStep('result_parent')
       }
     } catch (err) {
-      console.error('Lỗi chấm bài:', err)
+      console.error('Lỗi chấm bài (lần ' + attempt + '):', err)
+      // Prompt 23L: khi bước chấm quá thời gian / lỗi mạng, tự gọi lại một lần (cùng check_id) trước khi hiện màn "Chưa chấm xong"
+      if (attempt === 1 && err?.status !== 429) {
+        console.warn('Lần 1 chấm gặp lỗi/quá thời gian, tự động gọi lại lần 2...')
+        await new Promise((r) => setTimeout(r, 400))
+        return await doGrade(idToGrade, probTxt, linesToGrade, editedFlag, isRetake, 2)
+      }
       const msg =
         err?.status === 429
           ? 'Hôm nay đã dùng hết lượt chấm. Mẹ và bé quay lại vào ngày mai nhé!'
