@@ -4060,6 +4060,15 @@ function SnapToyCameraSection() {
     }
   }, [])
 
+  const stopCamera = () => {
+    soundTap()
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+    }
+    setCamOn(false)
+  }
+
   const retake = async () => {
     soundTap()
     setShot(null)
@@ -4153,25 +4162,16 @@ function SnapToyCameraSection() {
   return (
     <>
       <Header title="Chơi gì với đồ trong nhà?" back="home" />
-      <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden' }}>
+      <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden', marginBottom: 14, borderRadius: 20 }}>
         <div className="frame" />
         {/* Always keep video element in DOM so camera stream is not lost */}
         {!shot && !camOn && !camErr && (
           <div style={{ textAlign: 'center', padding: '24px 16px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} data-testid="snap-toy-static-invite">
             <span style={{ fontSize: 52, marginBottom: 8 }}>🧸 📸 🧴</span>
-            <b style={{ fontSize: 16, color: 'var(--c-text)', marginBottom: 4 }}>Chụp đồ vật quanh nhà</b>
-            <p className="xs" style={{ color: 'var(--c-text-2)', maxWidth: 280, margin: '0 0 14px', lineHeight: 1.45 }}>
+            <b style={{ fontSize: 16, color: 'var(--c-text)', marginBottom: 6 }}>Chụp đồ vật quanh nhà</b>
+            <p className="xs" style={{ color: 'var(--c-text-2)', maxWidth: 280, margin: 0, lineHeight: 1.45 }}>
               Chụp cây lược, bút, chai lọ hoặc đồ chơi để AI gợi ý trò chơi học toán cùng con!
             </p>
-            <button
-              type="button"
-              className="btn solid"
-              onClick={startCamera}
-              style={{ padding: '10px 22px', fontSize: 14, fontWeight: 800 }}
-              data-testid="btn-start-camera"
-            >
-              📷 Bật máy ảnh chụp
-            </button>
           </div>
         )}
         <video
@@ -4224,16 +4224,68 @@ function SnapToyCameraSection() {
         )}
       </div>
 
-      {!shot ? (
-        <div className="btns">
-          <button className="btn solid" onClick={capture}>📷 Chụp</button>
-          <button className="btn ghost" onClick={() => fileRef.current && fileRef.current.click()}>Chọn ảnh</button>
+      {!shot && !camOn && (
+        <div className="btns" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
+          <button
+            type="button"
+            className="btn solid"
+            onClick={startCamera}
+            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
+            data-testid="btn-start-camera"
+          >
+            📷 Bật máy ảnh chụp
+          </button>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => fileRef.current && fileRef.current.click()}
+            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
+          >
+            Chọn ảnh
+          </button>
         </div>
-      ) : (
-        <div className="btns">
-          <button className="btn ghost" onClick={retake}>📷 Chụp lại</button>
+      )}
+
+      {!shot && camOn && (
+        <div className="btns" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
+          <button
+            type="button"
+            className="btn solid"
+            onClick={capture}
+            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
+          >
+            📸 Chụp ngay
+          </button>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={stopCamera}
+            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
+          >
+            Đóng camera
+          </button>
+        </div>
+      )}
+
+      {shot && (
+        <div className="btns" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={retake}
+            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
+          >
+            📷 Chụp lại
+          </button>
           {!detectedToy && !analyzing && (
-            <button className="btn solid" onClick={() => triggerAnalyze(shotBlob, customInput)}>✨ Nhận diện AI</button>
+            <button
+              type="button"
+              className="btn solid"
+              onClick={() => triggerAnalyze(shotBlob, customInput)}
+              style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
+            >
+              ✨ Nhận diện AI
+            </button>
           )}
         </div>
       )}
