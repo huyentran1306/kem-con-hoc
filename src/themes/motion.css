@@ -254,3 +254,42 @@
 [data-motion="light"] .fly-motion .tr {
   display: none !important;
 }
+
+/* A3: Rung lắc thẻ câu hỏi khi con kẹt */
+@keyframes wob {
+  0%, 20%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-2.5deg) translateY(-2px); }
+  35% { transform: rotate(2.5deg) translateY(0); }
+  45% { transform: rotate(-1.5deg) translateY(-1px); }
+  55% { transform: rotate(1.5deg) translateY(0); }
+  65% { transform: rotate(0) translateY(0); }
+}
+.card-shaking {
+  animation: wob 0.6s ease-in-out !important;
+}
+
+/* Prompt 23J: Bỏ hẳn thẻ trắng, viền, bóng của hiệu ứng khi chạy trên màn hình bài học */
+.motion-layer-transparent {
+  position: fixed !important;
+  pointer-events: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.motion-layer-transparent .st {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.motion-layer-transparent .cap {
+  display: none !important;
+}

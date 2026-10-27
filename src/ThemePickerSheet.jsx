@@ -355,13 +355,45 @@ export function ThemePickerSheet({ onClose }) {
         </div>
       </div>
 
-      {/* Nút hành động */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <button className="btn ghost" onClick={handleCancel} style={{ flex: 1 }}>
+      {/* Nút hành động: 2 nút cùng cao 48px kiểu Phẳng mềm, chữ một dòng (Prompt 23H A15) */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+        <button
+          type="button"
+          className="btn ghost btn-km btn-km-m btn-km-secondary"
+          onClick={handleCancel}
+          style={{
+            height: 48,
+            minHeight: 48,
+            padding: '0 14px',
+            fontSize: 13.5,
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           Thôi, giữ nguyên
         </button>
-        <button className="btn solid" onClick={handleSave} style={{ flex: 2 }}>
-          ✨ Dùng giao diện này cho cả nhà
+        <button
+          type="button"
+          className="btn solid btn-km btn-km-m btn-km-primary"
+          onClick={handleSave}
+          style={{
+            height: 48,
+            minHeight: 48,
+            flex: 1,
+            padding: '0 12px',
+            fontSize: 13.5,
+            fontWeight: 800,
+            whiteSpace: 'nowrap',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ✨ Dùng cho cả nhà
         </button>
       </div>
 

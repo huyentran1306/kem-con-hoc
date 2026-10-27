@@ -150,14 +150,76 @@ export function ThieunhiStudyTracker({ tracker, onOpenReport }) {
 
 function SeasonStart({ theme, emoji, onStart }) {
   return (
-    <div className={`season-cta season-cta-${theme}`}>
-      <button type="button" className="season-cta-main" data-testid="start-photo" onClick={() => onStart?.('photo')}>
-        {emoji} Bắt đầu bài tối nay
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* Nút lớn 56px chữ thường chuẩn khuôn T3 (Prompt 23H A13) */}
+      <button
+        type="button"
+        data-testid="start-photo"
+        className="btn solid btn-km btn-km-l btn-km-primary"
+        style={{
+          minHeight: 56,
+          height: 56,
+          padding: "0 20px",
+          fontSize: 16.5,
+          fontWeight: 800,
+          textTransform: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+        onClick={() => onStart?.('photo')}
+      >
+        <span style={{ fontSize: 22 }}>{emoji || "📷"}</span>
+        <span>Bắt đầu bài tối nay</span>
       </button>
-      <div className="season-cta-mini">
-        <button type="button" data-testid="start-photo-mini" onClick={() => onStart?.('photo')}>📷 Chụp</button>
-        <button type="button" data-testid="start-type" onClick={() => onStart?.('type')}>⌨ Gõ</button>
-        <button type="button" data-testid="start-voice" onClick={() => onStart?.('voice')}>🎙 Đọc</button>
+
+      {/* 2 nút phụ 44px gõ đề và đọc đề */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <button
+          type="button"
+          data-testid="start-type"
+          className="btn ghost btn-km btn-km-m btn-km-secondary"
+          style={{
+            minHeight: 44,
+            height: 44,
+            padding: "0 12px",
+            fontSize: 13.5,
+            fontWeight: 700,
+            textTransform: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+          onClick={() => onStart?.('type')}
+        >
+          <span>⌨️</span>
+          <span>Gõ đề bài</span>
+        </button>
+        <button
+          type="button"
+          data-testid="start-voice"
+          className="btn ghost btn-km btn-km-m btn-km-secondary"
+          style={{
+            minHeight: 44,
+            height: 44,
+            padding: "0 12px",
+            fontSize: 13.5,
+            fontWeight: 700,
+            textTransform: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+          onClick={() => onStart?.('voice')}
+        >
+          <span>🎙️</span>
+          <span>Đọc đề cho AI</span>
+        </button>
       </div>
     </div>
   )

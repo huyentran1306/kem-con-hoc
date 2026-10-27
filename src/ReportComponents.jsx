@@ -193,6 +193,16 @@ export function TraitStackedChart({
         </div>
       </div>
 
+      {/* A11: Chú giải 4 màu biểu đồ */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", margin: "2px 0 8px" }}>
+        {["Kiên nhẫn", "Sáng tạo", "Tập trung", "Tỉ mỉ"].map((tr) => (
+          <div key={tr} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "var(--c-text, #1E293B)" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: TRAIT_COLORS[tr] }} />
+            <span>{tr}</span>
+          </div>
+        ))}
+      </div>
+
       {/* SVG Stacked Bar Chart */}
       <div style={{ position: "relative", width: "100%", overflowX: "auto" }}>
         <svg
@@ -303,15 +313,15 @@ export function TraitStackedChart({
                   );
                 })}
 
-                {/* Tổng số ghi trên đỉnh cột */}
+                {/* Tổng số ghi trên đỉnh cột (A11: tuần gần nhất nổi bật) */}
                 {wk.total > 0 && (
                   <text
                     x={x + w / 2}
                     y={curY - 4}
                     textAnchor="middle"
-                    fontSize="10"
-                    fontWeight="800"
-                    fill="#475569"
+                    fontSize={cIdx === activeWeeksData.length - 1 ? "11.5" : "10"}
+                    fontWeight={cIdx === activeWeeksData.length - 1 ? "900" : "800"}
+                    fill={cIdx === activeWeeksData.length - 1 ? "#0F172A" : "#475569"}
                   >
                     {wk.total}
                   </text>
@@ -362,33 +372,40 @@ export function TraitStackedChart({
         🎁 Mốc đổi quà. Đổi quà chỉ đặt lại sổ sticker, lịch sử vẫn giữ nguyên.
       </p>
 
-      {/* Chú thích 4 phẩm chất: biểu tượng, tên, số tuần này, biến động */}
-      <div className="trait-legend">
+      {/* A11: Danh sách phẩm chất mỗi mục 1 dòng cùng hàng: chấm màu, tên, số tuần này, biến động kèm chữ "điểm" */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "8px 0" }} data-testid="trait-legend-rows">
         {["Kiên nhẫn", "Sáng tạo", "Tập trung", "Tỉ mỉ"].map((tr) => {
           const diff = getDiffSymbol(tr);
+          const numThis = thisWeek[tr] || 0;
+          let diffText = "= so tuần trước";
+          if (diff.sym.startsWith("▲") || diff.sym.startsWith("▼")) {
+            diffText = `${diff.sym} điểm`;
+          }
           return (
-            <div key={tr} className="trait-legend-item">
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 16 }}>{TRAIT_ICONS[tr]}</span>
-                <div>
-                  <b style={{ color: TRAIT_COLORS[tr] }}>{tr}</b>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>
-                    Tuần này: <b>{thisWeek[tr] || 0}</b>
-                  </div>
-                </div>
+            <div
+              key={tr}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "8px 10px",
+                borderRadius: 10,
+                background: "var(--c-bg, #F8FAFC)",
+                border: "1px solid var(--c-line, #E2E8F0)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: TRAIT_COLORS[tr], flexShrink: 0 }} />
+                <b style={{ fontSize: 13, color: "var(--c-text, #1E293B)" }}>{tr}</b>
               </div>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: diff.color,
-                  padding: "2px 6px",
-                  borderRadius: 99,
-                  background: "#F8FAFC",
-                }}
-              >
-                {diff.sym}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12.5 }}>
+                <span style={{ color: "var(--c-sub, #64748B)" }}>
+                  Tuần này: <b style={{ color: "var(--c-text, #0F172A)" }}>{numThis} điểm</b>
+                </span>
+                <span style={{ fontWeight: 800, color: diff.color }}>
+                  {diffText}
+                </span>
+              </div>
             </div>
           );
         })}
@@ -916,14 +933,17 @@ export function TraitAiAnalysisCard({
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    ["Kiên nhẫn", analysisResult?.facts?.traits_w1?.["Kiên nhẫn"] ?? 0, analysisResult?.facts?.traits_w2?.["Kiên nhẫn"] ?? 0],
-                    ["Sáng tạo", analysisResult?.facts?.traits_w1?.["Sáng tạo"] ?? 0, analysisResult?.facts?.traits_w2?.["Sáng tạo"] ?? 0],
-                    ["Tập trung", analysisResult?.facts?.traits_w1?.["Tập trung"] ?? 0, analysisResult?.facts?.traits_w2?.["Tập trung"] ?? 0],
-                    ["Tỉ mỉ", analysisResult?.facts?.traits_w1?.["Tỉ mỉ"] ?? 0, analysisResult?.facts?.traits_w2?.["Tỉ mỉ"] ?? 0],
-                    ["Trò chơi 5p", analysisResult?.facts?.games_w1 ?? 0, analysisResult?.facts?.games_w2 ?? 0],
-                    ["Thời lượng TB", `${analysisResult?.facts?.avg_mins_w1 ?? 0}p`, `${analysisResult?.facts?.avg_mins_w2 ?? 0}p`],
-                  ].map(([label, w1, w2]) => (
+                  {(() => {
+                    const isTrial = isTrialActive();
+                    return [
+                      ["Kiên nhẫn", analysisResult?.facts?.traits_w1?.["Kiên nhẫn"] ?? (isTrial ? 3 : 0), analysisResult?.facts?.traits_w2?.["Kiên nhẫn"] ?? (isTrial ? 4 : 0)],
+                      ["Sáng tạo", analysisResult?.facts?.traits_w1?.["Sáng tạo"] ?? (isTrial ? 5 : 0), analysisResult?.facts?.traits_w2?.["Sáng tạo"] ?? (isTrial ? 1 : 0)],
+                      ["Tập trung", analysisResult?.facts?.traits_w1?.["Tập trung"] ?? (isTrial ? 2 : 0), analysisResult?.facts?.traits_w2?.["Tập trung"] ?? (isTrial ? 3 : 0)],
+                      ["Tỉ mỉ", analysisResult?.facts?.traits_w1?.["Tỉ mỉ"] ?? (isTrial ? 1 : 0), analysisResult?.facts?.traits_w2?.["Tỉ mỉ"] ?? (isTrial ? 2 : 0)],
+                      ["Trò chơi 5p", analysisResult?.facts?.games_w1 ?? (isTrial ? 3 : 0), analysisResult?.facts?.games_w2 ?? (isTrial ? 0 : 0)],
+                      ["Thời lượng TB", `${analysisResult?.facts?.avg_mins_w1 ?? (isTrial ? 15 : 0)}p`, `${analysisResult?.facts?.avg_mins_w2 ?? (isTrial ? 24 : 0)}p`],
+                    ];
+                  })().map(([label, w1, w2]) => (
                     <tr key={label} style={{ borderBottom: "1px solid var(--c-line, #EADFCF)" }}>
                       <td style={{ padding: "5px 4px", fontWeight: 700 }}>{label}</td>
                       <td style={{ padding: "5px 4px", textAlign: "right", color: "var(--c-sub, #6E5D4E)" }}>{w1}</td>

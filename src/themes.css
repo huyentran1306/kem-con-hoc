@@ -1365,19 +1365,22 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+/* Prompt 23I: Bộ theo mùa (Đêm Tuyết, Xuân Sum Vầy, Cầu Vồng) dùng kiểu Phẳng mềm như bộ gốc, bỏ bóng khối cứng dưới đáy */
 [data-theme="noel"] .btn.solid, [data-theme="noel"] .btn.primary,
 [data-theme="tet"] .btn.solid, [data-theme="tet"] .btn.primary,
 [data-theme="thieunhi"] .btn.solid, [data-theme="thieunhi"] .btn.primary {
   background: var(--c-btn) !important;
   color: var(--c-btn-text) !important;
   border: 0 !important;
-  border-radius: 999px !important;
-  box-shadow: var(--shadow-btn) !important;
-  font-weight: 900;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  font-weight: 800;
 }
 [data-theme="noel"] .btn.ghost, [data-theme="tet"] .btn.ghost, [data-theme="thieunhi"] .btn.ghost {
   background: var(--c-surface) !important;
-  box-shadow: 0 4px 0 var(--c-line);
+  border: 1.5px solid var(--c-line) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
 }
 [data-theme="noel"] .chip, [data-theme="tet"] .chip, [data-theme="thieunhi"] .chip {
   border-radius: 999px;

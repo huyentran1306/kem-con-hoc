@@ -1,4 +1,4 @@
-import { formatTeacherName } from './teacher/format.js'
+import { formatTeacherName, normalizeLesson } from './teacher/format.js'
 import { TopBarT3, TopBarT4, Progress4, HoldBtn, BtnKm, CardKm } from './ui/KhuonMoi'
 import { computeCoachAdvice, isCoachAdviceEnabled } from "./coachRules.js"
 import { Fragment, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react'
@@ -33,6 +33,7 @@ import { getDailyLimitMinutes, setDailyLimitMinutes } from './games/gameStorage'
 
 // Module-scoped pending shot buffer (Prompt 23D)
 let pendingShot = null
+let pendingToy = null
 
 const formatChildGrade = (g) => {
   if (!g) return 'Lớp 3'
@@ -216,7 +217,16 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
       preLesson = JSON.parse(item.ai_lesson_json)
     } catch {}
 
-    const problemObj = {
+    const rawSteps = preLesson?.steps || [
+      {
+        stepNumber: 1,
+        guidanceForParent: item.teacher_method_note || "Hỏi con đọc kỹ đề bài.",
+        questionForChild: "Con hãy đọc to đề bài nhé!",
+        hintLevel1: "Nhìn vào các con số trong đề.",
+        hintLevel2: "Thử giải từng bước một con nhé."
+      }
+    ]
+    const problemObj = normalizeLesson({
       ocr: item.problem_text,
       grade: child?.grade || 'Lớp 3',
       subject: assignment.subject,
@@ -225,16 +235,8 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
       teacherName: assignment.teacher_name,
       teacherMethodNote: item.teacher_method_note,
       teacherAnswer: item.teacher_answer,
-      steps: preLesson?.steps || [
-        {
-          stepNumber: 1,
-          guidanceForParent: item.teacher_method_note || "Hỏi con đọc kỹ đề bài.",
-          questionForChild: "Con hãy đọc to đề bài nhé!",
-          hintLevel1: "Nhìn vào các con số trong đề.",
-          hintLevel2: "Thử giải từng bước một con nhé."
-        }
-      ]
-    }
+      steps: rawSteps
+    })
 
     const sessId = 'ses_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
     patch({
@@ -634,7 +636,7 @@ export function Home() {
    3. CHỤP BÀI TẬP
    ============================================================ */
 export function SnapHomework() {
-  const { go, openSheet, toast } = useContext(AppCtx)
+  const { patch, go, openSheet, toast } = useContext(AppCtx)
   const fileRef = useRef(null)
   const nativeCamRef = useRef(null)
   const videoRef = useRef(null)
@@ -694,6 +696,7 @@ export function SnapHomework() {
 
   const sendShot = (shot) => {
     pendingShot = { dataUrl: shot.dataUrl, blob: shot.blob }
+    patch({ studySource: 'parent', assignmentId: null, assignmentItemId: null })
     toast('Đã nhận ảnh, AI đang đọc…')
     go('analyze')
   }
@@ -947,7 +950,20 @@ export function Analyze() {
   const child = S.children.find((c) => c.id === S.activeId)
 
   const useSampleProblem = () => {
-    patch({ problem: { ...PROBLEM, isSample: true } })
+    patch({
+      problem: {
+        ...PROBLEM,
+        isSample: true,
+        isTeacherAssigned: false,
+        teacherName: null,
+        teacherMethodNote: null,
+        teacherAnswer: null,
+        assignmentId: null
+      },
+      studySource: 'sample',
+      assignmentId: null,
+      assignmentItemId: null
+    })
     toast('Đang mở bài mẫu minh họa 📖')
     go('explain')
   }
@@ -970,7 +986,20 @@ export function Analyze() {
       }
 
       if (explainRes && explainRes.steps && explainRes.steps.length > 0) {
-        patch({ problem: { ...explainRes, isSample: false } })
+        const cleanLesson = normalizeLesson(explainRes, {
+          isSample: false,
+          isTeacherAssigned: false,
+          teacherName: null,
+          teacherMethodNote: null,
+          teacherAnswer: null,
+          assignmentId: null
+        })
+        patch({
+          problem: cleanLesson,
+          studySource: 'parent',
+          assignmentId: null,
+          assignmentItemId: null
+        })
         setAiState('done')
         toast('✅ AI đã soạn bài giảng xong!')
         setTimeout(() => go('explain'), 600)
@@ -1222,8 +1251,8 @@ export function Analyze() {
 
   return (
     <div className="analyze-container-km" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative', paddingBottom: 80 }}>
-      {/* 1. TRẠNG THÁI ĐANG ĐỌC (T7 Chờ AI) */}
-      {(aiState === 'loading' || aiState === 'cleaning') && (
+      {/* 1. TRẠNG THÁI ĐANG ĐỌC (T7 Chờ AI - A8: giữ màn chờ cho tới khi explain sẵn sàng) */}
+      {(aiState === 'loading' || aiState === 'cleaning' || aiState === 'done') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="card-km card-km-ai" style={{ textAlign: 'center', padding: '24px 16px' }}>
             <div style={{ marginBottom: 12, display: 'inline-block' }} className="mascot-bounce-km">
@@ -1527,7 +1556,7 @@ export function Explain() {
       />
 
       {/* Thẻ Theo cách cô dạy */}
-      {(problem.isTeacherAssigned || problem.teacherMethodNote || S.studySource === 'teacher') && (
+      {Boolean(problem.isTeacherAssigned && S.studySource === 'teacher') && (
         <div
           className="card-km"
           style={{
@@ -1548,7 +1577,7 @@ export function Explain() {
                 Theo cách cô dạy
               </span>
               <b style={{ fontSize: 12.5, color: '#065F46' }}>
-                {formatTeacherName(problem.teacherName || 'cô')}
+                {formatTeacherName(problem.teacherName || '')}
               </b>
             </div>
             <p style={{ fontSize: 13, color: '#064E3B', margin: '2px 0 0', lineHeight: 1.4, fontWeight: 600 }}>
@@ -1830,6 +1859,7 @@ export function Scaffold() {
   const child = S.children.find((c) => c.id === S.activeId)
   const steps = problem.steps || PROBLEM.steps
   const [showAns, setShowAns] = useState(false)
+  const [isCardShaking, setIsCardShaking] = useState(false)
   const [parentNote, setParentNote] = useState('')
   const [stepSeconds, setStepSeconds] = useState(0)
   const [nudgeProblemCount, setNudgeProblemCount] = useState(0)
@@ -2054,8 +2084,13 @@ export function Scaffold() {
   }
 
   const triggerMicroStep = async (idx = 1) => {
-    emitMotion('micro_step', { index: idx })
     const curStep = steps[step]
+    emitMotion('micro_step', {
+      index: idx,
+      question: curStep?.question || curStep?.q || '',
+      hint: curStep?.hintLevel1 || (curStep?.hints && curStep.hints[0]) || curStep?.hint || '',
+      hint2: curStep?.hintLevel2 || (curStep?.hints && curStep.hints[1]) || curStep?.hint2 || ''
+    })
     setLoadingMicro(true)
     buddyReact('thinking', 'Để Gấu chẻ nhỏ câu hỏi cho con nhé…', 2500)
     try {
@@ -2145,8 +2180,15 @@ export function Scaffold() {
 
   const stepStuck = () => {
     setBuddyState('thinking')
+    setIsCardShaking(true)
+    setTimeout(() => setIsCardShaking(false), 600)
     const ns = stuck + 1
-    emitMotion('stuck', { stuck: ns })
+    const curStep = steps[step]
+    emitMotion('stuck', {
+      stuck: ns,
+      question: curStep?.question || curStep?.q || '',
+      hint: (curStep?.hints && curStep.hints[ns - 1]) || curStep?.hintLevel1 || curStep?.hint || ''
+    })
     patch({ flow: { ...S.flow, stuck: ns } })
 
     // Đợt 18 · Chặng 4: Lần 2 ở cùng bậc -> gọi AI chẻ nhỏ câu hỏi
@@ -2281,7 +2323,7 @@ export function Scaffold() {
 
       {/* 3. THẺ CÂU HỎI CHÍNH (HERO CARD theo hoi-con-gon-gang.html) */}
       <div
-        className="card-km hero-question-km"
+        className={`card-km hero-question-km ${isCardShaking ? 'card-shaking' : ''}`}
         style={{
           padding: '16px 14px',
           background: 'var(--c-surface)',
@@ -2290,6 +2332,7 @@ export function Scaffold() {
           flexDirection: 'column',
           gap: 12,
           boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+          animation: isCardShaking ? 'wob 0.6s ease-in-out' : 'none',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -3105,12 +3148,6 @@ export function Done() {
   }, [hadStuckStep, stuckSkill, child?.name, child?.grade, problem.text, problem.problem_text])
 
   const pickSticker = (e) => {
-    if (problem?.isSample) {
-      toast('Bài mẫu không tính sticker nhé ⭐')
-      return
-    }
-    soundPop(600)
-    emitMotion('badge_given', { sticker: e })
     let found
     let customSource = 'chon_khac'
     let customReason = 'Con làm bài rất nỗ lực'
@@ -3131,6 +3168,17 @@ export function Done() {
         border: '#DDD6FE',
         desc: 'Con làm bài rất nỗ lực',
       }
+    }
+
+    soundPop(600)
+    emitMotion('badge_given', { sticker: found })
+    soundSuccess()
+    boom()
+    buddyReact('cheer', `Tuyệt vời! ${child.name} nhận huy hiệu ${found.n}! 🎉`, 3000)
+
+    if (problem?.isSample) {
+      toast('Đang dùng thử: đã tặng huy hiệu động viên con! ⭐')
+      return
     }
 
     const oldList = stats.stickersList || []
@@ -3172,8 +3220,7 @@ export function Done() {
     }).catch(() => {})
     soundSuccess()
     boom()
-    buddyReact('cheer')
-    toast(`${child.name} nhận huy hiệu ${found.n}! 🎉`)
+    buddyReact('cheer', `Tuyệt vời! ${child.name} nhận huy hiệu ${found.n}! 🎉`, 3000)
     if (newList.length >= 10) {
       setTimeout(() => {
         soundFanfare()
@@ -6283,18 +6330,17 @@ export function Report() {
           background: 'var(--c-bg, #FFFBF5)',
           padding: '8px 0',
           marginBottom: 12,
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 6,
-          overflowX: 'auto',
           borderBottom: '1px solid var(--c-line, #EADFCF)',
-          WebkitOverflowScrolling: 'touch',
         }}
       >
         {[
           { id: 'sec-week', label: 'Tuần này' },
           { id: 'sec-traits', label: 'Phẩm chất' },
           { id: 'sec-subjects', label: 'Môn học' },
-          { id: 'sec-ai', label: 'Gấu phân tích' }
+          { id: 'sec-ai', label: 'Phân tích' }
         ].map((t) => (
           <button
             key={t.id}
@@ -6884,7 +6930,7 @@ export function Profile() {
    📝 13. CHẤM VỞ, KHÔNG SỬA HỘ (Prompt 14 Phần A)
    ============================================================ */
 export function CheckWork() {
-  const { S, patch, go, toast, boom, stats, setStats } = useContext(AppCtx)
+  const { S, patch, go, openSheet, toast, boom, stats, setStats } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const childName = child?.name || 'Mít'
 

@@ -1899,7 +1899,21 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
   const isTrial = Boolean(session?.isTrial)
   const [text, setText] = useState(isTrial ? PRELOADED_TRIAL_LESSONS[0].de_bai : PROBLEM.ocr)
   const save = () => {
-    patch({ flow: { ...S.flow, ocr: text.trim() || PROBLEM.ocr } })
+    patch({
+      studySource: 'parent',
+      assignmentId: null,
+      assignmentItemId: null,
+      flow: { ...S.flow, ocr: text.trim() || PROBLEM.ocr, step: 0, stuck: 0, peeks: 0 },
+      problem: {
+        ...PROBLEM,
+        ocr: text.trim() || PROBLEM.ocr,
+        isTeacherAssigned: false,
+        teacherName: null,
+        teacherMethodNote: null,
+        teacherAnswer: null,
+        assignmentId: null,
+      }
+    })
     closeSheet()
     toast('Đã nhận đề, AI đang đọc…')
     go('analyze')

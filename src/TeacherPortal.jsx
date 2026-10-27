@@ -28,6 +28,37 @@ import { ClassTabs, StepChart, BearAssistant, TPill, buildAssistantTips, useStep
 const API_BASE = 'https://ai-gateway-worker.trannth1306.workers.dev';
 const TEACHER_TOKEN_KEY = 'kem-con-hoc:teacher:token';
 
+function TeacherCardSkeleton({ count = 3 }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="teacher-skeleton-list">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="tp-asg-card"
+          style={{
+            padding: 16,
+            background: "var(--s-card, #fff)",
+            borderRadius: 14,
+            border: "1px solid var(--s-border, #EADFCF)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            opacity: 0.85,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 64, height: 20, borderRadius: 999, background: "var(--s-border, #EADFCF)", animation: "pulse 1.5s infinite ease-in-out" }} />
+            <div style={{ width: 80, height: 16, borderRadius: 4, background: "var(--s-border, #EADFCF)", opacity: 0.6 }} />
+          </div>
+          <div style={{ width: "75%", height: 18, borderRadius: 6, background: "var(--s-border, #EADFCF)", animation: "pulse 1.5s infinite ease-in-out" }} />
+          <div style={{ width: "45%", height: 14, borderRadius: 4, background: "var(--s-border, #EADFCF)", opacity: 0.6 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 // Giữ tên xuất cũ để chỗ khác lỡ import vẫn chạy; hàm thật nằm ở src/teacher/format.js
 export { formatClassName };
 
@@ -1268,7 +1299,7 @@ function TeacherAssignmentsTab({ token, classId, cls, onSelectResult }) {
       </div>
 
       {loading ? (
-        <p style={{ color: 'var(--s-text-2)' }}>Đang tải bài tập...</p>
+        <TeacherCardSkeleton count={3} />
       ) : assignments.length === 0 ? (
         <EmptyState
           title="Chưa có bài tập nào"
@@ -2368,7 +2399,7 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
           )}
 
           {loading ? (
-            <p style={{ color: 'var(--s-text-2)' }}>Đang tải thông báo...</p>
+            <TeacherCardSkeleton count={3} />
           ) : infoAnnouncements.length === 0 ? (
             <EmptyState
               title="Chưa có thông báo nào"
@@ -2507,7 +2538,7 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
             </h4>
 
             {loading ? (
-              <p style={{ color: 'var(--s-text-2)' }}>Đang tải lời nhắc...</p>
+              <TeacherCardSkeleton count={2} />
             ) : reminders.length === 0 ? (
               <EmptyState
                 title="Chưa có lời nhắc việc"

@@ -36,9 +36,11 @@ export function useMotion() {
  */
 export function MotionStage({
   themeId = 'bear',
-  event = 'step_done', // 'step_done' (fill) | 'stuck' | 'micro_step' (split) | 'listen' | 'badge_given' (fly) | 'day_logged' (paw)
+  event = 'step_done',
+  payload = {},
   themeOverride = null,
   interactive = false,
+  showCap = true,
 }) {
   const theme = themeOverride || getTheme(themeId)
   const m = theme.motion || getTheme('bear').motion
@@ -70,7 +72,7 @@ export function MotionStage({
           </span>
           <div className="vessel">
             <i className="liq" />
-            <span className="fr">3/4</span>
+            <span className="fr">{payload?.step || 3}/{payload?.total || 4}</span>
             <span className="vi">{m.vessel?.icon}</span>
           </div>
           <span className={`drop${glowClass}`}>{m.vessel?.drop}</span>
@@ -78,7 +80,7 @@ export function MotionStage({
           <i className={`sp s2${glowClass}`}>{m.vessel?.spark}</i>
           <i className={`sp s3${glowClass}`}>{m.vessel?.spark}</i>
         </div>
-        <div className="cap">Con làm được rồi!</div>
+        {showCap && <div className="cap">Con làm được rồi!</div>}
       </div>
     )
   }
@@ -94,9 +96,9 @@ export function MotionStage({
           <i className={`q q1${glowClass}`}>{m.stuck?.particle}</i>
           <i className={`q q2${glowClass}`}>{m.stuck?.particle}</i>
           <i className={`q q3${glowClass}`}>{m.stuck?.particle}</i>
-          <div className="card">"Mẹ dùng mất bao nhiêu quả?"</div>
+          <div className="card">"{payload?.question || payload?.hint || "Mẹ dùng mất bao nhiêu quả?"}"</div>
         </div>
-        <div className="cap">Con chưa nghĩ ra</div>
+        {showCap && <div className="cap">Con chưa nghĩ ra</div>}
       </div>
     )
   }
@@ -107,11 +109,11 @@ export function MotionStage({
     return (
       <div className="st" data-style={m.split?.cardStyle} style={stageStyle} data-testid="motion-stage-micro-step">
         <div className="split-motion">
-          <div className="card big">Còn lại thì làm phép gì?</div>
-          <div className="card sm a">{tg}Dùng mất là nhiều lên hay ít đi?</div>
-          <div className="card sm b">{tg}Số nào đi cùng chữ "làm bánh"?</div>
+          <div className="card big">{payload?.question || "Còn lại thì làm phép gì?"}</div>
+          <div className="card sm a">{tg}{payload?.hint || "Dùng mất là nhiều lên hay ít đi?"}</div>
+          <div className="card sm b">{tg}{payload?.hint2 || "Số nào đi cùng câu hỏi này?"}</div>
         </div>
-        <div className="cap">{m.mascot} chẻ nhỏ câu hỏi</div>
+        {showCap && <div className="cap">{m.mascot} chẻ nhỏ câu hỏi</div>}
       </div>
     )
   }
@@ -131,7 +133,7 @@ export function MotionStage({
           <div className="card said">"Con nghĩ là phép trừ!"</div>
           <div className="ok">✓ Đúng rồi!</div>
         </div>
-        <div className="cap">{m.mascot} đang nghe con</div>
+        {showCap && <div className="cap">{m.mascot} đang nghe con</div>}
       </div>
     )
   }
@@ -150,7 +152,7 @@ export function MotionStage({
             📖<span>+1</span>
           </div>
         </div>
-        <div className="cap">Huy hiệu Kiên nhẫn</div>
+        {showCap && <div className="cap">Huy hiệu Kiên nhẫn</div>}
       </div>
     )
   }
@@ -166,7 +168,7 @@ export function MotionStage({
           </span>
         ))}
       </div>
-      <div className="cap">Dấu tuần này</div>
+      {showCap && <div className="cap">Dấu tuần này</div>}
     </div>
   )
 }
@@ -200,28 +202,44 @@ export function MotionLayer() {
 
   if (!activeMotion) return null
 
+  // A3: stuck và micro_step chạy trực tiếp trên thẻ câu hỏi, không dùng khung nổi bị cắt mép
+  if (activeMotion.event === 'stuck' || activeMotion.event === 'micro_step' || activeMotion.event === 'split') {
+    return null
+  }
+
+  // Prompt 23J: Bỏ hẳn nền trắng, viền, bóng của thẻ bao ngoài
+  const isFinish = activeMotion.event === 'step_done' && (activeMotion.payload?.step >= activeMotion.payload?.total)
+  const isBadge = activeMotion.event === 'badge_given' || activeMotion.event === 'fly'
+  const layerTop = isFinish ? 16 : (isBadge ? 48 : 52)
+
   return (
     <div
+      className="motion-layer-transparent"
       style={{
         position: 'fixed',
-        top: 60,
-        right: 12,
+        top: layerTop,
+        right: 8,
         zIndex: 9998,
-        width: 170,
-        height: 140,
+        width: 220,
+        height: 165,
         pointerEvents: 'none',
-        background: 'var(--c-surface)',
-        borderRadius: 16,
-        border: '1.5px solid var(--c-line)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-        overflow: 'hidden',
-        animation: 'fadeIn 0.25s ease-out',
-        transform: 'scale(0.85)',
+        background: 'transparent',
+        borderRadius: 0,
+        border: 0,
+        boxShadow: 'none',
+        overflow: 'visible',
+        animation: 'fadeIn 0.2s ease-out',
+        transform: 'scale(0.72)',
         transformOrigin: 'top right',
       }}
       data-testid="motion-layer-active"
     >
-      <MotionStage themeId={theme.id} event={activeMotion.event} />
+      <MotionStage
+        themeId={theme.id}
+        event={activeMotion.event}
+        payload={activeMotion.payload}
+        showCap={false}
+      />
     </div>
   )
 }
