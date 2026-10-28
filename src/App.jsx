@@ -31,6 +31,8 @@ const PublicReportView = lazy(() => import('./PublicReportView').then(m => ({ de
 const FamilyClassSheet = lazy(() => import('./FamilyClassSheet').then(m => ({ default: m.FamilyClassSheet })))
 import { BuddyPopLayer } from './themes/buddies/buddySvgs'
 import MotionLayer from './MotionLayer'
+import { xungHoPair, setCurrentXungHo } from './xungHo'
+import { swapMe } from './xungHo'
 
 const SESSION_KEY = 'kem-con-hoc:session'
 const famLsKey = (id) => `kem-con-hoc:fam:${id}`
@@ -134,7 +136,7 @@ const readSession = () => {
       if (magicToken) {
         setAuthToken(magicToken)
         const famId = params.get('family_id') || params.get('fam_id') || 'fam_magic'
-        const famName = params.get('family_name') || params.get('name') || 'Gia đình Vui Vẻ'
+        const famName = params.get('family_name') || params.get('name') || 'Gia đình vui vẻ'
         const sess = { id: famId, name: famName, token: magicToken }
         localStorage.setItem(SESSION_KEY, JSON.stringify(sess))
         return sess
@@ -378,8 +380,12 @@ export default function App() {
 
   /* ---------- áp dụng theme và hiệu ứng chuyển động ---------- */
   useEffect(() => {
-    applyTheme(S.theme || 'bear', S.motion || 'full')
-  }, [S.theme, S.motion])
+    if (showAdmin || showTeacher) {
+      applyTheme('bear', 'full')
+    } else {
+      applyTheme(S.theme || 'bear', S.motion || 'full')
+    }
+  }, [showAdmin, showTeacher, S.theme, S.motion])
 
   /* ---------- đồng bộ cấu hình công khai khi app trở lại từ nền sau hơn 10 phút ---------- */
   useEffect(() => {
@@ -759,12 +765,18 @@ export default function App() {
       openAdmin: () => setShowAdmin(true),
       soundOn,
       toggleSound: handleToggleSound,
+      // Prompt 29B: xưng hô theo người đang cầm máy (bố / mẹ / ông bà)
+      ...xungHoPair(S, session),
     }),
     [S, stats, study, session, soundOn, tracker]
   )
+  // Prompt 29B: các lời gọi AI dùng đúng xưng hô của người đang cầm máy
+  useEffect(() => {
+    setCurrentXungHo(ctx.ho)
+  }, [ctx.ho])
 
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
-  const calmLabel = S.parent === 'Mẹ' ? 'Mẹ bình tĩnh' : S.parent === 'Bố' ? 'Bố bình tĩnh' : 'Mình bình tĩnh'
+  const calmLabel = `${ctx.Ho || 'Bố mẹ'} bình tĩnh`
 
   const waitingServerState = Boolean(famId && !session?.isTrial && (!hydrated || cloudStatus === 'loading'))
   const ServerStateGate = () =>
@@ -801,6 +813,7 @@ export default function App() {
         <AdminPortal
           onExit={() => {
             setShowAdmin(false)
+            applyTheme(S.theme || 'bear', S.motion || 'full')
             if (window.location.pathname.startsWith('/admin')) {
               window.history.pushState(null, '', '/')
             } else {
@@ -814,10 +827,11 @@ export default function App() {
 
   if (showTeacher) {
     return (
-      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp Cổng Giáo Viên...</div>}>
+      <Suspense fallback={<div className="stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang nạp cổng giáo viên...</div>}>
         <TeacherPortal
           onExit={() => {
             setShowTeacher(false)
+            applyTheme(S.theme || 'bear', S.motion || 'full')
             if (window.location.pathname.startsWith('/teacher')) {
               window.history.pushState(null, '', '/')
             } else {
@@ -980,7 +994,7 @@ export default function App() {
           <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
 
           {sheet && (
-            <ErrorBoundary onClose={closeSheet} message="Có lỗi nhỏ khi mở cửa sổ này. Mẹ thử lại nhé!">
+            <ErrorBoundary onClose={closeSheet} message="Có lỗi nhỏ khi mở cửa sổ này. Thử lại nhé!">
               <SheetView type={sheet.type} data={sheet.data} session={session} />
             </ErrorBoundary>
           )}
@@ -1001,6 +1015,8 @@ const TAB_CAP = {
    CÁC POPUP (BOTTOM SHEET)
    ============================================================ */
 function SheetView({ type, data, session }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, go, closeSheet, toast, stats, setStats, boom, tracker } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
 
@@ -1012,7 +1028,7 @@ function SheetView({ type, data, session }) {
         currentProblem={S.problem}
         currentStepIndex={S.flow?.step || 0}
         child={child}
-        parentName={S.parent || 'Mẹ'}
+        parentName={Ho}
         themeId={S.theme || 'bear'}
         onLowerDifficulty={async () => {
           closeSheet()
@@ -1024,7 +1040,7 @@ function SheetView({ type, data, session }) {
             if (lowerRes && lowerRes.steps && lowerRes.steps.length > 0) {
               patch({
                 problem: { ...lowerRes, isSample: false },
-                flow: { ...S.flow, step: 0, stuck: 0, lowering: false },
+                flow: { ...S.flow, step: 0, stuck: 0, lowering: false, stepLog: [], revealedSteps: [], stepRevealTimes: [] },
               })
               toast('✅ Đã hạ độ khó! Con thử làm với số dễ hơn nhé')
             } else {
@@ -1050,7 +1066,7 @@ function SheetView({ type, data, session }) {
               unlocked: S.flow?.unlocked || false,
               savedAt: Date.now(),
             },
-            flow: { ...S.flow, step: 0, stuck: 0 },
+            flow: { ...S.flow, step: 0, stuck: 0, stepLog: [], revealedSteps: [], stepRevealTimes: [] },
           })
           if ((S.flow?.step || 0) >= 1 && tracker?.recordSession) {
             tracker.recordSession({
@@ -1103,7 +1119,7 @@ function SheetView({ type, data, session }) {
         if (lowerRes && lowerRes.steps && lowerRes.steps.length > 0) {
           patch({
             problem: { ...lowerRes, isSample: false },
-            flow: { ...S.flow, step: 0, stuck: 0, lowering: false },
+            flow: { ...S.flow, step: 0, stuck: 0, lowering: false, stepLog: [], revealedSteps: [], stepRevealTimes: [] },
           })
           toast('✅ Đã hạ độ khó! Con thử làm với số dễ hơn nhé')
         } else {
@@ -1124,7 +1140,7 @@ function SheetView({ type, data, session }) {
         </p>
         <div className="card coral">
           <span className="lbl coral">Nói với con</span>
-          <span style={{ fontSize: 14 }}>"Bài này khó thật, {S.parent.toLowerCase()} cũng phải nghĩ. Mình uống nước rồi vẽ lại nha."</span>
+          <span style={{ fontSize: 14 }}>"Bài này khó thật, {ho} cũng phải nghĩ. Mình uống nước rồi vẽ lại nha."</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
           <button className="btn solid" onClick={handleLowerDifficulty} style={{ background: '#D97706', borderColor: '#B45309' }}>
@@ -1199,6 +1215,8 @@ function Sheet({ children }) {
 
 /* ---------- MẸ BÌNH TĨNH ---------- */
 function CalmSheet() {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { closeSheet, toast, S, soundOn, toggleSound } = useContext(AppCtx)
   const [phase, setPhase] = useState('Hít vào…')
 
@@ -1237,9 +1255,9 @@ function CalmSheet() {
       </div>
       <div className="card mint">
         <span className="lbl mint">Thử nói</span>
-        <span style={{ fontSize: 15 }}>"{CALM_LINES.trySay}"</span>
+        <span style={{ fontSize: 15 }}>"{swapMe(CALM_LINES.trySay, ho)}"</span>
       </div>
-      <button className="btn solid" onClick={() => { closeSheet(); toast(`${S.parent} làm tốt lắm 💚`) }}>
+      <button className="btn solid" onClick={() => { closeSheet(); toast(`${Ho} làm tốt lắm 💚`) }}>
         Mình ổn rồi
       </button>
     </Sheet>
@@ -1295,6 +1313,7 @@ function TimerSheet() {
 
 /* ---------- LUYỆN THÊM (AI tạo bài cùng dạng) ---------- */
 function PracticeSheet() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, closeSheet, toast } = useContext(AppCtx)
   const [item, setItem] = useState(null)
   const problem = S.problem || PROBLEM
@@ -1323,7 +1342,7 @@ function PracticeSheet() {
         <>
           <div className="photo">{item.text}</div>
           <div className="card mint">
-            <span className="lbl mint">Đáp án ({S.parent.toLowerCase()} đối chiếu)</span>
+            <span className="lbl mint">Đáp án ({ho} đối chiếu)</span>
             <b>{item.answer}</b>
           </div>
           <button className="btn solid" onClick={() => { closeSheet(); toast('Bắt đầu bài luyện thêm nhé! 💪') }}>
@@ -1464,6 +1483,7 @@ function ReportIssueSheet({ problem }) {
 
 /* ---------- BÁO CÂU HỎI AI CHƯA HỢP (Prompt 14 Phần C) ---------- */
 function AiFeedbackSheet({ data, onClose, toast, S }) {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const [reason, setReason] = useState('too_hard')
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -1489,12 +1509,12 @@ function AiFeedbackSheet({ data, onClose, toast, S }) {
         questionText: data?.questionText || '',
       })
       setSubmitted(true)
-      toast('Đã gửi phản hồi! Cảm ơn mẹ đã giúp AI thông minh và an toàn hơn ❤️')
+      toast(`Đã gửi phản hồi! Cảm ơn ${ho} đã giúp AI thông minh và an toàn hơn ❤️`)
       setTimeout(() => {
         onClose()
       }, 1500)
     } catch (e) {
-      toast('Lỗi khi gửi, mẹ thử lại sau nhé!')
+      toast(`Lỗi khi gửi, ${ho} thử lại sau nhé!`)
       setSubmitting(false)
     }
   }
@@ -1512,7 +1532,7 @@ function AiFeedbackSheet({ data, onClose, toast, S }) {
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
             <p style={{ fontWeight: 700, fontSize: 14.5, color: '#047857' }}>
-              Cảm ơn mẹ! Đóng góp của mẹ đã được ghi nhận vào hệ thống An toàn AI.
+              Cảm ơn {ho}! Đóng góp của {ho} đã được ghi nhận vào hệ thống An toàn AI.
             </p>
           </div>
         ) : (
@@ -1524,7 +1544,7 @@ function AiFeedbackSheet({ data, onClose, toast, S }) {
             )}
 
             <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 8 }}>
-              Mẹ thấy câu này chưa phù hợp ở điểm nào?
+              {Ho} thấy câu này chưa phù hợp ở điểm nào?
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
@@ -1650,7 +1670,7 @@ function SafetyPortalSheet({ onClose, S }) {
 
             {/* 4 Lớp Bảo Vệ */}
             <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text)', textTransform: 'uppercase', marginBottom: 8 }}>
-              4 Lớp Cam Kết Sư Phạm & An Toàn:
+              4 lớp cam kết sư phạm và an toàn:
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
               {(summary?.four_layer_safety || []).map((l) => (
@@ -1925,15 +1945,20 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
   const { S, patch, go, closeSheet, toast, session } = useContext(AppCtx)
   const isTrial = Boolean(session?.isTrial)
   const [text, setText] = useState(isTrial ? PRELOADED_TRIAL_LESSONS[0].de_bai : '')
+  // Prompt 29B.3: ô để trống, không tự lấy đề mẫu có tên "Na" khi người dùng chưa gõ gì
   const save = () => {
+    if (!text.trim()) {
+      toast('Gõ hoặc đọc đề bài của con trước nhé')
+      return
+    }
     patch({
       studySource: 'parent',
       assignmentId: null,
       assignmentItemId: null,
-      flow: { ...S.flow, ocr: text.trim() || PROBLEM.ocr, step: 0, stuck: 0, peeks: 0 },
+      flow: { ...S.flow, ocr: text.trim(), step: 0, stuck: 0, peeks: 0, stepLog: [], revealedSteps: [], stepRevealTimes: [], startedAt: null },
       problem: {
         ...PROBLEM,
-        ocr: text.trim() || PROBLEM.ocr,
+        ocr: text.trim(),
         isTeacherAssigned: false,
         teacherName: null,
         teacherMethodNote: null,
@@ -1977,7 +2002,9 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
         }}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={isTrial ? "Gõ hoặc dán đề bài của con..." : (PROBLEM.ocr || "Ví dụ: Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?")}
+        placeholder="Gõ hoặc dán đề bài của con… (hoặc bấm một đề mẫu bên dưới)"
+        aria-label="Đề bài"
+        data-testid="type-problem-input"
       />
 
       {/* 2. Đề mẫu thành 3 chip Toán, Tiếng Việt, Tiếng Anh */}
@@ -2039,6 +2066,7 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
 
 /* ---------- SỔ DÁN STICKER CỦA BÉ ---------- */
 function StickerBookSheet() {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, openSheet, closeSheet, boom } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const curStats = S.stats[child.id] || {}
@@ -2064,7 +2092,7 @@ function StickerBookSheet() {
   return (
     <Sheet>
       <div style={{ textAlign: 'center', marginBottom: 12 }}>
-        <p className="title" style={{ margin: '0 0 4px' }}>📖 Sổ dán Sticker của {child.name}</p>
+        <p className="title" style={{ margin: '0 0 4px' }}>📖 Sổ dán sticker của {child.name}</p>
         <span className="sub">
           Đã sưu tập <b>{distinct}/{AVAILABLE_STICKERS.length}</b> loại huy hiệu · tổng <b>{list.length}</b> sticker ✨
           {curStats.rewardCount > 0 && (
@@ -2102,14 +2130,14 @@ function StickerBookSheet() {
           <div style={{ fontSize: 36, marginBottom: 4 }}>🎁 🏆 🍦</div>
           <b style={{ color: '#78350F', fontSize: 16 }}>ĐỦ 10 HUY HIỆU: ĐỔI QUÀ CHO BÉ!</b>
           <div style={{ color: '#92400E', fontSize: 13, margin: '4px 0 10px', lineHeight: 1.4 }}>
-            Chúc mừng {child.name} đã tích đủ 10 sticker nỗ lực! {S.parent} bấm để mở phiếu đổi quà và bắt đầu chặng mới nhé.
+            Chúc mừng {child.name} đã tích đủ 10 sticker nỗ lực! {Ho} bấm để mở phiếu đổi quà và bắt đầu chặng mới nhé.
           </div>
           <button
             className="btn solid"
             style={{ width: '100%', background: '#D97706', fontWeight: 700, fontSize: 14.5, boxShadow: '0 4px 12px rgba(217,119,6,0.3)' }}
             onClick={() => openSheet('redeem')}
           >
-            🎁 Mở Phiếu Đổi Quà Cho Con ➔
+            🎁 Mở phiếu đổi quà cho con ➔
           </button>
         </div>
       )}
@@ -2276,6 +2304,7 @@ function StickerBookSheet() {
 
 /* ---------- PHIẾU ĐỔI QUÀ 10 STICKER ---------- */
 function RedeemRewardSheet() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, setStats, closeSheet, toast, boom } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const curStats = S.stats[child.id] || {}
@@ -2334,7 +2363,7 @@ function RedeemRewardSheet() {
           ĐỦ 10 HUY HIỆU: ĐỔI QUÀ CHO {child.name.toUpperCase()}!
         </p>
         <span className="sub">
-          Chúc mừng {child.name} đã hoàn thành xuất sắc 10 buổi học nỗ lực. {S.parent} và con cùng chọn phần quà nhé:
+          Chúc mừng {child.name} đã hoàn thành xuất sắc 10 buổi học nỗ lực. {Ho} và con cùng chọn phần quà nhé:
         </span>
       </div>
 
@@ -2365,7 +2394,7 @@ function RedeemRewardSheet() {
         </div>
 
         <div style={{ marginTop: 8 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#92400E' }}>Hoặc {S.parent.toLowerCase()} tự nhập phần quà riêng:</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#92400E' }}>Hoặc {ho} tự nhập phần quà riêng:</span>
           <input
             className="field"
             style={{ marginTop: 4, fontSize: 13.5 }}
@@ -2381,7 +2410,7 @@ function RedeemRewardSheet() {
         style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 700, marginTop: 12, background: 'linear-gradient(135deg, #D97706, #B45309)', boxShadow: '0 4px 14px rgba(217,119,6,0.35)' }}
         onClick={confirmRedeem}
       >
-        🎁 {S.parent} xác nhận đổi quà & Đặt lại sổ mới ➔
+        🎁 {Ho} xác nhận đổi quà & Đặt lại sổ mới ➔
       </button>
     </Sheet>
   )
