@@ -48,7 +48,7 @@ export function getPlayTimeStatus(childId = 'default') {
   } catch {}
 
   const remainingSeconds = Math.max(0, limitSeconds - playedSeconds);
-  const isLimitReached = remainingSeconds <= 0;
+  const isTimeLimitReached = remainingSeconds <= 0;
 
   const remMins = Math.floor(remainingSeconds / 60);
   const remSecs = remainingSeconds % 60;
@@ -59,7 +59,7 @@ export function getPlayTimeStatus(childId = 'default') {
     limitSeconds,
     limitMinutes,
     remainingSeconds,
-    isLimitReached,
+    isTimeLimitReached,
     remainingFormatted,
   };
 }

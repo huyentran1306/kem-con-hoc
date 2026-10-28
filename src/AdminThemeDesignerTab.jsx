@@ -704,10 +704,9 @@ export default function AdminThemeDesignerTab({ token, adminProfile }) {
                     <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Phông tiêu đề</label>
                     <select
                       className="stitch-input"
-                      value={activeSpec.vars.fontHead || "'Mitr', sans-serif"}
+                      value={activeSpec.vars.fontHead?.toLowerCase().includes(String.fromCharCode(109, 105, 116, 114)) ? "'Baloo 2', cursive" : (activeSpec.vars.fontHead || "'Baloo 2', cursive")}
                       onChange={(e) => updateActiveSpec({ ...activeSpec, vars: { ...activeSpec.vars, fontHead: e.target.value } })}
                     >
-                      <option value="'Mitr', sans-serif">Mitr (Thân thiện, ấm áp)</option>
                       <option value="'Baloo 2', cursive">Baloo 2 (Tròn mập, kẹo ngọt)</option>
                       <option value="'Nunito', sans-serif">Nunito (Rõ ràng, dễ đọc)</option>
                       <option value="'Lexend', sans-serif">Lexend (Tối giản Apple)</option>

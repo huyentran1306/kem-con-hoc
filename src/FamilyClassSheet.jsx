@@ -341,7 +341,7 @@ export function FamilyClassSheet({
           ) : classes.length === 0 ? (
             <div style={styles.emptyCard}>
               <div style={{ fontSize: 44, marginBottom: 8 }}>🎒</div>
-              <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
+              <h4 style={{ fontFamily: 'Baloo 2, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
                 Bé chưa kết nối vào lớp nào
               </h4>
               <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 16px 0' }}>
@@ -465,7 +465,7 @@ export function FamilyClassSheet({
           {joinSuccess ? (
             <div style={styles.successBox}>
               <div style={{ fontSize: 52, marginBottom: 8 }}>📨</div>
-              <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
+              <h3 style={{ fontFamily: 'Baloo 2, sans-serif', fontSize: 20, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
                 {joinSuccess.status === 'active' ? 'Đã kết nối thành công!' : `Đã gửi ${formatTeacherName(joinSuccess.teacherName, { lower: true })} duyệt`}
               </h3>
               <p style={{ fontSize: 13, color: 'var(--c-text-2)', maxWidth: 320, margin: '0 auto 16px auto' }}>
@@ -541,7 +541,7 @@ export function FamilyClassSheet({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <span style={styles.previewTag}>{[classPreview.grade ? `Khối ${classPreview.grade}` : '', classPreview.school_year].filter(Boolean).join(' · ') || 'Lớp học'}</span>
-                      <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '4px 0 2px 0' }}>
+                      <h4 style={{ fontFamily: 'Baloo 2, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '4px 0 2px 0' }}>
                         {formatClassName(classPreview.name)} · {formatTeacherName(classPreview.teacher_name, { lower: true })}
                       </h4>
                       <p style={{ fontSize: 12, color: 'var(--c-text-2)', margin: 0 }}>
@@ -778,7 +778,7 @@ export function FamilyClassSheet({
         <div style={styles.modalBackdrop} onClick={() => setChangingClassStudent(null)}>
           <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 32, marginBottom: 4 }}>🔄</div>
-            <h4 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
+            <h4 style={{ fontFamily: 'Baloo 2, sans-serif', fontSize: 18, color: 'var(--c-text)', margin: '0 0 6px 0' }}>
               Đổi con cho {formatClassName(changingClassStudent.class_name) || 'lớp này'}
             </h4>
             <p style={{ fontSize: 12.5, color: 'var(--c-text-2)', margin: '0 0 14px 0' }}>
@@ -857,7 +857,7 @@ const styles = {
     fontSize: 18,
   },
   title: {
-    fontFamily: 'Mitr, sans-serif',
+    fontFamily: 'Baloo 2, sans-serif',
     fontSize: 18,
     fontWeight: 700,
     margin: 0,

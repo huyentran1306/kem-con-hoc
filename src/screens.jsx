@@ -1014,25 +1014,53 @@ export function Analyze() {
   const prefetchAbortRef = useRef(null)
   const prefetchPromiseRef = useRef(null)
   const prefetchTextRef = useRef('')
+  const prefetchChildRef = useRef({ id: '', grade: '', book: '', subject: '' })
+  const isStartingExplainRef = useRef(false)
 
-  // Đợt 23V: Soạn trước phần cần ngay (lần A) khi màn review vừa hiện
+  const normalizeProblemText = (str) => (str || '').trim().replace(/\s+/g, ' ')
+
+  // Đợt 23Y: Soạn trước phần cần ngay (lần A), KHÔNG hủy khi mẹ bấm "Đúng rồi, soạn bài"
   useEffect(() => {
     if (aiState !== 'review') return
     if (isDemoMode() || isTrialActive()) return
 
-    const textToPrefetch = (editedText || ocrText || S.flow?.ocr || '').trim()
-    if (!textToPrefetch) return
+    const rawText = (editedText || ocrText || S.flow?.ocr || '').trim()
+    const normText = normalizeProblemText(rawText)
+    if (!normText) return
 
+    const currentChildInfo = {
+      id: child?.id || '',
+      grade: child?.grade || '',
+      book: child?.book || '',
+      subject: child?.subject || 'Toán',
+    }
+
+    // Nếu đã có prefetch đúng đề và đúng lớp/sách/môn, giữ nguyên dùng tiếp
+    if (
+      prefetchPromiseRef.current &&
+      prefetchTextRef.current === normText &&
+      prefetchChildRef.current.grade === currentChildInfo.grade &&
+      prefetchChildRef.current.book === currentChildInfo.book &&
+      prefetchChildRef.current.subject === currentChildInfo.subject
+    ) {
+      return
+    }
+
+    // Nếu đề/lớp thực sự thay đổi, hủy lần prefetch cũ
     if (prefetchAbortRef.current) {
       prefetchAbortRef.current.abort()
+      cancelPrefetch({ familyId: S.user?.family_id || getCurrentFamilyId() }).catch(() => {})
     }
+
     const abortCtrl = new AbortController()
     prefetchAbortRef.current = abortCtrl
-    prefetchTextRef.current = textToPrefetch
+    prefetchTextRef.current = normText
+    prefetchChildRef.current = currentChildInfo
+    isStartingExplainRef.current = false
 
     const effectiveFamId = S.user?.family_id || getCurrentFamilyId()
     prefetchPromiseRef.current = aiExplain(
-      textToPrefetch,
+      rawText,
       child,
       S.tone,
       redirectNote,
@@ -1044,12 +1072,13 @@ export function Analyze() {
     })
 
     return () => {
-      if (prefetchAbortRef.current) {
+      // 23Y: CHỈ hủy khi mẹ thoát/chụp lại; nếu mẹ bấm "Đúng rồi, soạn bài" thì KHÔNG ĐƯỢC HỦY!
+      if (!isStartingExplainRef.current && prefetchAbortRef.current) {
         prefetchAbortRef.current.abort()
         cancelPrefetch({ familyId: effectiveFamId }).catch(() => {})
       }
     }
-  }, [aiState, ocrText, child?.id, child?.grade])
+  }, [aiState, ocrText, child?.id, child?.grade, child?.book, child?.subject])
 
   const useSampleProblem = () => {
     patch({
@@ -1071,6 +1100,7 @@ export function Analyze() {
   }
 
   const startExplain = async (textToUse, customParentNote = '') => {
+    isStartingExplainRef.current = true // Đánh dấu đã bấm bắt đầu: giữ nguyên prefetch!
     setAiState('loading')
     setDone(3)
     setExplainStartedAt(Date.now())
@@ -1078,13 +1108,30 @@ export function Analyze() {
       const combinedNote = [customParentNote, redirectNote].filter(Boolean).join('. ')
       const effectiveFamId = S.user?.family_id || getCurrentFamilyId()
 
+      const normText = normalizeProblemText(textToUse)
+      const isSameProblem =
+        Boolean(prefetchPromiseRef.current) &&
+        prefetchTextRef.current === normText &&
+        prefetchChildRef.current.grade === (child?.grade || '') &&
+        prefetchChildRef.current.book === (child?.book || '') &&
+        prefetchChildRef.current.subject === (child?.subject || 'Toán')
+
       let explainRes = null
-      // Đợt 23V: Dùng kết quả soạn trước nếu đúng đề
-      if (prefetchPromiseRef.current && prefetchTextRef.current.trim() === (textToUse || '').trim()) {
+      if (isSameProblem) {
+        // Đợt 23Y: Đề không đổi, dùng tiếp kết quả soạn trước (chờ nó xong hoặc lấy luôn nếu đã xong)
         try {
           explainRes = await prefetchPromiseRef.current
         } catch (_) {}
+      } else {
+        // Đề thực sự bị sửa, hủy lần soạn trước và dọn ref
+        if (prefetchAbortRef.current) {
+          prefetchAbortRef.current.abort()
+          cancelPrefetch({ familyId: effectiveFamId }).catch(() => {})
+          prefetchAbortRef.current = null
+          prefetchPromiseRef.current = null
+        }
       }
+
       if (!explainRes || explainRes.error) {
         explainRes = await aiExplain(textToUse, child, S.tone, combinedNote, false, { familyId: effectiveFamId })
       }
@@ -1552,9 +1599,12 @@ export function Analyze() {
               type="button"
               className="btn-km btn-km-m btn-km-secondary"
               onClick={() => {
+                isStartingExplainRef.current = false
                 if (prefetchAbortRef.current) {
                   prefetchAbortRef.current.abort()
                   cancelPrefetch({ familyId: S.user?.family_id || getCurrentFamilyId() }).catch(() => {})
+                  prefetchAbortRef.current = null
+                  prefetchPromiseRef.current = null
                 }
                 soundPop(500)
                 go('snap')

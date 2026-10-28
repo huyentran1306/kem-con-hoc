@@ -1151,7 +1151,7 @@
 }
 .kadm-brand-text b {
   display: block;
-  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-family: var(--s-font-head, 'Baloo 2', sans-serif);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.1;
@@ -1406,7 +1406,7 @@
   border: 2px solid #FFFFFF;
   box-shadow: 0 0 0 1px var(--s-line, #F0DDC2);
   font-weight: 900;
-  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-family: var(--s-font-head, 'Baloo 2', sans-serif);
 }
 .kadm-avatar-static { cursor: default; flex-shrink: 0; }
 .kadm-pop {
@@ -1426,7 +1426,7 @@
   gap: 2px;
 }
 .kadm-pop-title {
-  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-family: var(--s-font-head, 'Baloo 2', sans-serif);
   font-size: 14px;
   padding: 4px 8px 6px;
 }
@@ -1604,7 +1604,7 @@
 .kadm-auth-title {
   margin: 0 0 4px;
   text-align: center;
-  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-family: var(--s-font-head, 'Baloo 2', sans-serif);
   font-size: 21px;
   font-weight: 600;
   color: var(--s-text, #4B3621);
@@ -1671,7 +1671,7 @@
   background: #FFFFFF;
   box-shadow: 0 4px 0 var(--s-line, #F0DDC2);
   color: var(--s-text, #4B3621);
-  font-family: var(--s-font-head, 'Mitr', sans-serif);
+  font-family: var(--s-font-head, 'Baloo 2', sans-serif);
   font-size: 22px;
   cursor: pointer;
   display: grid;

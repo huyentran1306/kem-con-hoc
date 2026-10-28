@@ -242,14 +242,14 @@ THÔNG TIN:
 {{khung_ghi_chu}}
 PHƯƠNG PHÁP: {{doan_phuong_phap}}
 
-QUY TẮC BẮT BUỘC:
-1. Soạn từ 3 đến 4 bậc câu hỏi ngắn (< 25 chữ) cho mẹ đọc to dẫn dắt con. TUYỆT ĐỐI không lộ đáp số cuối trong cau_hoi hoặc goi_y.
+QUY TẮC BẮT BUỘC (RÚT GỌN ĐỂ MỞ BÀI DƯỚI 8 GIÂY):
+1. BẮT BUỘC soạn từ 3 đến 4 bậc trong mảng "cac_bac" (không được dưới 3 bậc): câu hỏi mỗi bậc ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ. TUYỆT ĐỐI không lộ đáp số cuối trong cau_hoi hoặc goi_y.
 2. Đáp án từng bậc chỉ để trong "dap_an_cho_me".
-3. Mỗi bậc có 2 gợi ý: "muc_1_do_vat" (đồ vật thật), "muc_2_hinh_ve" (hình vẽ/sơ đồ).
+3. Mỗi bậc có 2 gợi ý ngắn: "muc_1_do_vat" (đồ vật thật/ngữ cảnh), "muc_2_hinh_ve" (hình vẽ/sơ đồ/viết nháp).
 4. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
-5. Nếu đề thiếu dữ kiện hoặc không đọc được: trả "can_hoi_lai" nêu lý do.
-6. ĐẦU RA PHẢI LÀ JSON VIẾT LIỀN MỘT DÒNG, KHÔNG XUỐNG DÒNG, KHÔNG THỤT LỀ, ĐÚNG THEO MẪU SAU:
-{"dang_bai":"Toán phép tính","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Đề bài cho biết những số nào hả con?","ky_nang":"doc_hieu_de","dap_an_cho_me":"Có 15 kẹo và 3 bạn","goi_y":{"muc_1_do_vat":"Đếm que tính trên bàn","muc_2_hinh_ve":"Vẽ 3 vòng tròn"}}],"dap_an_cuoi_cho_me":"5 chiếc kẹo"}
+5. Nếu đề thiếu dữ kiện: trả "can_hoi_lai" nêu lý do.
+6. ĐẦU RA BẮT BUỘC LÀ JSON VIẾT LIỀN 1 DÒNG, KHÔNG XUỐNG DÒNG, KHÔNG THỤT LỀ, CÓ ĐỦ 3 ĐẾN 4 BẬC:
+{"dang_bai":"Toán phép tính","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Đề bài cho biết số nào con?","ky_nang":"doc_hieu_de","dap_an_cho_me":"15 kẹo, 3 bạn","goi_y":{"muc_1_do_vat":"Đếm que tính","muc_2_hinh_ve":"Vẽ 3 nhóm"}},{"cau_hoi":"Muốn chia đều con dùng phép tính gì?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"Phép chia 15 : 3","goi_y":{"muc_1_do_vat":"Chia que vào 3 ô","muc_2_hinh_ve":"Viết 15 : 3"}},{"cau_hoi":"Kết quả 15 chia 3 bằng mấy nào?","ky_nang":"tinh_toan","dap_an_cho_me":"5 chiếc kẹo","goi_y":{"muc_1_do_vat":"Đếm 1 phần que","muc_2_hinh_ve":"Nhẩm bảng chia 3"}}],"dap_an_cuoi_cho_me":"5 chiếc kẹo"}
 CHỈ TRẢ VỀ DUY NHẤT CHUỖI JSON MỘT DÒNG ĐÓ.`,
   },
 

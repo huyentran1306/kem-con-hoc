@@ -1,7 +1,7 @@
 import { syncPublicConfig } from './api';
 /**
  * CỔNG GIÁO VIÊN BẢN GẤU (PROMPT 11 - PHẦN A, B, C)
- * Thiết kế bản Gấu ấm áp, Mitr + Nunito, WCAG AA, không còn màu xanh dương viết cứng
+ * Thiết kế bản Gấu ấm áp, Baloo 2 + Nunito, WCAG AA, không còn màu xanh dương viết cứng
  */
 
 import { appConfirm, appPrompt } from './dialog'
@@ -403,7 +403,7 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
             <BearMascot mood="welcome" size={64} />
           </div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 6px 0', fontFamily: '"Mitr", sans-serif' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 6px 0', fontFamily: '"Baloo 2", sans-serif' }}>
             {mode === 'login' ? 'Đăng nhập Cổng Giáo Viên' : 'Đăng ký Tài khoản Cô Giáo'}
           </h2>
           <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)', margin: 0 }}>
@@ -618,7 +618,7 @@ function TeacherStatusNotice({ teacher, token, onLogout, onRefresh }) {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
               <BearMascot mood="remind" size={64} />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 8px 0', fontFamily: '"Mitr", sans-serif' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 8px 0', fontFamily: '"Baloo 2", sans-serif' }}>
               Hồ sơ đang chờ duyệt
             </h2>
             <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)', lineHeight: 1.6, marginBottom: 20 }}>
@@ -644,7 +644,7 @@ function TeacherStatusNotice({ teacher, token, onLogout, onRefresh }) {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                 <BearMascot mood="remind" size={64} />
               </div>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#DC2626', margin: '0 0 6px 0', fontFamily: '"Mitr", sans-serif' }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#DC2626', margin: '0 0 6px 0', fontFamily: '"Baloo 2", sans-serif' }}>
                 Hồ sơ chưa được phê duyệt
               </h2>
               <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)' }}>
@@ -2894,7 +2894,7 @@ function formatGrades(g) {
 }
 
 // ---------------------------------------------------------------------------
-// STYLES: CỔNG GIÁO VIÊN BẢN GẤU (Mitr + Nunito, bảng màu ấm áp #FFF8EC)
+// STYLES: CỔNG GIÁO VIÊN BẢN GẤU (Baloo 2 + Nunito, bảng màu ấm áp #FFF8EC)
 // ---------------------------------------------------------------------------
 const styles = {
   pageWrapper: {
@@ -2930,7 +2930,7 @@ const styles = {
     fontSize: 22,
   },
   brandTitle: {
-    fontFamily: '"Mitr", sans-serif',
+    fontFamily: '"Baloo 2", sans-serif',
     fontSize: 18,
     fontWeight: 700,
     margin: 0,
@@ -2953,7 +2953,7 @@ const styles = {
     marginBottom: 20,
   },
   sectionHeading: {
-    fontFamily: '"Mitr", sans-serif',
+    fontFamily: '"Baloo 2", sans-serif',
     fontSize: 22,
     fontWeight: 700,
     color: '#4B3621',
@@ -2990,7 +2990,7 @@ const styles = {
     marginBottom: 6,
   },
   className: {
-    fontFamily: '"Mitr", sans-serif',
+    fontFamily: '"Baloo 2", sans-serif',
     fontSize: 20,
     fontWeight: 700,
     color: '#4B3621',

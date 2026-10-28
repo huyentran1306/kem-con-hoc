@@ -41,7 +41,7 @@ export function QrCodeModal({ url, title, sub, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ fontSize: 32, marginBottom: 4 }}>🏫</div>
-        <h3 style={{ fontFamily: 'Mitr, sans-serif', fontSize: 20, color: '#4B3621', margin: '0 0 6px 0' }}>
+        <h3 style={{ fontFamily: 'Baloo 2, sans-serif', fontSize: 20, color: '#4B3621', margin: '0 0 6px 0' }}>
           {title || 'Mã QR Vào Lớp'}
         </h3>
         <p style={{ fontSize: 13, color: '#8A6A4A', margin: '0 0 16px 0' }}>

@@ -35,7 +35,7 @@ export default function GameDuel({ child, stats, onBack, onOpenProfile, isTrial 
     // Cộng thời gian chơi
     addPlaySeconds(child?.id, 6);
     const status = getPlayTimeStatus(child?.id);
-    if (status.isLimitReached || round >= 6) {
+    if (status.isTimeLimitReached || round >= 6) {
       setIsGameOver(true);
       return;
     }
@@ -248,7 +248,7 @@ export default function GameDuel({ child, stats, onBack, onOpenProfile, isTrial 
             className="btn-km btn-km-m btn-km-primary"
             style={{ height: 48, fontSize: 14 }}
             onClick={() => {
-              if (timeStatus.isLimitReached) {
+              if (timeStatus.isTimeLimitReached) {
                 onBack();
               } else {
                 setRound(1);
@@ -259,7 +259,7 @@ export default function GameDuel({ child, stats, onBack, onOpenProfile, isTrial 
               }
             }}
           >
-            {timeStatus.isLimitReached ? 'Nghỉ thôi' : 'Chơi ván nữa'}
+            {timeStatus.isTimeLimitReached ? 'Nghỉ thôi' : 'Chơi ván nữa'}
           </button>
         </div>
       </div>

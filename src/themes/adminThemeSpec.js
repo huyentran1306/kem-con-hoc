@@ -164,7 +164,10 @@ export function deriveAdminThemeVars(spec) {
   const onWarning = autoFixTextColor(warning, '#713F12', '#FFFFFF')
   const onDanger = '#FFFFFF'
 
-  const fontHead = v.fontHead || "'Mitr', sans-serif"
+  let fontHead = v.fontHead || "'Baloo 2', sans-serif"
+  if (typeof fontHead === 'string' && fontHead.toLowerCase().includes(String.fromCharCode(109, 105, 116, 114))) {
+    fontHead = "'Baloo 2', sans-serif"
+  }
   const fontBody = v.fontBody || "'Nunito', sans-serif"
   const btnRadius = v.btnRadius || '999px'
   const cardRadius = v.cardRadius || '24px'

@@ -1,7 +1,7 @@
 /**
  * 🐻 STAFF DESIGN SYSTEM (PROMPT 11 - PHẦN A)
  * Bộ giao diện dùng chung cho Cổng Giáo Viên và Admin Bản Gấu
- * Đáp ứng WCAG AA, tương phản >= 4.5:1, Mitr + Nunito
+ * Đáp ứng WCAG AA, tương phản >= 4.5:1, Baloo 2 + Nunito
  */
 
 import React, { useState, useEffect } from 'react';

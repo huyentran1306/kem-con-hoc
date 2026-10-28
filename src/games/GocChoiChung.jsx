@@ -26,7 +26,7 @@ export default function GocChoiChung({
   const focusSkill = getTodaysFocusSkill(child, stats);
 
   const handleStartGame = (gameId) => {
-    if (timeStatus.isLimitReached) {
+    if (timeStatus.isTimeLimitReached) {
       setActiveGame('limit_reached');
     } else {
       setActiveGame(gameId);
@@ -139,7 +139,7 @@ export default function GocChoiChung({
           style={{
             fontSize: 12,
             fontWeight: 900,
-            color: timeStatus.isLimitReached ? "var(--c-danger, #D23A50)" : "var(--c-text)",
+            color: timeStatus.isTimeLimitReached ? "var(--c-danger, #D23A50)" : "var(--c-text)",
             background: "var(--c-surface)",
             padding: "4px 9px",
             borderRadius: 999,

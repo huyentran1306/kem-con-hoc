@@ -368,7 +368,47 @@ export function DevUiKitPage() {
           {renderKitForTheme(currentTheme)}
         </div>
       )}
-    </div>
+    
+      {/* 23X: Kiểm tra dấu chồng tiếng Việt cho tất cả các font */}
+      <div style={{ marginTop: 32, padding: 24, background: '#FFFFFF', borderRadius: 24, border: '2px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 8px 0', color: '#0F172A' }}>
+          🔤 Kiểm tra dấu chồng tiếng Việt (Prompt 23X)
+        </h3>
+        <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px 0' }}>
+          Chuỗi mẫu thử các dấu chồng (ầ, ấ, ẩ, ẫ, ậ, ề, ể, ễ, ồ, ổ, ỗ, ộ, ờ, ở, ỡ...):<br/>
+          <code style={{ background: '#F1F5F9', padding: '2px 6px', borderRadius: 4, color: '#0F172A', fontWeight: 600 }}>
+            Bắt đầu bài tối nay · Đúng rồi, soạn bài · 5 phút mỗi tối · Lưu & về trang chủ · Tặng huy hiệu Kính lúp Tỉ mỉ · Chẳng những thế · Nghỉ ngơi · Gợi ý · Kỹ năng
+          </code>
+        </p>
+
+        <div style={{ display: 'grid', gap: 16 }}>
+          {[
+            { name: 'Baloo 2 (Bộ Bạn Gấu & Kẹo ngọt)', font: "'Baloo 2', cursive", weight: 700 },
+            { name: 'Coiny (Bộ Bánh mì / Bento)', font: "'Coiny', cursive", weight: 400 },
+            { name: 'Itim (Bộ Nhãn dán / Sticker)', font: "'Itim', cursive", weight: 400 },
+            { name: 'Paytone One (Bộ Bảng phấn)', font: "'Paytone One', sans-serif", weight: 400 },
+            { name: 'Unbounded (Bộ Thiếu nhi & Công nghệ)', font: "'Unbounded', sans-serif", weight: 700 },
+            { name: 'Comfortaa (Bộ Vườn ươm)', font: "'Comfortaa', cursive", weight: 700 },
+            { name: 'Mali (Bộ Vở bài tập)', font: "'Mali', cursive", weight: 700 },
+            { name: 'Lexend (Bộ Cực quang / Aurora)', font: "'Lexend', sans-serif", weight: 700 },
+            { name: 'Playfair Display (Bộ Lễ hội Noel)', font: "'Playfair Display', serif", weight: 700 },
+            { name: 'Lora (Bộ Tết cổ truyền)', font: "'Lora', serif", weight: 600 },
+            { name: 'Plus Jakarta Sans (Hiện đại)', font: "'Plus Jakarta Sans', sans-serif", weight: 700 },
+            { name: 'Be Vietnam Pro (Chuẩn mực tiếng Việt)', font: "'Be Vietnam Pro', sans-serif", weight: 700 },
+            { name: 'Nunito (Phông thân chữ)', font: "'Nunito', sans-serif", weight: 700 },
+          ].map((fItem, idx) => (
+            <div key={idx} style={{ padding: 12, background: '#F8FAFC', borderRadius: 12, border: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                {fItem.name} — <span style={{ fontFamily: 'monospace', color: '#2563EB' }}>{fItem.font} ({fItem.weight})</span>
+              </div>
+              <div style={{ fontFamily: fItem.font, fontWeight: fItem.weight, fontSize: 16, color: '#0F172A', lineHeight: 1.5 }}>
+                Bắt đầu bài tối nay · Đúng rồi, soạn bài · 5 phút mỗi tối · Lưu & về trang chủ · Tặng huy hiệu Kính lúp Tỉ mỉ · Chẳng những thế · Nghỉ ngơi · Gợi ý · Kỹ năng
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+</div>
   )
 }
 
