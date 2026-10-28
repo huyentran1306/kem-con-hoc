@@ -2,8 +2,9 @@
    KÈM CON HỌC — DEFAULT THEME SLOTS
    Prompt 07 Phần B (Bộ khe mặc định cho 3 màn chính)
    ============================================================ */
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useContext } from 'react'
 import { InputModeIcon } from '../themeIcons'
+import { AppCtx } from '../../ctx'
 
 // 1. HomeHero
 export function DefaultHomeHero({ child, parentName, dateLabel, grade }) {
@@ -15,7 +16,7 @@ export function DefaultHomeHero({ child, parentName, dateLabel, grade }) {
             {dateLabel || 'Tối nay'}
           </span>
           <h2 style={{ fontSize: 22, fontWeight: 800, margin: '2px 0 0', color: 'var(--c-text)' }}>
-            Chào {parentName || 'mẹ'}! ✨
+            Chào {parentName || 'bạn'}! ✨
           </h2>
           <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--c-text-2)' }}>
             Đồng hành cùng <b>{child?.name || 'con'}</b> ({grade || child?.grade || 'Lớp 3'})
@@ -365,6 +366,7 @@ export function DefaultHintList({ hints = [], openedLevels = [], onOpenHint }) {
 
 // 8. AnswerReveal (Giữ 1.5 giây để xem đáp án)
 export function DefaultAnswerReveal({ answerForParent, onRevealed }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const [unlocked, setUnlocked] = useState(false)
   const [progress, setProgress] = useState(0)
   const timerRef = useRef(null)
@@ -414,7 +416,7 @@ export function DefaultAnswerReveal({ answerForParent, onRevealed }) {
       onKeyUp={endHold}
       tabIndex={0}
       role="button"
-      aria-label="Xem đáp án cho mẹ (giữ 1.5 giây)"
+      aria-label={`Xem đáp án cho ${ho} (giữ 1.5 giây)`}
     >
       {/* Vạch tiến độ lấp đầy */}
       {!unlocked && progress > 0 && (
@@ -444,7 +446,7 @@ export function DefaultAnswerReveal({ answerForParent, onRevealed }) {
           </div>
         ) : (
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text-2)' }}>
-            {progress > 0 ? `Đang mở… ${Math.round(progress)}%` : '🔒 Giữ 1.5 giây để xem đáp án (cho mẹ)'}
+            {progress > 0 ? `Đang mở… ${Math.round(progress)}%` : `🔒 Giữ 1.5 giây để xem đáp án (cho ${ho})`}
           </span>
         )}
       </div>
@@ -513,10 +515,11 @@ export function DefaultDoneCelebration({ problemNo = 1, selfSteps = 4, totalStep
 
 // 11. TeachBackPicker (Con dạy lại mẹ)
 export function DefaultTeachBackPicker({ value = 'self', onChange }) {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const options = [
     { id: 'self', label: 'Tự giảng lại trơn tru', emoji: '🌟' },
-    { id: 'hint', label: 'Cần mẹ nhắc nhẹ 1 bước', emoji: '💡' },
-    { id: 'guided', label: 'Mẹ cần hướng dẫn lại', emoji: '🤝' },
+    { id: 'hint', label: `Cần ${ho} nhắc nhẹ 1 bước`, emoji: '💡' },
+    { id: 'guided', label: `${Ho} cần hướng dẫn lại`, emoji: '🤝' },
   ]
 
   return (
@@ -587,6 +590,7 @@ export function DefaultDoneNext({ siblingProblem, game, onOpen, onFinish }) {
 
 // 13. CheckWorkEntry (Khe thẻ Chấm vở con đã làm - Prompt 14 Phần A)
 export function DefaultCheckWorkEntry({ onStart, childName }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div
       className="card-km card-km-action"
@@ -619,7 +623,7 @@ export function DefaultCheckWorkEntry({ onStart, childName }) {
           Chấm vở {childName || 'con'} đã làm
         </h3>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--c-sub, var(--c-text-2))', lineHeight: 1.4 }}>
-          Chụp bài làm xong. AI tìm đúng bước sai đầu tiên và đưa mẹ câu hỏi để con <b>tự sửa</b>, không chữa hộ.
+          Chụp bài làm xong. AI tìm đúng bước sai đầu tiên và đưa {ho} câu hỏi để con <b>tự sửa</b>, không chữa hộ.
         </p>
       </div>
       <button

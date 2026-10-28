@@ -2,11 +2,13 @@
  * 🔍 TRÒ CHƠI 3: THÁM TỬ ĐỒ VẬT (MÀN 6, 7 THEO BẢN VẼ)
  * Con tìm đồ trong nhà, chụp/chọn từng nhóm, mẹ xác nhận số đếm, phép tính hiện dần, phá án.
  */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { generateDetectiveMission } from './questionGenerator';
 import { logGameAnswer, addPlaySeconds } from './gameStorage';
 import { soundTap, soundSuccess, soundWrong, soundPop } from '../audio';
 import { emitMotion } from '../MotionLayer';
+import { AppCtx } from '../ctx'
+import { haiNguoi } from '../xungHo'
 
 const COMMON_ITEMS = [
   { name: 'cây bút', emoji: '✏️', count: 4 },
@@ -18,6 +20,7 @@ const COMMON_ITEMS = [
 ];
 
 export default function GameDetective({ child, onBack, onOpenProfile, isTrial = false }) {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const childName = child?.name || 'Bé Na';
   const childGrade = child?.grade || '3';
 
@@ -156,7 +159,7 @@ export default function GameDetective({ child, onBack, onOpenProfile, isTrial = 
             🌟 GẤU KHEN
           </div>
           <p style={{ margin: 0, fontSize: 13.5, color: '#166534', lineHeight: 1.45, fontWeight: 700 }}>
-            {childName} tự quan sát và đếm rất chuẩn các nhóm đồ vật! Hai mẹ con phối hợp phá án cực đỉnh.
+            {childName} tự quan sát và đếm rất chuẩn các nhóm đồ vật! {haiNguoi(ho)} phối hợp phá án cực đỉnh.
           </p>
         </div>
 
@@ -283,7 +286,7 @@ export default function GameDetective({ child, onBack, onOpenProfile, isTrial = 
 
       {/* Lưu ý cho mẹ */}
       <div style={{ fontSize: 12.5, color: 'var(--c-sub)', background: 'var(--c-surface-2)', padding: '8px 12px', borderRadius: 12, lineHeight: 1.4 }}>
-        👩 <b>Mẹ là trọng tài:</b> đếm lại cùng {childName} trước khi bấm "Đúng rồi".
+        👩 <b>{Ho} là trọng tài:</b> đếm lại cùng {childName} trước khi bấm "Đúng rồi".
       </div>
 
       {/* Nút dính đáy */}
@@ -338,7 +341,7 @@ export default function GameDetective({ child, onBack, onOpenProfile, isTrial = 
             <div className="grabber" />
             <h4 style={{ margin: '0 0 4px', fontSize: 16 }}>📸 Xác nhận nhóm {currentSlotIdx + 1}</h4>
             <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--c-sub)' }}>
-              Mẹ và {childName} cùng đếm đồ vật tìm được nhé:
+              {Ho} và {childName} cùng đếm đồ vật tìm được nhé:
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

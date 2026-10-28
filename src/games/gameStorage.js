@@ -126,6 +126,16 @@ export async function logGameAnswer({ game, skill, who = 'child', correct, ms, c
 /**
  * Lấy kỹ năng đang ôn hôm nay từ Gấu nhớ
  */
+/** Prompt 29B.4: con đã có dữ liệu học thật chưa (để không nói "hay kẹt" khi chưa học buổi nào) */
+export function hasLearningData(child, stats) {
+  return Boolean(
+    (stats?.weak || []).length > 0 ||
+    (child?.bearMemory || []).length > 0 ||
+    (stats?.studyLog || []).length > 0 ||
+    (stats?.history || []).some((h) => h && !h.sample)
+  );
+}
+
 export function getTodaysFocusSkill(child, stats) {
   // Ưu tiên kỹ năng hay vướng gần nhất
   const weakList = stats?.weak || [];

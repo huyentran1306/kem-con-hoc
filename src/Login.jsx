@@ -150,7 +150,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
                     className="field"
                     style={{ marginTop: 6, paddingRight: 44 }}
                     type={showPass ? 'text' : 'password'}
-                    placeholder="••••••"
+                    placeholder="Nhập lại mật khẩu"
                     value={pass2}
                     onChange={(e) => setPass2(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && submit()}

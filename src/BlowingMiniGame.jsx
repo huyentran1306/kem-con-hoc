@@ -6,8 +6,9 @@
    - Fallback: "Giữ nút và thở ra" khi mic bị từ chối / Zalo Webview.
    ============================================================ */
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import { soundPop, soundSuccess, soundBreathe } from './audio'
+import { AppCtx } from './ctx'
 
 export function BlowingMiniGame({
   themeId = 'bear',
@@ -15,6 +16,7 @@ export function BlowingMiniGame({
   onCancel,
   soundOn = true,
 }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const [mode, setMode] = useState('with_child') // 'with_child' | 'solo_mom'
   const [turn, setTurn] = useState(1) // 1, 2, 3
   const [turnProgress, setTurnProgress] = useState(0) // 0 -> 100
@@ -289,7 +291,7 @@ export function BlowingMiniGame({
             onClick={() => setMode('solo_mom')}
             style={{ fontSize: 12.5, fontWeight: 700, padding: '4px 10px' }}
           >
-            🧘 Mẹ thở một mình
+            🧘 {Ho} thở một mình
           </button>
         </div>
         <button

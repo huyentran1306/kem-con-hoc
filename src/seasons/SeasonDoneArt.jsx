@@ -31,13 +31,14 @@ export function seasonLevelEmoji(level, fallback) {
 }
 
 export function SeasonDoneArt() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const ctx = useContext(AppCtx)
   const S = ctx?.S
   const [openPraise, setOpenPraise] = useState(false)
   const theme = S?.theme || 'bear'
   if (!S || !isSeasonalTheme(theme)) return null
   const child = (S.children || []).find((c) => c.id === S.activeId) || (S.children || [])[0] || { name: 'con' }
-  const parentLower = String(S.parent || 'Mẹ').toLowerCase()
+  const parentLower = ho
   const today = getSeasonToday()
   const praiseOk = canOpenPraise(theme, S.praiseNote, today)
 
@@ -89,7 +90,7 @@ export function SeasonDoneArt() {
             </button>
           ) : (
             <div className="card season-praise-card" role="region" aria-label="Lời khen">
-              <span className="season-kk">{String(S.parent || 'Mẹ').toUpperCase()} ĐỌC CHO {String(child.name).toUpperCase()} NGHE NHÉ</span>
+              <span className="season-kk">{Ho.toUpperCase()} ĐỌC CHO {String(child.name).toUpperCase()} NGHE NHÉ</span>
               <p className="season-praise-text">{S.praiseNote.text}</p>
             </div>
           )}

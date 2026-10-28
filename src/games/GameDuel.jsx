@@ -2,12 +2,15 @@
  * ⚔️ TRÒ CHƠI 1: ĐẤU TRÍ HAI ĐẦU BÀN (MÀN 2, 3 THEO BẢN VẼ)
  * Nửa trên xoay 180 độ về mẹ, nửa dưới con, 6s đếm ngược, ván 6 câu, khen cả hai.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { generateChildMathQuestion, generateParentMathQuestion } from './questionGenerator';
 import { logGameAnswer, addPlaySeconds, getPlayTimeStatus } from './gameStorage';
 import { soundTap, soundSuccess, soundWrong, soundPop } from '../audio';
+import { AppCtx } from '../ctx'
+import { haiNguoi } from '../xungHo'
 
 export default function GameDuel({ child, stats, onBack, onOpenProfile, isTrial = false }) {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const childName = child?.name || 'Bé Na';
   const childGrade = child?.grade || '3';
 
@@ -197,14 +200,14 @@ export default function GameDuel({ child, stats, onBack, onOpenProfile, isTrial 
             {headline}
           </h3>
           <p style={{ margin: 0, fontSize: 13.5, color: 'var(--c-sub)', lineHeight: 1.45 }}>
-            Mẹ làm câu khó hơn, {childName} làm câu vừa sức. Cả hai mẹ con đều rất nhanh trí!
+            {Ho} làm câu khó hơn, {childName} làm câu vừa sức. Cả {haiNguoi(ho, { cap: false })} đều rất nhanh trí!
           </p>
         </div>
 
         {/* 2 Thẻ số liệu */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div style={{ background: 'var(--c-surface-2)', borderRadius: 16, padding: '12px 14px', textAlign: 'center' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-sub)' }}>👩 Mẹ</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-sub)' }}>👩 {Ho}</span>
             <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--c-text)', margin: '2px 0' }}>{parentScore}</div>
             <span style={{ fontSize: 11.5, color: 'var(--c-sub)' }}>câu 2 phép tính</span>
           </div>
@@ -298,7 +301,7 @@ export default function GameDuel({ child, stats, onBack, onOpenProfile, isTrial 
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <b style={{ fontSize: 14, color: 'var(--c-sub)' }}>👩 Mẹ</b>
+          <b style={{ fontSize: 14, color: 'var(--c-sub)' }}>👩 {Ho}</b>
           <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--c-text)' }}>{parentScore} điểm</span>
         </div>
 

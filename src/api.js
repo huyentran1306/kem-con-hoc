@@ -29,6 +29,9 @@ import { renderPrompt, getActiveAiConfig, setActivePrompts, setActiveAiConfig, c
 import { getWeekLabel } from './utils.js'
 import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
 import { viNumberWords } from './guard.js'
+import { auditSteps, issueScore } from './stepQuality.js'
+import { buildLocalMicroStep, isServerMicroStepGeneric } from './microStepLocal.js'
+import { getCurrentXungHo } from './xungHo.js'
 import { isTrialActive, matchTrialLesson, PRELOADED_TRIAL_LESSONS, getTrialInitialState, trialLessonToProblem, setActiveTrialLesson, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, TRIAL_LIMIT_MESSAGE } from './trialData.js'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -425,7 +428,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
         return p;
       }
     } else {
-      const reqTokens = targetPromptId === 'p3_explain_v3' ? 650 : Math.min(Number(aiCfg.max_tokens) || 1400, 1600);
+      // Prompt 28 A3: bài 2 bước cần đủ 4 bậc; 650 token hay bị cắt cụt nên nâng lên 900
+      const reqTokens = targetPromptId === 'p3_explain_v3' ? 900 : Math.min(Number(aiCfg.max_tokens) || 1400, 1600);
       j = await postAi(
         '/chat',
         {
@@ -443,6 +447,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       );
     }
     let data = extractJson(j.response ?? j)
+    // Prompt 29B.5: đo thời gian từng phần của lần soạn bài (gọi AI, kiểm, soạn lại) để tìm bước chậm
+    const timing = { prompt: targetPromptId, first_call_ms: Date.now() - startedAt, server: j?.timing || j?.server_timing || null }
 
     // Đợt 23V: Nếu lần A (p3_explain_v3) lỗi hoặc thiếu bậc, tự động gọi lại bằng p3_explain_v2 như cũ
     const remainingMs = EXPLAIN_TIMEOUT_MS - (Date.now() - startedAt)
@@ -505,10 +511,31 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       data = extractJson(retryResp.response ?? retryResp)
     }
 
+    timing.after_fallback_ms = Date.now() - startedAt
     if (!isValidExplain(data)) {
       return {
         error: 'format_error',
-        message: 'AI trả lời chưa đúng định dạng, mẹ thử lại nhé',
+        message: 'AI trả lời chưa đúng định dạng, thử lại nhé',
+      }
+    }
+
+    // Prompt 28 A3: máy kiểm bậc chung chung / lặp câu hỏi của đề / thiếu bậc → soạn lại riêng các bậc đó
+    if (targetPromptId === 'p3_explain_v3' && Array.isArray(data.cac_bac) && !(data.can_hoi_lai && String(data.can_hoi_lai).trim())) {
+      const remainMs = EXPLAIN_TIMEOUT_MS - (Date.now() - startedAt)
+      if (remainMs > 12000) {
+        const repairStart = Date.now()
+        try {
+          data = await repairGenericSteps(data, ocr, classification.mon || 'Toán', {
+            familyId: effectiveFamilyId,
+            modelId,
+            timeoutMs: Math.min(remainMs - 2000, 30000),
+            signal: options.signal,
+          })
+        } catch (repErr) {
+          console.warn('Sửa bậc chung chung lỗi, giữ bản gốc:', repErr)
+        }
+        timing.repair_ms = Date.now() - repairStart
+        timing.repaired = Boolean(data?._stepsRepaired)
       }
     }
 
@@ -555,7 +582,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       warning: data.luu_y_khi_giang || data.warning || '',
       method: data.method || 'Singapore CPA + Socratic',
       ocr: data.ocr || ocr,
-      steps: rawSteps.slice(0, 4),
+      steps: rawSteps.slice(0, 5),
       answer: data.dap_an_cuoi_cho_me || data.answer || '',
       brotherProblem: data.bai_anh_em || null,
       teachBack: data.con_day_lai_me || '',
@@ -565,7 +592,12 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       answerLine: '',
       diagram: null,
       prompt_version: targetPromptId === 'p3_explain_v3' ? 'v3' : (targetPromptId === 'p3_explain_v2' ? 'v2' : 'v1'),
+      _timing: { ...timing, total_ms: Date.now() - startedAt, final_prompt: targetPromptId, has_profile: hoSoConText !== 'chưa có' },
     }
+    try {
+      console.info('[KCH] thời gian soạn bài', problemObj._timing)
+      localStorage.setItem('kch_last_explain_timing', JSON.stringify({ at: new Date().toISOString(), ...problemObj._timing }))
+    } catch (_) {}
 
     // Đợt 23V: Nếu dùng v3 và chưa có bài anh em (chưa có lần B), kích hoạt lần B chạy nền
     if (targetPromptId === 'p3_explain_v3' && !problemObj.brotherProblem && !isDemoMode() && !isTrialActive()) {
@@ -649,6 +681,56 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     if (e && e.status) return { error: 'server', status: e.status, message: e.message };
     return { error: 'network', message: 'Không kết nối được máy chủ' };
   }
+}
+
+/* ============================================================
+   🛠 Prompt 28 A3: SỬA ĐÚNG CHỖ các bậc chung chung
+   Máy kiểm (stepQuality.js) chỉ ra bậc lỗi → 1 lần gọi AI nhỏ soạn lại riêng các bậc đó.
+   Bản sửa chỉ được nhận khi ít lỗi hơn bản gốc. Không gửi X-Problem-Text để máy chủ không cache nhầm.
+   ============================================================ */
+export async function repairGenericSteps(data, ocr, mon = 'Toán', { familyId = '', modelId, timeoutMs = 25000, signal } = {}) {
+  const before = auditSteps(data?.cac_bac || [], ocr, mon)
+  if (before.ok) return data
+  const compact = (data.cac_bac || []).map((b) => ({
+    cau_hoi: b.cau_hoi, ky_nang: b.ky_nang, dap_an_cho_me: b.dap_an_cho_me, goi_y: b.goi_y,
+  }))
+  const sys = renderPrompt('p3_fix_steps_v3', {
+    de_bai: ocr,
+    cac_bac_hien_tai: JSON.stringify(compact),
+    loi_can_sua: before.issues.map((i) => i.text).join('; '),
+    so_bac: String(Math.max(before.minSteps, compact.length)),
+  })
+  const j = await postAi(
+    '/chat',
+    {
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: 'Sửa đúng các bậc bị lỗi. Chỉ trả JSON một dòng.' },
+      ],
+      max_tokens: 900,
+      temperature: 0.2,
+      model: modelId,
+    },
+    timeoutMs,
+    {
+      'X-Prompt-Id': 'p3_fix_steps_v3',
+      'X-Family-Id': encodeURIComponent(familyId || ''),
+      'X-Bypass-Cache': '1',
+    },
+    signal
+  )
+  const fixed = extractJson(j?.response ?? j)
+  const fixedSteps = Array.isArray(fixed?.cac_bac) ? fixed.cac_bac.filter((b) => b && b.cau_hoi) : []
+  if (fixedSteps.length < 3) return data
+  const after = auditSteps(fixedSteps, ocr, mon)
+  if (issueScore(after) >= issueScore(before)) return data
+  // Giữ lại phần đã có của bậc tốt (lý do, lời khen nếu có), thay bậc lỗi bằng bậc mới
+  const merged = fixedSteps.map((b, idx) => {
+    const old = (data.cac_bac || [])[idx]
+    const oldBad = before.issues.some((i) => i.idx === idx)
+    return old && !oldBad && old.cau_hoi === b.cau_hoi ? { ...old, ...b } : b
+  })
+  return { ...data, cac_bac: merged, _stepsRepaired: before.issues.map((i) => i.kind) }
 }
 
 /* ============================================================
@@ -1826,6 +1908,8 @@ export async function teachBackGrade({
       finalAnswer,
       lop,
       tenCon,
+      // Prompt 29B: người con giảng lại cho (bố / mẹ / ông bà)
+      xungHo: getCurrentXungHo(),
     }),
   })
 
@@ -1895,7 +1979,7 @@ export async function getSafetySummary(range = '7d') {
         { layer: 1, name: 'Prompt Sư phạm Socratic', status: 'active', desc: 'Không giải bài hộ, chia 3 bậc gợi ý' },
         { layer: 2, name: 'Bộ chặn rò rỉ đáp án (Guard Module)', status: 'active', desc: 'Kiểm tra số chữ/số nguyên, thay thế tự động nếu lộ' },
         { layer: 3, name: 'Máy tính độc lập & Khử ảo giác', status: 'active', desc: 'Shunting-yard parser & Anti-hallucination quote checker' },
-        { layer: 4, name: 'Quyền chốt của Phụ huynh', status: 'active', desc: 'Mẹ luôn là người duyệt & chốt mức hiểu bài cuối cùng' },
+        { layer: 4, name: 'Quyền chốt của Phụ huynh', status: 'active', desc: 'Bố mẹ luôn là người duyệt & chốt mức hiểu bài cuối cùng' },
       ],
     }
   }
@@ -2046,7 +2130,7 @@ export async function fetchAiProgressReport(childId, childName = 'Bé', options 
   }
 
   try {
-    const res = await post('/api/v1/ai/progress', { child_id: childId, child_name: childName }, 30000, AI_GATEWAY);
+    const res = await post('/api/v1/ai/progress', { child_id: childId, child_name: childName, xung_ho: getCurrentXungHo() }, 30000, AI_GATEWAY);
     return res;
   } catch (err) {
     console.warn('fetchAiProgressReport error:', err);
@@ -2067,21 +2151,10 @@ export async function fetchAiMicroStep({
   sessionId = null,
   familyId = null,
 } = {}) {
+  // Prompt 28 A4: câu nhỏ hơn phải bám đúng bậc đang kẹt và số trong đề (soạn tại máy, không gọi AI)
+  const localMicro = () => buildLocalMicroStep({ problemText, stepQuestion, stepAnswer, skill, microIndex, childName })
   if (isTrialActive()) {
-    const sampleQuestions = [
-      `${childName} tìm trong đề chữ đứng trước số nhé. Số đó là bao nhiêu?`,
-      `Nếu bớt đi thì số còn lại nhiều hơn hay ít hơn lúc đầu hả ${childName}?`
-    ];
-    return {
-      ok: true,
-      micro_step: {
-        cau_hoi_nho: sampleQuestions[(microIndex - 1) % sampleQuestions.length] || sampleQuestions[0],
-        dap_an_cho_me: stepAnswer || 'Số liệu trong đề',
-        ly_do_cho_me: 'Giúp con nhận diện đúng dữ kiện nhỏ nhất trước khi bắt đầu tính.',
-        micro_index: microIndex,
-      },
-      latency_ms: 120,
-    };
+    return { ok: true, micro_step: localMicro(), latency_ms: 120 };
   }
 
   try {
@@ -2099,14 +2172,22 @@ export async function fetchAiMicroStep({
         child_name: childName,
         session_id: sessionId,
         family_id: familyId,
+        xung_ho: getCurrentXungHo(),
       },
       12000,
       AI_GATEWAY
     );
+    // Máy chủ trả câu dự phòng chung (không gắn với bậc/đề) → thay bằng câu soạn theo kỹ năng của bậc
+    if (res && res.ok && res.micro_step && isServerMicroStepGeneric(res.micro_step, problemText)) {
+      return { ...res, micro_step: { ...res.micro_step, ...localMicro(), server_question: res.micro_step.cau_hoi_nho || '' }, replaced_generic: true };
+    }
+    if (!res || !res.ok || !res.micro_step) {
+      return { ok: true, micro_step: localMicro(), replaced_generic: true, server_error: res?.error || null };
+    }
     return res;
   } catch (err) {
-    console.warn('fetchAiMicroStep error:', err);
-    return { ok: false, error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
+    console.warn('fetchAiMicroStep error, dùng câu nhỏ soạn tại máy:', err);
+    return { ok: true, micro_step: localMicro(), replaced_generic: true, server_error: { code: 'TIMEOUT_OR_NETWORK', message: err.message } };
   }
 }
 
@@ -2392,7 +2473,7 @@ export async function fetchAiTraitAnalysis({
           `Tối thứ 3: để ${childName} tự đặt một đề đố mẹ.`,
           "Giữ mỗi buổi khoảng 15 phút, xong là chơi 5 phút."
         ],
-        luu_y: "Đây là gợi ý, mẹ quyết định."
+        luu_y: "Đây là gợi ý, bố mẹ quyết định."
       },
       facts: {
         total_sessions: 17,

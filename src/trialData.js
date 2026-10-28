@@ -30,7 +30,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 1,
         ky_nang: 'doc_hieu_de',
-        cau_hoi: 'Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt nào?',
+        cau_hoi: 'Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt?',
         ly_do_cho_me: 'Giúp con nhận diện dữ kiện số lượng ban đầu của đàn vịt trước khi thực hiện thao tác bớt đi.',
         dap_an_cho_me: 'Xác định số lượng ban đầu là 15 con vịt.',
         goi_y: {
@@ -41,7 +41,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       {
         bac: 2,
         ky_nang: 'chon_phep_tinh',
-        cau_hoi: 'Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con hả con?',
+        cau_hoi: 'Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con?',
         ly_do_cho_me: 'Dẫn dắt con hiểu từ khoá "bán bớt" tương ứng với phép toán trừ trong thực tế.',
         dap_an_cho_me: 'Bán bớt tức là làm phép trừ, bớt đi 6 con.',
         goi_y: {
@@ -292,7 +292,7 @@ export function isTrialActive() {
   return false;
 }
 
-export const TRIAL_LIMIT_MESSAGE = 'Dùng thử chỉ có 3 đề mẫu. Mẹ chọn một đề bên dưới, hoặc đăng ký để AI giảng mọi đề nhé.'
+export const TRIAL_LIMIT_MESSAGE = 'Dùng thử chỉ có 3 đề mẫu. Bố mẹ chọn một đề bên dưới, hoặc đăng ký để AI giảng mọi đề nhé.'
 
 /**
  * Tìm bài mẫu khớp đề. Đợt 15 P1: đề không khớp → null (không còn trả "Bác Ba bán vịt" cho mọi đề).

@@ -3,12 +3,13 @@
  * 3 trò mẹ con: Đấu trí hai đầu bàn, Leo cây mật ong, Thám tử đồ vật.
  * 0 token, tự dừng khi hết giờ, luôn khen cả hai.
  */
-import React, { useState } from 'react';
-import { getPlayTimeStatus, getTodaysFocusSkill } from './gameStorage';
+import React, { useState, useContext } from 'react';
+import { getPlayTimeStatus, getTodaysFocusSkill, hasLearningData, getDailyLimitMinutes } from './gameStorage';
 import GameDuel from './GameDuel';
 import GameHoneyTree from './GameHoneyTree';
 import GameDetective from './GameDetective';
 import GameLimitScreen from './GameLimitScreen';
+import { AppCtx } from '../ctx'
 
 export default function GocChoiChung({
   child,
@@ -20,7 +21,12 @@ export default function GocChoiChung({
   isTrial = false,
   SnapToyLegacyComponent,
 }) {
-  const childName = child?.name || 'Bé Na';
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
+  const childName = child?.name || 'con';
+  // Prompt 29B.4: chưa có buổi học nào thì nói thật, không nói "hay kẹt"
+  const hasData = hasLearningData(child, stats);
+  const playMin = getDailyLimitMinutes(child?.id);
+  const gradeLabel = String(child?.grade || '').replace(/^\s*lớp\s*/i, '') || '3';
   const [activeGame, setActiveGame] = useState(null); // null | 'duel' | 'tree' | 'detective'
   const timeStatus = getPlayTimeStatus(child?.id);
   const focusSkill = getTodaysFocusSkill(child, stats);
@@ -93,8 +99,8 @@ export default function GocChoiChung({
           className="btn-km-circle"
           style={{ width: 36, height: 36, fontSize: 15 }}
           onClick={() => openSheet('calm')}
-          aria-label="Mẹ bình tĩnh"
-          title="Mẹ bình tĩnh"
+          aria-label={`${Ho} bình tĩnh`}
+          title={`${Ho} bình tĩnh`}
         >
           😮‍💨
         </button>
@@ -107,7 +113,9 @@ export default function GocChoiChung({
             Góc chơi chung
           </h2>
           <p style={{ margin: '2px 0 0', fontSize: 13.5, color: 'var(--c-sub)' }}>
-            Mẹ và {childName} chơi cùng 5 phút, ôn đúng chỗ hôm nay hay kẹt.
+            {hasData
+              ? `${Ho} và ${childName} chơi cùng ${playMin} phút, ôn đúng chỗ ${childName} hay kẹt.`
+              : `Chưa có buổi học nào. Hôm nay ${Ho.toLowerCase()} và ${childName} chơi ôn ${focusSkill} (lớp ${gradeLabel}).`}
           </p>
         </div>
         <span style={{ fontSize: 44, flexShrink: 0 }}>🐻</span>
@@ -327,7 +335,9 @@ export default function GocChoiChung({
       </div>
       {/* Dòng chú thích */}
       <p style={{ margin: '4px 0', fontSize: 12, color: 'var(--c-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-        Câu hỏi dựa trên chỗ {child?.name || 'con'} hay kẹt. Hết 5 phút thì tự dừng.
+        {hasData
+          ? `Câu hỏi dựa trên chỗ ${childName} hay kẹt. Hết ${playMin} phút thì tự dừng.`
+          : `Câu hỏi theo chương trình lớp ${gradeLabel}. Hết ${playMin} phút thì tự dừng.`}
       </p>
 
       {/* Khu "Chụp đồ vật để Gấu nghĩ trò" (Legacy component chuyển xuống dưới) */}

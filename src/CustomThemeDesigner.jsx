@@ -3,7 +3,7 @@
    Màn hình 6 bước tự thiết kế giao diện + Live preview 5 màn + Mã 6 ký tự
    ============================================================ */
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useContext } from 'react'
 import {
   CUSTOM_COLORS,
   CUSTOM_FONTS,
@@ -15,6 +15,7 @@ import { encodeThemeCode, decodeThemeCode } from './themes/customThemeCode'
 import { BuddyMascot, BUDDY_QUOTES } from './themes/buddies/buddySvgs'
 import { ThemedTabIcon } from './themes/themeIcons'
 import { soundPop, soundSuccess } from './audio'
+import { AppCtx } from './ctx'
 
 export function CustomThemeDesigner({
   currentCustomTheme = null,
@@ -23,6 +24,7 @@ export function CustomThemeDesigner({
   onCancel,
   canEdit = true,
 }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const [stepPage, setStepPage] = useState(1) // 1: Màu & Nền, 2: Chữ & Nút, 3: Bạn đồng hành & Icon, 4: Tổng quan 5 màn
 
   const [themeConfig, setThemeConfig] = useState(
@@ -419,7 +421,7 @@ export function CustomThemeDesigner({
                 }}
               >
                 <div style={{ fontSize: 9, fontWeight: 800, color: themeVars['--c-accent-ink'] }}>BẬC 2 / 4</div>
-                <div style={{ fontSize: 9.5, fontWeight: 700, margin: '2px 0' }}>Mẹ đọc câu hỏi</div>
+                <div style={{ fontSize: 9.5, fontWeight: 700, margin: '2px 0' }}>{Ho} đọc câu hỏi</div>
                 <div
                   style={{
                     height: 14,
@@ -529,7 +531,7 @@ export function CustomThemeDesigner({
               >
                 <span style={{ fontSize: 8.5, color: themeVars['--c-accent-ink'], fontWeight: 800 }}>BẬC 2 / 4</span>
                 <div style={{ fontSize: 10, fontWeight: 700, margin: '2px 0 6px', lineHeight: 1.2 }}>
-                  Mẹ đọc to cho {childName}
+                  {Ho} đọc to cho {childName}
                 </div>
                 <div
                   style={{

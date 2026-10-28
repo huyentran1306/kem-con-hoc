@@ -3,8 +3,12 @@
  * Trạng thái T7 lành mạnh: không có nút chơi thêm.
  */
 import React from 'react';
+import { AppCtx } from '../ctx'
+import { useContext } from 'react'
+import { haiNguoi } from '../xungHo'
 
 export default function GameLimitScreen({ childName = 'con', onBack, onOpenProfile }) {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div
       className="card-km"
@@ -27,7 +31,7 @@ export default function GameLimitScreen({ childName = 'con', onBack, onOpenProfi
         Hôm nay chơi đủ rồi
       </b>
       <p style={{ fontSize: 14, color: 'var(--c-sub, #6E5D4E)', maxWidth: 300, margin: 0, lineHeight: 1.5 }}>
-        Mai Gấu nghĩ trò mới theo bài tối nay nhé. Giờ hai mẹ con cùng đọc sách hoặc nghỉ ngơi thôi nào!
+        Mai Gấu nghĩ trò mới theo bài tối nay nhé. Giờ {haiNguoi(ho, { cap: false })} cùng đọc sách hoặc nghỉ ngơi thôi nào!
       </p>
 
       <div style={{ marginTop: 12, width: '100%', maxWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -55,7 +59,7 @@ export default function GameLimitScreen({ childName = 'con', onBack, onOpenProfi
           }}
           onClick={onOpenProfile}
         >
-          Mẹ chỉnh thời gian chơi trong Con tôi
+          {Ho} chỉnh thời gian chơi trong Con tôi
         </button>
       </div>
     </div>

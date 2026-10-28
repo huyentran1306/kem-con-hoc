@@ -313,7 +313,7 @@ export const TET_WISHES = [
   'Bé Lân múa một vòng chúc cả nhà vạn sự như ý!',
   'Chúc con năm nay đọc to thật hay, làm toán thật vui.',
   'Năm mới an khang, chúc nhà mình sum vầy và đầm ấm.',
-  'Chúc con ăn Tết thật vui, rồi cùng mẹ học tiếp thật hăng say.',
+  'Chúc con ăn Tết thật vui, rồi cùng bố mẹ học tiếp thật hăng say.',
 ]
 
 /**

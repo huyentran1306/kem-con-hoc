@@ -93,6 +93,7 @@ export function SeasonMiniPreview({ themeId, currentId }) {
 }
 
 export function SeasonHomeLayer() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const ctx = useContext(AppCtx)
   const { S, patch, session, toast } = ctx || {}
   const { cfg, ready } = useSeasonsConfig()
@@ -111,7 +112,7 @@ export function SeasonHomeLayer() {
   if (!S || !S.onboarded || isTrial) return null
 
   const child = (S.children || []).find((c) => c.id === S.activeId) || (S.children || [])[0] || { name: 'con' }
-  const parentLower = String(S.parent || 'Mẹ').toLowerCase()
+  const parentLower = ho
   const theme = S.theme || 'bear'
 
   const decision = ready
@@ -223,7 +224,7 @@ export function SeasonHomeLayer() {
               <p className="sub">
                 {note
                   ? `Đã cất lời khen. Tối nay xong bài, ${child.name} mở ra đọc cùng ${parentLower}.`
-                  : `${S.parent || 'Mẹ'} viết một lời khen, tối nay ${child.name} mở ra đọc cùng ${parentLower}.`}
+                  : `${Ho} viết một lời khen, tối nay ${child.name} mở ra đọc cùng ${parentLower}.`}
               </p>
               <button type="button" className="season-mini-btn" onClick={() => setPraiseDraft(note ? note.text : '')}>
                 {note ? 'Sửa lời khen' : 'Viết lời khen'}

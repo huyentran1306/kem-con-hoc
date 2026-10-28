@@ -57,17 +57,46 @@ export function Onboarding() {
   const setChild = (obj) =>
     patch({ children: S.children.map((c) => (c.id === child.id ? { ...c, ...obj } : c)) })
 
+  // Prompt 29B.2: chưa chọn ai thì chưa có vai trò; biệt danh để trống (không điền sẵn "Na")
+  const [pickedParent, setPickedParent] = useState(S.onboarded ? S.parent : null)
+  const [nameDraft, setNameDraft] = useState(S.onboarded ? (child?.name || '') : '')
+  const pickedHo = pickedParent ? (pickedParent === 'Ông/Bà' ? 'ông bà' : pickedParent.toLowerCase()) : ''
+  const canFinish = Boolean(pickedParent && nameDraft.trim())
+
+  const finishOnboarding = () => {
+    if (!canFinish) return
+    const name = nameDraft.trim()
+    // Prompt 29B.5: con mới có mã riêng, không dùng mã "na" cố định (khoá cache, bộ nhớ Gấu theo con)
+    const needNewId = !S.onboarded && child.id === 'na'
+    const newId = needNewId ? 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) : child.id
+    const children = S.children.map((c) => (c.id === child.id ? { ...c, id: newId, name } : c))
+    const stats = { ...(S.stats || {}) }
+    if (needNewId && stats[child.id]) {
+      stats[newId] = stats[child.id]
+      delete stats[child.id]
+    }
+    patch({
+      parent: pickedParent,
+      children,
+      activeId: S.activeId === child.id ? newId : S.activeId,
+      stats,
+      onboarded: true,
+    })
+    go('home')
+    toast(`Chào mừng ${pickedHo}! 💛`)
+  }
+
   return (
     <>
-      <p className="eyebrow">Bước 1/3 · 30 giây</p>
-      <p className="title">Chào {S.parent}! Con nhà mình học lớp mấy?</p>
+      <p className="eyebrow">30 giây</p>
+      <p className="title">Chào {pickedHo || 'bạn'}! Con nhà mình học lớp mấy?</p>
       <p className="sub">Không cần tên thật hay ảnh của con. Mình chỉ cần vài thông tin để AI giảng đúng cách.</p>
 
       <div className="card">
         <span className="lbl plum">Bạn là</span>
         <div className="opt-grid" style={{ marginBottom: 16 }}>
           {PARENT_TYPES.map((x) => (
-            <button key={x} className={`opt ${S.parent === x ? 'on' : ''}`} onClick={() => patch({ parent: x })}>
+            <button key={x} className={`opt ${pickedParent === x ? 'on' : ''}`} aria-pressed={pickedParent === x} onClick={() => setPickedParent(x)}>
               {x}
             </button>
           ))}
@@ -95,9 +124,11 @@ export function Onboarding() {
         </div>
         <input
           className="field"
-          value={child.name}
-          onChange={(e) => setChild({ name: e.target.value || 'Bé' })}
+          value={nameDraft}
+          onChange={(e) => setNameDraft(e.target.value)}
           placeholder="VD: Na, Bon, Miu…"
+          aria-label="Biệt danh của con"
+          data-testid="onb-child-name"
         />
       </div>
 
@@ -136,8 +167,9 @@ export function Onboarding() {
 
       <div className="card">
         <span className="lbl plum">🎨 Giao diện con thích (tuỳ chọn)</span>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 6 }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
+        {/* Prompt 30.1: cột chữ không được co về 0; nút rộng theo chữ, không 100% */}
+        <div className="onb-theme-row" style={{ marginTop: 6 }}>
+          <div className="onb-theme-text">
             <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #64748B)', fontWeight: 600 }}>Đang chọn</div>
             <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <span style={{ fontSize: 16 }}>{getTheme(S.theme || 'candy').icon || '✨'}</span>
@@ -146,8 +178,7 @@ export function Onboarding() {
           </div>
           <button
             type="button"
-            className="btn ghost"
-            style={{ padding: '8px 14px', fontSize: 13, flexShrink: 0, height: 'auto', minHeight: 36, whiteSpace: 'nowrap' }}
+            className="btn ghost onb-theme-btn"
             onClick={() => openSheet('themePicker')}
           >
             Đổi giao diện
@@ -170,9 +201,18 @@ export function Onboarding() {
         </span>
       </button>
 
+      {!canFinish && (
+        <p className="sub" style={{ textAlign: 'center', margin: '0 0 8px', fontSize: 12.5 }} data-testid="onb-missing">
+          {!pickedParent && !nameDraft.trim() ? 'Chọn bạn là ai và gõ biệt danh của con để bắt đầu' : !pickedParent ? 'Chọn bạn là ai để bắt đầu' : 'Gõ biệt danh của con để bắt đầu'}
+        </p>
+      )}
       <button
         className="btn solid"
-        onClick={() => { patch({ onboarded: true }); go('home'); toast(`Chào mừng ${S.parent.toLowerCase()}! 💛`) }}
+        disabled={!canFinish}
+        aria-disabled={!canFinish}
+        style={!canFinish ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+        onClick={finishOnboarding}
+        data-testid="onb-finish"
       >
         Xong, bắt đầu
       </button>
@@ -437,6 +477,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
 }
 
 export function Home() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, stats, go, openSheet, toast, soundOn, toggleSound, tracker } = useContext(AppCtx)
   const wide = useWide()
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
@@ -448,7 +489,7 @@ export function Home() {
   const hour = now.getHours()
   const minute = now.getMinutes()
   const greet = hour < 11 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
-  const parentLower = S.parent.toLowerCase()
+  const parentLower = ho
 
   const dayCodeMap = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
   const todayCode = dayCodeMap[now.getDay()]
@@ -666,7 +707,7 @@ export function Home() {
       >
         <span style={{ fontSize: 20, display: 'block', marginBottom: 2 }} aria-hidden="true">🧸</span>
         <b style={{ fontSize: 13.5, display: 'block', color: 'var(--c-text)' }}>Chụp đồ chơi</b>
-        <span style={{ fontSize: 11.5, color: 'var(--c-sub)' }}>Ôn vui 10 phút</span>
+        <span style={{ fontSize: 11.5, color: 'var(--c-sub)' }}>Ôn vui <PlayMinutesText /></span>
       </button>
 
       <button
@@ -1010,6 +1051,8 @@ function AnalyzeBuddy({ aiState, done }) {
 }
 
 export function Analyze() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, go, openSheet, toast } = useContext(AppCtx)
   const [done, setDone] = useState(0)
   const [aiState, setAiState] = useState('loading') // loading | cleaning | done | error | ocr_failed | review | scope_blocked | scope_warn | scope_pick_one
@@ -1233,7 +1276,7 @@ export function Analyze() {
     const subScope = evaluateTextScope(chosenText, {
       childGrade: child?.grade,
       childName: child?.name,
-      parentRole: S.parent,
+      parentRole: Ho,
     })
     if (subScope.action === 'warn') {
       setScopeResult(subScope)
@@ -1287,7 +1330,7 @@ export function Analyze() {
           const ocrRes = await aiOcr(shot.blob, 25000, {
             childGrade: child?.grade,
             childName: child?.name,
-            parentRole: S.parent,
+            parentRole: Ho,
           })
           if (cancelled) return null
 
@@ -1303,7 +1346,7 @@ export function Analyze() {
               scope = parseOcrV2Result(raw, {
                 childGrade: child?.grade,
                 childName: child?.name,
-                parentRole: S.parent,
+                parentRole: Ho,
               })
             }
           }
@@ -1408,7 +1451,7 @@ export function Analyze() {
           const textScope = evaluateTextScope(ocr, {
             childGrade: child?.grade,
             childName: child?.name,
-            parentRole: S.parent,
+            parentRole: Ho,
           })
           if (textScope.action === 'block') {
             setScopeResult(textScope)
@@ -1490,7 +1533,7 @@ export function Analyze() {
               ❓ CÂU HỎI 0 · HỎI CON NGAY
             </div>
             <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.45, marginBottom: 4 }}>
-              {QUESTION_ZERO[subjectDetected].replace('{parent}', S.parent.toLowerCase())}
+              {QUESTION_ZERO[subjectDetected].replace('{parent}', ho)}
             </div>
             <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>
               Hỏi con trong lúc AI đang đọc đề để con rèn thói quen quan sát đề bài trước.
@@ -1527,7 +1570,7 @@ export function Analyze() {
                 Gấu đọc được đề này!
               </h2>
               <span style={{ fontSize: 12.5, color: 'var(--c-sub)' }}>
-                Mẹ xem lại xem số liệu có cần sửa không nhé
+                {Ho} xem lại xem số liệu có cần sửa không nhé
               </span>
             </div>
           </div>
@@ -1548,7 +1591,7 @@ export function Analyze() {
           {reAskReason && (
             <div className="card-km card-km-note" style={{ background: '#FFF1F2', borderColor: '#FECDD3' }}>
               <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 700 }}>
-                ⚠️ Đề có chỗ chưa rõ: {reAskReason}. {S.parent} sửa lại giúp con nhé.
+                ⚠️ Đề có chỗ chưa rõ: {reAskReason}. {Ho} sửa lại giúp con nhé.
               </span>
             </div>
           )}
@@ -1758,6 +1801,7 @@ function gradeLabel(g) {
 }
 
 export function Explain() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
   const [showMathList, setShowMathList] = useState(false)
   const [showFullOcr, setShowFullOcr] = useState(false)
@@ -1767,7 +1811,7 @@ export function Explain() {
 
   const explainText =
     `Đây là dạng bài ${problem.type}. ${problem.summary || ''} ` +
-    `${S.parent.toLowerCase()} lưu ý: ${problem.warning || ''} ` +
+    `${ho} lưu ý: ${problem.warning || ''} ` +
     `Cách ${gradeLabel(child.grade)} đang học: ${problem.method || ''}.`
 
   return (
@@ -1988,7 +2032,7 @@ export function Explain() {
       {problem.warning && (
         <div className="card-km card-km-note" style={{ padding: '10px 14px' }}>
           <span style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.4 }}>
-            <b>⚠️ {S.parent} lưu ý:</b> {problem.warning}
+            <b>⚠️ {Ho} lưu ý:</b> {problem.warning}
           </span>
         </div>
       )}
@@ -2025,7 +2069,7 @@ export function Explain() {
           className="btn-km btn-km-l btn-km-primary"
           style={{ width: '100%' }}
           onClick={() => {
-            patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false } })
+            patch({ flow: { ...S.flow, step: 0, stuck: 0, unlocked: false, stepLog: [], revealedSteps: [], stepRevealTimes: [], startedAt: Date.now(), teachBackDone: false, teachBackId: null, teachBackOwnWay: false, playedMiniGame: false } })
             go('scaffold')
           }}
         >
@@ -2079,7 +2123,7 @@ function ParentAnswer({ text, parent }) {
    6. HỎI CON TỪNG BƯỚC
    ============================================================ */
 export function Scaffold() {
-  const { S, problem, patch, go, openSheet, closeSheet, toast, boom } = useContext(AppCtx)
+  const { S, problem, patch, go, openSheet, closeSheet, toast, boom, ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx)
   const { step, stuck, unlocked } = S.flow
   const child = S.children.find((c) => c.id === S.activeId)
   const steps = problem.steps || PROBLEM.steps
@@ -2121,6 +2165,31 @@ export function Scaffold() {
   const voiceTimeoutRef = useRef(null)
   // State Linh vật phản ứng (Đợt 18 · Chặng 7)
   const [buddyState, setBuddyState] = useState('idle')
+
+  // Prompt 28 A1/A2: ghi lại điều THẬT SỰ xảy ra ở từng bậc để màn Xong bài chỉ khen/góp ý đúng sự thật
+  useEffect(() => {
+    if (!S.flow?.startedAt) {
+      patch((prev) => ({ ...prev, flow: { ...prev.flow, startedAt: Date.now() } }))
+    }
+  }, [])
+  const buildStepLog = (extraFields = {}) => {
+    const curSt = steps[step] || {}
+    const revealed = Array.isArray(S.flow?.revealedSteps) && S.flow.revealedSteps.includes(step)
+    const entry = {
+      stepNo: step + 1,
+      skill: curSt.ky_nang || curSt.skill || null,
+      stuckCount: stuck || 0,
+      usedMicroStep: microCount > 0,
+      revealedAnswer: revealed,
+      guidedByParent: showAns,
+      selfSolved: !revealed && !showAns,
+      sec: stepSeconds,
+      endedAt: Date.now(),
+      ...extraFields,
+    }
+    const prevLog = Array.isArray(S.flow?.stepLog) ? S.flow.stepLog.filter((e) => e.stepNo !== entry.stepNo) : []
+    return [...prevLog, entry]
+  }
 
   useEffect(() => {
     setShowAns(false)
@@ -2192,7 +2261,7 @@ export function Scaffold() {
     }).catch(() => {})
 
     emitMotion('step_done', { step: ns, total: steps.length })
-    patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
+    patch({ flow: { ...S.flow, step: ns, stuck: 0, stepLog: buildStepLog() } })
     if (ns >= steps.length) {
       boom()
       toast(`🎉 ${child.name} tự giải xong cả ${steps.length} bậc!`)
@@ -2270,7 +2339,7 @@ export function Scaffold() {
         stepQuestion: curStep?.q || curStep?.question || '',
         stepAnswer: curStep?.answerForParent || curStep?.answer || curStep?.dap_an_cho_me || '',
         childSpeech: rawTranscript,
-        problemText: problem.text || problem.problem_text || '',
+        problemText: problem.ocr || problem.text || problem.problem_text || '',
         childName: child.name,
       })
 
@@ -2305,7 +2374,7 @@ export function Scaffold() {
           buddyReact('thinking', v.khen_cu_the || 'Gần đúng rồi con ơi!', 2500)
         } else if (v.danh_gia === 'sai_huong') {
           setBuddyState('surprised')
-          buddyReact('surprised', 'Chưa đúng hướng rồi, để mẹ hướng dẫn thêm nhé!', 2500)
+          buddyReact('surprised', `Chưa đúng hướng rồi, để ${ho} hướng dẫn thêm nhé!`, 2500)
         } else {
           setBuddyState('idle')
           buddyReact('idle', 'Gấu nghe chưa rõ, con nói to lại nha!', 2500)
@@ -2331,7 +2400,7 @@ export function Scaffold() {
     buddyReact('thinking', 'Để Gấu chẻ nhỏ câu hỏi cho con nhé…', 2500)
     try {
       const res = await fetchAiMicroStep({
-        problemText: problem.text || problem.problem_text || '',
+        problemText: problem.ocr || problem.text || problem.problem_text || '',
         stepQuestion: curStep?.q || curStep?.question || '',
         stepAnswer: curStep?.answerForParent || curStep?.answer || curStep?.dap_an_cho_me || '',
         hintsUsed: [curStep?.hint].filter(Boolean),
@@ -2348,9 +2417,9 @@ export function Scaffold() {
         setMicroStep(res.micro_step)
         setMicroCount(idx)
         setBuddyState('reading')
-        buddyReact('reading', 'Mẹ thử hỏi con câu nhỏ này xem sao nha!', 2500)
+        buddyReact('reading', `${Ho} thử hỏi con câu nhỏ này xem sao nha!`, 2500)
       } else {
-        toast('Gấu tạm chuyển sang gợi ý hình vẽ cho mẹ nhé')
+        toast(`Gấu tạm chuyển sang gợi ý hình vẽ cho ${ho} nhé`)
         buddyReact('oops', 'Mình xem gợi ý vẽ hình nhé!', 2000)
       }
     } catch (e) {
@@ -2378,9 +2447,10 @@ export function Scaffold() {
       micro_steps: microCount || 1,
     }).catch(() => {})
 
+    const stepLog = buildStepLog({ usedMicroStep: true })
     setMicroStep(null)
     setMicroCount(0)
-    patch({ flow: { ...S.flow, step: ns, stuck: 0 } })
+    patch({ flow: { ...S.flow, step: ns, stuck: 0, stepLog } })
     if (ns >= steps.length) {
       boom()
       toast(`🎉 ${child.name} đã tìm ra đáp án rồi!`)
@@ -2409,8 +2479,8 @@ export function Scaffold() {
 
       setMicroStep(null)
       setShowAns(true)
-      toast(`Mẹ hãy chỉ dẫn từng bước cho ${child.name} nhé 💚`)
-      buddyReact('idle', 'Mẹ hướng dẫn từng bước cho con nhé', 2500)
+      toast(`${Ho} hãy chỉ dẫn từng bước cho ${child.name} nhé 💚`)
+      buddyReact('idle', `${Ho} hướng dẫn từng bước cho con nhé`, 2500)
     }
   }
 
@@ -2449,9 +2519,12 @@ export function Scaffold() {
       micro_steps: 0,
     }).catch(() => {})
 
-    patch({ flow: { ...S.flow, unlocked: true } })
+    const revealTimes = Array.isArray(S.flow?.stepRevealTimes) ? [...S.flow.stepRevealTimes] : []
+    revealTimes[step] = stepSeconds
+    const revealedSteps = Array.from(new Set([...(S.flow?.revealedSteps || []), step]))
+    patch({ flow: { ...S.flow, unlocked: true, stepRevealTimes: revealTimes, revealedSteps } })
     boom()
-    toast('Đáp án đã mở, chỉ cho ' + S.parent.toLowerCase() + ' đối chiếu thôi nhé')
+    toast('Đáp án đã mở, chỉ cho ' + ho + ' đối chiếu thôi nhé')
   }
 
   const [showMomDrawer, setShowMomDrawer] = useState(false)
@@ -2479,7 +2552,7 @@ export function Scaffold() {
           {child.name} đã hoàn thành cả {steps.length} bậc!
         </h2>
         <p style={{ fontSize: 14, color: 'var(--c-sub)', margin: '0 0 20px' }}>
-          Tuyệt vời lắm! Mẹ cùng con nhận huy hiệu và tổng kết bài học nhé.
+          Tuyệt vời lắm! {Ho} cùng con nhận huy hiệu và tổng kết bài học nhé.
         </p>
         <button
           type="button"
@@ -2774,7 +2847,7 @@ export function Scaffold() {
           >
             <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--c-line)', alignSelf: 'center', marginBottom: 4 }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <b style={{ fontSize: 16, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>🔒 Dành riêng cho mẹ</b>
+              <b style={{ fontSize: 16, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>🔒 Dành riêng cho {ho}</b>
               <button
                 type="button"
                 className="sheet-t5-close"
@@ -2791,7 +2864,7 @@ export function Scaffold() {
                 ĐÁP ÁN ĐỐI CHIẾU
               </label>
               <HoldBtn
-                label={`Giữ 1.5s xem đáp án cho ${S.parent.toLowerCase()}`}
+                label={`Giữ 1.5s xem đáp án cho ${ho}`}
                 onHoldComplete={onOpen}
               />
               {unlocked && (
@@ -2868,7 +2941,7 @@ export function Scaffold() {
         >
           <span style={{ width: 28, height: 3, borderRadius: 99, background: 'var(--c-line)' }} />
           <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--c-sub)' }}>
-            🔒 Dành cho mẹ ▲
+            🔒 Dành cho {ho} ▲
           </span>
         </button>
 
@@ -2902,6 +2975,7 @@ export function Scaffold() {
    🎓 TEACH-BACK CARD: NGHE CON GIẢNG LẠI (Prompt 14 Phần B)
    ============================================================ */
 export function TeachBackCard({ problem, child, parent, currentChoice, sessionId, toast, onPickChoice }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const [tbState, setTbState] = useState('idle') // idle | recording | transcribing | review | grading | result
   const [recordSec, setRecordSec] = useState(0)
   const [transcript, setTranscript] = useState('')
@@ -3025,7 +3099,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
       {tbState === 'idle' && (
         <div>
           <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 12px', lineHeight: 1.45 }}>
-            Khuyến khích con nói tự nhiên trong 30-60 giây. AI sẽ lắng nghe và đối chiếu 4 tiêu chí sư phạm để mẹ đánh giá!
+            Khuyến khích con nói tự nhiên trong 30-60 giây. AI sẽ lắng nghe và đối chiếu 4 tiêu chí sư phạm để {ho} đánh giá!
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
@@ -3103,7 +3177,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
       {tbState === 'review' && (
         <div>
           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--plum)', textTransform: 'uppercase', marginBottom: 6 }}>
-            Lời con kể lại (mẹ có thể sửa nhanh nếu mic nghe nhầm):
+            Lời con kể lại ({ho} có thể sửa nhanh nếu mic nghe nhầm):
           </div>
           <textarea
             value={transcript}
@@ -3282,7 +3356,7 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
    7. KẾT THÚC
    ============================================================ */
 export function Done() {
-  const { S, problem, stats, patch, setStats, go, openSheet, toast, boom, tracker } = useContext(AppCtx)
+  const { S, problem, stats, patch, setStats, go, openSheet, toast, boom, tracker, ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
   // Đợt 15 P1: chỉ còn 1 bộ đánh giá (mẹ chốt mức hiểu bài trong thẻ Con dạy lại)
   const result = S.flow.result || (S.flow.teachBack === 'guided' ? 'weak' : S.flow.teachBack ? 'ok' : null)
@@ -3302,38 +3376,56 @@ export function Done() {
       .map((s) => s.trait)
   }, [stats?.stickerHistory])
 
+  // Prompt 28 A1/A2: chỉ dùng dữ liệu đo thật của buổi học (flow.stepLog do màn Hỏi con từng bước ghi lại).
+  // Không có dữ liệu thì để trống/false — không điền số mặc định, không suy ra điều chưa xảy ra.
   const sessionData = useMemo(() => {
-    const steps = (problem?.steps || []).map((st, idx) => ({
-      stepNo: idx + 1,
-      skill: st.skill || (idx === 0 ? 'doc_hieu_de' : idx === (problem.steps.length - 1) ? 'kiem_tra_lai' : 'tinh_toan'),
-      stuckCount: S?.flow?.step === idx ? (S?.flow?.stuck || 0) : 0,
-      usedStuck: S?.flow?.step === idx && Boolean(S?.flow?.stuck),
-      usedMicroStep: Boolean(st.usedMicroStep),
-      selfSolved: Boolean(st.selfSolved !== false),
-      revealedAnswer: Boolean(S?.flow?.unlocked),
-    }))
+    const log = Array.isArray(S?.flow?.stepLog) ? S.flow.stepLog : []
+    const steps = log
+      .slice()
+      .sort((a, b) => a.stepNo - b.stepNo)
+      .map((e) => ({
+        stepNo: e.stepNo,
+        skill: e.skill || null,
+        stuckCount: Number(e.stuckCount) || 0,
+        usedStuck: Number(e.stuckCount) > 0,
+        usedMicroStep: Boolean(e.usedMicroStep),
+        selfSolved: e.selfSolved === true,
+        revealedAnswer: e.revealedAnswer === true,
+      }))
+    const totalSteps = (problem?.steps || []).length
+    const completedAll = totalSteps > 0 && log.length >= totalSteps
+    const startedAt = Number(S?.flow?.startedAt) || 0
+    const lastEnd = log.reduce((m, e) => Math.max(m, Number(e.endedAt) || 0), 0)
+    const wallSec = startedAt && lastEnd > startedAt ? (lastEnd - startedAt) / 1000 : null
+    const visibleSec = log.reduce((sum, e) => sum + (Number(e.sec) || 0), 0)
+    const durationMinutes = completedAll && wallSec !== null ? Math.max(1, Math.round(wallSec / 60)) : null
+    const awayMin = wallSec !== null ? Math.max(0, (wallSec - visibleSec) / 60) : null
 
     return {
       steps,
-      durationMinutes: 15,
-      maxInactivityMinutes: 0,
-      stepsSeamless: true,
-      teachBackOwnWay: S?.flow?.teachBack === 'ok',
-      didBrotherProblem: Boolean(adaptiveBrother || problem?.brotherProblem || problem?.bai_anh_em),
-      playedMiniGame: Boolean(problem?.fiveMinGame),
+      durationMinutes,
+      maxInactivityMinutes: awayMin !== null ? awayMin : 99,
+      stepsSeamless: completedAll,
+      // Chỉ là giảng lại thật khi có lượt Con dạy lại (không tính nút "Mức độ tự chủ")
+      teachBackOwnWay: Boolean(S?.flow?.teachBackDone && S?.flow?.teachBackOwnWay),
+      // Bài anh em: chỉ tính khi bài vừa xong CHÍNH LÀ bài anh em con đã mở và làm hết các bậc
+      didBrotherProblem: Boolean(problem?.isBrotherProblem && completedAll),
+      // Trò chơi: chỉ tính khi thật sự đã chơi trong buổi này
+      playedMiniGame: Boolean(S?.flow?.playedMiniGame),
       aiRecognizedAlternativeWay: Boolean(problem?.alternativeWayRecognized),
       isCheckWork: Boolean(problem?.ocr && !problem?.steps),
-      presentationClean: true,
+      presentationClean: Boolean(problem?.presentationClean),
     }
-  }, [problem, S?.flow, adaptiveBrother])
+  }, [problem, S?.flow])
 
   const suggestedBadge = useMemo(() => {
     return computeSuggestedBadge({
       childName: child?.name || 'Con',
       sessionData,
       recentBadges2Weeks,
+      ho,
     })
-  }, [child?.name, sessionData, recentBadges2Weeks])
+  }, [child?.name, sessionData, recentBadges2Weeks, ho])
 
   const coachAdviceEnabled = isCoachAdviceEnabled(child)
   const coachAdviceList = useMemo(() => {
@@ -3341,13 +3433,21 @@ export function Done() {
       sessionData,
       child,
       extra: {
+        ho,
+        problem,
         stepRevealTimes: S?.flow?.stepRevealTimes || [],
         calmClickCount: S?.flow?.calmCount || S?.flow?.calmClickCount || 0,
-        durationMinutes: S?.flow?.durationMinutes || 12,
-        teachBackLevel: S?.flow?.teachBack === "ok" ? "self" : (S?.flow?.teachBack === "guided" ? "guided" : "hint"),
+        durationMinutes: sessionData.durationMinutes,
+        // Prompt 28 A1: chỉ góp ý về giảng lại khi THẬT SỰ có lượt giảng lại
+        hasTeachBack: Boolean(S?.flow?.teachBackDone),
+        teachBackLevel: S?.flow?.teachBackDone
+          ? (S.flow.teachBack === 'ok' ? 'self' : (S.flow.teachBack === 'guided' ? 'guided' : (S.flow.teachBack === 'hint' ? 'hint' : null)))
+          : null,
+        hasBrotherProblem: Boolean(problem?.brotherProblem || problem?.bai_anh_em),
+        streakDays: Number(tracker?.streak || 0),
       }
     })
-  }, [sessionData, child, S?.flow])
+  }, [sessionData, child, S?.flow, ho, problem, tracker?.streak])
 
   const currentTrait = pickedTrait || suggestedBadge.trait
   const currentBadgeInfo = TRAIT_BADGE_INFO[currentTrait] || TRAIT_BADGE_INFO['Kiên nhẫn']
@@ -3355,15 +3455,16 @@ export function Done() {
   const currentReason = isSuggested ? suggestedBadge.reason : `${child?.name || 'Con'} được chọn huy hiệu ${currentTrait}.`
   const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
   const stkOwned = (stats?.stickersList || []).filter((x) => x.id === stkCur.id || x.e === stkCur.e || x.name === stkCur.n).length
-  const hadStuckStep = Boolean(S.flow?.stuck > 0 || S.flow?.teachBack === 'hint' || S.flow?.teachBack === 'guided')
-  const stuckSkill = S.flow?.lastStuckSkill || 'tinh_toan'
+  const firstStuckStep = sessionData.steps.find((st) => st.stuckCount > 0 || st.usedMicroStep)
+  const hadStuckStep = Boolean(firstStuckStep || S.flow?.teachBack === 'hint' || S.flow?.teachBack === 'guided')
+  const stuckSkill = firstStuckStep?.skill || S.flow?.lastStuckSkill || 'tinh_toan'
 
   useEffect(() => {
     let cancelled = false
     if (hadStuckStep) {
       setLoadingBrother(true)
       fetchAiAdaptiveBrother({
-        problemText: problem.text || problem.problem_text || '',
+        problemText: problem.ocr || problem.text || problem.problem_text || '',
         stuckSkill,
         grade: child?.grade || 3,
         childName: child?.name || 'Con',
@@ -3381,7 +3482,7 @@ export function Done() {
     return () => {
       cancelled = true
     }
-  }, [hadStuckStep, stuckSkill, child?.name, child?.grade, problem.text, problem.problem_text])
+  }, [hadStuckStep, stuckSkill, child?.name, child?.grade, problem.ocr, problem.text, problem.problem_text])
 
   const pickSticker = (e) => {
     let found
@@ -3507,15 +3608,21 @@ export function Done() {
       // Chỉ tính bài thật vào lọ kẹo/dấu chân, bài mẫu không tính
       if (!isSample) {
         const now = Date.now()
+        // Prompt 28: số liệu thật của buổi học (không viết cứng 15 phút / tự làm hết các bậc)
+        const realLog = Array.isArray(prev.flow?.stepLog) ? prev.flow.stepLog : []
+        const realSelfSteps = realLog.length
+          ? realLog.filter((e) => e.selfSolved && !(Number(e.stuckCount) > 0) && !e.usedMicroStep).length
+          : (problem?.steps?.length || 0)
+        const realMinutes = sessionData.durationMinutes || (Number(prev.flow?.startedAt) ? Math.max(1, Math.round((now - Number(prev.flow.startedAt)) / 60000)) : null)
         const newEntry = {
           id: 'sess_' + now + '_' + Math.random().toString(36).slice(2, 6),
           ts: now,
           dateKey: getStudyDateKey(now),
           problemType: topicName,
           totalSteps: problem?.steps?.length || 4,
-          selfSteps: problem?.steps?.length || 4,
+          selfSteps: realSelfSteps,
           teachBack: prev.flow?.teachBack || null,
-          minutes: 15,
+          minutes: realMinutes || 15,
           partial: false,
         }
         studyLog = [newEntry, ...studyLog]
@@ -3542,6 +3649,14 @@ export function Done() {
           unlocked: false,
           result: null,
           teachBack: null,
+          stepLog: [],
+          revealedSteps: [],
+          stepRevealTimes: [],
+          startedAt: null,
+          teachBackDone: false,
+          teachBackId: null,
+          teachBackOwnWay: false,
+          playedMiniGame: false,
         },
       }
     })
@@ -3577,24 +3692,30 @@ export function Done() {
   const TEACH_BACK_OPTIONS = [
     { v: 'ok', e: seasonLevelEmoji('ok', '✅'), t: 'Con tự làm được' },
     { v: 'hint', e: seasonLevelEmoji('hint', '🟡'), t: 'Con cần gợi ý' },
-    { v: 'guided', e: seasonLevelEmoji('guided', '🔴'), t: `${S.parent} phải hướng dẫn nhiều` },
+    { v: 'guided', e: seasonLevelEmoji('guided', '🔴'), t: `${Ho} phải hướng dẫn nhiều` },
   ]
-  const pickTeachBack = (v) => {
+  // teachBackId chỉ có khi con THẬT SỰ giảng lại (thẻ Con dạy lại chấm xong). Nút "Mức độ tự chủ" không truyền id.
+  const pickTeachBack = (v, teachBackId) => {
     soundPop(500)
     const opt = TEACH_BACK_OPTIONS.find((o) => o.v === v)
+    const isRealTeachBack = Boolean(teachBackId)
     patch((prev) => {
       const activeId = prev.activeId
       const prevStats = { ...(prev.stats || {}) }
       const cStats = { ...(prevStats[activeId] || {}) }
       const oldHist = Array.isArray(cStats.history) ? [...cStats.history] : []
-      const hasTeachBack = oldHist.some((h) => h.txt && h.txt.startsWith('Con dạy lại mẹ'))
-      const updatedHist = hasTeachBack
+      const hasTeachBack = oldHist.some((h) => h.txt && h.txt.startsWith('Con dạy lại'))
+      const updatedHist = hasTeachBack || !isRealTeachBack
         ? oldHist
-        : [{ txt: `Con dạy lại mẹ: ${opt.t.toLowerCase()}`, when: 'Hôm nay', timestamp: Date.now() }, ...oldHist]
+        : [{ txt: `Con dạy lại ${ho}: ${opt.t.toLowerCase()}`, when: 'Hôm nay', timestamp: Date.now() }, ...oldHist]
 
       return {
         ...prev,
-        flow: { ...prev.flow, teachBack: v },
+        flow: {
+          ...prev.flow,
+          teachBack: v,
+          ...(isRealTeachBack ? { teachBackDone: true, teachBackId, teachBackOwnWay: v === 'ok' } : {}),
+        },
         stats: {
           ...prevStats,
           [activeId]: {
@@ -3758,7 +3879,7 @@ export function Done() {
         data-testid="done-section-parent"
       >
         <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
-          DÀNH CHO {S.parent.toUpperCase()}
+          DÀNH CHO {Ho.toUpperCase()}
         </span>
 
         {/* Tự chấm nhanh: nút gạt 3 mục */}
@@ -3766,7 +3887,8 @@ export function Done() {
           <label style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text)', display: 'block', marginBottom: 6 }}>
             Mức độ tự chủ của con hôm nay:
           </label>
-          <div className="seg-km" style={{ width: '100%', height: 36 }}>
+          {/* Prompt 29B.5: ba nút cách nhau ít nhất 6px để không nhìn như dính liền */}
+          <div className="seg-km" style={{ width: '100%', height: 'auto', minHeight: 36, gap: 6, background: 'transparent', padding: 0, display: 'flex' }}>
             {[
               { v: 'ok', label: 'Tự làm được' },
               { v: 'hint', label: 'Cần gợi ý' },
@@ -3778,7 +3900,7 @@ export function Done() {
                   key={opt.v}
                   type="button"
                   className={`seg-km-btn ${active ? 'active' : ''}`} aria-pressed={active ? "true" : "false"}
-                  style={{ height: 32, fontSize: 12 }}
+                  style={{ height: 34, fontSize: 12, flex: 1, minWidth: 0, padding: '0 4px', whiteSpace: 'nowrap', borderRadius: 10, border: '1px solid var(--c-line)', background: active ? undefined : 'var(--c-surface)' }}
                   onClick={() => pickTeachBack(opt.v)}
                 >
                   {opt.label}
@@ -3884,8 +4006,9 @@ export function Done() {
                         { question: 'Con tính ra kết quả là bao nhiêu?', answer: bro.dap_an_cho_me || 'Đáp số', praise: 'Xuất sắc!' },
                       ],
                       brotherProblem: null,
+                      isBrotherProblem: true,
                     },
-                    flow: { step: 0, stuck: 0, unlocked: false },
+                    flow: { step: 0, stuck: 0, unlocked: false, startedAt: Date.now(), sessionId: S.flow?.sessionId },
                   })
                   go('explain')
                 }}
@@ -3930,8 +4053,8 @@ export function Done() {
           </button>
         </div>
 
-        {/* Con giảng lại */}
-        {!S.flow?.teachBack && (
+        {/* Con giảng lại: ẩn khi con đã thật sự giảng lại (không ẩn chỉ vì đã chọn Mức độ tự chủ) */}
+        {!S.flow?.teachBackDone && (
           <div
             style={{
               display: 'flex',
@@ -3945,7 +4068,7 @@ export function Done() {
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>🎓 Con dạy lại mẹ</b>
+              <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>🎓 Con dạy lại {ho}</b>
               <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>Lắng nghe con giảng lại bài vừa giải</span>
             </div>
             <button
@@ -3990,6 +4113,7 @@ export function Done() {
    8. HỎI THÊM AI
    ============================================================ */
 export function AskAI() {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, problem, toast } = useContext(AppCtx)
   const [msgs, setMsgs] = useState([
     { from: 'ai', text: `Bạn cần hỏi gì về bài "${(problem.ocr || '').slice(0, 42)}…"? Mình sẽ gợi cách giảng, không đưa đáp án cho con nhé.` },
@@ -4063,7 +4187,7 @@ export function AskAI() {
         <input
           className="field grow0"
           style={{ flex: 1 }}
-          placeholder="Mẹ gõ câu hỏi cho AI…"
+          placeholder={`${Ho} gõ câu hỏi cho AI…`}
           value={val}
           onChange={(e) => setVal(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && ask(val)}
@@ -4252,6 +4376,7 @@ function detectToyItem(text) {
 }
 
 function SnapToyCameraSection() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, stats, go, toast } = useContext(AppCtx)
   const videoRef = useRef(null)
   const fileRef = useRef(null)
@@ -4548,7 +4673,7 @@ function SnapToyCameraSection() {
       {detectedToy && !analyzing && (
         <div className="card mint pop" style={{ border: '2px solid #10B981', background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08))' }}>
           <div style={{ marginBottom: 8, fontSize: 14.5, color: 'var(--text)' }}>
-            AI đoán đây là: <b style={{ color: 'var(--plum-deep)' }}>{detectedToy.n}</b>. Đúng chưa {S.parent.toLowerCase()}?
+            AI đoán đây là: <b style={{ color: 'var(--plum-deep)' }}>{detectedToy.n}</b>. Đúng chưa {ho}?
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '6px 0' }}>
             <div style={{ fontSize: 42, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
@@ -4582,7 +4707,7 @@ function SnapToyCameraSection() {
 
           {showEditToy && (
             <div className="card" style={{ marginTop: 8, background: '#fff', border: '1.5px solid var(--plum-tint)', padding: '12px' }}>
-              <span className="lbl plum" style={{ marginBottom: 6 }}>Chọn đúng đồ vật {S.parent.toLowerCase()} đang cầm:</span>
+              <span className="lbl plum" style={{ marginBottom: 6 }}>Chọn đúng đồ vật {ho} đang cầm:</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                 {TOY_MAPPINGS.map((tm) => (
                   <button
@@ -4666,11 +4791,16 @@ function SnapToyCameraSection() {
           </button>
         ))}
       </div>
+      {/* Prompt 29B.4: chưa có dữ liệu thì nói thật, không hiện khung trống */}
       <div className="card sky">
         <span className="lbl sky">AI ưu tiên ôn</span>
-        {(stats.weak || []).map((w) => (
-          <span key={w.n} className="sub">• {w.n}</span>
-        ))}
+        {(stats.weak || []).length > 0 ? (
+          (stats.weak || []).map((w) => (
+            <span key={w.n} className="sub">• {w.n}</span>
+          ))
+        ) : (
+          <span className="sub">Học xong bài đầu, Gấu sẽ gợi ý chỗ cần ôn.</span>
+        )}
       </div>
     </>
   )
@@ -4742,7 +4872,7 @@ export function Game() {
 
   return (
     <>
-      <Header title="Chơi với đồ chơi" back="toy" />
+      <Header title="Chơi với đồ vật" back="toy" />
       <div className="chips" style={{ marginBottom: 8 }}>
         {TOYS.map((t) => (
           <button key={t.n} className={`chip ${toy === t.n ? 'on' : ''}`} onClick={() => { soundTap(); setToy(t.n) }}>
@@ -4768,7 +4898,7 @@ export function Game() {
       <div className="card sky">
         <div className="chips">
           <span className="pill b">Tiếng Anh</span>
-          <span className="pill g">10 phút</span>
+          <PlayMinutesPill />
         </div>
         <b style={{ fontSize: 16 }}>⏰ Đồng hồ Lego</b>
         <span style={{ fontSize: 13.5 }}>Xếp kim giờ, kim phút bằng thanh Lego. Bấm để nghe câu mẫu:</span>
@@ -4800,6 +4930,8 @@ export function Game() {
 
 /* ---------- CHAI / LỌ: Đo chiều cao & Ước lượng dung tích ---------- */
 function BottleGame() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, toast, boom } = useContext(AppCtx)
   const [tab, setTab] = useState('spray') // 'spray' (Đong ml & Xịt nước) | 'height' (Thước đo chiều cao)
   const [liquid, setLiquid] = useState(100) // 0 to 100 ml
@@ -4839,7 +4971,7 @@ function BottleGame() {
     { name: 'Cây bút chì', height: 15, hint: 'Cây bút chì (15cm) dài hơn chai xịt (12cm) nhé con!' },
     { name: 'Cục gôm / Tẩy', height: 4, hint: 'Cục gôm (4cm) lùn hơn chai xịt (12cm) nhiều!' },
     { name: 'Bàn tay của con', height: 11, hint: 'Bàn tay con xòe ra gần bằng chiều cao chai xịt đấy!' },
-    { name: `Điện thoại của ${S.parent.toLowerCase()}`, height: 14, hint: `Điện thoại ${S.parent.toLowerCase()} (khoảng 14cm) nhỉnh hơn chai xịt một chút!` },
+    { name: `Điện thoại của ${ho}`, height: 14, hint: `Điện thoại ${ho} (khoảng 14cm) nhỉnh hơn chai xịt một chút!` },
   ]
 
   return (
@@ -5009,7 +5141,7 @@ function BottleGame() {
         <div className="card" style={{ background: '#FFFBEB', padding: '12px', border: '1px solid #FCD34D' }}>
           <b style={{ fontSize: 14, color: '#92400E' }}>📏 Trò chơi: Chai xịt làm thước đo chiều cao</b>
           <p style={{ fontSize: 13, color: '#78350F', margin: '4px 0 8px', lineHeight: 1.4 }}>
-            Chai xịt này cao khoảng <b>12 cm</b>. Mẹ đố con đoán xem đồ vật nào cao hơn chai xịt:
+            Chai xịt này cao khoảng <b>12 cm</b>. {Ho} đố con đoán xem đồ vật nào cao hơn chai xịt:
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: '#78350F' }}>
             {COMPARES.map((c, idx) => (
@@ -5042,6 +5174,7 @@ function BottleGame() {
 
 /* ---------- CÂY LƯỢC: Đếm răng lược nhảy 2-5-10 & Thước đo so sánh ---------- */
 function CombGame() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, toast, boom } = useContext(AppCtx)
   const [tab, setTab] = useState('teeth') // 'teeth' (Đếm răng lược) | 'measure' (Lược làm thước đo)
   const [stepMode, setStepMode] = useState(2) // 2 | 5
@@ -5160,9 +5293,9 @@ function CombGame() {
           </div>
 
           <div className="card" style={{ background: '#FFFBEB', padding: '10px 12px', fontSize: 13, border: '1px solid #FCD34D' }}>
-            <b style={{ color: '#92400E' }}>💡 Thử thách cho {S.parent.toLowerCase()} hỏi con:</b>
+            <b style={{ color: '#92400E' }}>💡 Thử thách cho {ho} hỏi con:</b>
             <div style={{ marginTop: 4, color: '#78350F', lineHeight: 1.4 }}>
-              "Cây lược có tất cả <b>{TOTAL_TEETH} cái răng</b>. Nếu {S.parent.toLowerCase()} chia đôi chiếc lược thành 2 nửa bằng nhau, mỗi nửa có mấy răng?"
+              "Cây lược có tất cả <b>{TOTAL_TEETH} cái răng</b>. Nếu {ho} chia đôi chiếc lược thành 2 nửa bằng nhau, mỗi nửa có mấy răng?"
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
               <input
@@ -5197,7 +5330,7 @@ function CombGame() {
         <div className="card" style={{ background: '#FFFBEB', padding: '12px', border: '1px solid #FCD34D' }}>
           <b style={{ fontSize: 14, color: '#92400E' }}>📏 Trò chơi: Cây lược làm thước đo</b>
           <p style={{ fontSize: 13, color: '#78350F', margin: '4px 0 8px', lineHeight: 1.4 }}>
-            {S.parent.toLowerCase()} đưa cây lược cho con và cùng làm các thử thách thú vị:
+            {ho} đưa cây lược cho con và cùng làm các thử thách thú vị:
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: '#78350F' }}>
             <div style={{ background: '#fff', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A' }}>
@@ -5216,19 +5349,29 @@ function CombGame() {
   )
 }
 
+/* Prompt 28 B4: thời lượng chơi lấy đúng cài đặt "Thời gian chơi chung mỗi ngày" (mặc định 5 phút) */
+function PlayMinutesText() {
+  const { S } = useContext(AppCtx)
+  return <>{getDailyLimitMinutes(S?.activeId)} phút</>
+}
+function PlayMinutesPill() {
+  return <span className="pill g"><PlayMinutesText /></span>
+}
+
 /* ---------- TRÒ CHƠI CHO ĐỒ VẬT TỰ DO KHÁC ---------- */
 function GenericToyGame({ toyName }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div className="card mint" style={{ border: '2px solid #10B981', background: '#F0FDF4', padding: '14px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <span style={{ fontSize: 32 }}>🧸</span>
         <div>
           <b style={{ fontSize: 16, color: '#065F46' }}>Khám phá toán học cùng: {toyName}</b>
-          <div style={{ fontSize: 12.5, color: '#047857' }}>10 phút vừa học vừa chơi với đồ thật trong nhà</div>
+          <div style={{ fontSize: 12.5, color: '#047857' }}><PlayMinutesText /> vừa học vừa chơi với đồ thật trong nhà</div>
         </div>
       </div>
       <div style={{ background: '#fff', padding: '10px 12px', borderRadius: 10, border: '1px solid #A7F3D0', fontSize: 13, lineHeight: 1.5, color: '#064E3B' }}>
-        <b>🎯 3 câu hỏi gợi ý mẹ hỏi con ngay:</b>
+        <b>🎯 3 câu hỏi gợi ý {ho} hỏi con ngay:</b>
         <ol style={{ margin: '6px 0 0 16px', padding: 0 }}>
           <li><b>Quan sát & Hình khối:</b> Món đồ này có dạng hình gì? (hình tròn, hình trụ, chữ nhật...).</li>
           <li><b>Đo lường & So sánh:</b> Đồ vật này nặng hơn hay nhẹ hơn cuốn sách? Dài hơn hay ngắn hơn bàn tay con?</li>
@@ -5241,6 +5384,7 @@ function GenericToyGame({ toyName }) {
 
 /* ---------- CÂY BÚT: Bó bút nhân chia & Đo độ dài ---------- */
 function PenGame() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, toast, boom } = useContext(AppCtx)
   const [tab, setTab] = useState('pack') // 'pack' (Bó bút nhân chia) | 'measure' (Đo độ dài bằng bút)
 
@@ -5310,9 +5454,8 @@ function PenGame() {
 
       {tab === 'pack' ? (
         <>
-          <b style={{ fontSize: 16 }}>✏️ Bó bút học nhân & chia</b>
           <span style={{ fontSize: 14 }}>
-            {S.parent} có <b>{cfg.packs} bó bút</b>, mỗi bó có <b>{cfg.perPack} cây bút</b>. Hỏi có tất cả bao nhiêu cây bút?
+            {Ho} có <b>{cfg.packs} bó bút</b>, mỗi bó có <b>{cfg.perPack} cây bút</b>. Hỏi có tất cả bao nhiêu cây bút?
           </span>
 
           {/* Visual Pen Bundles · Đợt 15 · 6.5: lưới tự xuống dòng trong khung */}
@@ -5364,29 +5507,29 @@ function PenGame() {
               {fb === 'yes' && (
                 <div className="card mint pop">
                   <b>Chính xác! {cfg.perPack} × {cfg.packs} = {totalPens} cây bút 🎉</b>
-                  <div style={{ fontSize: 13, marginTop: 4 }}>Con có thể lấy số bút thật trên bàn bó lại thành {cfg.packs} bó để {S.parent.toLowerCase()} cùng ngắm nhé!</div>
+                  <div style={{ fontSize: 13, marginTop: 4 }}>Con có thể lấy số bút thật trên bàn bó lại thành {cfg.packs} bó để {ho} cùng ngắm nhé!</div>
                 </div>
               )}
               {fb === 'no' && (
                 <div className="card sun pop">
-                  <span>Chưa đúng rồi. Con thử bấm vào từng bó bút để đếm cùng {S.parent.toLowerCase()} nhé!</span>
+                  <span>Chưa đúng rồi. Con thử bấm vào từng bó bút để đếm cùng {ho} nhé!</span>
                 </div>
               )}
               <div className="pill-row" style={{ marginTop: 8 }}>
                 <button type="button" className={`pill-btn ${cfg.mode === 'Dễ hơn' ? 'on' : ''}`} aria-pressed={cfg.mode === 'Dễ hơn'} onClick={() => setPackMode('Dễ hơn')}>Dễ hơn · 2 bó</button>
                 <button type="button" className={`pill-btn ${cfg.mode === 'Khó hơn' ? 'on' : ''}`} aria-pressed={cfg.mode === 'Khó hơn'} onClick={() => setPackMode('Khó hơn')}>Khó hơn · 4 bó</button>
                 <button type="button" className="pill-btn" onClick={() => { setRole(true); setQuiz({ a: 3 + Math.floor(Math.random() * 5), b: 2 + Math.floor(Math.random() * 6) }) }}>
-                  🔄 Đổi vai: con đố {S.parent.toLowerCase()}
+                  🔄 Đổi vai: con đố {ho}
                 </button>
               </div>
             </>
           ) : (
             <div className="card coral pop">
-              <span className="lbl coral">Con ra đề cho {S.parent.toLowerCase()}</span>
-              <b style={{ fontSize: 17 }}>{S.parent} ơi, {quiz.a} bó bút, mỗi bó {quiz.b} cây thì bằng mấy? ({quiz.a} × {quiz.b} = ?)</b>
-              <span className="sub">{S.parent} thử đoán xem, con lấy bút thật ra kiểm tra xem {S.parent.toLowerCase()} trả lời đúng chưa nhé!</span>
-              <button className="btn solid" onClick={() => { setRole(false); toast(`${S.parent} đã trả lời xong! Con chấm điểm nhé 😄`) }}>
-                {S.parent} trả lời xong (Đổi lại)
+              <span className="lbl coral">Con ra đề cho {ho}</span>
+              <b style={{ fontSize: 17 }}>{Ho} ơi, {quiz.a} bó bút, mỗi bó {quiz.b} cây thì bằng mấy? ({quiz.a} × {quiz.b} = ?)</b>
+              <span className="sub">{Ho} thử đoán xem, con lấy bút thật ra kiểm tra xem {ho} trả lời đúng chưa nhé!</span>
+              <button className="btn solid" onClick={() => { setRole(false); toast(`${Ho} đã trả lời xong! Con chấm điểm nhé 😄`) }}>
+                {Ho} trả lời xong (Đổi lại)
               </button>
             </div>
           )}
@@ -5543,6 +5686,7 @@ function RulerGame() {
 
 /* ---------- LEGO: xây tòa nhà nhân ---------- */
 function LegoGame() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, toast, boom } = useContext(AppCtx)
   const [cfg, setCfg] = useState({ per: 4, floors: 6, minus: 0, mode: 'Vừa sức' })
   const [guess, setGuess] = useState('')
@@ -5579,7 +5723,7 @@ function LegoGame() {
     <div className="card plum">
       <div className="chips">
         <span className="pill p">Toán · {cfg.mode}</span>
-        <span className="pill g">10 phút</span>
+        <PlayMinutesPill />
       </div>
       <b style={{ fontSize: 16 }}>🏢 Xây "tòa nhà nhân"</b>
       <span style={{ fontSize: 13.5 }}>
@@ -5619,7 +5763,7 @@ function LegoGame() {
             <button className="btn solid grow0" style={{ width: 'auto', padding: '12px 20px' }} onClick={check}>Đoán</button>
           </div>
           {fb === 'yes' && <div className="card mint pop"><b>Đúng rồi! {cfg.per} × {cfg.floors}{cfg.minus ? ` − ${cfg.minus}` : ''} = {answer}</b></div>}
-          {fb === 'no' && <div className="card sun pop"><span>Chưa đúng. Đếm từng tầng một xem sao, {S.parent.toLowerCase()} không vội đâu.</span></div>}
+          {fb === 'no' && <div className="card sun pop"><span>Chưa đúng. Đếm từng tầng một xem sao, {ho} không vội đâu.</span></div>}
           <div className="btns">
             <button className="btn ghost" onClick={() => setMode('Dễ hơn')}>Dễ hơn</button>
             <button className="btn ghost" onClick={() => setMode('Khó hơn')}>Khó hơn</button>
@@ -5630,10 +5774,10 @@ function LegoGame() {
         </>
       ) : (
         <div className="card coral pop">
-          <span className="lbl coral">Con ra đề cho {S.parent.toLowerCase()}</span>
+          <span className="lbl coral">Con ra đề cho {ho}</span>
           <b style={{ fontSize: 17 }}>{quiz.a} × {quiz.b} = ?</b>
           <span className="sub">Con tự kiểm tra đáp án bằng cách đếm hoặc vẽ nhé.</span>
-          <button className="btn solid" onClick={() => { setRole(false); toast(`Con kiểm tra giúp ${S.parent.toLowerCase()} nhé 😄`) }}>{S.parent} trả lời xong</button>
+          <button className="btn solid" onClick={() => { setRole(false); toast(`Con kiểm tra giúp ${ho} nhé 😄`) }}>{Ho} trả lời xong</button>
         </div>
       )}
     </div>
@@ -5766,6 +5910,7 @@ function genCards() {
 }
 
 function CardGame() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, toast, boom } = useContext(AppCtx)
   const [cards, setCards] = useState(genCards)
   const [first, setFirst] = useState(null)
@@ -5824,7 +5969,7 @@ function CardGame() {
           </button>
         ))}
       </div>
-      <span className="sub">Nhớ vị trí các lá đã lật, {S.parent.toLowerCase()} có thể chơi cùng con để xem ai nhớ lâu hơn.</span>
+      <span className="sub">Nhớ vị trí các lá đã lật, {ho} có thể chơi cùng con để xem ai nhớ lâu hơn.</span>
       <button className="btn ghost" onClick={() => { setCards(genCards()); setFirst(null); setLock(false); setFound(0) }}>Ván mới</button>
     </div>
   )
@@ -6083,6 +6228,7 @@ const LOI_LABEL = {
 }
 
 function WeeklyAiCards({ stats, childName }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const [safety, setSafety] = useState(null)
   useEffect(() => {
     let off = false
@@ -6135,7 +6281,7 @@ function WeeklyAiCards({ stats, childName }) {
           <div>
             <span style={{ color: 'var(--c-text)' }}>Phép tính sai đã bắt</span>
             <b>{isTrialActive() ? 3 : (safety?.dot18_safety?.phep_tinh_sai_da_bat ?? 0)}</b>
-            <em style={{ color: 'var(--c-text)' }}>trước khi tới mẹ</em>
+            <em style={{ color: 'var(--c-text)' }}>trước khi tới {ho}</em>
           </div>
           <div>
             <span style={{ color: 'var(--c-text)' }}>Bậc bộ chặn sửa lại</span>
@@ -6162,6 +6308,7 @@ function WeeklyAiCards({ stats, childName }) {
 }
 
 export function Report() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, stats, toast, boom, tracker, patch, session } = useContext(AppCtx)
   const child = S?.children?.find((c) => c.id === S?.activeId) || S?.children?.[0] || { name: 'Con', id: 'c1' }
   const momSessions = stats?.sessionsMom || 0
@@ -6278,7 +6425,7 @@ export function Report() {
     const t = Number(w?.t ?? 0)
     return t > 0 ? (v / t) * 100 : v > 0 ? 100 : 0
   }
-  const parentLower = S?.parent ? S.parent.toLowerCase() : 'bố mẹ'
+  const parentLower = ho
 
   // ---- Các khối báo cáo (thứ tự 6.3: tóm tắt, hay vướng, đã vững, phẩm chất, phân tích, lịch học, riêng người lớn, gửi Zalo) ----
   const aiKemCard = (
@@ -6308,7 +6455,9 @@ export function Report() {
   const weakSection = (
     <div className="pg-section">
       <p className="lbl mut">Con hay vướng (cần tháo gỡ)</p>
-      {(stats?.weak || []).length === 0 && <span className="sub">Tuần này chưa có dạng nào bị vướng 🎉</span>}
+      {(stats?.weak || []).length === 0 && (
+        <span className="sub">{(stats?.studyLog || []).length > 0 ? 'Tuần này chưa có dạng nào bị vướng 🎉' : 'Chưa có buổi học nào nên chưa biết con hay vướng ở đâu.'}</span>
+      )}
       {(stats?.weak || []).map((w) => (
         <div className="card" key={w.n}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -6324,7 +6473,7 @@ export function Report() {
   const strongSection = (
     <div className="pg-section">
       <p className="lbl mut">Con đã vững</p>
-      {(stats?.strong || []).length === 0 && <span className="sub">Chưa có dạng bài nào đủ vững, cứ từ từ nhé.</span>}
+      {(stats?.strong || []).length === 0 && <span className="sub">{(stats?.studyLog || []).length > 0 ? 'Chưa có dạng bài nào đủ vững, cứ từ từ nhé.' : 'Chưa có buổi học nào, học xong vài bài Gấu sẽ ghi lại.'}</span>}
       {(stats?.strong || []).map((w) => (
         <div className="card" key={w.n}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -6395,7 +6544,7 @@ export function Report() {
           <div>
             <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Cần ít nhất 3 buổi học</b>
             <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
-              {child.name} mới học {progressState.sessionsCount} buổi. Học thêm {Math.max(1, (progressState.required || 3) - progressState.sessionsCount)} buổi nữa, Gấu sẽ phân tích cho mẹ.
+              {child.name} mới học {progressState.sessionsCount} buổi. Học thêm {Math.max(1, (progressState.required || 3) - progressState.sessionsCount)} buổi nữa, Gấu sẽ phân tích cho {ho}.
             </p>
           </div>
         </div>
@@ -6423,7 +6572,7 @@ export function Report() {
           <div style={{ flex: 1 }}>
             <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu chưa phân tích được lúc này</b>
             <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
-              Không có bài viết sẵn nào thay thế. Mẹ thử lại sau ít phút nhé.
+              Không có bài viết sẵn nào thay thế. {Ho} thử lại sau ít phút nhé.
             </p>
             <button className="mini-btn" onClick={loadProgress}>Thử lại</button>
           </div>
@@ -6590,7 +6739,7 @@ export function Report() {
           Tuần này {parentLower} đã dừng lại {count} lần trước khi nổi nóng 💚
         </h4>
         <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '0 0 10px', lineHeight: 1.45 }}>
-          {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc thang. Đó là nỗ lực tuyệt vời của {parentLower}!
+          {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc. Đó là nỗ lực tuyệt vời của {parentLower}!
         </p>
 
         <div className="switch-row" style={{ borderTop: '1px dashed var(--c-line)', padding: '12px 14px 8px 14px' }}>
@@ -6745,6 +6894,7 @@ export function Report() {
    NHỮNG GÌ GẤU NHỚ VỀ CON (Prompt 18 Chặng 2 & Prompt 22 - 0.5)
    ============================================================ */
 function BearMemorySection({ child, S, stats, patch, toast }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const memoryEnabled = child.bearMemory !== false
 
@@ -6919,7 +7069,7 @@ function BearMemorySection({ child, S, stats, patch, toast }) {
               Xoá toàn bộ những gì Gấu nhớ?
             </b>
             <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.5, margin: '0 0 16px' }}>
-              Gấu sẽ quên toàn bộ dạng bài hay kẹt, dạng đã vững và cách giảng của {child.name}. Mẹ có chắc chắn không?
+              Gấu sẽ quên toàn bộ dạng bài hay kẹt, dạng đã vững và cách giảng của {child.name}. {Ho} có chắc chắn không?
             </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
@@ -6946,6 +7096,7 @@ function BearMemorySection({ child, S, stats, patch, toast }) {
 }
 
 export function Profile() {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, stats, patch, go, openSheet, toast, logout, familyName, openAdmin, soundOn, toggleSound } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const familyLabel = /^gia đình\b/i.test(String(familyName || '').trim()) ? String(familyName).trim() : `Gia đình ${familyName || ''}`.trim()
@@ -7082,7 +7233,7 @@ export function Profile() {
         <button className="big-card sky" onClick={() => openSheet('members')}>
           <span className="ic" aria-hidden="true">👨‍👩‍👧</span>
           <b>Thành viên gia đình</b>
-          <span className="sub">Mời người thân (bố, ông bà, gia sư) cùng kèm con, chia sẻ buổi học</span>
+          <span className="sub">Mời người thân (bố mẹ, ông bà, gia sư) cùng kèm con, chia sẻ buổi học</span>
         </button>
 
         <button className="big-card" style={{ borderColor: 'var(--c-accent)' }} onClick={() => openSheet('themePicker')}>
@@ -7139,7 +7290,7 @@ export function Profile() {
             Tự động dừng khi hết giờ chơi
           </b>
           <span className="sub" style={{ display: 'block', marginBottom: 10 }}>
-            Mỗi ngày mẹ và {child.name} chơi cùng tối đa bao nhiêu phút?
+            Mỗi ngày {ho} và {child.name} chơi cùng tối đa bao nhiêu phút?
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             {[3, 5, 10, 15].map((mins) => {
@@ -7195,7 +7346,7 @@ export function Profile() {
           <div className="switch-row">
             <div>
               <b style={{ fontSize: 14, color: 'var(--c-text)', display: 'block' }}>Nhắc nghỉ khi căng thẳng</b>
-              <span className="sub">Tự động nhắc {S.parent.toLowerCase()} con nghỉ 1 phút khi bí hoặc làm lâu</span>
+              <span className="sub">Tự động nhắc {ho} con nghỉ 1 phút khi bí hoặc làm lâu</span>
             </div>
             <Switch
               on={S.calmNudgeEnabled !== false}
@@ -7234,13 +7385,13 @@ export function Profile() {
           <span className="ic" aria-hidden="true">🛡️</span>
           <span className="lbl mint">Minh bạch và an toàn</span>
           <b>AI an toàn thế nào?</b>
-          <span className="sub">Cam kết 4 lớp: không giải hộ, không lộ đáp án, {S.parent.toLowerCase()} luôn làm chủ</span>
+          <span className="sub">Cam kết 4 lớp: không giải hộ, không lộ đáp án, {ho} luôn làm chủ</span>
         </button>
 
         <div className="card">
           <span className="lbl plum">Quyền riêng tư</span>
           <span className="sub">
-            Ảnh chỉ dùng để đọc đề, app không lưu ảnh. Hồ sơ, sticker, lịch sử học được lưu trên máy chủ để dùng được trên nhiều máy; {S.parent.toLowerCase()} có thể xoá toàn bộ bất cứ lúc nào.
+            Ảnh chỉ dùng để đọc đề, app không lưu ảnh. Hồ sơ, sticker, lịch sử học được lưu trên máy chủ để dùng được trên nhiều máy; {ho} có thể xoá toàn bộ bất cứ lúc nào.
           </span>
         </div>
 
@@ -7276,6 +7427,7 @@ export function Profile() {
    📝 13. CHẤM VỞ, KHÔNG SỬA HỘ (Prompt 14 Phần A)
    ============================================================ */
 export function CheckWork() {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, go, openSheet, toast, boom, stats, setStats } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const childName = child?.name || 'Mít'
@@ -7360,9 +7512,9 @@ export function CheckWork() {
     } catch (err) {
       console.error('Lỗi đọc ảnh:', err)
       if (err.status === 429) {
-        toast('Hôm nay đã dùng hết 50 lượt đọc ảnh. Mẹ và bé quay lại vào ngày mai nhé! 🌙')
+        toast(`Hôm nay đã dùng hết 50 lượt đọc ảnh. ${Ho} và bé quay lại vào ngày mai nhé! 🌙`)
       } else {
-        toast('Không thể đọc ảnh, mẹ thử chụp lại hoặc gõ bài làm nhé')
+        toast(`Không thể đọc ảnh, ${ho} thử chụp lại hoặc gõ bài làm nhé`)
       }
       setStep('capture')
     }
@@ -7383,7 +7535,7 @@ export function CheckWork() {
         cacDong: linesToGrade,
         linesEdited: editedFlag,
         lop: child?.grade || 'Lớp 3',
-        xungHo: S.parent || 'mẹ',
+        xungHo: ho,
         tenCon: childName,
         recheckOf: isRetake ? checkId : undefined,
       })
@@ -7396,7 +7548,7 @@ export function CheckWork() {
           await new Promise((r) => setTimeout(r, 400))
           return await doGrade(idToGrade, probTxt, linesToGrade, editedFlag, isRetake, 2)
         }
-        setGradeError({ message: 'AI chấm chưa xong, mẹ bấm Thử lại giúp mình nhé.', retryArgs: [idToGrade, probTxt, linesToGrade, editedFlag, isRetake] })
+        setGradeError({ message: `AI chấm chưa xong, ${ho} bấm Thử lại giúp mình nhé.`, retryArgs: [idToGrade, probTxt, linesToGrade, editedFlag, isRetake] })
         setStep('grade_error')
         return
       }
@@ -7424,8 +7576,8 @@ export function CheckWork() {
       }
       const msg =
         err?.status === 429
-          ? 'Hôm nay đã dùng hết lượt chấm. Mẹ và bé quay lại vào ngày mai nhé!'
-          : err?.data?.message || 'AI chấm chưa xong, mẹ bấm Thử lại giúp mình nhé.'
+          ? `Hôm nay đã dùng hết lượt chấm. ${Ho} và bé quay lại vào ngày mai nhé!`
+          : err?.data?.message || `AI chấm chưa xong, ${ho} bấm Thử lại giúp mình nhé.`
       setGradeError({ message: msg, retryArgs: err?.status === 429 ? null : [idToGrade, probTxt, linesToGrade, editedFlag, isRetake] })
       setStep('grade_error')
     }
@@ -7678,7 +7830,7 @@ export function CheckWork() {
                 ✨ Đọc chữ viết tay · {lines.length} dòng
               </span>
             </div>
-            <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Mẹ chạm để sửa chỗ AI đọc nhầm</span>
+            <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>{Ho} chạm để sửa chỗ AI đọc nhầm</span>
           </div>
 
           {problemText && (
@@ -7779,7 +7931,7 @@ export function CheckWork() {
                           setEditingText(ln.noi_dung)
                         }}
                       >
-                        Mẹ sửa
+                        {Ho} sửa
                       </button>
                     </div>
                   </div>
@@ -7834,7 +7986,7 @@ export function CheckWork() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 88 }}>
           <TopBarT4
             title="Kết quả chấm vở"
-            stepText="Chỉ mẹ thấy"
+            stepText="Chỉ bố mẹ thấy"
             onBack={() => setStep('capture')}
             onOpenCalm={() => openSheet('calm')}
           />
@@ -8057,7 +8209,7 @@ export function CheckWork() {
               "{gradeResult.cau_hoi_cho_con?.muc_1 || 'Con đọc lại đề bài nhé. Phép tính này mình làm thế nào nhỉ?'}"
             </p>
             <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>
-              Mẹ đọc to câu trên để con tự nhìn lại bài của mình nhé.
+              {Ho} đọc to câu trên để con tự nhìn lại bài của mình nhé.
             </span>
           </div>
 
@@ -8263,10 +8415,10 @@ export function CheckWork() {
       {step === 'blur' && (
         <div style={{ textAlign: 'center', padding: '30px 10px' }}>
           <div style={{ fontSize: 50, marginBottom: 12 }}>🌫️</div>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Mình chưa đọc rõ ảnh, mẹ chụp lại giúp nhé</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Mình chưa đọc rõ ảnh, {ho} chụp lại giúp nhé</h3>
           <p style={{ fontSize: 13.5, color: 'var(--c-text-2)', margin: '8px 0 16px' }}>
             {blurReason && !/chưa đọc rõ ảnh/i.test(blurReason) ? `(${blurReason}) ` : ''}
-            Mẹ bật đèn, giữ chắc tay, chụp thẳng và gần trang vở của {childName} hơn nhé.
+            {Ho} bật đèn, giữ chắc tay, chụp thẳng và gần trang vở của {childName} hơn nhé.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button className="btn primary" style={{ padding: '12px' }} onClick={() => setStep('capture')}>

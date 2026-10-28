@@ -3,7 +3,8 @@
    Prompt 23 · Chặng 1 & Chặng 2
    ============================================================ */
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
+import { AppCtx } from '../ctx'
 
 /**
  * T1. NÚT PHẲNG MỀM (Soft-flat Button)
@@ -186,6 +187,7 @@ export function CardKm({
 
 /** T3. THANH TRÊN MÀN TAB CHÍNH (40px) */
 export function TopBarT3({ dateText, soundOn, onToggleSound, onOpenCalm }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div className="top-bar-t3">
       <span className="top-bar-t3-date">{dateText || 'T2 26/10 · Lớp 3'}</span>
@@ -206,7 +208,7 @@ export function TopBarT3({ dateText, soundOn, onToggleSound, onOpenCalm }) {
             type="button"
             className="btn-km-circle"
             onClick={onOpenCalm}
-            aria-label="Mẹ bình tĩnh"
+            aria-label={`${Ho} bình tĩnh`}
             title="Góc bình yên"
             data-testid="btn-calm-corner-t3"
           >
@@ -220,6 +222,7 @@ export function TopBarT3({ dateText, soundOn, onToggleSound, onOpenCalm }) {
 
 /** T4. THANH TRÊN MÀN TẬP TRUNG (48px) */
 export function TopBarT4({ onBack, title, stepText, onOpenCalm }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div className="top-bar-t4">
       {onBack && (
@@ -242,7 +245,7 @@ export function TopBarT4({ onBack, title, stepText, onOpenCalm }) {
           type="button"
           className="btn-km-circle"
           onClick={onOpenCalm}
-          aria-label="Mẹ bình tĩnh"
+          aria-label={`${Ho} bình tĩnh`}
           title="Góc bình yên"
           data-testid="btn-calm-corner-t4"
         >

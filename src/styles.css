@@ -1562,8 +1562,9 @@ input::placeholder,
 textarea::placeholder {
   font-style: italic !important;
   font-weight: 400 !important;
-  color: #94A3B8 !important;
-  opacity: 0.9 !important;
+  /* Prompt 30.4: #94A3B8 chỉ ~2,6:1 trên nền trắng; #7C8797 ~3,6:1, vẫn nghiêng, nét thường */
+  color: #7C8797 !important;
+  opacity: 1 !important;
 }
 
 .field-code::placeholder {
@@ -1572,6 +1573,20 @@ textarea::placeholder {
   font-weight: 400 !important;
   letter-spacing: 0px !important;
   text-transform: none !important;
-  color: #94A3B8 !important;
+  color: #7C8797 !important;
+  opacity: 1 !important;
   font-size: 14.5px !important;
+}
+
+/* Prompt 30.1 · Khung "Đang chọn" ở màn khai báo lần đầu:
+   bên trái 2 dòng (chữ nhỏ "Đang chọn", dưới là emoji + tên bộ đậm), nút bên phải căn giữa dọc.
+   .btn mặc định width:100% nên phải trả nút về width:auto; cột chữ flex:1 + min-width:0 để không co về 0. */
+.onb-theme-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.onb-theme-row .onb-theme-text { flex: 1 1 auto; min-width: 0; }
+.onb-theme-row .onb-theme-text > div { white-space: nowrap; }
+.onb-theme-row .onb-theme-btn { width: auto !important; flex: 0 0 auto !important; white-space: nowrap; padding: 8px 14px; font-size: 13px; height: auto; min-height: 36px; margin: 0; }
+@media (max-width: 339px) {
+  .onb-theme-row { flex-wrap: wrap; }
+  .onb-theme-row .onb-theme-text { flex: 1 1 100%; }
+  .onb-theme-row .onb-theme-btn { width: 100% !important; flex: 1 1 100% !important; }
 }

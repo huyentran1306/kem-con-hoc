@@ -16,6 +16,7 @@ import { BlowingMiniGame } from './BlowingMiniGame'
 import { soundPop, soundSuccess, soundBreathe } from './audio'
 import { aiChat } from './api'
 import { renderPrompt } from './promptStudio'
+import { swapMe } from './xungHo'
 
 export function CalmCornerModal({
   isOpen,
@@ -152,7 +153,7 @@ export function CalmCornerModal({
 
   // Lấy câu hỏi của bậc đã xong gần nhất
   const lastFinishedIndex = Math.max(0, currentStepIndex - 1)
-  const roleQuestion = steps[lastFinishedIndex]?.q || steps[0]?.q || 'Con đố mẹ làm được bài này nè!'
+  const roleQuestion = steps[lastFinishedIndex]?.q || steps[0]?.q || `Con đố ${parentName.toLowerCase()} làm được bài này nè!`
   const rawAns = steps[lastFinishedIndex]?.a || steps[0]?.a || ''
 
   // Tạo câu trả lời sai có chủ ý để con sửa
@@ -163,7 +164,7 @@ export function CalmCornerModal({
       const wrongNum = n > 2 ? n - 1 : n + 2
       return ans.replace(String(n), String(wrongNum))
     }
-    return `Mẹ nghĩ là ngược lại chứ nhỉ? (${ans})`
+    return `${parentName} nghĩ là ngược lại chứ nhỉ? (${ans})`
   }
   const intentionalWrongAnswer = makeWrongAnswer(rawAns)
 
@@ -206,7 +207,7 @@ export function CalmCornerModal({
         xung_ho: parentName,
         dang_bai: currentProblem?.dang_bai || currentProblem?.type || "Toán",
         cau_hoi_bac: currentStep?.q || "Câu hỏi bài tập",
-        ly_do: reasonId === "frustrated" ? "Mẹ mệt, bực" : (reasonId === "late" ? "Muộn rồi" : (reasonId === "distracted" ? "Con mất tập trung" : "Con vướng bài")),
+        ly_do: reasonId === "frustrated" ? `${parentName} mệt, bực` : (reasonId === "late" ? "Muộn rồi" : (reasonId === "distracted" ? "Con mất tập trung" : "Con vướng bài")),
       };
 
       const rendered = renderPrompt("p8_calm_phrase", promptInput);
@@ -340,8 +341,8 @@ export function CalmCornerModal({
                   }}
                 >
                   <span style={{ fontSize: 28 }}>{r.emoji}</span>
-                  <b style={{ fontSize: 14.5, color: 'var(--c-text)' }}>{r.title}</b>
-                  <span style={{ fontSize: 11.5, color: 'var(--c-text-2)', lineHeight: 1.3 }}>{r.desc}</span>
+                  <b style={{ fontSize: 14.5, color: 'var(--c-text)' }}>{swapMe(r.title, parentName.toLowerCase())}</b>
+                  <span style={{ fontSize: 11.5, color: 'var(--c-text-2)', lineHeight: 1.3 }}>{swapMe(r.desc, parentName.toLowerCase())}</span>
                 </button>
               ))}
             </div>
@@ -404,7 +405,7 @@ export function CalmCornerModal({
               {currentGame.title}
             </h3>
             <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--c-text-2)' }}>
-              {currentGame.desc}
+              {swapMe(currentGame.desc, parentName.toLowerCase())}
             </p>
 
             {/* Đồng hồ đếm ngược 2 phút */}
@@ -517,7 +518,7 @@ export function CalmCornerModal({
               </div>
               {!isHintFolded && (
                 <div style={{ marginTop: 8, fontSize: 13, color: '#78350F', lineHeight: 1.4 }}>
-                  {parentName} thử trả lời: <b>"{intentionalWrongAnswer}"</b> để xem {child?.name} có phát hiện ra chỗ sai và sửa giúp mẹ không nhé!
+                  {parentName} thử trả lời: <b>"{intentionalWrongAnswer}"</b> để xem {child?.name} có phát hiện ra chỗ sai và sửa giúp {parentName.toLowerCase()} không nhé!
                 </div>
               )}
             </div>
@@ -594,7 +595,7 @@ export function CalmCornerModal({
                 Thay vì buột miệng nói:
               </span>
               <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#9F1239', textDecoration: 'line-through' }}>
-                "{calmPhrase.thay_vi_noi}"
+                "{swapMe(calmPhrase.thay_vi_noi, parentName.toLowerCase())}"
               </p>
             </div>
 
@@ -612,14 +613,14 @@ export function CalmCornerModal({
                 {parentName} thử nói nhẹ nhàng:
               </span>
               <p style={{ margin: '4px 0 0', fontSize: 15, fontWeight: 700, color: '#065F46', lineHeight: 1.4 }}>
-                "{calmPhrase.thu_noi}"
+                "{swapMe(calmPhrase.thu_noi, parentName.toLowerCase())}"
               </p>
             </div>
 
             {/* Việc làm ngay */}
             {calmPhrase.viec_lam_ngay && (
               <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginBottom: 16 }}>
-                💡 <b>Việc làm ngay:</b> {calmPhrase.viec_lam_ngay}
+                💡 <b>Việc làm ngay:</b> {swapMe(calmPhrase.viec_lam_ngay, parentName.toLowerCase())}
               </div>
             )}
 

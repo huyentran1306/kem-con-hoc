@@ -931,7 +931,7 @@ export function SideNav({
         <BearMascot mood="greeting" size={34} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <b style={{ fontFamily: "var(--s-font-head)", fontSize: 15, color: "var(--s-text)", display: "block", lineHeight: 1.15 }}>
-            Cổng Giáo Viên
+            Cổng giáo viên
           </b>
           {schoolName ? (
             <small style={{ fontSize: 12, color: "var(--s-text-2)", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -1168,7 +1168,7 @@ export function StaffShell({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
               <BearMascot mood="greeting" size={26} />
               <strong style={{ fontFamily: 'var(--s-font-head)', fontSize: 15, color: 'var(--s-text)', whiteSpace: 'nowrap' }}>
-                Cổng Giáo Viên
+                Cổng giáo viên
               </strong>
             </div>
           ) : (

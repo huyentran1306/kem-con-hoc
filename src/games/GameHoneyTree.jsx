@@ -2,13 +2,16 @@
  * 🌳 TRÒ CHƠI 2: LEO CÂY MẬT ONG (MÀN 4, 5 THEO BẢN VẼ)
  * Cùng một phe, cây 8 bậc, gạt thay lượt, đồng hồ 2 phút, tới đích tặng huy hiệu Đồng đội.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { generateReadingQuestion, generateChildMathQuestion, generateParentMathQuestion } from './questionGenerator';
 import { logGameAnswer, addPlaySeconds, getPlayTimeStatus } from './gameStorage';
 import { soundTap, soundSuccess, soundWrong, soundPop } from '../audio';
 import { emitMotion } from '../MotionLayer';
+import { AppCtx } from '../ctx'
+import { haiNguoi } from '../xungHo'
 
 export default function GameHoneyTree({ child, stats, onBack, onOpenProfile, isTrial = false }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const childName = child?.name || 'Bé Na';
   const childGrade = child?.grade || '3';
 
@@ -170,7 +173,7 @@ export default function GameHoneyTree({ child, stats, onBack, onOpenProfile, isT
             Cả nhà lên tới hũ mật!
           </h3>
           <p style={{ margin: 0, fontSize: 13.5, color: 'var(--c-sub)' }}>
-            8 bậc · {childName} trả lời {childAnswersCount} câu, mẹ trả lời {parentAnswersCount} câu
+            8 bậc · {childName} trả lời {childAnswersCount} câu, {ho} trả lời {parentAnswersCount} câu
           </p>
         </div>
 
@@ -204,7 +207,7 @@ export default function GameHoneyTree({ child, stats, onBack, onOpenProfile, isT
           </div>
           <b style={{ fontSize: 15, color: '#14532D', display: 'block' }}>Đồng đội</b>
           <p style={{ margin: '2px 0 0', fontSize: 13, color: '#166534', lineHeight: 1.4 }}>
-            Hai mẹ con cùng leo, cùng giúp nhau từng bậc, không ai bị bỏ lại!
+            {haiNguoi(ho)} cùng leo, cùng giúp nhau từng bậc, không ai bị bỏ lại!
           </p>
         </div>
 
@@ -379,7 +382,7 @@ export default function GameHoneyTree({ child, stats, onBack, onOpenProfile, isT
             borderRadius: 9,
           }}
         >
-          👩 Lượt của mẹ
+          👩 Lượt của {ho}
         </div>
       </div>
 

@@ -3,7 +3,9 @@
    Prompt 08 Mục 1: Thẻ nhắc trượt lên từ dưới không chặn câu đọc to
    ============================================================ */
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
+import { AppCtx } from './ctx'
+import { haiNguoi } from './xungHo'
 
 export function CalmNudgeCard({
   childName = 'con',
@@ -11,6 +13,7 @@ export function CalmNudgeCard({
   onAccept,
   onSnooze,
 }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   // Tự ẩn sau 20 giây nếu không bấm
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,7 +54,7 @@ export function CalmNudgeCard({
             <span style={{ fontSize: 26 }}>🫧</span>
             <div>
               <b style={{ fontSize: 15, color: 'var(--c-text)', display: 'block' }}>
-                Hai mẹ con nghỉ 1 phút nhé?
+                {haiNguoi(ho)} nghỉ 1 phút nhé?
               </b>
               <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
                 {reasonText} · <b>Bài vẫn giữ nguyên</b>

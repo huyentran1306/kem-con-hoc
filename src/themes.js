@@ -173,7 +173,7 @@ export const THEMES = [
   {
     id: 'bento',
     name: 'Bento Mềm',
-    desc: 'Tối giản, sáng sạch kiểu Apple, dải cam san hô sang tím',
+    desc: 'Tối giản, sáng sạch, dải cam san hô sang tím',
     icon: '🍱',
     isDark: false,
     fontHead: "'Lexend', sans-serif",

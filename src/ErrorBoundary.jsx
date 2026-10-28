@@ -35,10 +35,10 @@ export class ErrorBoundary extends React.Component {
           }}
         >
           <span className="lbl coral" style={{ display: 'inline-block', marginBottom: 6 }}>
-            ⚠️ Có lỗi nhỏ, mẹ thử lại
+            ⚠️ Có lỗi nhỏ, thử lại nhé
           </span>
           <p style={{ margin: '6px 0 12px', fontSize: 13.5, color: 'var(--c-text, #333)' }}>
-            {this.props.message || 'Ứng dụng gặp một lỗi nhỏ khi hiển thị. Mẹ thử bấm lại nhé!'}
+            {this.props.message || 'Ứng dụng gặp một lỗi nhỏ khi hiển thị. Bấm thử lại nhé!'}
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button

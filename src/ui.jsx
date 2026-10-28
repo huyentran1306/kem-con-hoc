@@ -188,7 +188,7 @@ export function VoiceInputBtn({ onResult, placeholder = 'Bấm để nói bằng
         if (text && text.trim()) {
           onResult(text.trim())
         } else {
-          toast('Chưa nhận được giọng nói, mẹ thử nói lại hoặc gõ đề nhé')
+          toast('Chưa nhận được giọng nói, thử nói lại hoặc gõ đề nhé')
         }
       }
 
