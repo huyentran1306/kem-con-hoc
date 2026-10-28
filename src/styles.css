@@ -349,7 +349,8 @@ textarea.field{resize:none;line-height:1.6}
 
 /* ---------- Sheet ---------- */
 .sheet{
-  position:fixed;inset:0;z-index:50;
+  /* Prompt 31A: trên thanh nút dính đáy (z-index 90) của màn Xong bài, để bảng trượt Nghe con bấm được */
+  position:fixed;inset:0;z-index:95;
   background:rgba(42,34,51,.48);
   display:flex;align-items:flex-end;justify-content:center;
   animation:fadeIn .2s both;

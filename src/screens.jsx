@@ -14,9 +14,9 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, cancelPrefetch, isDemoMode, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, cancelPrefetch, isDemoMode, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary, isTeachBackSampleMode, sampleTeachBackTranscript, fastClassifyProblem } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
-import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
+import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson, matchTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
 import { evaluateTextScope, formatScopeMessage, getActiveScopeRules, parseGradeNum, parseOcrV2Result } from './scopeRules'
@@ -1584,7 +1584,7 @@ export function Analyze() {
               🎒 {child?.grade || 'Lớp 3'}
             </span>
             <span className="btn-km-chip" style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 800 }}>
-              📐 {S.problem?.dang_bai || S.problem?.type || 'Toán có lời văn'}
+              📐 {problemTypeLabel(S, child)}
             </span>
           </div>
 
@@ -2971,6 +2971,21 @@ export function Scaffold() {
   )
 }
 
+/* Prompt 31B1: nhãn dạng bài ở màn "Gấu đọc được đề này!" lấy đúng đề đang đọc.
+   Không dùng type của bài giả mặc định (PROBLEM id 'mock' là đề 3 hộp bút cũ). */
+export function problemTypeLabel(S, child) {
+  const p = S?.problem || {}
+  if (p.dang_bai) return p.dang_bai
+  if (p.type && p.id !== 'mock') return p.type
+  const text = S?.flow?.ocr || p.ocr || ''
+  if (isTrialActive()) {
+    const trial = matchTrialLesson(text)
+    if (trial?.dang_bai) return trial.dang_bai
+  }
+  const cls = fastClassifyProblem(text, child?.grade || 'Lớp 3')
+  return cls?.dang_bai || 'Toán có lời văn'
+}
+
 /* ============================================================
    🎓 TEACH-BACK CARD: NGHE CON GIẢNG LẠI (Prompt 14 Phần B)
    ============================================================ */
@@ -2981,6 +2996,11 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
   const [transcript, setTranscript] = useState('')
   const [tbResult, setTbResult] = useState(null)
   const [round, setRound] = useState(1)
+  // Prompt 31A: dữ liệu mẫu (Dùng thử / trình diễn) có nhãn "Mẫu"; mic lỗi thì cho gõ chữ
+  const sampleMode = isTeachBackSampleMode()
+  const [usedSample, setUsedSample] = useState(false)
+  const [typeNote, setTypeNote] = useState('')
+  const problemText = problem?.ocr || problem?.text || problem?.de_bai || ''
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const timerRef = useRef(null)
@@ -3005,12 +3025,13 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
         stream.getTracks().forEach((t) => t.stop())
         setTbState('transcribing')
         try {
-          const res = await teachBackTranscribe({ audioBlob })
+          const res = await teachBackTranscribe({ audioBlob, round, problemText })
+          setUsedSample(Boolean(res?.sample))
           setTranscript(res.transcript || '')
+          setTypeNote(res.transcript ? '' : `Chưa nghe rõ, ${ho} gõ lại lời con kể vào ô dưới nhé.`)
           setTbState('review')
         } catch (err) {
-          toast('Không bóc băng được âm thanh, dùng lời giảng mẫu nhé!')
-          applySample()
+          openTyping('Chưa chuyển được giọng thành chữ.')
         }
       }
       mr.start(250)
@@ -3026,9 +3047,17 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
         })
       }, 1000)
     } catch (err) {
-      toast('Không kết nối được micro, đang dùng lời giảng mẫu!')
-      applySample()
+      // Mic bị từ chối hoặc máy không có mic: Dùng thử dùng lời mẫu, tài khoản thật cho gõ chữ
+      if (sampleMode) applySample()
+      else openTyping('Không mở được micro.')
     }
+  }
+
+  const openTyping = (reason = '') => {
+    setUsedSample(false)
+    setTranscript('')
+    setTypeNote(`${reason} ${ho.charAt(0).toUpperCase() + ho.slice(1)} gõ lời ${child?.name || 'con'} kể vào ô dưới rồi chấm như thường nhé.`.trim())
+    setTbState('review')
   }
 
   const stopRecording = () => {
@@ -3039,14 +3068,15 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
   }
 
   // Lời giảng mẫu chỉ có ở Dùng thử hoặc bài mẫu, và luôn khớp với bài đang học (đợt 15 P1)
-  const canUseSample = isTrialActive() || Boolean(problem?.isSample)
+  const canUseSample = sampleMode || Boolean(problem?.isSample)
   const applySample = async () => {
-    if (isTrialActive()) {
-      const r = await teachBackTranscribe({}).catch(() => null)
-      setTranscript(r?.transcript || '')
-    } else {
-      setTranscript('Con lấy ba hộp, mỗi hộp tám cây bút là hai mươi tư cây. Xong mẹ cho bạn Na năm cây thì con lấy hai mươi tư trừ đi năm còn mười chín cây bút ạ.')
-    }
+    // Lời giảng mẫu luôn khớp với bài đang học (không gọi AI)
+    const text = sampleMode
+      ? ((await teachBackTranscribe({ round, problemText }).catch(() => null))?.transcript || '')
+      : sampleTeachBackTranscript({ problemText, round })
+    setUsedSample(true)
+    setTypeNote('')
+    setTranscript(text)
     setTbState('review')
   }
 
@@ -3069,9 +3099,9 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
         tenCon: child?.name || 'Mít',
       })
       setTbResult(res)
+      if (res?.sample) setUsedSample(true)
       setTbState('result')
-      const mapped = res.muc_de_xuat === 'self' ? 'ok' : res.muc_de_xuat
-      onPickChoice(mapped, res.teach_back_id)
+      // Không tự chốt: AI chỉ đề xuất, người kèm bấm chốt mức ở dưới (confirm)
     } catch (err) {
       toast('Lỗi chấm: ' + (err.message || 'Thử lại'))
       setTbState('review')
@@ -3089,7 +3119,10 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
     <div className={`card plum pop teach-back-box ${tbState === 'recording' ? 'teach-back-recording' : ''}`} style={{ border: '2px solid var(--plum)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <span className="pill p">🎓 Con dạy lại {parent.toLowerCase()}</span>
-        {round > 1 && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--plum)' }}>Vòng {round}</span>}
+        <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {usedSample && <span className="pill" data-testid="tb-sample-label" style={{ fontSize: 11, fontWeight: 800, background: 'var(--c-bg)', border: '1px dashed var(--c-line)' }}>Mẫu</span>}
+          {round > 1 && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--plum)' }}>Vòng {round}</span>}
+        </span>
       </div>
 
       <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--plum-deep)', margin: '4px 0 10px', lineHeight: 1.45 }}>
@@ -3131,6 +3164,14 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
                 🎧 Dùng lời giảng mẫu (bài đang học)
               </button>
             )}
+            <button
+              className="btn soft"
+              data-testid="tb-type-btn"
+              style={{ width: '100%', fontSize: 12.5, padding: '8px', color: 'var(--c-text-2)' }}
+              onClick={() => openTyping('')}
+            >
+              ⌨️ Không có mic? {parent} gõ lời con kể
+            </button>
           </div>
         </div>
       )}
@@ -3179,9 +3220,15 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--plum)', textTransform: 'uppercase', marginBottom: 6 }}>
             Lời con kể lại ({ho} có thể sửa nhanh nếu mic nghe nhầm):
           </div>
+          {typeNote && (
+            <p data-testid="tb-type-note" style={{ fontSize: 12.5, color: 'var(--c-text-2)', margin: '0 0 6px', lineHeight: 1.4 }}>{typeNote}</p>
+          )}
           <textarea
             value={transcript}
             onChange={(e) => setTranscript(e.target.value)}
+            placeholder={`VD: Con lấy ... vì ...`}
+            aria-label="Lời con kể lại"
+            data-testid="tb-transcript"
             rows={3}
             style={{
               width: '100%',
@@ -3286,8 +3333,11 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
                 style={{ width: '100%', fontSize: 12, padding: '6px', background: '#FFF' }}
                 onClick={() => {
                   setRound(2)
+                  setTranscript('')
+                  setTypeNote('')
                   setTbState('idle')
                 }}
+                data-testid="tb-round2-btn"
               >
                 🎙️ Hỏi thêm và ghi âm tiếp (Vòng 2)
               </button>
@@ -3305,17 +3355,19 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
                 className={`btn ${currentChoice === o.v ? 'solid' : 'soft'}`}
                 style={{
                   width: '100%',
-                  background: currentChoice === o.v ? 'var(--plum)' : '#fff',
-                  color: currentChoice === o.v ? '#fff' : 'var(--plum-deep)',
-                  border: currentChoice === o.v ? 'none' : '1.5px solid var(--plum-line)',
+                  background: currentChoice === o.v ? 'var(--plum, var(--c-primary))' : 'var(--c-surface, #fff)',
+                  color: currentChoice === o.v ? 'var(--c-on-accent, #fff)' : 'var(--plum-deep, var(--c-text))',
+                  border: currentChoice === o.v ? 'none' : '1.5px solid var(--plum-line, var(--c-line))',
                   fontSize: 13,
                   fontWeight: currentChoice === o.v ? 800 : 600,
                   padding: '8px 12px',
                   textAlign: 'left',
                 }}
                 onClick={() => onPickChoice(o.v, tbResult?.teach_back_id)}
+                data-testid={`tb-confirm-${o.v}`}
               >
                 {o.e} {o.t}
+                {(tbResult?.muc_de_xuat === 'self' ? 'ok' : tbResult?.muc_de_xuat) === o.v ? ' · AI đề xuất' : ''}
               </button>
             ))}
           </div>
@@ -3333,9 +3385,9 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
               className={`btn ${currentChoice === o.v ? 'solid' : 'soft'}`}
               style={{
                 width: '100%',
-                background: currentChoice === o.v ? 'var(--plum)' : '#fff',
-                color: currentChoice === o.v ? '#fff' : 'var(--plum-deep)',
-                border: currentChoice === o.v ? 'none' : '1.5px solid var(--plum-line)',
+                background: currentChoice === o.v ? 'var(--plum, var(--c-primary))' : 'var(--c-surface, #fff)',
+                color: currentChoice === o.v ? 'var(--c-on-accent, #fff)' : 'var(--plum-deep, var(--c-text))',
+                border: currentChoice === o.v ? 'none' : '1.5px solid var(--plum-line, var(--c-line))',
                 fontSize: 13,
                 fontWeight: currentChoice === o.v ? 800 : 600,
                 padding: '8px 12px',
@@ -3348,6 +3400,63 @@ export function TeachBackCard({ problem, child, parent, currentChoice, sessionId
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* Prompt 31A: ghi kết quả "Con dạy lại" vào buổi học. Dùng chung cho màn Xong bài và bảng trượt Nghe con.
+   Chỉ khi có teachBackId (con thật sự giảng lại và AI đã chấm) mới tính là một lần giảng lại. */
+export function applyTeachBackChoice(prev, v, teachBackId, ho = 'bố mẹ', label = '') {
+  const isRealTeachBack = Boolean(teachBackId)
+  const activeId = prev.activeId
+  const prevStats = { ...(prev.stats || {}) }
+  const cStats = { ...(prevStats[activeId] || {}) }
+  const oldHist = Array.isArray(cStats.history) ? [...cStats.history] : []
+  const sessionId = prev.flow?.sessionId || null
+  const already = oldHist.some((h) => h.kind === 'teach_back' && sessionId && h.sessionId === sessionId)
+  const updatedHist = !isRealTeachBack || already
+    ? oldHist
+    : [{ kind: 'teach_back', sessionId, txt: `Con dạy lại ${ho}: ${String(label).toLowerCase()}`, when: 'Hôm nay', timestamp: Date.now() }, ...oldHist]
+  return {
+    ...prev,
+    flow: {
+      ...prev.flow,
+      teachBack: v,
+      ...(isRealTeachBack ? { teachBackDone: true, teachBackId, teachBackOwnWay: v === 'ok' } : {}),
+    },
+    stats: { ...prevStats, [activeId]: { ...cStats, history: updatedHist } },
+  }
+}
+
+/* Prompt 31A: bảng trượt "Nghe con giảng lại" (mở từ nút "Nghe con ›" ở màn Xong bài) */
+export function TeachBackSheet() {
+  const { S, problem, patch, toast, closeSheet, ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx)
+  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+  const [choice, setChoice] = useState(S.flow?.teachBackDone ? S.flow.teachBack : null)
+  const labels = { ok: 'Con tự làm được', hint: 'Con cần gợi ý', guided: `${Ho} phải hướng dẫn nhiều` }
+  const onPick = (v, teachBackId) => {
+    soundPop(500)
+    setChoice(v)
+    patch((prev) => applyTeachBackChoice(prev, v, teachBackId, ho, labels[v] || ''))
+    if (teachBackId) {
+      teachBackConfirm({ teachBackId, finalLevel: v === 'ok' ? 'self' : v }).catch(() => {})
+      toast(`Đã chốt: ${labels[v] || ''}. Ghi vào buổi học 💾`)
+    } else {
+      toast(`Đã lưu mức tự chấm: ${labels[v] || ''} 💾`)
+    }
+    closeSheet()
+  }
+  return (
+    <div data-testid="sheet-teach-back">
+      <TeachBackCard
+        problem={problem}
+        child={child}
+        parent={Ho}
+        currentChoice={choice}
+        sessionId={S.flow?.sessionId || S.currentSessionId}
+        toast={toast}
+        onPickChoice={onPick}
+      />
     </div>
   )
 }
@@ -3622,6 +3731,8 @@ export function Done() {
           totalSteps: problem?.steps?.length || 4,
           selfSteps: realSelfSteps,
           teachBack: prev.flow?.teachBack || null,
+          // Prompt 31A: chỉ tính là "lần con giảng lại" khi có lượt giảng lại thật
+          teachBackDone: Boolean(prev.flow?.teachBackDone),
           minutes: realMinutes || 15,
           partial: false,
         }
@@ -3698,34 +3809,8 @@ export function Done() {
   const pickTeachBack = (v, teachBackId) => {
     soundPop(500)
     const opt = TEACH_BACK_OPTIONS.find((o) => o.v === v)
-    const isRealTeachBack = Boolean(teachBackId)
-    patch((prev) => {
-      const activeId = prev.activeId
-      const prevStats = { ...(prev.stats || {}) }
-      const cStats = { ...(prevStats[activeId] || {}) }
-      const oldHist = Array.isArray(cStats.history) ? [...cStats.history] : []
-      const hasTeachBack = oldHist.some((h) => h.txt && h.txt.startsWith('Con dạy lại'))
-      const updatedHist = hasTeachBack || !isRealTeachBack
-        ? oldHist
-        : [{ txt: `Con dạy lại ${ho}: ${opt.t.toLowerCase()}`, when: 'Hôm nay', timestamp: Date.now() }, ...oldHist]
-
-      return {
-        ...prev,
-        flow: {
-          ...prev.flow,
-          teachBack: v,
-          ...(isRealTeachBack ? { teachBackDone: true, teachBackId, teachBackOwnWay: v === 'ok' } : {}),
-        },
-        stats: {
-          ...prevStats,
-          [activeId]: {
-            ...cStats,
-            history: updatedHist,
-          },
-        },
-      }
-    })
-    toast(`Đã lưu: ${opt.t} 💾`)
+    patch((prev) => applyTeachBackChoice(prev, v, teachBackId, ho, opt?.t || ''))
+    toast(`Đã lưu: ${opt?.t || ''} 💾`)
   }
 
   return (
@@ -6242,7 +6327,7 @@ function WeeklyAiCards({ stats, childName }) {
     }
   }, [])
   const week = (stats?.studyLog || []).filter((e) => e && e.ts && getWeekLabel(e.ts) === 'Tuần này')
-  const teachBacks = week.filter((e) => e.kind !== 'check' && e.teachBack).length
+  const teachBacks = week.filter((e) => e.kind !== 'check' && (e.teachBackDone === true || (e.teachBackDone === undefined && e.teachBack))).length
   const selfFixedLocal = week.filter((e) => e.kind === 'check')
   const selfFixed = Math.max(selfFixedLocal.length, Number(safety?.work_checks?.self_fixed || 0))
   const errCount = {}

@@ -552,7 +552,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     if (Array.isArray(data.cac_bac) && data.cac_bac.length > 0) {
       rawSteps = data.cac_bac.map((b, idx) => ({
         question: b.cau_hoi || `Bậc ${idx + 1}`,
-        ky_nang: b.ky_nang || 'tinh_toan',
+        // Prompt 31B2: thiếu nhãn thì để trống, không mặc định "Tính toán"
+        ky_nang: b.ky_nang || null,
         ly_do_cho_me: b.ly_do_cho_me || '',
         answerForParent: b.dap_an_cho_me || '',
         answer: b.dap_an_cho_me || '',
@@ -1828,10 +1829,26 @@ export async function checkWorkHistory() {
    🎓 NGHE CON GIẢNG LẠI (Prompt 14 Phần B)
    ============================================================ */
 
-export async function teachBackTranscribe({ audioBlob }) {
-  if (isTrialActive()) {
+/* Prompt 31A: Dùng thử và chế độ trình diễn dùng lời giảng mẫu + kết quả chấm mẫu, KHÔNG gọi AI.
+   Vòng 1 thiếu ý "vì sao" để demo được vòng 2; vòng 2 đạt đủ 4 tiêu chí. */
+export function isTeachBackSampleMode() {
+  return isTrialActive() || isDemoMode()
+}
+function sampleGiangLai(problemText = '') {
+  const lesson = getActiveTrialLesson(problemText)
+  return (TRIAL_LESSON_EXTRAS[lesson?.id] || {}).giang_lai || null
+}
+export function sampleTeachBackTranscript({ problemText = '', round = 1 } = {}) {
+  const g = sampleGiangLai(problemText)
+  if (!g) return ''
+  if (round >= 2) return g.transcript_vong_2 || g.transcript || ''
+  return g.transcript_vong_1 || g.transcript || ''
+}
+
+export async function teachBackTranscribe({ audioBlob, round = 1, problemText = '' } = {}) {
+  if (isTeachBackSampleMode()) {
     await new Promise((r) => setTimeout(r, 600))
-    return { ok: true, transcript: TRIAL_LESSON_EXTRAS[getActiveTrialLesson().id].giang_lai.transcript }
+    return { ok: true, sample: true, transcript: sampleTeachBackTranscript({ problemText, round }) }
   }
 
   const token = getAuthToken()
@@ -1877,15 +1894,21 @@ export async function teachBackGrade({
   lop = 'Lớp 3',
   tenCon = 'Mít',
 }) {
-  if (isTrialActive()) {
+  if (isTeachBackSampleMode()) {
     await new Promise((r) => setTimeout(r, 700))
+    const g = sampleGiangLai(problemText) || { tieu_chi: [] }
+    const name = String(tenCon || '').replace(/^bé\s+/i, '')
+    const missingWhy = round < 2 && Boolean(g.transcript_vong_1)
     return {
       ok: true,
+      sample: true,
       teach_back_id: `tb_trial_${Date.now()}`,
-      tieu_chi: TRIAL_LESSON_EXTRAS[getActiveTrialLesson(problemText).id].giang_lai.tieu_chi.map((t) => ({ ...t })),
-      muc_de_xuat: 'self',
-      cau_hoi_them: '',
-      loi_khen_cho_con: `Bé ${String(tenCon || "").replace(/^bé\s+/i, "")} kể lại các bước rất tự tin và nhớ chính xác từng số liệu!`,
+      tieu_chi: (g.tieu_chi || []).map((t) => (missingWhy && t.ma === 'vi_sao' ? { ...t, dat: false, trich: '' } : { ...t })),
+      muc_de_xuat: missingWhy ? 'hint' : 'self',
+      cau_hoi_them: missingWhy ? (g.cau_hoi_them || 'Vì sao con lại chọn phép tính đó?') : '',
+      loi_khen_cho_con: missingWhy
+        ? `${name} kể đúng số liệu và phép tính rồi. Thêm một câu "vì sao" nữa là trọn vẹn!`
+        : `${name} kể lại các bước rất tự tin và giải thích được vì sao!`,
       hallucination_detected: false,
     }
   }
@@ -1923,7 +1946,7 @@ export async function teachBackGrade({
 }
 
 export async function teachBackConfirm({ teachBackId, finalLevel }) {
-  if (isTrialActive()) {
+  if (isTeachBackSampleMode() || String(teachBackId || '').startsWith('tb_trial_')) {
     return { ok: true, id: teachBackId, final_level: finalLevel }
   }
 

@@ -1198,6 +1198,8 @@ function SheetView({ type, data, session }) {
   if (type === 'aiFeedback') return <AiFeedbackSheet data={data} onClose={closeSheet} toast={toast} S={S} />
   if (type === 'safetyPortal') return <SafetyPortalSheet onClose={closeSheet} S={S} />
   if (type === 'themePicker') return <Sheet><ThemePickerSheet onClose={closeSheet} /></Sheet>
+  // Prompt 31A: Nghe con giảng lại
+  if (type === 'teachBack') return <Sheet><Scr.TeachBackSheet /></Sheet>
   return null
 }
 
@@ -1958,6 +1960,12 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
       flow: { ...S.flow, ocr: text.trim(), step: 0, stuck: 0, peeks: 0, stepLog: [], revealedSteps: [], stepRevealTimes: [], startedAt: null },
       problem: {
         ...PROBLEM,
+        // Prompt 31B1: không mang nhãn/tóm tắt của đề giả 3 hộp bút sang đề vừa gõ
+        id: 'typed_' + Date.now(),
+        type: '',
+        dang_bai: '',
+        summary: '',
+        warning: '',
         ocr: text.trim(),
         isTeacherAssigned: false,
         teacherName: null,
