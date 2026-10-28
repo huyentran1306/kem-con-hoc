@@ -372,7 +372,7 @@ export function TraitStackedChart({
 
       {/* Dòng chú thích mốc đổi quà */}
       <p className="xs" style={{ color: "var(--c-accent-ink, var(--c-text-2))", margin: "4px 0 8px" }}>
-        🎁 Mốc đổi quà. Đổi quà chỉ đặt lại sổ sticker, lịch sử vẫn giữ nguyên.
+        🎁 Mỗi khi đổi quà, bé bắt đầu tích trang sticker mới; lịch sử tiến bộ của con vẫn giữ nguyên.
       </p>
 
       {/* A11: Danh sách phẩm chất mỗi mục 1 dòng cùng hàng: chấm màu, tên, số tuần này, biến động kèm chữ "điểm" */}

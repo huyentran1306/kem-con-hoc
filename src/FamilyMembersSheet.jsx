@@ -35,8 +35,8 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
   const loadData = async () => {
     setLoading(true)
     const TRIAL_MEMBERS = [
-      { id: "mem_mom", name: "Mẹ (Chủ gia đình)", role: "owner", relation_hint: "Mẹ", email: "me.kemcon@example.com", is_active: true },
-      { id: "mem_dad", name: "Bố (Người giám hộ)", role: "guardian", relation_hint: "Bố", email: "bo.kemcon@example.com", is_active: true },
+      { id: "mem_mom", displayName: "Mẹ Lan", name: "Mẹ Lan", role: "owner", relation: "Mẹ", relation_hint: "Mẹ", email: "me.lan@kemconhoc.vn", is_active: true },
+      { id: "mem_dad", displayName: "Bố Minh", name: "Bố Minh", role: "guardian", relation: "Bố", relation_hint: "Bố", email: "bo.minh@kemconhoc.vn", is_active: true },
     ]
     try {
       if (isTrialActive()) {
@@ -298,11 +298,11 @@ export function FamilyMembersSheet({ onClose, toast, currentUser, familyName }) 
                             fontSize: 18,
                           }}
                         >
-                          {(m.displayName || m.relation || 'U')[0].toUpperCase()}
+                          {(m.displayName || m.name || m.relation || (m.role === 'owner' ? 'M' : 'B'))[0].toUpperCase()}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <b style={{ fontSize: 14.5, color: 'var(--c-text)' }}>{m.relation ? `${m.relation} ` : ''}{m.displayName}</b>
+                            <b style={{ fontSize: 14.5, color: 'var(--c-text)' }}>{m.displayName || m.name || (m.relation ? `${m.relation}` : (m.role === 'owner' ? 'Chủ gia đình' : 'Thành viên'))}</b>
                             {isSelf && <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 700 }}>(Bạn)</span>}
                             {roleBadge(m.role)}
                           </div>

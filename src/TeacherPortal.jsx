@@ -1328,12 +1328,35 @@ function TeacherAssignmentsTab({ token, classId, cls, onSelectResult }) {
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {assignments.map((a) => (
+          {[...assignments].sort((x, y) => {
+            const now = Date.now();
+            const xExpired = x.due_at && new Date(x.due_at).getTime() < now;
+            const yExpired = y.due_at && new Date(y.due_at).getTime() < now;
+            const xRank = x.status === 'published' && !xExpired ? 0 : x.status === 'draft' ? 1 : xExpired ? 2 : 3;
+            const yRank = y.status === 'published' && !yExpired ? 0 : y.status === 'draft' ? 1 : yExpired ? 2 : 3;
+            return xRank - yRank;
+          }).map((a) => {
+            const isExpired = a.due_at && new Date(a.due_at).getTime() < Date.now();
+            const badgeLabel = a.status === 'closed'
+              ? 'Đã đóng'
+              : a.status === 'draft'
+              ? 'Bản nháp'
+              : isExpired
+              ? 'Quá hạn'
+              : 'Đang mở';
+            const badgeStyle = a.status === 'closed'
+              ? styles.statusBadgeDraft
+              : a.status === 'draft'
+              ? styles.statusBadgeDraft
+              : isExpired
+              ? (styles.statusBadgeExpired || { backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FCA5A5', padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 800 })
+              : styles.statusBadgeActive;
+            return (
             <div key={a.id} className="tp-asg-card">
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                  <span style={a.status === 'published' ? styles.statusBadgeActive : styles.statusBadgeDraft}>
-                    {a.status === 'published' ? 'Đang mở' : a.status === 'closed' ? 'Đã đóng' : 'Bản nháp'}
+                  <span style={badgeStyle}>
+                    {badgeLabel}
                   </span>
                   {a.subject && <span style={{ fontSize: 12, color: 'var(--s-text-2)' }}>Môn {a.subject}</span>}
                 </div>
@@ -1377,7 +1400,7 @@ function TeacherAssignmentsTab({ token, classId, cls, onSelectResult }) {
                 )}
               </div>
             </div>
-          ))}
+          ); })}
         </div>
       )}
 
@@ -3511,8 +3534,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 100,
-    padding: 20,
+    zIndex: 1000,
+    padding: '20px 16px calc(20px + env(safe-area-inset-bottom, 16px))',
+    boxSizing: 'border-box',
   },
   modalBox: {
     backgroundColor: '#FFFFFF',
@@ -3520,8 +3544,20 @@ const styles = {
     padding: 24,
     width: '100%',
     maxWidth: 520,
+    maxHeight: '85vh',
+    overflowY: 'auto',
     boxShadow: '0 20px 40px rgba(75, 54, 33, 0.25)',
     border: '2px solid #F0DDC2',
+    boxSizing: 'border-box',
+  },
+  statusBadgeExpired: {
+    backgroundColor: '#FEE2E2',
+    color: '#991B1B',
+    border: '1px solid #FCA5A5',
+    padding: '3px 8px',
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 800,
   },
   modalHeader: {
     display: 'flex',

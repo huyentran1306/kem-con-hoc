@@ -327,12 +327,12 @@ export default function GocChoiChung({
       </div>
       {/* Dòng chú thích */}
       <p style={{ margin: '4px 0', fontSize: 12, color: 'var(--c-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-        Câu hỏi tạo bằng code từ phần Gấu nhớ, không tốn token. Hết 5 phút thì tự dừng.
+        Câu hỏi dựa trên chỗ {child?.name || 'con'} hay kẹt. Hết 5 phút thì tự dừng.
       </p>
 
       {/* Khu "Chụp đồ vật để Gấu nghĩ trò" (Legacy component chuyển xuống dưới) */}
       {SnapToyLegacyComponent && (
-        <div style={{ marginTop: 8, borderTop: '1px solid var(--c-line)', paddingTop: 16 }}>
+        <div id="sec-snap-toy" style={{ marginTop: 8, borderTop: '1px solid var(--c-line)', paddingTop: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-sub)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             🧸 Chụp đồ vật quanh nhà
           </div>

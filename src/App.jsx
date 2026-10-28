@@ -945,7 +945,7 @@ export default function App() {
             </div>
           </div>
 
-          {S.onboarded && !['snap', 'analyze', 'explain', 'scaffold', 'checkWork', 'check_work', 'check'].includes(screen) && (
+          {S.onboarded && !['snap', 'analyze', 'explain', 'prep', 'scaffold', 'done', 'checkWork', 'check_work', 'check'].includes(screen) && (
             <nav className="tabs">
               {[
                 ['home', BookOpen, 'Học tối nay'],
@@ -1711,7 +1711,7 @@ function AddChildSheet() {
         <input className="field" placeholder="VD: Bon, Miu…" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="card">
-        <span className="lbl plum">Avatar</span>
+        <span className="lbl plum">Hình đại diện</span>
         <div className="chips" style={{ gap: 4 }}>
           {EMOJIS.map((e) => (
             <button
@@ -1738,9 +1738,17 @@ function AddChildSheet() {
       </div>
       <div className="card">
         <span className="lbl plum">Bộ sách</span>
-        <div className="opt-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
           {BOOKS.map((x) => (
-            <button key={x} className={`opt col ${book === x ? 'on' : ''}`} onClick={() => setBook(x)}>{x}</button>
+            <button
+              key={x}
+              type="button"
+              className={`btn-km btn-km-s ${book === x ? 'btn-km-primary' : 'btn-km-secondary'}`}
+              style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+              onClick={() => setBook(x)}
+            >
+              {x}
+            </button>
           ))}
         </div>
       </div>
@@ -1916,7 +1924,7 @@ function WipeSheet() {
 function TypeProblemSheet({ initialMode, autoMic = false }) {
   const { S, patch, go, closeSheet, toast, session } = useContext(AppCtx)
   const isTrial = Boolean(session?.isTrial)
-  const [text, setText] = useState(isTrial ? PRELOADED_TRIAL_LESSONS[0].de_bai : PROBLEM.ocr)
+  const [text, setText] = useState(isTrial ? PRELOADED_TRIAL_LESSONS[0].de_bai : '')
   const save = () => {
     patch({
       studySource: 'parent',
@@ -1969,7 +1977,7 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
         }}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Gõ hoặc dán đề bài của con..."
+        placeholder={isTrial ? "Gõ hoặc dán đề bài của con..." : (PROBLEM.ocr || "Ví dụ: Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?")}
       />
 
       {/* 2. Đề mẫu thành 3 chip Toán, Tiếng Việt, Tiếng Anh */}
@@ -2200,10 +2208,10 @@ function StickerBookSheet() {
               >
                 <i className={stk.fa || 'fa-solid fa-award'} />
               </div>
-              <span style={{ fontSize: 11, fontWeight: 800, color: unlocked ? stk.color : '#94A3B8', marginTop: 6, textAlign: 'center', lineHeight: 1.2 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: unlocked ? stk.color : '#475569', marginTop: 6, textAlign: 'center', lineHeight: 1.2 }}>
                 {stk.trait || stk.n.split(' ')[0]}
               </span>
-              <span style={{ fontSize: 9.5, color: unlocked ? '#64748B' : '#94A3B8', marginTop: 2 }}>
+              <span style={{ fontSize: 9.5, color: unlocked ? '#64748B' : '#64748B', fontWeight: 600, marginTop: 2 }}>
                 {!unlocked ? 'Chưa mở' : cnt > 1 ? `Đã có ×${cnt}` : 'Đã có'}
               </span>
             </button>

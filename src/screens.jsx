@@ -136,20 +136,38 @@ export function Onboarding() {
 
       <div className="card">
         <span className="lbl plum">🎨 Giao diện con thích (tuỳ chọn)</span>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-          <span style={{ fontSize: 13.5 }}>
-            Đang chọn: <b>{getTheme(S.theme || 'candy').name}</b>
-          </span>
-          <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => openSheet('themePicker')}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 6 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 11.5, color: 'var(--c-text-2, #64748B)', fontWeight: 600 }}>Đang chọn</div>
+            <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+              <span style={{ fontSize: 16 }}>{getTheme(S.theme || 'candy').icon || '✨'}</span>
+              <span>{getTheme(S.theme || 'candy').name}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ padding: '8px 14px', fontSize: 13, flexShrink: 0, height: 'auto', minHeight: 36, whiteSpace: 'nowrap' }}
+            onClick={() => openSheet('themePicker')}
+          >
             Đổi giao diện
           </button>
         </div>
       </div>
 
-      <button className="big-card sky" onClick={() => openSheet('invite')}>
+      <button
+        type="button"
+        className="big-card sky"
+        onClick={() => openSheet('invite')}
+        style={{ textAlign: 'left', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}
+      >
         <span className="lbl sky">Không phải một mình</span>
-        <b>{S.partner ? '✓ Đã mời bố cùng kèm con' : '+ Mời bố cùng kèm con'}</b>
-        <span className="sub">Gửi link app cho bố, chia ca kèm, người trực ca sẽ thấy lời nhắc khi mở app buổi tối</span>
+        <b style={{ display: 'block', fontSize: 15, margin: '2px 0 4px' }}>
+          {S.partner ? (typeof S.partner === 'string' ? `✓ Đã mời ${S.partner}` : '✓ Đã gửi lời mời') : '+ Mời người thân cùng kèm con'}
+        </b>
+        <span className="sub" style={{ display: 'block', fontSize: 12.5, lineHeight: 1.45, color: 'var(--c-text-2)' }}>
+          Gửi link cho bố, mẹ, ông bà hay gia sư. Chia ca kèm, người trực ca sẽ thấy lời nhắc khi mở app buổi tối.
+        </span>
       </button>
 
       <button
@@ -568,7 +586,7 @@ export function Home() {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <b style={{ color: 'var(--c-text)', fontSize: 14.5, display: 'block' }}>📖 Làm tiếp bài hôm qua</b>
+          <b style={{ color: 'var(--c-text)', fontSize: 14.5, display: 'block' }}>📖 Làm tiếp bài đang dở</b>
           <span style={{ color: 'var(--c-sub, var(--c-text-2))', fontSize: 12.5 }}>
             Đang ở bậc {(S.pendingProblemResume.step || 0) + 1} · {S.pendingProblemResume.problem?.dang_bai || S.pendingProblemResume.problem?.type || 'Bài tập'}
           </span>
@@ -638,7 +656,13 @@ export function Home() {
         type="button"
         className="card-km"
         style={{ margin: 0, padding: '12px', textAlign: 'left', cursor: 'pointer', background: 'var(--c-surface)' }}
-        onClick={() => go('toy')}
+        onClick={() => {
+          go('toy')
+          setTimeout(() => {
+            const el = document.getElementById('sec-snap-toy')
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 150)
+        }}
       >
         <span style={{ fontSize: 20, display: 'block', marginBottom: 2 }} aria-hidden="true">🧸</span>
         <b style={{ fontSize: 13.5, display: 'block', color: 'var(--c-text)' }}>Chụp đồ chơi</b>
@@ -900,14 +924,14 @@ export function SnapHomework() {
       <div className="btns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 8 }}>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13 }} onClick={() => fileRef.current.click()}>🖼 Chọn ảnh</button>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13 }} onClick={() => openSheet('typeProblem')}>⌨️ Gõ đề</button>
-        <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13, borderColor: 'var(--plum)', color: 'var(--plum-deep)', background: 'var(--plum-tint)' }} onClick={() => openSheet('typeProblem')}>🎙️ Đọc đề</button>
+        <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13, borderColor: 'var(--plum)', color: 'var(--plum-deep)', background: 'var(--plum-tint)' }} onClick={() => openSheet('typeProblem', { mode: 'voice', autoMic: true })}>🎙️ Đọc đề</button>
       </div>
       <button
         className="btn ghost"
         style={{ width: '100%', marginTop: 8, padding: '9px 10px', fontSize: 12.5 }}
         onClick={() => nativeCamRef.current && nativeCamRef.current.click()}
       >
-        📸 Chữ viết tay nhỏ? Chụp bằng camera của máy (nét hơn)
+        📸 Chữ nhỏ? Dùng camera của máy cho nét hơn
       </button>
       <input
         ref={fileRef}
@@ -1517,7 +1541,7 @@ export function Analyze() {
               🎒 {child?.grade || 'Lớp 3'}
             </span>
             <span className="btn-km-chip" style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 800 }}>
-              📐 Bài tập
+              📐 {S.problem?.dang_bai || S.problem?.type || 'Toán có lời văn'}
             </span>
           </div>
 
@@ -1575,6 +1599,11 @@ export function Analyze() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Dòng tóm tắt trước nút */}
+          <div style={{ textAlign: 'center', padding: '6px 12px 14px', color: 'var(--c-sub)', fontSize: 13, fontWeight: 600 }}>
+            🐾 Gấu sẽ hỏi {child?.name || 'con'} khoảng 3 bậc gợi mở
           </div>
 
           {/* Nút dính đáy */}
@@ -1854,8 +1883,8 @@ export function Explain() {
               Đã kiểm lại {mathInfo.verifiedCount} phép tính
             </span>
           </div>
-          <span style={{ fontSize: 11.5, color: 'var(--c-primary)', fontWeight: 800 }}>
-            {showMathList ? 'Đóng' : 'Xem'}
+          <span style={{ fontSize: 12, color: 'var(--c-primary)', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 8 }}>
+            {showMathList ? 'Đóng ▲' : 'Xem ›'}
           </span>
         </div>
       )}
@@ -4127,7 +4156,7 @@ const TOY_MAPPINGS = [
     gameIdea: 'Luyện đọc giờ đúng, giờ rưỡi và đối thoại mẫu câu tiếng Anh.',
   },
   {
-    n: 'Bài',
+    n: 'Bộ bài',
     e: '🃏',
     keys: ['bài', 'bai', 'card', 'flashcard', 'thẻ', 'the', 'tú lơ khơ'],
     desc: 'Bộ bài tây hoặc thẻ flashcard',
@@ -4376,7 +4405,7 @@ function SnapToyCameraSection() {
 
   return (
     <>
-      <Header title="Chơi gì với đồ trong nhà?" back="home" />
+      <Header title="Chơi gì với đồ trong nhà?" />
       <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden', marginTop: 12, marginBottom: 14, borderRadius: 20 }}>
         <div className="frame" />
         {/* Always keep video element in DOM so camera stream is not lost */}
@@ -6264,10 +6293,14 @@ export function Report() {
         {totalSessions === 0
           ? <b>tuần này chưa ghi nhận ca học nào.</b>
           : dadSessions === 0
-          ? <b>gợi ý: thử giao 1-2 ca cho bố để mẹ nghỉ ngơi nhé.</b>
+          ? <b>gợi ý: thử giao 1 ca cho bố để mẹ nghỉ ngơi nhé.</b>
           : momSessions === 0
-          ? <b>tuần này bố đảm nhiệm hết, cảm ơn bố nhiều!</b>
-          : <b>hai người cân sức rồi, giữ nếp nhé!</b>}
+          ? <b>gợi ý: thử giao 1 ca cho mẹ cùng kèm con nhé.</b>
+          : Math.abs(momPct - dadPct) <= 20
+          ? <b>hai người cân sức rồi, giữ nếp nhé!</b>
+          : momPct > dadPct
+          ? <b>gợi ý: thử giao thêm 1 ca cho bố để cân bằng nhé.</b>
+          : <b>gợi ý: thử giao thêm 1 ca cho mẹ để cân bằng nhé.</b>}
       </span>
     </div>
   )
@@ -6585,7 +6618,7 @@ export function Report() {
   return (
     <>
       <Header title={`Tuần này của ${child.name}`} />
-      <p className="sub">{totalSessions} ca · mẹ kèm {momSessions} ca, bố kèm {dadSessions} ca · {stickerHistory.length} mốc dữ liệu phẩm chất</p>
+      <p className="sub">{totalSessions} ca · mẹ kèm {momSessions} ca, bố kèm {dadSessions} ca · {stickerHistory.length} lần ghi nhận phẩm chất</p>
 
       {/* Dải tab dính trên Báo cáo (Prompt 23 Chặng 3.8 & Prompt 23D) */}
       <div
@@ -6775,24 +6808,26 @@ function BearMemorySection({ child, S, stats, patch, toast }) {
 
   return (
     <div className="card" style={{ padding: '16px', marginBottom: 12, border: '1.5px solid var(--c-line)' }} data-testid="card-bear-memory">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 22 }}>🧠 🐻</span>
-          <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Những gì Gấu nhớ về {child.name}</b>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+          <span style={{ fontSize: 20, flexShrink: 0 }}>🧠 🐻</span>
+          <b style={{ fontSize: 15, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            Những gì Gấu nhớ về {child.name}
+          </b>
         </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-          <span>{memoryEnabled ? 'Đang bật' : 'Tắt'}</span>
-          <input
-            type="checkbox"
-            checked={memoryEnabled}
-            onChange={(e) => {
-              const updated = S.children.map((c) => (c.id === child.id ? { ...c, bearMemory: e.target.checked } : c))
-              patch({ children: updated })
-              toast(e.target.checked ? `Đã bật ghi nhớ cho ${child.name}` : `Đã tắt ghi nhớ cho ${child.name}`)
-            }}
-            style={{ width: 18, height: 18, accentColor: 'var(--c-accent)' }}
-          />
-        </label>
+        <Switch
+          on={memoryEnabled}
+          onChange={(val) => {
+            const nextVal = typeof val === 'boolean' ? val : !memoryEnabled
+            const updated = S.children.map((c) => (c.id === child.id ? { ...c, bearMemory: nextVal } : c))
+            patch({ children: updated })
+            toast(nextVal ? `Đã bật ghi nhớ cho ${child.name}` : `Đã tắt ghi nhớ cho ${child.name}`)
+          }}
+          label={`Ghi nhớ về ${child.name}`}
+        />
+      </div>
+      <div style={{ fontSize: 12, color: memoryEnabled ? 'var(--c-accent-ink, #059669)' : 'var(--c-text-2, #64748B)', fontWeight: 600, marginBottom: 8 }}>
+        Trạng thái: {memoryEnabled ? 'Đang bật' : 'Đang tắt'}
       </div>
 
       <p className="xs" style={{ color: 'var(--c-text-2)', margin: '0 0 10px', lineHeight: 1.45 }}>
@@ -7054,7 +7089,7 @@ export function Profile() {
           <span className="ic" aria-hidden="true">🎨</span>
           <b>Giao diện cả nhà</b>
           <span className="sub">
-            Đang dùng: <b>{getTheme(S.theme || 'candy').name}</b> · 8 bộ phong cách đổi 1 chạm
+            Đang dùng: <b>{getTheme(S.theme || 'candy').name}</b> · 11 bộ phong cách đổi 1 chạm
           </span>
         </button>
 
@@ -7626,19 +7661,23 @@ export function CheckWork() {
         <>
           <Header title="AI đọc được thế này" back="home" rightAction={{ label: 'Chụp lại', onClick: () => setStep('capture') }} />
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                color: 'var(--c-accent, #F6A623)',
-                background: 'var(--c-surface-2, #F1F5F9)',
-                padding: '4px 10px',
-                borderRadius: 999,
-              }}
-            >
-              ✨ Đọc chữ viết tay · {lines.length} dòng
-            </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+            <div>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: 'var(--c-accent-ink, var(--c-accent, #F6A623))',
+                  background: 'var(--c-surface-2, #F1F5F9)',
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  display: 'inline-block',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                ✨ Đọc chữ viết tay · {lines.length} dòng
+              </span>
+            </div>
             <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Mẹ chạm để sửa chỗ AI đọc nhầm</span>
           </div>
 
@@ -8034,12 +8073,12 @@ export function CheckWork() {
               }}
               onClick={() => setExpandHint2(!expandHint2)}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <b style={{ fontSize: 13, color: 'var(--c-text)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <b style={{ fontSize: 13, color: 'var(--c-text)', flex: 1, minWidth: 0 }}>
                   💡 Gợi ý mức 2 (chỉ mở khi con vẫn chưa nhận ra)
                 </b>
-                <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-primary)' }}>
-                  {expandHint2 ? 'Thu gọn ▲' : 'Mở xem ▼'}
+                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--c-primary)', flexShrink: 0 }}>
+                  {expandHint2 ? '▴' : '▾'}
                 </span>
               </div>
               {expandHint2 && (

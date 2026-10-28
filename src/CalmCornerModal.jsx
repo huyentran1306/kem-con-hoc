@@ -85,6 +85,8 @@ export function CalmCornerModal({
       } else if (onLowerDifficulty) {
         onLowerDifficulty()
         onClose()
+      } else {
+        setView('not_understood_guide')
       }
     } else if (reason.id === 'distracted') {
       // Chọn 1 trong 12 trò vận động ngẫu nhiên
@@ -270,6 +272,32 @@ export function CalmCornerModal({
         {/* ========================================================
             VIEW 1: CHỌN LÝ DO (4 Ô CHÍNH + 2 HÀNG PHỤ)
             ======================================================== */}
+        {view === 'not_understood_guide' && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Gợi ý khi con chưa hiểu</h3>
+              <button className="round-btn" style={{ width: 32, height: 32, fontSize: 14 }} onClick={onClose} aria-label="Đóng">✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+              <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface-2, #F8FAFC)', border: '1px solid var(--c-line, #E2E8F0)', borderRadius: 14 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', marginBottom: 4 }}>🍎 Dùng đồ vật thực tế</div>
+                <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', lineHeight: 1.45 }}>
+                  Lấy kẹo, que tính hoặc cúc áo mô phỏng bài toán. Trẻ tiểu học tiếp thu nhanh nhất qua trực quan sinh động.
+                </div>
+              </div>
+              <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface-2, #F8FAFC)', border: '1px solid var(--c-line, #E2E8F0)', borderRadius: 14 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', marginBottom: 4 }}>🐾 Chia nhỏ thành từng câu hỏi</div>
+                <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', lineHeight: 1.45 }}>
+                  Hỏi dữ kiện ban đầu trước, sau đó hỏi đề bài yêu cầu tìm gì, tránh giảng giải một tràng dài.
+                </div>
+              </div>
+            </div>
+            <button type="button" className="btn solid" style={{ width: '100%', minHeight: 46 }} onClick={() => setView('reasons')}>
+              ← Quay lại
+            </button>
+          </div>
+        )}
+
         {view === 'reasons' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -284,7 +312,11 @@ export function CalmCornerModal({
               </button>
             </div>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--c-text-2)' }}>
-              Chọn một ô, app gợi ý việc làm ngay. Bài đang làm vẫn giữ ở <b>Bậc {currentStepIndex + 1}</b>.
+              {currentProblem ? (
+                <>Chọn một ô, app gợi ý việc làm ngay. Bài đang làm vẫn giữ ở <b>Bậc {currentStepIndex + 1}</b>.</>
+              ) : (
+                <>Chọn một lý do, app gợi ý cách đồng hành nhẹ nhàng cùng con.</>
+              )}
             </p>
 
             {/* 4 Ô CHÍNH */}
@@ -481,7 +513,7 @@ export function CalmCornerModal({
                 onClick={() => setIsHintFolded(!isHintFolded)}
               >
                 <span>💡 Gợi ý câu trả lời sai có chủ ý cho {parentName.toLowerCase()}</span>
-                <span>{isHintFolded ? '▼ Chạm để mở' : '▲ Gấp lại'}</span>
+                <span style={{ fontSize: 14, fontWeight: 800 }}>{isHintFolded ? '▾' : '▴'}</span>
               </div>
               {!isHintFolded && (
                 <div style={{ marginTop: 8, fontSize: 13, color: '#78350F', lineHeight: 1.4 }}>

@@ -90,8 +90,8 @@
 
 /* Lời chào ở trang chủ (Prompt 23H A14 & A16: đặt sang bên trái/dưới lời chào, không che ô chọn con) */
 .kb-greeter{position:relative;flex:0 0 auto}
-.kb-greeter .kb-say{position:absolute;top:4px;right:calc(100% + 8px);transform-origin:top right;width:max-content;max-width:200px;background:var(--c-surface, #fff) !important;color:var(--c-text, #3A2A33) !important;border:1px solid var(--c-line, #F4DDE7) !important;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10;opacity:1 !important}
-.kb-greeter .kb-say::after{content:"";position:absolute;right:-7px;top:14px;border:7px solid transparent;border-left-color:var(--c-surface, #fff);border-right:0}
+.kb-greeter .kb-say{position:absolute;bottom:calc(100% + 8px);top:auto;right:-6px;transform-origin:bottom right;width:max-content;max-width:220px;background:var(--c-surface, #fff) !important;color:var(--c-text, #3A2A33) !important;border:1px solid var(--c-line, #F4DDE7) !important;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10;opacity:1 !important}
+.kb-greeter .kb-say::after{content:"";position:absolute;right:22px;bottom:-7px;top:auto;border:7px solid transparent;border-top-color:var(--c-surface, #fff);border-bottom:0}
 
 /* Linh vật bật lên khi con làm đúng / bối rối */
 /* Linh vật bật lên (Prompt 23J: Đặt ở vùng trống ngay trên thanh nút đáy, không chồng lên thẻ Dành cho mẹ) */

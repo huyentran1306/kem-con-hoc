@@ -254,13 +254,15 @@ export function TopBarT4({ onBack, title, stepText, onOpenCalm }) {
 }
 
 /** THANH TIẾN ĐỘ 4 KHÚC CHO MÀN TẬP TRUNG */
-export function Progress4({ currentStep = 1, totalSteps = 4 }) {
+export function Progress4({ currentStep, totalSteps, current, total }) {
+  const cur = currentStep ?? ((current !== undefined) ? current + 1 : 1)
+  const tot = totalSteps ?? total ?? 4
   return (
-    <div className="fprog-4" aria-label={`Bước ${currentStep} trên ${totalSteps}`}>
-      {Array.from({ length: totalSteps }).map((_, i) => {
+    <div className="fprog-4" aria-label={`Bước ${cur} trên ${tot}`}>
+      {Array.from({ length: tot }).map((_, i) => {
         const stepNum = i + 1
-        const isDone = stepNum < currentStep
-        const isCur = stepNum === currentStep
+        const isDone = stepNum < cur
+        const isCur = stepNum === cur
         return <i key={i} className={isDone ? 'done' : isCur ? 'cur' : ''} />
       })}
     </div>

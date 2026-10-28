@@ -29,6 +29,7 @@ export const PRELOADED_TRIAL_LESSONS = [
     cac_bac: [
       {
         bac: 1,
+        ky_nang: 'doc_hieu_de',
         cau_hoi: 'Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt nào?',
         ly_do_cho_me: 'Giúp con nhận diện dữ kiện số lượng ban đầu của đàn vịt trước khi thực hiện thao tác bớt đi.',
         dap_an_cho_me: 'Xác định số lượng ban đầu là 15 con vịt.',
@@ -39,6 +40,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       },
       {
         bac: 2,
+        ky_nang: 'chon_phep_tinh',
         cau_hoi: 'Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con hả con?',
         ly_do_cho_me: 'Dẫn dắt con hiểu từ khoá "bán bớt" tương ứng với phép toán trừ trong thực tế.',
         dap_an_cho_me: 'Bán bớt tức là làm phép trừ, bớt đi 6 con.',
@@ -49,6 +51,7 @@ export const PRELOADED_TRIAL_LESSONS = [
       },
       {
         bac: 3,
+        ky_nang: 'tinh_toan',
         cau_hoi: 'Đếm lại số que tính còn lại trên bàn, hoặc viết phép tính để tìm số vịt còn lại nào!',
         ly_do_cho_me: 'Khích lệ con tự thực hiện phép tính và kết luận số lượng còn lại.',
         dap_an_cho_me: 'Phép tính: 15 - 6 = 9 (con vịt). Đáp số: 9 con vịt.',
@@ -491,9 +494,10 @@ export function trialLessonToProblem(lesson) {
     de_bai: lesson.de_bai,
     phuong_phap: lesson.phuong_phap,
     cac_bac: lesson.cac_bac,
-    steps: lesson.cac_bac.map((b) => ({
+    steps: lesson.cac_bac.map((b, idx) => ({
       q: b.cau_hoi,
       question: b.cau_hoi,
+      ky_nang: b.ky_nang || (idx === 0 ? 'doc_hieu_de' : idx === 1 ? 'chon_phep_tinh' : 'tinh_toan'),
       ly_do_cho_me: b.ly_do_cho_me || '',
       answerForParent: b.dap_an_cho_me,
       answer: b.dap_an_cho_me,
