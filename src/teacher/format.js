@@ -69,7 +69,7 @@ export function normalizeLesson(lessonData, meta = {}) {
   const base = typeof lessonData === 'object' ? lessonData : {}
   const rawSteps = Array.isArray(base.steps) ? base.steps : (Array.isArray(lessonData) ? lessonData : [])
 
-  const normalizedSteps = (rawSteps.length > 0 ? rawSteps : [
+  const normalizedStepsSrc = (rawSteps.length > 0 ? rawSteps : [
     {
       stepNumber: 1,
       questionForChild: 'Con hãy đọc kỹ đề bài nhé!',
@@ -77,7 +77,12 @@ export function normalizeLesson(lessonData, meta = {}) {
       hintLevel1: 'Nhìn vào các con số trong đề.',
       hintLevel2: 'Thử giải từng bước một con nhé.'
     }
-  ]).map((s, idx) => {
+  ])
+  // Prompt 31B2: bài cô giao đã lưu mà mọi bậc đều "tinh_toan" là dấu hiệu nhãn bị điền mặc định, không phải nhãn thật
+  const SKILL_IDS = new Set(['doc_hieu_de', 'chon_phep_tinh', 'tinh_toan', 'don_vi', 'viet_loi_giai', 'kiem_tra_lai', 'doc_hieu', 'tu_vung', 'chinh_ta', 'dat_cau', 'tu_vung_en', 'nghe', 'ngu_phap', 'phat_am'])
+  const rawSkills = normalizedStepsSrc.map((s) => s.ky_nang || s.skill || null)
+  const allDefaultCalc = normalizedStepsSrc.length >= 2 && rawSkills.every((k) => k === 'tinh_toan') && (base.category === 'teacher_assignment' || base.isTeacherAssigned)
+  const normalizedSteps = normalizedStepsSrc.map((s, idx) => {
     const qText = String(s.question || s.questionForChild || s.q || s.cau_hoi || s.title || '').trim()
     const validQ = qText || `Bậc ${idx + 1}: Con hãy đọc kỹ đề nhé!`
     const hintsList = Array.isArray(s.hints) ? s.hints.filter(Boolean) : [s.hintLevel1, s.hintLevel2, s.hint, s.hint2].filter(Boolean)
@@ -85,7 +90,9 @@ export function normalizeLesson(lessonData, meta = {}) {
     const hint2 = hintsList[1] || s.hintLevel2 || s.hint2 || 'Tìm các số và dữ kiện quan trọng.'
     const parentNote = s.guidanceForParent || s.why || s.vi_sao_hoi || s.ly_do_cho_me || ''
     const answer = s.answer || s.expected_answer || s.expectedAnswer || s.dap_an_cho_me || s.answerForParent || ''
-    const skill = s.ky_nang || s.skill || s.category || 'tinh_toan'
+    // Thiếu nhãn kỹ năng thì để trống (không hiện nhãn), không mặc định "Tính toán"
+    const rawSkill = s.ky_nang || s.skill || (SKILL_IDS.has(s.category) ? s.category : null)
+    const skill = allDefaultCalc ? null : (rawSkill || null)
 
     return {
       ...s,

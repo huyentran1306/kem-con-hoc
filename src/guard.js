@@ -373,7 +373,7 @@ function getFieldValues(obj, path) {
 
 export function checkAnswerLeak(promptId, data, context = {}) {
   // Đợt 18 · Chặng 0.4: Bộ chặn cho p3_explain / p3_explain_v2 sửa đúng bậc, bớt bắt nhầm
-  if (promptId === "p3_explain" || promptId === "p3_explain_v2") {
+  if (promptId === "p3_explain" || promptId === "p3_explain_v2" || promptId === "p3_explain_v3" || promptId === "p3_fix_steps_v3") {
     const problemText = String(context.problem_text || "");
     const allowedNumbers = new Set(extractNumbers(problemText));
     const problemLower = problemText.toLowerCase();
@@ -400,6 +400,10 @@ export function checkAnswerLeak(promptId, data, context = {}) {
     const leakReasons = [];
     const leaks = [];
 
+    // Prompt 31 (sửa gốc của 28 A3): kết quả trung gian của các bậc TRƯỚC được phép nhắc ở bậc sau
+    // (ví dụ bậc 4 "Có 30 quả, làm bánh hết 8 quả…" sau khi bậc 3 tính ra 30). Trước đây coi là lộ đáp án
+    // và thay cả câu bằng câu an toàn chung chung ("Để tìm kết quả bước này…") → câu hỏi nhạt hẳn.
+    const earlierResults = new Set();
     steps.forEach((step, idx) => {
       if (!step || typeof step !== "object") return;
       const stepNo = idx + 1;
@@ -407,10 +411,13 @@ export function checkAnswerLeak(promptId, data, context = {}) {
 
       const stepAnsText = step.dap_an_cho_me || step.answerForParent || "";
       const stepAnsNumbers = new Set(
-        extractNumbers(stepAnsText).filter((n) => !allowedNumbers.has(n))
+        extractNumbers(stepAnsText).filter((n) => !allowedNumbers.has(n) && !earlierResults.has(n))
       );
       // Chỉ coi là lộ đáp án khi cau_hoi hoặc goi_y chứa đáp số cuối HOẶC kết quả của chính bậc đó
       const forbiddenForStep = new Set([...finalAnsNumbers, ...stepAnsNumbers]);
+      // Đáp số cuối vẫn bị cấm, trừ khi nó đã là kết quả của một bậc trước
+      earlierResults.forEach((n) => forbiddenForStep.delete(n));
+      extractNumbers(stepAnsText).forEach((n) => { if (!finalAnsNumbers.has(n)) earlierResults.add(n); });
 
       const qText = step.cau_hoi || step.questionForChild || "";
       if (qText) {

@@ -356,6 +356,10 @@ export const TRIAL_LESSON_EXTRAS = {
     },
     giang_lai: {
       transcript: 'Đàn vịt có mười lăm con, bác Ba bán bớt sáu con nên con lấy mười lăm trừ sáu còn chín con vịt ạ.',
+      // Prompt 31A: vòng 1 thiếu ý "vì sao" để demo vòng 2
+      transcript_vong_1: 'Đàn vịt có mười lăm con, con lấy mười lăm trừ sáu còn chín con vịt ạ.',
+      cau_hoi_them: 'Vì sao bác Ba bán bớt thì con lại làm phép trừ?',
+      transcript_vong_2: 'Vì bác Ba bán bớt đi thì số vịt ít đi, nên con lấy mười lăm trừ sáu còn chín con vịt ạ.',
       tieu_chi: [
         { ma: 'du_kien', dat: true, trich: 'đàn vịt có mười lăm con' },
         { ma: 'phep_tinh', dat: true, trich: 'mười lăm trừ sáu' },

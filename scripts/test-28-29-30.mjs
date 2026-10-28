@@ -12,6 +12,7 @@ import { auditSteps } from '../src/stepQuality.js'
 import { buildLocalMicroStep, isServerMicroStepGeneric } from '../src/microStepLocal.js'
 import { announcementStatus, expiryFromPreset, hasDateWords } from '../src/teacher/announcementStatus.js'
 import { swapMe, xungHo, haiNguoi } from '../src/xungHo.js'
+import { validateAndGuard } from '../src/guard.js'
 
 let n = 0
 const t = (name, fn) => { fn(); n++; console.log('  ✓', name) }
@@ -82,6 +83,19 @@ t('A4: câu nhỏ hơn bám đúng bậc và số trong đề', () => {
   assert.match(m2.cau_hoi_nho, /6/)
   assert.ok(isServerMicroStepGeneric({ cau_hoi_nho: 'Na đọc lại số đứng ngay trước câu hỏi nhé?' }, trung))
   assert.ok(!isServerMicroStepGeneric({ cau_hoi_nho: 'Mỗi rổ có mấy quả trứng?' }, trung))
+})
+
+t('A3 (gốc, sửa ở 31): bộ chặn lộ đáp án không thay câu nhắc kết quả của bậc trước bằng câu chung', () => {
+  const data = { dap_an_cuoi_cho_me: '22 quả trứng', cac_bac: [
+    { cau_hoi: 'Có mấy rổ trứng, mỗi rổ mấy quả?', ky_nang: 'doc_hieu_de', dap_an_cho_me: '5 rổ, mỗi rổ 6 quả' },
+    { cau_hoi: '5 rổ, mỗi rổ 6 quả, muốn biết tất cả con làm phép gì?', ky_nang: 'chon_phep_tinh', dap_an_cho_me: 'Phép nhân 6 × 5 = 30' },
+    { cau_hoi: '6 nhân 5 bằng mấy quả trứng?', ky_nang: 'tinh_toan', dap_an_cho_me: '30 quả' },
+    { cau_hoi: 'Có 30 quả, làm bánh hết 8 quả thì con lấy số nào trừ số nào?', ky_nang: 'chon_phep_tinh', dap_an_cho_me: '30 − 8 = 22 quả' },
+  ] }
+  const r = validateAndGuard('p3_explain_v3', JSON.stringify(data), { problem_text: trung })
+  assert.equal(r.data.cac_bac[3].cau_hoi, data.cac_bac[3].cau_hoi, r.validator.detail)
+  const leak = JSON.parse(JSON.stringify(data)); leak.cac_bac[3].cau_hoi = '30 trừ 8 bằng 22 phải không con?'
+  assert.ok(validateAndGuard('p3_explain_v3', JSON.stringify(leak), { problem_text: trung }).guarded, 'vẫn phải chặn đáp số cuối')
 })
 
 console.log('Prompt 29 · Phần A (thông báo của cô)')
