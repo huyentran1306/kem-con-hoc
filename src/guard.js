@@ -323,8 +323,8 @@ export const DEFAULT_GUARD_FALLBACKS = {
   'cau_hoi_cho_con.muc_2': 'Con dùng que tính hoặc kẹo để kiểm tra lại nhé.',
   'loi_khen_cu_the': 'Dòng đầu tiên con trình bày rất cẩn thận.',
   'cau_hoi_them': 'Vì sao con lại làm phép tính này hả con?',
-  'loi_khen_cho_con': 'Con kể lại rất rõ ràng, mẹ rất vui!',
-  'default': 'Con thử tự suy nghĩ và giải thích cho mẹ nghe nhé?',
+  'loi_khen_cho_con': 'Con kể lại rất rõ ràng, bố mẹ rất vui!',
+  'default': 'Con thử tự suy nghĩ và giải thích lại nghe nhé?',
 };
 
 function getFieldValues(obj, path) {

@@ -145,7 +145,7 @@ export async function handleSafetySummary(request, env, corsHeaders) {
         { layer: 1, name: 'Prompt Sư phạm Socratic', status: 'active', desc: 'Không giải bài hộ, chia 3 bậc gợi ý' },
         { layer: 2, name: 'Bộ chặn rò rỉ đáp án (Guard Module)', status: 'active', desc: 'Kiểm tra số chữ/số nguyên, thay thế tự động nếu lộ' },
         { layer: 3, name: 'Máy tính độc lập & Khử ảo giác', status: 'active', desc: 'Shunting-yard parser & Anti-hallucination quote checker' },
-        { layer: 4, name: 'Quyền chốt của Phụ huynh', status: 'active', desc: 'Mẹ luôn là người duyệt & chốt mức hiểu bài cuối cùng' },
+        { layer: 4, name: 'Quyền chốt của Phụ huynh', status: 'active', desc: 'Bố mẹ luôn là người duyệt & chốt mức hiểu bài cuối cùng' },
       ],
     }, 200, corsHeaders);
   } catch (err) {

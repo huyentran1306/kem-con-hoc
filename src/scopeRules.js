@@ -97,7 +97,7 @@ export function formatScopeMessage(template, params = {}) {
     lop_doan: params.lop_doan || 'lớn hơn',
     lop_con: params.lop_con || 'hiện tại',
     ten_con: params.ten_con || 'bé',
-    xung_ho: params.xung_ho || 'Mẹ',
+    xung_ho: params.xung_ho || 'Bố mẹ',
   }
   Object.keys(vars).forEach((k) => {
     msg = msg.replace(new RegExp(`\\{${k}\\}`, 'g'), String(vars[k]))
@@ -123,7 +123,7 @@ export function evaluateTextScope(text, { childGrade, childName, parentRole, cus
 
   const raw = (text || '').trim()
   const lower = raw.toLowerCase()
-  const xungHo = parentRole || 'Mẹ'
+  const xungHo = parentRole || 'Bố mẹ'
   const lopConNum = parseGradeNum(childGrade) || 3
 
   // 1. Kiểm tra từ khoá bị chặn
@@ -304,7 +304,7 @@ export function parseOcrV2Result(rawResponse, opts = {}) {
 
 function parseOcrV2Core(rawResponse, { childGrade, childName, parentRole, customRules } = {}) {
   const rules = customRules || getActiveScopeRules()
-  const xungHo = parentRole || 'Mẹ'
+  const xungHo = parentRole || 'Bố mẹ'
   const lopConNum = parseGradeNum(childGrade) || 3
 
   let parsed = null
@@ -495,7 +495,7 @@ export async function checkTextScopeWithAi(text, { childGrade, childName, parent
         const rules = customRules || getActiveScopeRules()
         const cat = res.pham_vi
         const action = rules.actions[cat] || 'warn'
-        const xungHo = parentRole || 'Mẹ'
+        const xungHo = parentRole || 'Bố mẹ'
         return {
           passed: action !== 'block' && action !== 'retake',
           category: cat,

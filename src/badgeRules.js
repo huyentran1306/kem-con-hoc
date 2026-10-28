@@ -67,7 +67,10 @@ export function computeSuggestedBadge({
   childName = "Con",
   sessionData = {},
   recentBadges2Weeks = [],
+  ho = "bố mẹ",
 } = {}) {
+  // Prompt 28 A2: chỉ khen điều THẬT SỰ đã xảy ra trong buổi học.
+  // didBrotherProblem / playedMiniGame phải là "con đã mở và làm xong", không phải "bài có sẵn".
   const cName = childName || "Con";
   const matched = [];
 
@@ -108,9 +111,9 @@ export function computeSuggestedBadge({
   if (sessionData.teachBackOwnWay) {
     creativityReason = `${cName} giảng lại bài bằng cách giải độc đáo của riêng mình.`;
   } else if (sessionData.didBrotherProblem) {
-    creativityReason = `${cName} tự tin giải thêm bài anh em thích ứng.`;
+    creativityReason = `${cName} làm xong thêm bài anh em.`;
   } else if (sessionData.playedMiniGame) {
-    creativityReason = `${cName} cùng mẹ chơi trò chơi tương tác 5 phút vui vẻ.`;
+    creativityReason = `${cName} cùng ${ho} chơi trò chơi 5 phút.`;
   } else if (sessionData.aiRecognizedAlternativeWay) {
     creativityReason = `${cName} nêu một cách giải khác rất thông minh và đúng.`;
   } else if (sessionData.creativityAchieved) {
@@ -128,11 +131,12 @@ export function computeSuggestedBadge({
   const maxInact = typeof sessionData.maxInactivityMinutes === "number" ? sessionData.maxInactivityMinutes : 0;
   const seamless = sessionData.stepsSeamless !== false;
 
+  // Chỉ xét khi có thời lượng đo thật (duration là số); không có dữ liệu thì không khen Tập trung
   if (
     (duration !== null && duration > 0 && duration <= 20 && maxInact <= 2 && seamless) ||
     sessionData.focusAchieved
   ) {
-    const mins = Math.max(1, Math.round(duration || 15));
+    const mins = Math.max(1, Math.round(duration || 1));
     focusReason = sessionData.focusReason || `${cName} xong cả bài tập trung chỉ trong ${mins} phút, liền mạch.`;
     matched.push({ trait: "Tập trung", reason: focusReason });
   }

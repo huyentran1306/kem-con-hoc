@@ -15,6 +15,7 @@
  */
 
 import { checkAnswerLeak } from './guard.js';
+import { getCurrentXungHo } from './xungHo.js'
 
 function jsonResponse(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -90,7 +91,7 @@ export function validateTeachBackResult(aiResult, transcript, options = {}) {
       ],
       muc_de_xuat: 'guided',
       cau_hoi_them: 'Con có thể kể lại từng bước con đã làm được không?',
-      loi_khen_cho_con: 'Con đã rất cố gắng giải thích cho mẹ nghe!',
+      loi_khen_cho_con: `Con đã rất cố gắng giải thích cho ${getCurrentXungHo()} nghe!`,
       hallucination_detected: false,
     };
   }
@@ -148,7 +149,7 @@ export function validateTeachBackResult(aiResult, transcript, options = {}) {
     tieu_chi: sanitizedCriteria,
     muc_de_xuat: computedLevel,
     cau_hoi_them: cauHoiThem,
-    loi_khen_cho_con: aiResult.loi_khen_cho_con || 'Con đã rất tự tin kể lại cách làm cho mẹ!',
+    loi_khen_cho_con: aiResult.loi_khen_cho_con || `Con đã rất tự tin kể lại cách làm cho ${getCurrentXungHo()}!`,
     hallucination_detected: hallucinationDetected,
   };
 }
@@ -232,7 +233,7 @@ export async function handleTeachBackGrade(request, env, corsHeaders) {
       return jsonResponse({ error: 'Thiếu transcript giọng nói của con' }, 400, corsHeaders);
     }
 
-    const systemPrompt = `Bạn là trợ lý sư phạm toán tiểu học lắng nghe bé ${tenCon} học ${lop} giảng lại bài toán cho mẹ nghe.
+    const systemPrompt = `Bạn là trợ lý sư phạm toán tiểu học lắng nghe bé ${tenCon} học ${lop} giảng lại bài toán cho ${getCurrentXungHo()} nghe.
 Đề bài:
 """${problemText}"""
 
@@ -255,7 +256,7 @@ NHIỆM VỤ:
    - "self": Đạt cả 4 tiêu chí.
    - "hint": Đạt 2 hoặc 3 tiêu chí.
    - "guided": Đạt 0 hoặc 1 tiêu chí.
-3. Nếu bé chưa nói được "vi_sao" và round = 1, đưa ra "cau_hoi_them" để mẹ hỏi tiếp (không lộ đáp án).
+3. Nếu bé chưa nói được "vi_sao" và round = 1, đưa ra "cau_hoi_them" để ${getCurrentXungHo()} hỏi tiếp (không lộ đáp án).
 4. Lời khen ngợi động viên con bằng chính chi tiết con vừa kể ("loi_khen_cho_con").
 
 Trả về DUY NHẤT một JSON hợp lệ:

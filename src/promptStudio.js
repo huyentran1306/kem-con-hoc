@@ -1,3 +1,4 @@
+import { getCurrentXungHo } from './xungHo.js'
 /* ============================================================
    📝 PROMPT STUDIO CONFIG & TEMPLATE ENGINE
    Hệ thống quản lý 8 Prompts linh hoạt, hỗ trợ điền biến {{...}}
@@ -228,8 +229,9 @@ CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
 
   p3_explain_v3: {
     id: 'p3_explain_v3',
-    name: '3 (v3 Bản gọn). Soạn bài phần cần ngay (Prompt 23V)',
-    desc: 'Soạn nhanh các bậc câu hỏi, gợi ý và đáp án cho mẹ (JSON 1 dòng, không thụt lề, phản hồi dưới 10 giây)',
+    rev: 28,
+    name: '3 (v3 Bản gọn). Soạn bài phần cần ngay (Prompt 23V, sửa 28)',
+    desc: 'Soạn nhanh các bậc câu hỏi bám từng bước của chính đề (dữ kiện → chọn phép tính → kết quả trung gian → kết quả cuối). JSON 1 dòng.',
     variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}', '{{ho_so_con}}'],
     requiredVars: ['{{de_bai}}'],
     template: `Bạn là trợ lý sư phạm tiểu học hướng dẫn PHỤ HUYNH dẫn con TỰ tìm ra đáp án bằng câu hỏi gợi mở Socratic.
@@ -239,22 +241,48 @@ THÔNG TIN:
 - Dạng bài: {{dang_bai}}. Lỗi hay gặp: {{loi_hay_gap}}.
 - Đề bài: """{{de_bai}}"""
 - Hồ sơ con: {{ho_so_con}}
+- Người đang kèm con: {{xung_ho}} (khi câu chữ nhắc tới người kèm thì gọi là "{{xung_ho}}").
 {{khung_ghi_chu}}
 PHƯƠNG PHÁP: {{doan_phuong_phap}}
 
-QUY TẮC BẮT BUỘC (RÚT GỌN ĐỂ MỞ BÀI DƯỚI 8 GIÂY):
-1. BẮT BUỘC soạn từ 3 đến 4 bậc trong mảng "cac_bac" (không được dưới 3 bậc): câu hỏi mỗi bậc ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ. TUYỆT ĐỐI không lộ đáp số cuối trong cau_hoi hoặc goi_y.
-2. Đáp án từng bậc chỉ để trong "dap_an_cho_me".
-3. Mỗi bậc có 2 gợi ý ngắn: "muc_1_do_vat" (đồ vật thật/ngữ cảnh), "muc_2_hinh_ve" (hình vẽ/sơ đồ/viết nháp).
-4. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
-5. Nếu đề thiếu dữ kiện: trả "can_hoi_lai" nêu lý do.
-6. ĐẦU RA BẮT BUỘC LÀ JSON VIẾT LIỀN 1 DÒNG, KHÔNG XUỐNG DÒNG, KHÔNG THỤT LỀ, CÓ ĐỦ 3 ĐẾN 4 BẬC:
-{"dang_bai":"Toán phép tính","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Đề bài cho biết số nào con?","ky_nang":"doc_hieu_de","dap_an_cho_me":"15 kẹo, 3 bạn","goi_y":{"muc_1_do_vat":"Đếm que tính","muc_2_hinh_ve":"Vẽ 3 nhóm"}},{"cau_hoi":"Muốn chia đều con dùng phép tính gì?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"Phép chia 15 : 3","goi_y":{"muc_1_do_vat":"Chia que vào 3 ô","muc_2_hinh_ve":"Viết 15 : 3"}},{"cau_hoi":"Kết quả 15 chia 3 bằng mấy nào?","ky_nang":"tinh_toan","dap_an_cho_me":"5 chiếc kẹo","goi_y":{"muc_1_do_vat":"Đếm 1 phần que","muc_2_hinh_ve":"Nhẩm bảng chia 3"}}],"dap_an_cuoi_cho_me":"5 chiếc kẹo"}
-CHỈ TRẢ VỀ DUY NHẤT CHUỖI JSON MỘT DÒNG ĐÓ.`,
+QUY TẮC BẮT BUỘC:
+1. MỖI BẬC LÀ MỘT BƯỚC NHỎ CỤ THỂ CỦA CHÍNH ĐỀ NÀY, nhắc đúng số và sự vật trong đề. Thứ tự: dữ kiện → chọn phép tính → tính kết quả trung gian → kết quả cuối.
+2. SỐ BẬC: bài 1 phép tính soạn 3 bậc; bài 2 phép tính soạn ĐỦ 4 bậc (mỗi phép tính có bậc chọn phép tính và bậc tính riêng); bài 3 phép tính soạn 5 bậc. Tiếng Việt, Tiếng Anh: 3 bậc bám đúng câu, từ trong đề.
+3. CẤM câu chung chung dùng được cho mọi đề, ví dụ: "Đề bài cho biết gì và hỏi gì?", "Con đọc lại đề nhé", "Con thử nghĩ xem nào".
+4. Bậc cuối KHÔNG được lặp lại nguyên câu hỏi của đề; phải hỏi phép tính cuối cụ thể (số nào làm phép gì với số nào).
+5. Câu hỏi mỗi bậc ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ. Không lộ đáp số cuối trong cau_hoi hoặc goi_y; đáp án từng bậc chỉ để trong "dap_an_cho_me".
+6. Mỗi bậc có 2 gợi ý ngắn: "muc_1_do_vat" (đồ vật thật), "muc_2_hinh_ve" (hình vẽ, sơ đồ, viết nháp).
+7. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
+8. Đề thiếu dữ kiện: trả "can_hoi_lai" nêu lý do.
+VÍ DỤ MẪU (bài 2 phép tính, đủ 4 bậc tốt). Đề: "Mẹ có 4 hộp bút, mỗi hộp 6 cây. Mẹ cho bạn 5 cây. Hỏi mẹ còn bao nhiêu cây bút?"
+{"dang_bai":"Toán có lời văn 2 bước","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Có mấy hộp bút, mỗi hộp mấy cây?","ky_nang":"doc_hieu_de","dap_an_cho_me":"4 hộp, mỗi hộp 6 cây","goi_y":{"muc_1_do_vat":"Xếp 4 nhóm que tính","muc_2_hinh_ve":"Vẽ 4 hộp"}},{"cau_hoi":"4 hộp, mỗi hộp 6 cây, muốn biết tất cả con làm phép gì?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"Phép nhân 6 × 4","goi_y":{"muc_1_do_vat":"Gộp 4 nhóm que","muc_2_hinh_ve":"Viết 6 + 6 + 6 + 6"}},{"cau_hoi":"6 nhân 4 bằng mấy cây bút?","ky_nang":"tinh_toan","dap_an_cho_me":"24 cây bút","goi_y":{"muc_1_do_vat":"Đếm cả 4 nhóm","muc_2_hinh_ve":"Nhẩm bảng nhân 6"}},{"cau_hoi":"Có 24 cây, cho bạn 5 cây thì con lấy số nào trừ số nào?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"24 − 5 = 19 cây","goi_y":{"muc_1_do_vat":"Cất bớt 5 que","muc_2_hinh_ve":"Gạch 5 vạch"}}],"dap_an_cuoi_cho_me":"19 cây bút"}
+ĐẦU RA: JSON viết liền 1 dòng, không xuống dòng, không thụt lề, đúng cấu trúc ví dụ trên. CHỈ TRẢ VỀ CHUỖI JSON ĐÓ.`,
+  },
+
+  p3_fix_steps_v3: {
+    id: 'p3_fix_steps_v3',
+    rev: 28,
+    name: '3d (v3 Sửa đúng chỗ). Soạn lại riêng các bậc chung chung (Prompt 28)',
+    desc: 'Chỉ gọi khi máy kiểm thấy bậc chung chung, bậc lặp câu hỏi của đề, hoặc bài 2 bước thiếu bậc. Giữ nguyên các bậc tốt.',
+    variables: ['{{de_bai}}', '{{cac_bac_hien_tai}}', '{{loi_can_sua}}', '{{so_bac}}'],
+    requiredVars: ['{{de_bai}}', '{{cac_bac_hien_tai}}'],
+    template: `Bạn là trợ lý sư phạm tiểu học. Bộ câu hỏi dẫn dắt dưới đây có bậc chưa đạt. Hãy sửa ĐÚNG CHỖ.
+
+ĐỀ BÀI: """{{de_bai}}"""
+CÁC BẬC HIỆN TẠI (JSON): {{cac_bac_hien_tai}}
+LỖI CẦN SỬA: {{loi_can_sua}}
+
+QUY TẮC:
+1. Giữ nguyên các bậc không bị nêu lỗi. Chỉ viết lại các bậc bị lỗi, hoặc chèn thêm bậc còn thiếu cho đủ {{so_bac}} bậc.
+2. Mỗi bậc là một bước nhỏ cụ thể của chính đề này, nhắc đúng số và sự vật trong đề, theo thứ tự: dữ kiện → chọn phép tính → tính kết quả trung gian → kết quả cuối.
+3. Cấm câu chung chung kiểu "Đề bài cho biết gì, hỏi gì?". Bậc cuối không được lặp lại câu hỏi của đề.
+4. Câu hỏi ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ, không lộ đáp số cuối trong cau_hoi hoặc goi_y.
+ĐẦU RA: JSON 1 dòng {"cac_bac":[{"cau_hoi":"...","ky_nang":"...","dap_an_cho_me":"...","goi_y":{"muc_1_do_vat":"...","muc_2_hinh_ve":"..."}}]} gồm TOÀN BỘ các bậc theo thứ tự. CHỈ TRẢ VỀ CHUỖI JSON ĐÓ.`,
   },
 
   p3_extra_v3: {
     id: 'p3_extra_v3',
+    rev: 29,
     name: '3c (v3 Phần viết sau). Bổ sung lý do, bài anh em & trò chơi (Prompt 23V)',
     desc: 'Chạy ngầm sau lần A: viết lý do cho mẹ, lời khen từng bậc, giải thích, bài anh em, trò chơi 5 phút, con dạy lại mẹ',
     variables: ['{{de_bai}}', '{{cac_cau_hoi}}'],
@@ -264,6 +292,7 @@ CHỈ TRẢ VỀ DUY NHẤT CHUỖI JSON MỘT DÒNG ĐÓ.`,
 ĐỀ BÀI: """{{de_bai}}"""
 CÁC BẬC CÂU HỎI ĐÃ SOẠN:
 {{cac_cau_hoi}}
+NGƯỜI ĐANG KÈM CON: {{xung_ho}}. Trong lời khen, "con_day_lai_me" và mọi câu nhắc tới người kèm, gọi đúng là "{{xung_ho}}" (không tự gọi là mẹ nếu người kèm không phải mẹ).
 
 QUY TẮC BẮT BUỘC:
 1. Viết "ly_do_cho_me" (< 30 từ, nêu mục tiêu sư phạm vì sao hỏi câu này, TUYỆT ĐỐI không chứa đáp số của đề) và "loi_khen" (< 15 từ, khen nỗ lực) cho từng bậc theo đúng thứ tự.
@@ -595,13 +624,30 @@ CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
 let cachedPrompts = null
 
 /* Lấy toàn bộ prompt đang áp dụng (Local Storage + Fallback Default) */
+/*
+ * Prompt 28: prompt mặc định có trường `rev`. Bản lưu trong máy (localStorage) hoặc bản đồng bộ từ máy chủ
+ * có rev nhỏ hơn (hoặc không có rev) sẽ bị thay bằng bản mặc định mới, để bản sửa trong code thật sự có hiệu lực.
+ * Quản trị viên muốn ghi đè thì lưu bản mới kèm rev >= rev mặc định.
+ */
+function applyDefaultRevisions(prompts) {
+  const out = { ...prompts }
+  for (const [k, def] of Object.entries(DEFAULT_PROMPTS)) {
+    if (!def || typeof def.rev !== 'number') continue
+    const cur = out[k]
+    if (!cur || typeof cur !== 'object' || !(Number(cur.rev) >= def.rev)) {
+      out[k] = { ...def }
+    }
+  }
+  return out
+}
+
 export function getActivePrompts() {
   if (cachedPrompts) return cachedPrompts
   try {
     const raw = localStorage.getItem(PROMPT_STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      cachedPrompts = { ...DEFAULT_PROMPTS, ...parsed }
+      cachedPrompts = applyDefaultRevisions({ ...DEFAULT_PROMPTS, ...parsed })
       return cachedPrompts
     }
   } catch (e) {}
@@ -621,7 +667,7 @@ export function setActivePrompts(newPrompts) {
       }
     }
   }
-  cachedPrompts = merged
+  cachedPrompts = applyDefaultRevisions(merged)
   try {
     localStorage.setItem(PROMPT_STORAGE_KEY, JSON.stringify(cachedPrompts))
   } catch (e) {}
@@ -923,6 +969,8 @@ export function renderPrompt(promptId, params = {}) {
     thong_ke_tuan_truoc: params.thong_ke_tuan_truoc || '',
     mon_hoc_va_vuong_mac: params.mon_hoc_va_vuong_mac || '',
     so_ca_hoc: params.so_ca_hoc || '',
+    // Prompt 29B: người đang kèm con (bố / mẹ / ông bà)
+    xung_ho: params.xung_ho || getCurrentXungHo(),
   }
 
   // Thay thế tất cả {{key}}
