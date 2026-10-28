@@ -121,25 +121,43 @@ export function JoinFamilyView({ inviteCode, onJoined, onCancel, toast, boom }) 
             <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
               Nhập mã mời 6 ký tự:
             </label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
               <input
-                className="field"
+                className="field field-code"
                 placeholder="Ví dụ: X5N9AP"
                 value={code}
                 maxLength={8}
                 onChange={(e) => setCode(e.target.value.toUpperCase().trim())}
                 style={{
-                  fontFamily: 'monospace',
-                  fontSize: 18,
-                  fontWeight: 800,
-                  letterSpacing: 3,
+                  flex: 1,
+                  fontFamily: code ? 'monospace' : 'inherit',
+                  fontSize: code ? 18 : 14.5,
+                  fontWeight: code ? 800 : 400,
+                  letterSpacing: code ? 3 : 0,
                   textAlign: 'center',
                   textTransform: 'uppercase',
+                  height: 48,
+                  boxSizing: 'border-box',
                 }}
               />
               <button
+                type="button"
                 className="btn solid grow0"
-                style={{ width: 'auto', padding: '0 16px' }}
+                style={{
+                  width: 'auto',
+                  minWidth: 110,
+                  whiteSpace: 'nowrap',
+                  padding: '0 16px',
+                  height: 48,
+                  minHeight: 48,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxSizing: 'border-box',
+                }}
                 disabled={loading || code.length < 4}
                 onClick={() => fetchInvite(code)}
               >

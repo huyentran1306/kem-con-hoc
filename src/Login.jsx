@@ -77,12 +77,11 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
             </div>
           )}
 
-          <div style={{ textAlign: 'center', marginBottom: 8 }}>
+          <div style={{ textAlign: 'center', marginBottom: 12 }}>
             <div style={{ fontSize: 56, lineHeight: 1.2 }}>{activeTheme.icon}</div>
-            <p className="eyebrow" style={{ marginTop: 8, color: "var(--c-accent-ink, var(--c-text))" }}>{activeTheme.name} · Bạn đồng hành dịu dàng</p>
-            <p className="title" style={{ fontSize: 30 }}>Kèm Con Học</p>
-            <p className="sub" style={{ maxWidth: 300, margin: '8px auto 0' }}>
-              AI không giải bài cho con · chỉ cho bố mẹ cách giảng.
+            <h1 className="title" style={{ fontSize: 32, margin: '10px 0 0 0', fontWeight: 800 }}>Kèm Con Học</h1>
+            <p className="sub" style={{ maxWidth: 320, margin: '8px auto 0', textWrap: 'balance', fontSize: 14, lineHeight: 1.5 }}>
+              AI không giải bài cho con, chỉ cho bố mẹ cách giảng.
             </p>
           </div>
 
@@ -106,7 +105,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span className="lbl plum">Tên gia đình</span>
-                <span className="sub" style={{ fontSize: 12 }}>{name.length}/30</span>
+                {mode === 'register' && <span className="sub" style={{ fontSize: 12 }}>{name.length}/30</span>}
               </div>
               <input
                 className="field"
@@ -125,7 +124,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
                   className="field"
                   style={{ marginTop: 6, paddingRight: 44 }}
                   type={showPass ? 'text' : 'password'}
-                  placeholder={mode === 'register' ? 'Tối thiểu 4 ký tự' : '••••••'}
+                  placeholder={mode === 'register' ? 'Tối thiểu 4 ký tự' : 'Nhập mật khẩu'}
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submit()}
@@ -176,40 +175,81 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
               <button
                 type="button"
                 className="btn-km btn-km-l btn-km-primary"
-                style={{ width: '100%' }}
+                style={{ width: '100%', justifyContent: 'center', textAlign: 'center' }}
                 disabled={busy}
                 onClick={submit}
               >
                 {busy ? 'Đang xử lý…' : mode === 'login' ? 'Vào app' : 'Tạo gia đình & vào app'}
               </button>
 
-              {/* Nút Phụ ngay dưới nút Vào app (Prompt 23 P3) */}
-              <button
-                type="button"
-                className="btn-km btn-km-m btn-km-secondary"
-                style={{ width: '100%' }}
-                onClick={() => onAuthed(TRIAL_SESSION)}
-              >
-                ✨ Dùng thử không cần tài khoản
-              </button>
-            </div>
+              {/* 23Z: Dòng đồng bộ chỉ giữ ở Tạo gia đình mới, đặt dưới nút chính */}
+              {mode === 'register' && (
+                <p className="notice" style={{ margin: '6px 0 2px', fontSize: 12, color: 'var(--c-text-2, #64748B)', textAlign: 'center' }}>
+                  Dữ liệu được đồng bộ để mọi máy trong nhà cùng xem · mỗi gia đình tài khoản riêng ☁️
+                </p>
+              )}
 
-            <p className="notice" style={{ marginTop: 10 }}>
-              Dữ liệu được đồng bộ để mọi máy trong nhà cùng xem · mỗi gia đình tài khoản riêng ☁️
-            </p>
+              {/* 23Z: Dòng "hoặc" mảnh */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '10px 0 6px' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--c-line, #E2E8F0)' }} />
+                <span style={{ fontSize: 12, color: 'var(--c-text-2, #94A3B8)', fontWeight: 500 }}>hoặc</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--c-line, #E2E8F0)' }} />
+              </div>
 
-            {onOpenJoin && (
-              <div style={{ marginTop: 8, textAlign: 'center' }}>
+              {/* 23Z: 2 nút phụ cùng 1 hàng, cùng kiểu viền nhẹ, không tô màu */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <button
                   type="button"
-                  className="btn ghost"
-                  style={{ fontSize: 13, color: 'var(--c-primary, #4F46E5)', fontWeight: 700 }}
-                  onClick={onOpenJoin}
+                  className="btn ghost btn-km btn-km-m"
+                  style={{
+                    flex: '1 1 0',
+                    minWidth: 0,
+                    height: 44,
+                    minHeight: 44,
+                    padding: '0 8px',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    border: '1.5px solid var(--c-line, #CBD5E1)',
+                    background: 'transparent',
+                    color: 'var(--c-text, #334155)',
+                    borderRadius: 14,
+                    whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onClick={() => onAuthed(TRIAL_SESSION)}
                 >
-                  💌 Bạn có mã mời tham gia gia đình?
+                  ✨ Dùng thử
                 </button>
+                {onOpenJoin && (
+                  <button
+                    type="button"
+                    className="btn ghost btn-km btn-km-m"
+                    style={{
+                      flex: '1 1 0',
+                      minWidth: 0,
+                      height: 44,
+                      minHeight: 44,
+                      padding: '0 8px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      border: '1.5px solid var(--c-line, #CBD5E1)',
+                      background: 'transparent',
+                      color: 'var(--c-text, #334155)',
+                      borderRadius: 14,
+                      whiteSpace: 'nowrap',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    onClick={onOpenJoin}
+                  >
+                    💌 Có mã mời
+                  </button>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
   )

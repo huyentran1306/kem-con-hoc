@@ -1,24 +1,63 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFFDF9"/>
-      <stop offset="50%" stop-color="#FFF1F2"/>
-      <stop offset="100%" stop-color="#FCE7F3"/>
+    <!-- Nền mật ong chuyển màu ấm áp -->
+    <linearGradient id="honeyBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFEBB8"/>
+      <stop offset="45%" stop-color="#FFD478"/>
+      <stop offset="100%" stop-color="#F6A623"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#BE185D" flood-opacity="0.15"/>
+    <!-- Đổ bóng nhẹ cho mặt gấu -->
+    <filter id="bearShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#78350F" flood-opacity="0.2"/>
     </filter>
   </defs>
-  <!-- Background App Tile -->
-  <rect width="512" height="512" rx="128" fill="url(#bg)"/>
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="#F43F5E" stroke-width="6" stroke-opacity="0.12"/>
-  
-  <!-- Flower Emblem -->
-  <g transform="translate(256, 230)" filter="url(#shadow)">
-    <text text-anchor="middle" dominant-baseline="central" font-size="220" font-family="Apple Color Emoji, Segoe UI Emoji, sans-serif">🌸</text>
+
+  <!-- Nền gạch icon bo góc chuẩn iOS/Android -->
+  <rect width="512" height="512" rx="116" fill="url(#honeyBg)"/>
+  <rect x="8" y="8" width="496" height="496" rx="108" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-opacity="0.4"/>
+
+  <!-- Nhóm Bạn Gấu -->
+  <g transform="translate(0, -10)" filter="url(#bearShadow)">
+    <!-- Tai trái -->
+    <circle cx="150" cy="145" r="75" fill="#E2871A"/>
+    <circle cx="150" cy="145" r="44" fill="#FEF3C7"/>
+
+    <!-- Tai phải -->
+    <circle cx="362" cy="145" r="75" fill="#E2871A"/>
+    <circle cx="362" cy="145" r="44" fill="#FEF3C7"/>
+
+    <!-- Khuôn mặt gấu -->
+    <circle cx="256" cy="265" r="155" fill="#D97706"/>
+
+    <!-- Mõm gấu -->
+    <ellipse cx="256" cy="305" rx="76" ry="58" fill="#FEF3C7"/>
+
+    <!-- Mũi gấu -->
+    <ellipse cx="256" cy="278" rx="28" ry="19" fill="#5A280B"/>
+    <ellipse cx="250" cy="274" rx="7" ry="4" fill="#FFFFFF" opacity="0.6"/>
+
+    <!-- Miệng gấu cười -->
+    <path d="M256 297 L256 312" stroke="#5A280B" stroke-width="6" stroke-linecap="round"/>
+    <path d="M236 312 Q256 328 276 312" fill="none" stroke="#5A280B" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Mắt trái có đốm sáng lấp lánh -->
+    <circle cx="198" cy="235" r="18" fill="#451A03"/>
+    <circle cx="193" cy="229" r="6" fill="#FFFFFF"/>
+    <circle cx="204" cy="241" r="3" fill="#FFFFFF"/>
+
+    <!-- Mắt phải có đốm sáng lấp lánh -->
+    <circle cx="314" cy="235" r="18" fill="#451A03"/>
+    <circle cx="309" cy="229" r="6" fill="#FFFFFF"/>
+    <circle cx="320" cy="241" r="3" fill="#FFFFFF"/>
+
+    <!-- Đôi má ửng hồng phấn tròn trịa -->
+    <circle cx="154" cy="290" r="22" fill="#FB7185" opacity="0.85"/>
+    <circle cx="358" cy="290" r="22" fill="#FB7185" opacity="0.85"/>
   </g>
-  
-  <!-- App Title Pill -->
-  <rect x="96" y="380" width="320" height="68" rx="34" fill="#BE185D"/>
-  <text x="256" y="423" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="28" letter-spacing="1">KÈM CON HỌC</text>
+
+  <!-- Thanh chữ KÈM CON HỌC bo tròn nổi bật -->
+  <g transform="translate(0, 15)">
+    <rect x="106" y="385" width="300" height="60" rx="30" fill="#4B3621" opacity="0.95"/>
+    <text x="256" y="424" text-anchor="middle" fill="#FFFFFF" font-family="'Baloo 2', -apple-system, sans-serif" font-weight="800" font-size="26" letter-spacing="1">KÈM CON HỌC</text>
+  </g>
 </svg>

@@ -355,8 +355,8 @@ export function ThemePickerSheet({ onClose }) {
         </div>
       </div>
 
-      {/* Nút hành động: 2 nút cùng cao 48px kiểu Phẳng mềm, chữ một dòng (Prompt 23H A15) */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+      {/* 23Z: Nút hành động dính đáy, 2 nút chia đôi 50/50, không sinh thanh cuộn ngang */}
+      <div className="sheet-actions-bar">
         <button
           type="button"
           className="btn ghost btn-km btn-km-m btn-km-secondary"
@@ -364,11 +364,10 @@ export function ThemePickerSheet({ onClose }) {
           style={{
             height: 48,
             minHeight: 48,
-            padding: '0 14px',
+            padding: '0 8px',
             fontSize: 13.5,
             fontWeight: 700,
             whiteSpace: 'nowrap',
-            flexShrink: 0,
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -383,8 +382,7 @@ export function ThemePickerSheet({ onClose }) {
           style={{
             height: 48,
             minHeight: 48,
-            flex: 1,
-            padding: '0 12px',
+            padding: '0 8px',
             fontSize: 13.5,
             fontWeight: 800,
             whiteSpace: 'nowrap',
