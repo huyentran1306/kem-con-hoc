@@ -31,7 +31,7 @@ function walk(dir, out = []) {
   return out
 }
 const srcFiles = walk(path.join(root, 'src')).map((p) => ({ rel: path.relative(root, p), code: fs.readFileSync(p, 'utf-8') }))
-const SHELL_FILES = ['src/Admin.jsx', 'src/adminApi.js', 'src/AdminLockScreen.jsx', 'src/admin/ShellRoutes.jsx', 'src/admin/ShellSidebar.jsx', 'src/admin/ShellHeader.jsx', 'src/admin/ShellLogin.jsx']
+const SHELL_FILES = ['src/Admin.jsx', 'src/adminApi.js', 'src/AdminLockScreen.jsx', 'src/admin/ShellRoutes.jsx', 'src/admin/ShellSidebar.jsx', 'src/admin/ShellHeader.jsx', 'src/admin/ShellLogin.jsx', 'src/admin/SectionTabs.jsx', 'src/admin/navIcons.jsx']
 
 console.log('\n--- 1. Cờ cũ kem-con-hoc:admin-auth không còn được đọc ---')
 const OLD_KEY = 'kem-con-hoc:admin-auth'
@@ -69,7 +69,50 @@ ok(/ADMIN_ROUTE_TABLE\[path\] \|\| 'overview'/.test(routes), 'Slug lạ thì v�
 ok(adminJsx.includes('history.pushState') && adminJsx.includes("addEventListener('popstate'"), 'Điều hướng bằng pushState và nghe popstate (nút quay lại hoạt động)')
 ok(/team-prompts[^\n]*devOnly: true/.test(routes) && routes.includes("import.meta.env.VITE_DEV_TOOLS === '1'"), 'Team Prompts Sync chỉ hiện khi VITE_DEV_TOOLS=1')
 ok(/id: 'sql'[^\n]*superadminOnly: true/.test(routes) && routes.includes("role !== 'superadmin'"), 'D1 SQL Studio chỉ hiện với superadmin')
-for (const g of ['Theo dõi', 'AI & nội dung', 'Hệ thống']) ok(routes.includes(`label: '${g}'`), `Thanh bên có nhóm "${g}"`)
+for (const g of ['Người dùng', 'AI', 'Hệ thống']) ok(routes.includes(`label: '${g}'`), `Thanh bên có nhóm "${g}"`)
+
+// Kiểm tra cấu trúc 9 mục Phương án A (Đợt 23T / 23R)
+const navIcons = read('src/admin/navIcons.jsx')
+const cleanedRoutes = routes
+  .replace(/import\.meta\.env/g, 'env')
+  .replace(/export\s+const\s+/g, 'const ')
+  .replace(/export\s+function\s+/g, 'function ')
+const evalRoutes = new Function('env', cleanedRoutes + ';\nreturn { ADMIN_SECTIONS, ADMIN_PAGES, sectionOf, canSeePage, visiblePagesForSection, pageById };')
+const { ADMIN_SECTIONS, ADMIN_PAGES: pagesList, sectionOf, canSeePage, visiblePagesForSection, pageById } = evalRoutes({ VITE_DEV_TOOLS: '1' })
+
+ok(ADMIN_SECTIONS && ADMIN_SECTIONS.length === 9, `Có đúng 9 mục điều hướng (hiện có ${ADMIN_SECTIONS?.length})`)
+
+// Mỗi id trong ADMIN_PAGES thuộc đúng một mục
+let pageBelongsExactOne = true
+for (const p of pagesList) {
+  const matchSections = ADMIN_SECTIONS.filter((s) => s.pages.includes(p.id))
+  if (matchSections.length !== 1) {
+    pageBelongsExactOne = false
+    ok(false, `Trang ${p.id} không thuộc đúng 1 mục (thuộc ${matchSections.length} mục)`)
+  }
+}
+if (pageBelongsExactOne) ok(true, 'Mỗi id trong 21 trang ADMIN_PAGES thuộc đúng một mục')
+
+// Mỗi mục có biểu tượng trong navIcons.jsx
+const allIconsFound = ADMIN_SECTIONS.every((s) => {
+  const compName = 'Nav' + s.icon.charAt(0).toUpperCase() + s.icon.slice(1)
+  return navIcons.includes(`export function ${compName}`) || navIcons.includes(`${s.icon}:`)
+})
+ok(allIconsFound, 'Mỗi mục trong 9 mục đều có biểu tượng trong navIcons.jsx')
+
+// sectionOf đúng cho cả 21 trang
+const sectionOfAllCorrect = pagesList.every((p) => {
+  const sec = sectionOf(p.id)
+  return sec && sec.pages.includes(p.id)
+})
+ok(sectionOfAllCorrect, 'Hàm sectionOf trả về đúng mục cho cả 21 trang')
+
+// support không thấy mục Quản trị và không thấy tab scope
+const supportScope = canSeePage(pageById('scope'), 'support')
+ok(!supportScope, 'Vai trò support không thấy tab scope (Phạm vi đề)')
+const adminSec = ADMIN_SECTIONS.find((s) => s.id === 'admin-mgnt' || s.label === 'Quản trị')
+const supportAdminTabs = visiblePagesForSection(adminSec, 'support')
+ok(supportAdminTabs.length === 0, 'Vai trò support không thấy mục Quản trị (0 tab được xem)')
 
 console.log('\n--- 4. Chặn truy cập ở máy chủ ---')
 ok(adminJsx.includes('/api/v1/admin/me'), 'Admin.jsx gọi GET /api/v1/admin/me')

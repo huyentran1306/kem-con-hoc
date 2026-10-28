@@ -237,6 +237,7 @@ textarea.field{resize:none;line-height:1.6}
   position:relative;border-radius:20px;background:#221A28;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
   min-height:220px;
+  margin-top:12px;
 }
 .cam .frame{position:absolute;inset:26px;border:2px dashed rgba(255,255,255,.55);border-radius:14px;pointer-events:none}
 .cam .hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;color:#fff;font-size:12px;opacity:.9;padding:0 20px}

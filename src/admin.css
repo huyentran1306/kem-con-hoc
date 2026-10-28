@@ -1682,3 +1682,275 @@
 .kadm-key:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--s-line, #F0DDC2); }
 .kadm-key:disabled { opacity: 0.6; cursor: wait; }
 .kadm-key-action { background: var(--s-accent-tint, #FFF1D6); color: var(--s-accent-ink, #9A5B00); }
+
+/* ============================================================
+   Phương án A (Đợt 23T / 23R) · Menu admin gọn 9 mục, Tab & Mini
+   ============================================================ */
+
+/* Biểu tượng SVG tông mật ong vẽ riêng */
+.kadm-side svg.cute {
+  width: 22px;
+  height: 22px;
+  stroke: #6B4A2B;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.kadm-side .cute .f { fill: #FFE6B0; transition: fill .2s ease; }
+.kadm-side .kadm-nv.is-on .cute .f,
+.kadm-side .it.on .cute .f { fill: #FFC85C; }
+.kadm-side .cute .d { fill: #6B4A2B; stroke: none; }
+.kadm-side .cute .h { fill: #F47C8C; stroke: none; }
+.kadm-side .cute .l { fill: #8CCB6E; }
+.kadm-side .cute .s { fill: #FFC85C; }
+.kadm-side .cute .k { fill: #7FB7F5; stroke: none; }
+.kadm-side .cute .w { fill: #FFFFFF; }
+@media (prefers-reduced-motion: no-preference) {
+  .kadm-side .kadm-nv:hover svg.cute,
+  .kadm-side .it:hover svg.cute { transform: rotate(-8deg) scale(1.1); }
+}
+.kadm-side .kadm-nv.is-on svg.cute,
+.kadm-side .it.on svg.cute { transform: scale(1.06); }
+
+/* Mục thanh bên mới */
+.kadm-side .kadm-nv {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #6E5236;
+  font-weight: 600;
+  font-size: 13.5px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.kadm-side .kadm-nv:hover {
+  background: #FFF8EC;
+  color: #4B3621;
+}
+.kadm-side .kadm-nv.is-on {
+  background: #FFF0D2;
+  color: #4B3621;
+  font-weight: 700;
+  box-shadow: inset 4px 0 0 #F6A623;
+}
+.kadm-tab-cnt {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: #8A6E52;
+  font-weight: 700;
+}
+.kadm-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #E0566B;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+/* Nút thu gọn thanh bên & chân thanh bên */
+.kadm-foot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.kadm-foot-row .kadm-health {
+  flex: 1;
+  border-top: none;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kadm-collapse-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--s-line, #F0DDC2);
+  background: #FFFFFF;
+  color: #6E5236;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.kadm-collapse-btn:hover {
+  background: #FFF8EC;
+  color: #4B3621;
+}
+.kadm-collapse-svg {
+  width: 16px;
+  height: 16px;
+  transition: transform .25s ease;
+}
+.kadm-side.is-mini .kadm-collapse-svg {
+  transform: rotate(180deg);
+}
+
+/* Thu gọn mini trên màn rộng (>= 1280px) */
+@media (min-width: 1280px) {
+  .kadm-side.is-mini {
+    width: 76px;
+    padding: 14px 8px 12px;
+    align-items: center;
+  }
+  .kadm-side.is-mini .kadm-brand {
+    padding: 0 0 8px;
+    justify-content: center;
+  }
+  .kadm-side.is-mini .kadm-brand-text,
+  .kadm-side.is-mini .kadm-label,
+  .kadm-side.is-mini .kadm-tab-cnt {
+    display: none;
+  }
+  .kadm-side.is-mini .kadm-sep {
+    height: 1px;
+    padding: 0;
+    margin: 8px 6px;
+    background: var(--s-line, #F0DDC2);
+    font-size: 0;
+    width: 36px;
+  }
+  .kadm-side.is-mini .kadm-nv {
+    width: 48px;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+  }
+  .kadm-side.is-mini .kadm-badge {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    padding: 0 4px;
+  }
+  .kadm-side.is-mini .kadm-foot-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .kadm-side.is-mini .kadm-health {
+    border-top: none;
+    padding: 0;
+    justify-content: center;
+  }
+  .kadm-side.is-mini .kadm-nv[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #4B3621;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(75, 54, 33, 0.25);
+    pointer-events: none;
+  }
+}
+
+/* ---------- Thanh tab đầu trang ---------- */
+.kadm-section-tabs-wrap {
+  margin: 0 0 16px;
+  width: 100%;
+}
+.kadm-section-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: #FFFFFF;
+  border: 1px solid #F1E3CC;
+  border-radius: 14px;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.kadm-section-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #6E5236;
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+.kadm-section-tab:hover {
+  background: #FFF8EC;
+  color: #4B3621;
+}
+.kadm-section-tab.is-on {
+  background: #FFD98A;
+  color: #4B3621;
+  font-weight: 800;
+  box-shadow: 0 3px 0 #E9B04D;
+}
+
+/* Chip Sẵn sàng demo & Kbd search */
+.kadm-demo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--s-line, #F0DDC2);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4B3621;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+.kadm-demo-chip:hover {
+  background: #FFF8EC;
+  border-color: #F6A623;
+}
+.kadm-demo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 3px #D1FAE5;
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .kadm-demo-text { display: none; }
+  .kadm-demo-chip { padding: 8px; }
+}
+.kadm-search-kbd {
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--s-text-2, #84664A);
+  background: #FFF8EC;
+  border: 1px solid var(--s-line, #F0DDC2);
+  border-radius: 6px;
+  padding: 2px 5px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}

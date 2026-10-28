@@ -14,7 +14,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, startSession, updateSession, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -974,7 +974,8 @@ export function Analyze() {
     setExplainStartedAt(Date.now())
     try {
       const combinedNote = [customParentNote, redirectNote].filter(Boolean).join('. ')
-      const explainRes = await aiExplain(textToUse, child, S.tone, combinedNote)
+      const effectiveFamId = S.user?.family_id || getCurrentFamilyId()
+      const explainRes = await aiExplain(textToUse, child, S.tone, combinedNote, false, { familyId: effectiveFamId })
       setDone(4)
 
       // Nếu AI phản hồi can_hoi_lai (đề không rõ hoặc thiếu dữ kiện)
@@ -986,6 +987,23 @@ export function Analyze() {
       }
 
       if (explainRes && explainRes.steps && explainRes.steps.length > 0) {
+        const sessId = 'ses_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+        const methodRuleId = explainRes.method_rule_id || explainRes.methodRuleId || 'fallback'
+        startSession({
+          id: sessId,
+          childId: child?.id || null,
+          startedAt: new Date().toISOString(),
+          source: shotImg ? 'photo' : 'text',
+          assignmentId: null,
+          assignmentItemId: null,
+          subject: child?.subject || 'Toán',
+          grade: child?.grade || 'Lớp 2',
+          problemText: textToUse,
+          problemType: explainRes.type || explainRes.dang_bai || 'Toán có lời văn',
+          methodRuleId: methodRuleId,
+          stepsTotal: (explainRes.steps || []).length,
+        }).catch((e) => console.warn('startSession parent error:', e))
+
         const cleanLesson = normalizeLesson(explainRes, {
           isSample: false,
           isTeacherAssigned: false,
@@ -998,7 +1016,9 @@ export function Analyze() {
           problem: cleanLesson,
           studySource: 'parent',
           assignmentId: null,
-          assignmentItemId: null
+          assignmentItemId: null,
+          currentSessionId: sessId,
+          flow: { step: 0, stuck: 0, peeks: 0, sessionId: sessId }
         })
         setAiState('done')
         toast('✅ AI đã soạn bài giảng xong!')
@@ -4162,7 +4182,7 @@ function SnapToyCameraSection() {
   return (
     <>
       <Header title="Chơi gì với đồ trong nhà?" back="home" />
-      <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden', marginBottom: 14, borderRadius: 20 }}>
+      <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden', marginTop: 12, marginBottom: 14, borderRadius: 20 }}>
         <div className="frame" />
         {/* Always keep video element in DOM so camera stream is not lost */}
         {!shot && !camOn && !camErr && (

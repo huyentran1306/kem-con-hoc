@@ -1,17 +1,16 @@
 /**
- * Đầu trang của khung admin (Đợt 15 · Chặng 2)
- * Đường dẫn trang · ô tìm chung · giờ Việt Nam · chuông việc cần làm · menu tài khoản.
+ * Đầu trang của khung admin (Phương án A · Đợt 23T / 23R)
+ * - Đường dẫn vị trí: <Mục> › <Tab> (hoặc <Mục> nếu chỉ có 1 trang)
+ * - Chip "Sẵn sàng demo" có chấm xanh (bấm vào mở pre-demo)
+ * - Ô tìm chung hỗ trợ Ctrl+K
  */
 import { useEffect, useRef, useState } from 'react'
 import { BearMascot } from '../ui/staff'
-import { groupLabel, resolveSearch } from './ShellRoutes.jsx'
+import { sectionOf, pageTabLabel, resolveSearch } from './ShellRoutes.jsx'
 
-const WEEKDAYS = { Sun: 'CN', Mon: 'T2', Tue: 'T3', Wed: 'T4', Thu: 'T5', Fri: 'T6', Sat: 'T7' }
-
-/** "CN 26/10 · 09:10" theo giờ Việt Nam */
-export function formatVnClock(date = new Date()) {
+function formatVnClock(date = new Date()) {
   try {
-    const parts = new Intl.DateTimeFormat('en-GB', {
+    const fmt = new Intl.DateTimeFormat('vi-VN', {
       timeZone: 'Asia/Ho_Chi_Minh',
       weekday: 'short',
       day: '2-digit',
@@ -19,10 +18,8 @@ export function formatVnClock(date = new Date()) {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-    }).formatToParts(date)
-    const get = (t) => parts.find((p) => p.type === t)?.value || ''
-    const hour = get('hour') === '24' ? '00' : get('hour')
-    return `${WEEKDAYS[get('weekday')] || ''} ${get('day')}/${get('month')} · ${hour}:${get('minute')}`
+    })
+    return fmt.format(date).replace(',', ' ·')
   } catch (e) {
     const d = date
     const pad = (n) => String(n).padStart(2, '0')
@@ -35,7 +32,6 @@ function useVnClock() {
   useEffect(() => {
     let interval = null
     const tick = () => setNow(formatVnClock())
-    // Canh đúng đầu phút rồi cập nhật mỗi phút
     const first = setTimeout(() => {
       tick()
       interval = setInterval(tick, 60 * 1000)
@@ -189,6 +185,18 @@ function AccountMenu({ profile, onLock, onLogout, onExit }) {
 export function ShellHeader({ page, role, profile, counts, canSee, onNavigate, onToggleMenu, menuOpen, onLock, onLogout, onExit }) {
   const clock = useVnClock()
   const [q, setQ] = useState('')
+  const searchInputRef = useRef(null)
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const onSearch = (e) => {
     e.preventDefault()
@@ -197,6 +205,9 @@ export function ShellHeader({ page, role, profile, counts, canSee, onNavigate, o
     onNavigate(r.pageId, r.search)
     setQ('')
   }
+
+  const sec = sectionOf(page.id)
+  const isMultiPage = sec && sec.pages.length > 1
 
   return (
     <header className="kadm-hd">
@@ -210,21 +221,45 @@ export function ShellHeader({ page, role, profile, counts, canSee, onNavigate, o
       >
         ☰
       </button>
-      <nav className="kadm-crumb" aria-label="Đường dẫn trang">
-        <span className="kadm-crumb-group">{groupLabel(page.group)}</span>
-        <span className="kadm-crumb-sep" aria-hidden="true">›</span>
-        <b aria-current="page">{page.label}</b>
+
+      <nav className="kadm-crumb" aria-label="Đường dẫn vị trí">
+        {isMultiPage ? (
+          <>
+            <span className="kadm-crumb-group">{sec.label}</span>
+            <span className="kadm-crumb-sep" aria-hidden="true">›</span>
+            <b aria-current="page">{pageTabLabel(page)}</b>
+          </>
+        ) : (
+          <b aria-current="page">{sec ? sec.label : page.label}</b>
+        )}
       </nav>
+
       <form className="kadm-search" role="search" onSubmit={onSearch}>
         <span aria-hidden="true">🔍</span>
         <input
+          ref={searchInputRef}
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Tìm gia đình, buổi học, prompt…"
+          placeholder="Tìm gia đình, buổi học, prompt… (Ctrl+K)"
           aria-label="Tìm gia đình, buổi học, prompt"
         />
+        <kbd className="kadm-search-kbd" aria-hidden="true">Ctrl K</kbd>
       </form>
+
+      {canSee && canSee('pre-demo') && (
+        <button
+          type="button"
+          className="kadm-demo-chip"
+          onClick={() => onNavigate('pre-demo')}
+          title="Kiểm tra trước demo (Sẵn sàng demo)"
+          aria-label="Kiểm tra trước demo"
+        >
+          <span className="kadm-demo-dot" aria-hidden="true" />
+          <span className="kadm-demo-text">Sẵn sàng demo</span>
+        </button>
+      )}
+
       <span className="kadm-clock" aria-label={`Giờ Việt Nam ${clock}`}>{clock}</span>
       <Bell counts={counts} onNavigate={onNavigate} canSee={canSee} />
       <AccountMenu profile={profile} onLock={onLock} onLogout={onLogout} onExit={onExit} />

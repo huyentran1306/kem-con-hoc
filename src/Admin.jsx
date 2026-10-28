@@ -18,6 +18,7 @@ import { ToastHost, ConfirmHost, staffToast, EmptyState, Button, BearMascot } fr
 import { AdminLockScreen } from './AdminLockScreen'
 import { ShellSidebar } from './admin/ShellSidebar.jsx'
 import { ShellHeader } from './admin/ShellHeader.jsx'
+import { SectionTabs } from './admin/SectionTabs.jsx'
 import { ShellLogin, ShellChecking } from './admin/ShellLogin.jsx'
 import {
   ADMIN_PAGES,
@@ -438,12 +439,14 @@ export default function AdminPortal({ onExit }) {
       <div className="kadm-shell">
         <ShellSidebar
           pages={visiblePages(role)}
+          role={role}
           activeId={page.id}
           onNavigate={(id) => navigate(id)}
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
           health={health}
           todaySessions={todaySessions}
+          counts={counts}
         />
         <div className="kadm-main">
           <ShellHeader
@@ -460,6 +463,7 @@ export default function AdminPortal({ onExit }) {
             onExit={onExit}
           />
           <main className="kadm-content" id="kadm-content">
+            <SectionTabs pageId={page.id} role={role} onNavigate={navigate} />
             <AdminPageErrorBoundary pageId={page.id} onNavigate={navigate}>
               {renderPage()}
             </AdminPageErrorBoundary>

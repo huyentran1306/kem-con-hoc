@@ -1420,3 +1420,28 @@ h1, h2, h3, h4, .brand, .hero-title, .title, .done-h {
 [data-theme="sticker"] .big-card.sky * {
   color: #FFFFFF !important;
 }
+
+/* Prompt 23T / 23Q Mục 1: Nút trong thẻ nền màu phải có nền trắng và chữ đậm #1B1B2F */
+[data-theme="sticker"] .card.plum .btn,
+[data-theme="sticker"] .card.plum button,
+[data-theme="sticker"] .big-card.plum .btn,
+[data-theme="sticker"] .big-card.plum button,
+[data-theme="sticker"] .card.sky .btn,
+[data-theme="sticker"] .card.sky button,
+[data-theme="sticker"] .big-card.sky .btn,
+[data-theme="sticker"] .big-card.sky button {
+  background: #FFFFFF !important;
+  color: #1B1B2F !important;
+  border: 3px solid #1B1B2F !important;
+  font-weight: 800 !important;
+}
+[data-theme="sticker"] .card.plum .btn *,
+[data-theme="sticker"] .card.plum button *,
+[data-theme="sticker"] .big-card.plum .btn *,
+[data-theme="sticker"] .big-card.plum button *,
+[data-theme="sticker"] .card.sky .btn *,
+[data-theme="sticker"] .card.sky button *,
+[data-theme="sticker"] .big-card.sky .btn *,
+[data-theme="sticker"] .big-card.sky button * {
+  color: #1B1B2F !important;
+}

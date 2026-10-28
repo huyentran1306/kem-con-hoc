@@ -750,6 +750,8 @@ export function routePedagogyMethod({ mon = 'Toán', lop = 'Lớp 2', dang_bai =
     const item = activeRules.find((x) => x.id === 'con_bi_lap_lai' || x.matchTopic === 'isStuck')
     if (item) {
       return {
+        rule_id: item.id || 'con_bi_lap_lai',
+        ruleId: item.id || 'con_bi_lap_lai',
         phuong_phap: item.methods,
         doan_phuong_phap: `- Phương pháp: ${item.methods}\n- Hướng dẫn thực hiện: ${item.instruction}\n- Cuối bài: Áp dụng Metacognitive ("Con dạy lại mẹ" và hỏi lần sau gặp bài này con làm bước nào trước).`,
       }
@@ -763,6 +765,8 @@ export function routePedagogyMethod({ mon = 'Toán', lop = 'Lớp 2', dang_bai =
     const topicMatch = !item.matchTopic || item.matchTopic === 'all' || new RegExp(item.matchTopic, 'i').test(dang_bai)
     if (subMatch && gradeMatch && topicMatch) {
       return {
+        rule_id: item.id,
+        ruleId: item.id,
         phuong_phap: item.methods,
         doan_phuong_phap: `- Phương pháp: ${item.methods}\n- Hướng dẫn thực hiện: ${item.instruction}\n- Cuối bài: Áp dụng Metacognitive ("Con dạy lại mẹ" và hỏi lần sau gặp bài này con làm bước nào trước).`,
       }
@@ -771,8 +775,10 @@ export function routePedagogyMethod({ mon = 'Toán', lop = 'Lớp 2', dang_bai =
 
   const def = activeRules[0] || DEFAULT_AI_CONFIG.pedagogy_routing[0]
   return {
-    phuong_phap: def.methods,
-    doan_phuong_phap: `- Phương pháp: ${def.methods}\n- Hướng dẫn thực hiện: ${def.instruction}\n- Cuối bài: Áp dụng Metacognitive ("Con dạy lại mẹ" và hỏi lần sau gặp bài này con làm bước nào trước).`,
+    rule_id: def ? def.id : 'fallback',
+    ruleId: def ? def.id : 'fallback',
+    phuong_phap: def ? def.methods : '',
+    doan_phuong_phap: def ? `- Phương pháp: ${def.methods}\n- Hướng dẫn thực hiện: ${def.instruction}\n- Cuối bài: Áp dụng Metacognitive ("Con dạy lại mẹ" và hỏi lần sau gặp bài này con làm bước nào trước).` : '',
   }
 }
 

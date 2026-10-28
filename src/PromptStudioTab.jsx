@@ -496,6 +496,12 @@ export default function PromptStudioTab() {
         staffToast('Chưa xuất bản được, máy chủ chưa nhận. Bản nháp vẫn còn nguyên.', { tone: 'bad' })
         return
       }
+      // Đợt 23T Phần 2: Đọc lại ngay để kiểm tra chắc chắn đã ghi vào D1
+      const verified = await dbKvGet(PROMPT_CONFIG_KV)
+      if (!verified || typeof verified !== 'object') {
+        staffToast('Chưa xuất bản được, máy chủ chưa lưu được dữ liệu vào cơ sở dữ liệu. Bản nháp vẫn còn nguyên.', { tone: 'bad' })
+        return
+      }
       const merged = setActivePrompts(payload)
       setPublished(merged)
       const store = { ...readDraftStore() }

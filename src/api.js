@@ -25,7 +25,7 @@ export function setDemoMode(val) {
    CLIENT GATEWAY — API Service & Database Bridge
    ============================================================ */
 import { PROBLEM } from './data.js'
-import { renderPrompt, getActiveAiConfig, setActivePrompts, setActiveAiConfig, classifyProblemDynamic } from './promptStudio.js'
+import { renderPrompt, getActiveAiConfig, setActivePrompts, setActiveAiConfig, classifyProblemDynamic, routePedagogyMethod } from './promptStudio.js'
 import { getWeekLabel } from './utils.js'
 import { parseOcrV2Result, evaluateTextScope, DEFAULT_SCOPE_RULES, SCOPE_RULES_KV_KEY, parseGradeNum } from './scopeRules.js'
 import { viNumberWords } from './guard.js'
@@ -36,6 +36,15 @@ export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env
 export const CLOUD_KEY = 'kem-con-hoc:state'
 export const famCloudKey = (id) => (id ? `fam:${id}:state` : 'kem-con-hoc:state')
 export const AUTH_STORAGE_KEY = 'kem-con-hoc:auth'
+
+export function getCurrentFamilyId() {
+  try {
+    const s = JSON.parse(localStorage.getItem('kem-con-hoc:session') || 'null');
+    return (s && s.id) ? s.id : '';
+  } catch (_) {
+    return '';
+  }
+}
 
 /* ---------- Quản lý Auth Token ---------- */
 export function getAuthToken() {
@@ -310,6 +319,14 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const grade = child?.grade || 'Lớp 2'
   const book = child?.book || 'Kết nối tri thức'
   const classification = fastClassifyProblem(ocr, grade)
+  const routedMethod = routePedagogyMethod({
+    mon: classification.mon || 'Toán',
+    lop: grade,
+    dang_bai: classification.dang_bai || 'Toán có lời văn',
+    isStuck,
+  })
+  const effectiveRuleId = routedMethod?.rule_id || 'fallback'
+  const effectiveFamilyId = options.familyId || getCurrentFamilyId() || ""
 
   // Đợt 18 · Chặng 0.3: Mặc định bật p3_explain_v2 trên mọi môi trường (kể cả production)
   const aiCfg = getActiveAiConfig();
@@ -352,7 +369,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const explainHeaders = {
     'X-Prompt-Id': targetPromptId,
     'X-Problem-Text': encodeURIComponent(ocr || ''),
-    'X-Family-Id': encodeURIComponent(options.familyId || ''),
+    'X-Family-Id': encodeURIComponent(effectiveFamilyId),
     'X-Grade': encodeURIComponent(grade || ''),
     'X-Book-Series': encodeURIComponent(book || ''),
     'X-Subject': encodeURIComponent(classification.mon || 'Toán'),
@@ -474,6 +491,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
 
     return {
       id: 'ai-' + Date.now(),
+      method_rule_id: effectiveRuleId,
+      methodRuleId: effectiveRuleId,
       type: data.dang_bai || data.type || classification.dang_bai,
       summary: data.giai_thich_cho_me || data.summary || '',
       warning: data.luu_y_khi_giang || data.warning || '',
