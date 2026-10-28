@@ -76,9 +76,18 @@ export function getAdminToken() {
   return ''
 }
 
-async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeaders = {}) {
+async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeaders = {}, customSignal = null) {
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  if (customSignal) {
+    if (customSignal.aborted) {
+      clearTimeout(t)
+      const err = new Error('Aborted')
+      err.name = 'AbortError'
+      throw err
+    }
+    customSignal.addEventListener('abort', () => ctrl.abort())
+  }
   const token = getAdminToken() || getAuthToken()
   const safeHeaders = { 'Content-Type': 'application/json' }
   if (extraHeaders && typeof extraHeaders === 'object') {
@@ -112,8 +121,8 @@ async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeade
   }
 }
 
-async function postAi(path, body, timeoutMs = 25000, extraHeaders = {}) {
-  return post(path, body, timeoutMs, AI_GATEWAY, extraHeaders)
+async function postAi(path, body, timeoutMs = 25000, extraHeaders = {}, customSignal = null) {
+  return post(path, body, timeoutMs, AI_GATEWAY, extraHeaders, customSignal)
 }
 
 /* Lấy JSON từ response (gateway có thể trả object hoặc chuỗi) */
@@ -328,10 +337,14 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   const effectiveRuleId = routedMethod?.rule_id || 'fallback'
   const effectiveFamilyId = options.familyId || getCurrentFamilyId() || ""
 
-  // Đợt 18 · Chặng 0.3: Mặc định bật p3_explain_v2 trên mọi môi trường (kể cả production)
+  // Đợt 23V: Hỗ trợ v3 (soạn bài nhanh 2 lần gọi), v2 hoặc v1 qua công tắc cấu hình
   const aiCfg = getActiveAiConfig();
-  const useV1 = aiCfg?.prompt_version === 'v1' || aiCfg?.p3_version === 'v1';
-  const targetPromptId = useV1 ? 'p3_explain' : 'p3_explain_v2';
+  let targetPromptId = 'p3_explain_v3';
+  if (aiCfg?.prompt_version === 'v1' || aiCfg?.p3_version === 'v1') {
+    targetPromptId = 'p3_explain';
+  } else if (aiCfg?.prompt_version === 'v2' || aiCfg?.p3_version === 'v2') {
+    targetPromptId = 'p3_explain_v2';
+  }
 
   const learnerProfile = options.learnerProfile || child?.learnerProfile || null
   const hoSoConText = (child?.bearMemory !== false && learnerProfile?.profile) ? learnerProfile.profile : 'chưa có'
@@ -348,6 +361,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     ghi_chu: parentNote,
     isStuck,
     ho_so_con: hoSoConText,
+    doan_phuong_phap: routedMethod?.doan_phuong_phap || '',
+    phuong_phap: routedMethod?.phuong_phap || '',
   })
 
   const isValidExplain = (d) => {
@@ -375,6 +390,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     'X-Subject': encodeURIComponent(classification.mon || 'Toán'),
     'X-Child-Id': encodeURIComponent(child?.id || ''),
     ...(options.bypassCache ? { 'X-Bypass-Cache': '1' } : {}),
+    ...(options.isPrefetch ? { 'X-Prefetch': '1' } : {}),
   }
 
   try {
@@ -409,6 +425,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
         return p;
       }
     } else {
+      const reqTokens = targetPromptId === 'p3_explain_v3' ? 650 : Math.min(Number(aiCfg.max_tokens) || 1400, 1600);
       j = await postAi(
         '/chat',
         {
@@ -416,19 +433,58 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
             { role: 'system', content: sys },
             { role: 'user', content: userPrompt },
           ],
-          max_tokens: Math.min(Number(aiCfg.max_tokens) || 1400, 1600),
+          max_tokens: reqTokens,
           temperature: typeof aiCfg.temperature === 'number' ? aiCfg.temperature : 0.3,
           model: modelId,
         },
         EXPLAIN_TIMEOUT_MS,
-        explainHeaders
+        explainHeaders,
+        options.signal
       );
     }
     let data = extractJson(j.response ?? j)
 
-    // Lần đầu lỗi JSON hoặc thiếu schema: thử lại 1 lần nếu còn đủ thời gian
+    // Đợt 23V: Nếu lần A (p3_explain_v3) lỗi hoặc thiếu bậc, tự động gọi lại bằng p3_explain_v2 như cũ
     const remainingMs = EXPLAIN_TIMEOUT_MS - (Date.now() - startedAt)
-    if (!isValidExplain(data) && remainingMs > 20000) {
+    if (!isValidExplain(data) && targetPromptId === 'p3_explain_v3' && remainingMs > 15000) {
+      try {
+        console.warn('Lần A p3_explain_v3 chưa hợp lệ, tự động gọi lại bằng p3_explain_v2...')
+        targetPromptId = 'p3_explain_v2'
+        explainHeaders['X-Prompt-Id'] = 'p3_explain_v2'
+        const sysV2 = renderPrompt('p3_explain_v2', {
+          mon: classification.mon,
+          lop: grade,
+          sach: book,
+          bo_sach: book,
+          dang_bai: classification.dang_bai,
+          loi_hay_gap: classification.loi_hay_gap,
+          giong: tone || 'Dịu dàng',
+          de_bai: ocr,
+          ghi_chu: parentNote,
+          isStuck,
+          ho_so_con: hoSoConText,
+          doan_phuong_phap: routedMethod?.doan_phuong_phap || '',
+        })
+        const v2Resp = await postAi(
+          '/chat',
+          {
+            messages: [
+              { role: 'system', content: sysV2 },
+              { role: 'user', content: userPrompt },
+            ],
+            max_tokens: 1400,
+            temperature: 0.3,
+            model: modelId,
+          },
+          remainingMs,
+          explainHeaders,
+          options.signal
+        )
+        data = extractJson(v2Resp.response ?? v2Resp)
+      } catch (fbErr) {
+        console.warn('Fallback to p3_explain_v2 error:', fbErr)
+      }
+    } else if (!isValidExplain(data) && remainingMs > 20000) {
       const retryResp = await postAi(
         '/chat',
         {
@@ -443,7 +499,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           model: modelId,
         },
         remainingMs,
-        explainHeaders
+        explainHeaders,
+        options.signal
       )
       data = extractJson(retryResp.response ?? retryResp)
     }
@@ -489,7 +546,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       }))
     }
 
-    return {
+    const problemObj = {
       id: 'ai-' + Date.now(),
       method_rule_id: effectiveRuleId,
       methodRuleId: effectiveRuleId,
@@ -507,7 +564,80 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
       needReAsk: data.can_hoi_lai || '',
       answerLine: '',
       diagram: null,
+      prompt_version: targetPromptId === 'p3_explain_v3' ? 'v3' : (targetPromptId === 'p3_explain_v2' ? 'v2' : 'v1'),
     }
+
+    // Đợt 23V: Nếu dùng v3 và chưa có bài anh em (chưa có lần B), kích hoạt lần B chạy nền
+    if (targetPromptId === 'p3_explain_v3' && !problemObj.brotherProblem && !isDemoMode() && !isTrialActive()) {
+      const extraPromise = (async () => {
+        try {
+          const questions = rawSteps.map(s => s.question);
+          const extra = await fetchAiExtraV3({
+            ocr,
+            questions,
+            familyId: effectiveFamilyId,
+            childId: child?.id,
+          });
+          if (extra && typeof extra === 'object') {
+            const extraSteps = Array.isArray(extra.cac_bac) ? extra.cac_bac : [];
+            extraSteps.forEach((eb, idx) => {
+              if (problemObj.steps[idx]) {
+                if (eb.ly_do_cho_me) problemObj.steps[idx].ly_do_cho_me = eb.ly_do_cho_me;
+                if (eb.loi_khen) {
+                  problemObj.steps[idx].loi_khen = eb.loi_khen;
+                  problemObj.steps[idx].praise = eb.loi_khen;
+                }
+              }
+            });
+            if (extra.giai_thich_cho_me) problemObj.summary = extra.giai_thich_cho_me;
+            if (extra.luu_y_khi_giang) problemObj.warning = extra.luu_y_khi_giang;
+            if (extra.bai_anh_em) problemObj.brotherProblem = extra.bai_anh_em;
+            if (extra.tro_choi_5_phut) problemObj.fiveMinGame = extra.tro_choi_5_phut;
+            if (extra.con_day_lai_me) problemObj.teachBack = extra.con_day_lai_me;
+            if (extra.loi_khen) problemObj.praise = extra.loi_khen;
+
+            cacheLessonOnServer({
+              problemText: ocr,
+              grade,
+              bookSeries: book,
+              subject: classification.mon || 'Toán',
+              childProfileHash: child?.id || 'none',
+              lessonObj: {
+                ...data,
+                ...extra,
+                cac_bac: problemObj.steps.map(s => ({
+                  cau_hoi: s.question,
+                  ky_nang: s.ky_nang,
+                  ly_do_cho_me: s.ly_do_cho_me,
+                  dap_an_cho_me: s.answerForParent,
+                  loi_khen: s.loi_khen,
+                  goi_y: { muc_1_do_vat: s.hint, muc_2_hinh_ve: s.hint2 },
+                })),
+                giai_thich_cho_me: problemObj.summary,
+                luu_y_khi_giang: problemObj.warning,
+                bai_anh_em: problemObj.brotherProblem,
+                tro_choi_5_phut: problemObj.fiveMinGame,
+                con_day_lai_me: problemObj.teachBack,
+                loi_khen: problemObj.praise,
+              },
+              promptVersion: 'v3',
+            }).catch(() => {});
+
+            if (typeof options.onExtraLoaded === 'function') {
+              options.onExtraLoaded(problemObj);
+            }
+            try {
+              window.dispatchEvent(new CustomEvent('kem_lesson_extra_loaded', { detail: problemObj }));
+            } catch (_) {}
+          }
+        } catch (extraErr) {
+          console.warn('Lần B p3_extra_v3 error:', extraErr);
+        }
+      })();
+      problemObj._extraPromise = extraPromise;
+    }
+
+    return problemObj
   } catch (e) {
     // Phân biệt: lỗi mã nguồn (ReferenceError, TypeError,...) không che giấu dưới dạng lỗi mạng
     if (e instanceof ReferenceError || e instanceof TypeError || e instanceof RangeError || e instanceof SyntaxError) {
@@ -771,8 +901,12 @@ export async function cloudDeleteFamily(password) {
 
 /* ============================================================
    📝 GHI NHẬN BUỔI HỌC & SỰ KIỆN QUA /api/v1/sessions
+   Đợt 23V: Chế độ Dùng thử hoặc demo tuyệt đối không gửi lên máy chủ
    ============================================================ */
 export async function startSession(sessionData) {
+  if (isTrialActive() || isDemoMode() || sessionData?.isTrial) {
+    return { ok: true, offline: true }
+  }
   try {
     return await post('/api/v1/sessions', sessionData)
   } catch (e) {
@@ -782,6 +916,9 @@ export async function startSession(sessionData) {
 }
 
 export async function updateSession(sessionId, updateData) {
+  if (isTrialActive() || isDemoMode() || updateData?.isTrial) {
+    return { ok: true, offline: true }
+  }
   try {
     const r = await fetch(`${GATEWAY}/api/v1/sessions/${sessionId}`, {
       method: 'PATCH',
@@ -796,6 +933,60 @@ export async function updateSession(sessionId, updateData) {
     console.warn('updateSession warning:', e)
     return null
   }
+}
+
+export async function cancelPrefetch({ familyId = '', sessionId = '' } = {}) {
+  try {
+    return await post('/api/v1/ai/cancel-prefetch', { family_id: familyId, session_id: sessionId })
+  } catch (_) {
+    return null
+  }
+}
+
+export async function cacheLessonOnServer({ problemText, grade, bookSeries, subject, childProfileHash = 'none', lessonObj, promptVersion = 'v3' }) {
+  try {
+    return await post('/api/v1/ai/cache-lesson', {
+      problemText,
+      grade,
+      bookSeries,
+      subject,
+      childProfileHash,
+      lessonObj,
+      promptVersion,
+    })
+  } catch (_) {
+    return null
+  }
+}
+
+export async function fetchAiExtraV3({ ocr, questions = [], familyId = '', childId = '', signal = null }) {
+  const formattedQuestions = questions.map((q, i) => `${i + 1}. ${q}`).join('\n')
+  const sys = renderPrompt('p3_extra_v3', {
+    de_bai: ocr,
+    cac_cau_hoi: formattedQuestions,
+  })
+  const userPrompt = `Viết phần bổ trợ sư phạm cho các câu hỏi sau. Chỉ trả JSON một dòng.\nĐề bài: """${ocr}"""\nCâu hỏi:\n${formattedQuestions}`
+  const headers = {
+    'X-Prompt-Id': 'p3_extra_v3',
+    'X-Problem-Text': encodeURIComponent(ocr || ''),
+    'X-Family-Id': encodeURIComponent(familyId || ''),
+    'X-Child-Id': encodeURIComponent(childId || ''),
+  }
+  const j = await postAi(
+    '/chat',
+    {
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: 700,
+      temperature: 0.3,
+    },
+    30000,
+    headers,
+    signal
+  )
+  return extractJson(j?.response ?? j)
 }
 
 /* ============================================================

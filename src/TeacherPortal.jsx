@@ -1344,7 +1344,7 @@ function TeacherAssignmentsTab({ token, classId, cls, onSelectResult }) {
                 </p>
               </div>
 
-              <div className="tp-asg-actions">
+              <div className="tp-asg-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <button
                   style={styles.secondaryBtn}
                   onClick={() => {
@@ -1354,6 +1354,27 @@ function TeacherAssignmentsTab({ token, classId, cls, onSelectResult }) {
                 >
                   {a.status === 'draft' ? 'Duyệt bài giảng' : 'Xem kết quả làm bài'}
                 </button>
+                {a.status === 'published' && (
+                  <button
+                    style={{ ...styles.secondaryBtn, color: '#DC2626', borderColor: '#FECDD3', background: '#FFF1F2' }}
+                    onClick={async () => {
+                      if (!confirm('Cô có chắc chắn muốn đóng bài tập này? (Học sinh sẽ không làm tiếp được nữa)')) return;
+                      try {
+                        const r = await fetch(`${API_BASE}/api/v1/teacher/assignments/${a.id}/close`, {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${token}` }
+                        });
+                        if (r.ok) {
+                          loadAssignments();
+                        }
+                      } catch (err) {
+                        console.warn('Đóng bài error:', err);
+                      }
+                    }}
+                  >
+                    Đóng bài
+                  </button>
+                )}
               </div>
             </div>
           ))}

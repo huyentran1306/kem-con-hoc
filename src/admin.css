@@ -1806,6 +1806,7 @@
     width: 76px;
     padding: 14px 8px 12px;
     align-items: center;
+    overflow: visible;
   }
   .kadm-side.is-mini .kadm-brand {
     padding: 0 0 8px;
@@ -1853,7 +1854,7 @@
   .kadm-side.is-mini .kadm-nv[data-tip]:hover::after {
     content: attr(data-tip);
     position: absolute;
-    left: 56px;
+    left: calc(100% + 10px);
     top: 50%;
     transform: translateY(-50%);
     background: #4B3621;
@@ -1863,7 +1864,7 @@
     padding: 6px 10px;
     border-radius: 8px;
     white-space: nowrap;
-    z-index: 100;
+    z-index: 9999;
     box-shadow: 0 4px 12px rgba(75, 54, 33, 0.25);
     pointer-events: none;
   }

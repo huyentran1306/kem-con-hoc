@@ -226,6 +226,54 @@ QUY TẮC BẮT BUỘC:
 CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
   },
 
+  p3_explain_v3: {
+    id: 'p3_explain_v3',
+    name: '3 (v3 Bản gọn). Soạn bài phần cần ngay (Prompt 23V)',
+    desc: 'Soạn nhanh các bậc câu hỏi, gợi ý và đáp án cho mẹ (JSON 1 dòng, không thụt lề, phản hồi dưới 10 giây)',
+    variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}', '{{ho_so_con}}'],
+    requiredVars: ['{{de_bai}}'],
+    template: `Bạn là trợ lý sư phạm tiểu học hướng dẫn PHỤ HUYNH dẫn con TỰ tìm ra đáp án bằng câu hỏi gợi mở Socratic.
+
+THÔNG TIN:
+- Môn: {{mon}}, Lớp: {{lop}}, Bộ sách: {{sach}}.
+- Dạng bài: {{dang_bai}}. Lỗi hay gặp: {{loi_hay_gap}}.
+- Đề bài: """{{de_bai}}"""
+- Hồ sơ con: {{ho_so_con}}
+{{khung_ghi_chu}}
+PHƯƠNG PHÁP: {{doan_phuong_phap}}
+
+QUY TẮC BẮT BUỘC:
+1. Soạn từ 3 đến 4 bậc câu hỏi ngắn (< 25 chữ) cho mẹ đọc to dẫn dắt con. TUYỆT ĐỐI không lộ đáp số cuối trong cau_hoi hoặc goi_y.
+2. Đáp án từng bậc chỉ để trong "dap_an_cho_me".
+3. Mỗi bậc có 2 gợi ý: "muc_1_do_vat" (đồ vật thật), "muc_2_hinh_ve" (hình vẽ/sơ đồ).
+4. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
+5. Nếu đề thiếu dữ kiện hoặc không đọc được: trả "can_hoi_lai" nêu lý do.
+6. ĐẦU RA PHẢI LÀ JSON VIẾT LIỀN MỘT DÒNG, KHÔNG XUỐNG DÒNG, KHÔNG THỤT LỀ, ĐÚNG THEO MẪU SAU:
+{"dang_bai":"Toán phép tính","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Đề bài cho biết những số nào hả con?","ky_nang":"doc_hieu_de","dap_an_cho_me":"Có 15 kẹo và 3 bạn","goi_y":{"muc_1_do_vat":"Đếm que tính trên bàn","muc_2_hinh_ve":"Vẽ 3 vòng tròn"}}],"dap_an_cuoi_cho_me":"5 chiếc kẹo"}
+CHỈ TRẢ VỀ DUY NHẤT CHUỖI JSON MỘT DÒNG ĐÓ.`,
+  },
+
+  p3_extra_v3: {
+    id: 'p3_extra_v3',
+    name: '3c (v3 Phần viết sau). Bổ sung lý do, bài anh em & trò chơi (Prompt 23V)',
+    desc: 'Chạy ngầm sau lần A: viết lý do cho mẹ, lời khen từng bậc, giải thích, bài anh em, trò chơi 5 phút, con dạy lại mẹ',
+    variables: ['{{de_bai}}', '{{cac_cau_hoi}}'],
+    requiredVars: ['{{de_bai}}', '{{cac_cau_hoi}}'],
+    template: `Bạn là chuyên gia sư phạm tiểu học. Dựa vào đề bài và các câu hỏi đã soạn cho mẹ, hãy viết tiếp phần bổ trợ sư phạm.
+
+ĐỀ BÀI: """{{de_bai}}"""
+CÁC BẬC CÂU HỎI ĐÃ SOẠN:
+{{cac_cau_hoi}}
+
+QUY TẮC BẮT BUỘC:
+1. Viết "ly_do_cho_me" (< 30 từ, nêu mục tiêu sư phạm vì sao hỏi câu này, TUYỆT ĐỐI không chứa đáp số của đề) và "loi_khen" (< 15 từ, khen nỗ lực) cho từng bậc theo đúng thứ tự.
+2. "giai_thich_cho_me" (< 50 từ, tóm tắt cách dẫn dắt), "luu_y_khi_giang" (< 40 từ, lỗi con dễ mắc).
+3. "bai_anh_em" (cùng dạng đề bài nhưng đổi số liệu, TUYỆT ĐỐI không chứa đáp số của bài gốc), "tro_choi_5_phut" (trò chơi vui gắn đồ vật thật trong nhà), "con_day_lai_me" (câu hỏi để con đóng vai cô giáo chỉ lại cho mẹ), "loi_khen" chung (< 20 từ).
+4. ĐẦU RA PHẢI LÀ JSON VIẾT LIỀN MỘT DÒNG, KHÔNG XUỐNG DÒNG, KHÔNG THỤT LỀ, ĐÚNG THEO MẪU SAU:
+{"cac_bac":[{"ly_do_cho_me":"Giúp con nhận biết số liệu ban đầu","loi_khen":"Con quan sát rất nhanh!"}],"giai_thich_cho_me":"Dẫn dắt con từng bước chia đều","luu_y_khi_giang":"Con dễ quên viết đơn vị","bai_anh_em":{"de":"Có 12 cái kẹo chia cho 3 bạn...","dap_an_cho_me":"4 cái kẹo"},"tro_choi_5_phut":"Dùng hạt đỗ chia đều vào 3 cốc","con_day_lai_me":"Con chỉ cho mẹ vì sao lại làm phép chia nhé!","loi_khen":"Hôm nay con học rất tập trung!"}
+CHỈ TRẢ VỀ DUY NHẤT CHUỖI JSON MỘT DÒNG ĐÓ.`,
+  },
+
   p3b_parent_note_explain: {
     id: 'p3b_parent_note_explain',
     name: '3b. Khung ghi chú phụ huynh (soạn bài)',
@@ -592,6 +640,7 @@ export const DEFAULT_AI_CONFIG = {
   temperature: 0.3,
   max_tokens: 1500,
   timeout_ms: 30000,
+  prompt_version: 'v3',
   curriculum_config: {
     books: ['Kết nối tri thức', 'Chân trời sáng tạo', 'Cánh diều', 'Cùng học để phát triển năng lực'],
     grades: ['Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5'],
@@ -773,12 +822,11 @@ export function routePedagogyMethod({ mon = 'Toán', lop = 'Lớp 2', dang_bai =
     }
   }
 
-  const def = activeRules[0] || DEFAULT_AI_CONFIG.pedagogy_routing[0]
   return {
-    rule_id: def ? def.id : 'fallback',
-    ruleId: def ? def.id : 'fallback',
-    phuong_phap: def ? def.methods : '',
-    doan_phuong_phap: def ? `- Phương pháp: ${def.methods}\n- Hướng dẫn thực hiện: ${def.instruction}\n- Cuối bài: Áp dụng Metacognitive ("Con dạy lại mẹ" và hỏi lần sau gặp bài này con làm bước nào trước).` : '',
+    rule_id: 'fallback',
+    ruleId: 'fallback',
+    phuong_phap: 'Từng bước gợi mở (Scaffolding)',
+    doan_phuong_phap: '- Phương pháp: Từng bước gợi mở (Scaffolding)\n- Hướng dẫn thực hiện: Dẫn dắt con bằng các câu hỏi gợi mở, không giải bài hộ.\n- Cuối bài: Áp dụng Metacognitive ("Con dạy lại mẹ" và hỏi lần sau gặp bài này con làm bước nào trước).',
   }
 }
 

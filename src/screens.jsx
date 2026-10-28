@@ -14,7 +14,7 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
+import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, cancelPrefetch, isDemoMode, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
@@ -167,8 +167,22 @@ export function Onboarding() {
    ============================================================ */
 function TeacherAssignmentBanner({ child, S, patch, go }) {
   const [assignment, setAssignment] = useState(null)
+  const [assignmentsList, setAssignmentsList] = useState([])
   const [items, setItems] = useState([])
   const [showItemsModal, setShowItemsModal] = useState(false)
+
+  const loadAssignmentDetail = useCallback((asgId) => {
+    const token = getAuthToken()
+    if (!token || !asgId) return
+    fetch(`${GATEWAY}/api/v1/family/assignments/${asgId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok && d.items) setItems(d.items)
+      })
+      .catch(() => {})
+  }, [])
 
   const loadAssignments = useCallback(() => {
     const token = getAuthToken()
@@ -179,20 +193,34 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
       .then(res => res.json())
       .then(data => {
         if (data.ok && Array.isArray(data.assignments) && data.assignments.length > 0) {
-          const first = data.assignments[0]
-          setAssignment(first)
-          fetch(`${GATEWAY}/api/v1/family/assignments/${first.assignment_id}`, {
-            headers: { Authorization: `Bearer ${token}` }
+          // Đợt 23V: Sắp xếp bài chưa xong, còn hạn, mới nhất trước; bài đã xong hoặc quá hạn xếp dưới
+          const now = new Date()
+          const sorted = [...data.assignments].sort((a, b) => {
+            const aDone = Boolean(a.completed || (a.completed_count != null && a.completed_count >= a.item_count) || a.status === 'completed' || a.status === 'closed')
+            const bDone = Boolean(b.completed || (b.completed_count != null && b.completed_count >= b.item_count) || b.status === 'completed' || b.status === 'closed')
+            const aExpired = Boolean(a.due_at && new Date(a.due_at) < now)
+            const bExpired = Boolean(b.due_at && new Date(b.due_at) < now)
+
+            const aRank = aDone ? 2 : (aExpired ? 1 : 0)
+            const bRank = bDone ? 2 : (bExpired ? 1 : 0)
+            if (aRank !== bRank) return aRank - bRank
+
+            const aTime = new Date(a.created_at || a.due_at || 0).getTime()
+            const bTime = new Date(b.created_at || b.due_at || 0).getTime()
+            return bTime - aTime
           })
-            .then(r => r.json())
-            .then(d => {
-              if (d.ok && d.items) setItems(d.items)
-            })
-            .catch(() => {})
+          setAssignmentsList(sorted)
+          const first = sorted[0]
+          setAssignment(first)
+          loadAssignmentDetail(first.assignment_id || first.id)
+        } else {
+          setAssignmentsList([])
+          setAssignment(null)
+          setItems([])
         }
       })
       .catch(() => {})
-  }, [child?.id])
+  }, [child?.id, loadAssignmentDetail])
 
   useEffect(() => {
     loadAssignments()
@@ -269,6 +297,41 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
 
   return (
     <>
+      {assignmentsList.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6, marginBottom: 8 }}>
+          {assignmentsList.map((a) => {
+            const isSel = (a.assignment_id || a.id) === (assignment.assignment_id || assignment.id)
+            const isDone = Boolean(a.completed || (a.completed_count != null && a.completed_count >= a.item_count) || a.status === 'completed' || a.status === 'closed')
+            const isExpired = Boolean(a.due_at && new Date(a.due_at) < new Date())
+            let badge = ''
+            if (isDone) badge = ' · Đã xong'
+            else if (isExpired) badge = ' · Hết hạn'
+            return (
+              <button
+                key={a.assignment_id || a.id}
+                type="button"
+                onClick={() => {
+                  setAssignment(a)
+                  loadAssignmentDetail(a.assignment_id || a.id)
+                }}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: isSel ? 700 : 500,
+                  background: isSel ? 'var(--c-primary, #059669)' : 'var(--c-surface, #fff)',
+                  color: isSel ? '#FFFFFF' : 'var(--c-text)',
+                  border: isSel ? '1.5px solid var(--c-primary, #059669)' : '1px solid var(--c-line, #E2E8F0)',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                }}
+              >
+                {a.title}{badge}
+              </button>
+            )
+          })}
+        </div>
+      )}
       <div
         className="card mint pop"
         style={{
@@ -948,6 +1011,45 @@ export function Analyze() {
   const [zoom, setZoom] = useState(1)
   const reqRef = useRef(null)
   const child = S.children.find((c) => c.id === S.activeId)
+  const prefetchAbortRef = useRef(null)
+  const prefetchPromiseRef = useRef(null)
+  const prefetchTextRef = useRef('')
+
+  // Đợt 23V: Soạn trước phần cần ngay (lần A) khi màn review vừa hiện
+  useEffect(() => {
+    if (aiState !== 'review') return
+    if (isDemoMode() || isTrialActive()) return
+
+    const textToPrefetch = (editedText || ocrText || S.flow?.ocr || '').trim()
+    if (!textToPrefetch) return
+
+    if (prefetchAbortRef.current) {
+      prefetchAbortRef.current.abort()
+    }
+    const abortCtrl = new AbortController()
+    prefetchAbortRef.current = abortCtrl
+    prefetchTextRef.current = textToPrefetch
+
+    const effectiveFamId = S.user?.family_id || getCurrentFamilyId()
+    prefetchPromiseRef.current = aiExplain(
+      textToPrefetch,
+      child,
+      S.tone,
+      redirectNote,
+      false,
+      { familyId: effectiveFamId, isPrefetch: true, signal: abortCtrl.signal }
+    ).catch((e) => {
+      if (e?.name !== 'AbortError') console.warn('Prefetch error:', e)
+      return null
+    })
+
+    return () => {
+      if (prefetchAbortRef.current) {
+        prefetchAbortRef.current.abort()
+        cancelPrefetch({ familyId: effectiveFamId }).catch(() => {})
+      }
+    }
+  }, [aiState, ocrText, child?.id, child?.grade])
 
   const useSampleProblem = () => {
     patch({
@@ -975,7 +1077,17 @@ export function Analyze() {
     try {
       const combinedNote = [customParentNote, redirectNote].filter(Boolean).join('. ')
       const effectiveFamId = S.user?.family_id || getCurrentFamilyId()
-      const explainRes = await aiExplain(textToUse, child, S.tone, combinedNote, false, { familyId: effectiveFamId })
+
+      let explainRes = null
+      // Đợt 23V: Dùng kết quả soạn trước nếu đúng đề
+      if (prefetchPromiseRef.current && prefetchTextRef.current.trim() === (textToUse || '').trim()) {
+        try {
+          explainRes = await prefetchPromiseRef.current
+        } catch (_) {}
+      }
+      if (!explainRes || explainRes.error) {
+        explainRes = await aiExplain(textToUse, child, S.tone, combinedNote, false, { familyId: effectiveFamId })
+      }
       setDone(4)
 
       // Nếu AI phản hồi can_hoi_lai (đề không rõ hoặc thiếu dữ kiện)
@@ -1380,8 +1492,15 @@ export function Analyze() {
               rows={5}
               value={editedText}
               onChange={(e) => {
-                setEditedText(e.target.value)
+                const val = e.target.value
+                setEditedText(val)
                 setReAskReason(null)
+                if (prefetchAbortRef.current) {
+                  prefetchAbortRef.current.abort()
+                  prefetchAbortRef.current = null
+                  prefetchPromiseRef.current = null
+                  cancelPrefetch({ familyId: S.user?.family_id || getCurrentFamilyId() }).catch(() => {})
+                }
               }}
               placeholder="Nhập hoặc sửa lại nội dung đề bài..."
               style={{
@@ -1432,7 +1551,14 @@ export function Analyze() {
             <button
               type="button"
               className="btn-km btn-km-m btn-km-secondary"
-              onClick={() => { soundPop(500); go('snap') }}
+              onClick={() => {
+                if (prefetchAbortRef.current) {
+                  prefetchAbortRef.current.abort()
+                  cancelPrefetch({ familyId: S.user?.family_id || getCurrentFamilyId() }).catch(() => {})
+                }
+                soundPop(500)
+                go('snap')
+              }}
             >
               Chụp lại
             </button>
@@ -1878,6 +2004,17 @@ export function Scaffold() {
   const { step, stuck, unlocked } = S.flow
   const child = S.children.find((c) => c.id === S.activeId)
   const steps = problem.steps || PROBLEM.steps
+
+  useEffect(() => {
+    const handleExtra = (e) => {
+      const loaded = e.detail
+      if (loaded && loaded.id === problem?.id) {
+        patch({ problem: { ...problem, ...loaded } })
+      }
+    }
+    window.addEventListener('kem_lesson_extra_loaded', handleExtra)
+    return () => window.removeEventListener('kem_lesson_extra_loaded', handleExtra)
+  }, [problem?.id])
   const [showAns, setShowAns] = useState(false)
   const [isCardShaking, setIsCardShaking] = useState(false)
   const [parentNote, setParentNote] = useState('')
@@ -2428,9 +2565,9 @@ export function Scaffold() {
           </button>
         </div>
 
-        {showWhyModal && (curStep.ly_do_cho_me || microStep?.ly_do_cho_me) && (
+        {showWhyModal && (
           <div style={{ background: 'var(--c-bg)', padding: '8px 12px', borderRadius: 10, fontSize: 12.5, color: 'var(--c-sub)', lineHeight: 1.4 }}>
-            💡 <b>Mục tiêu sư phạm:</b> {microStep?.ly_do_cho_me || curStep.ly_do_cho_me}
+            💡 <b>Mục tiêu sư phạm:</b> {(microStep?.ly_do_cho_me || curStep.ly_do_cho_me) || 'Gấu đang viết lý do…'}
           </div>
         )}
 
@@ -3626,6 +3763,14 @@ export function Done() {
         {/* Bài anh em */}
         {(() => {
           const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
+          if (!bro && problem?.prompt_version === 'v3' && !isDemoMode() && !isTrialActive()) {
+            return (
+              <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--c-bg)', border: '1px solid var(--c-line)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>🐻💭</span>
+                <span style={{ fontSize: 13, color: 'var(--c-sub)', fontWeight: 600 }}>Gấu đang viết bài anh em cho con…</span>
+              </div>
+            )
+          }
           if (!bro) return null
           const deText = bro.de || bro.text || ''
           return (
