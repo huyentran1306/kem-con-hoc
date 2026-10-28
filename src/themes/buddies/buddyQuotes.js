@@ -5,7 +5,7 @@
 export const BUDDY_QUOTES = {
   bear: {
     hello: 'Gấu mật chào con! Tối nay mình cùng săn sticker ngọt ngào nhé! 🍯',
-    nudge: 'Gấu mang hũ mật thơm nè, hai mẹ con uống ngụm nước ấm rồi thở phào nha!',
+    nudge: 'Gấu mang hũ mật thơm nè, cả nhà uống ngụm nước ấm rồi thở phào nha!',
     cheer: 'Tuyệt vời lắm! Gấu vỗ tay khen con vượt qua bài học xuất sắc! 🐻✨',
   },
   cloud: {
@@ -55,7 +55,7 @@ export const BUDDY_QUOTES = {
   },
   onigiri: {
     hello: 'Bé Cơm Nắm tròn xoe chào con! Tối nay mình cùng nạp năng lượng học thật ngoan nhé! 🍙',
-    nudge: 'Bé Cơm Nắm thơm ngon nhắc con: uống ngụm nước rồi hai mẹ con cùng làm tiếp nha!',
+    nudge: 'Bé Cơm Nắm thơm ngon nhắc con: uống ngụm nước rồi cả nhà cùng làm tiếp nha!',
     cheer: 'Giỏi quá là giỏi! Bé Cơm Nắm tặng con trọn hộp bento dinh dưỡng tinh thần! 🍱✨',
   },
 };

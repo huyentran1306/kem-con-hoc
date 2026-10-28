@@ -43,12 +43,12 @@ export function PublicReportView({ reportToken, onHome }) {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: '#F8FAFC' }}>
         <div className="card" style={{ maxWidth: 400, textAlign: 'center', padding: 24, borderRadius: 20 }}>
           <div style={{ fontSize: 44, marginBottom: 8 }}>⌛</div>
-          <h3 style={{ fontSize: 18, color: '#1E293B', marginBottom: 8 }}>Báo Cáo Không Khả Dụng</h3>
+          <h3 style={{ fontSize: 18, color: '#1E293B', marginBottom: 8 }}>Báo cáo không khả dụng</h3>
           <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5, marginBottom: 18 }}>
             {errorMsg || 'Link báo cáo đã hết thời hạn chia sẻ (7 ngày) hoặc đã được phụ huynh thu hồi bảo mật.'}
           </p>
           <button className="btn solid" onClick={onHome} style={{ width: '100%' }}>
-            Mở Trang Chủ Kèm Con Học 🏠
+            Mở trang chủ Kèm Con Học 🏠
           </button>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function PublicReportView({ reportToken, onHome }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 99, background: '#F3E8FF', color: '#7E22CE', textTransform: 'uppercase', letterSpacing: 1 }}>
-            Kèm Con Học · Báo Cáo Tuần
+            Kèm Con Học · Báo cáo tuần
           </span>
           <h1 style={{ fontSize: 22, fontWeight: 900, color: '#4C1D95', margin: '8px 0 2px' }}>
             Tuần của {rep.childName || 'Bé'}
@@ -176,7 +176,7 @@ export function PublicReportView({ reportToken, onHome }) {
               background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
             }}
           >
-            Đăng Nhập Cùng Kèm Con Học 🦄
+            Đăng nhập cùng Kèm Con Học 🦄
           </button>
         </div>
       </div>

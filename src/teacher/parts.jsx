@@ -285,7 +285,7 @@ export function buildAssistantTips({ items = [], students = [], steps = [], tota
     const g = Number(it.guided_count) || 0
     if (g > 0 && (!worst || g > (Number(worst.guided_count) || 0))) worst = it
   }
-  if (worst) tips.push(`Câu ${worst.position} có ${worst.guided_count} lượt mẹ phải dẫn nhiều: nên chữa câu này cùng cả lớp.`)
+  if (worst) tips.push(`Câu ${worst.position} có ${worst.guided_count} lượt bố mẹ phải dẫn nhiều: nên chữa câu này cùng cả lớp.`)
   const done = (items || []).reduce((a, it) => a + (Number(it.done_count) || 0), 0)
   const self = (items || []).reduce((a, it) => a + (Number(it.self_count) || 0), 0)
   if (done > 0) {

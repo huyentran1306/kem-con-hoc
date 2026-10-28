@@ -7,6 +7,11 @@
    ============================================================ */
 import { useEffect, useState } from 'react'
 import { GATEWAY, getAuthToken, teacherLabel } from './api'
+import { announcementStatus } from './teacher/announcementStatus.js'
+
+// Prompt 29A: màn chính chỉ hiện tối đa 2 thông báo CÒN HẠN, chưa ẩn (ghim lên trước).
+// Thông báo hết hạn chỉ thấy trong "Xem tất cả", để mờ, có nhãn "Đã qua". Đã ẩn / đã xoá thì không hiện.
+const HOME_MAX = 2
 
 function normalize(a) {
   return {
@@ -23,6 +28,11 @@ function normalize(a) {
     requireAck: Boolean(a.require_ack ?? a.requireAck),
     readAt: a.read_at || a.readAt || null,
     ackedAt: a.acked_at || a.ackedAt || a.ack_at || null,
+    expires_at: a.expires_at ?? a.expiresAt ?? null,
+    hidden_at: a.hidden_at || a.hiddenAt || null,
+    deleted_at: a.deleted_at || a.deletedAt || null,
+    created_at: a.created_at || a.createdAt || '',
+    remind_for: a.remind_for || a.remindFor || '',
   }
 }
 
@@ -59,7 +69,11 @@ export default function FamilyAnnouncements({ childId, toast }) {
         if (cancelled) return
         const list = d && (d.announcements || d.items || [])
         if (Array.isArray(list)) {
-          const norm = list.map(normalize).filter((a) => a.id != null)
+          const norm = list
+            .map(normalize)
+            .filter((a) => a.id != null)
+            .map((a) => ({ ...a, status: announcementStatus(a) }))
+            .filter((a) => a.status === 'active' || a.status === 'expired')
           norm.sort((x, y) => (y.pinned - x.pinned) || String(y.createdAt).localeCompare(String(x.createdAt)))
           setItems(norm)
         }
@@ -70,11 +84,13 @@ export default function FamilyAnnouncements({ childId, toast }) {
     }
   }, [childId])
 
-  if (items.length === 0) return null
+  const activeItems = items.filter((a) => a.status === 'active')
+  const pastItems = items.filter((a) => a.status === 'expired')
+  if (activeItems.length === 0 && !showAll) return null
 
   const token = getAuthToken()
-  const unread = items.filter((a) => !a.readAt).length
-  const visible = showAll ? items : items.slice(0, 3)
+  const unread = activeItems.filter((a) => !a.readAt).length
+  const visible = showAll ? [...activeItems, ...pastItems] : activeItems.slice(0, HOME_MAX)
 
   const open = (a) => {
     setOpenId(openId === a.id ? null : a.id)
@@ -103,11 +119,14 @@ export default function FamilyAnnouncements({ childId, toast }) {
 
       {visible.map((a) => {
         const isOpen = openId === a.id
-        const needAck = a.requireAck && !a.ackedAt
+        const isPast = a.status === 'expired'
+        const needAck = a.requireAck && !a.ackedAt && !isPast
         return (
           <div
             key={a.id}
+            data-testid={isPast ? 'ann-past' : 'ann-active'}
             style={{
+              opacity: isPast ? 0.55 : 1,
               borderRadius: 14,
               border: `1.5px solid ${a.readAt ? 'var(--c-line, #F4DDE7)' : 'var(--c-accent, #D9577F)'}`,
               background: a.readAt ? 'var(--c-surface, #fff)' : 'var(--c-surface-2, #FDE8EF)',
@@ -122,7 +141,8 @@ export default function FamilyAnnouncements({ childId, toast }) {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {!a.readAt && <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--c-accent, #D9577F)', flex: '0 0 auto' }} />}
-                {a.pinned && <span title="Cô ghim">📌</span>}
+                {a.pinned && !isPast && <span title="Cô ghim">📌</span>}
+                {isPast && <span style={{ fontSize: 11, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: 'var(--c-line, #EADFCF)', color: 'var(--c-text-2, #6B5D6B)' }}>Đã qua</span>}
                 <b style={{ fontSize: 14, color: 'var(--c-text, #3A2A33)', flex: 1, minWidth: 0 }}>
                   {a.title || (a.kind === 'reminder' ? 'Lời nhắc của cô' : 'Thông báo')}
                 </b>
@@ -157,9 +177,9 @@ export default function FamilyAnnouncements({ childId, toast }) {
         )
       })}
 
-      {items.length > 3 && (
+      {(activeItems.length > HOME_MAX || pastItems.length > 0 || showAll) && (
         <button className="btn ghost" style={{ padding: '7px 12px', fontSize: 12.5 }} onClick={() => setShowAll((v) => !v)}>
-          {showAll ? 'Thu gọn' : `Xem tất cả ${items.length} thông báo`}
+          {showAll ? 'Thu gọn' : 'Xem tất cả thông báo của cô'}
         </button>
       )}
     </div>

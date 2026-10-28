@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from './utils';
 import { REMINDER_TEMPLATES, MAX_REMINDERS_PER_DAY, getQuickReminderDates } from './teacherReminderData.js';
+import { EXPIRY_PRESETS, DEFAULT_EXPIRY_PRESET, expiryFromPreset, presetFromExpiry, hasDateWords, announcementStatus, STATUS_LABEL, expiryLabel } from './teacher/announcementStatus.js';
 import { QrCodeModal } from './qrCode.jsx';
 import {
   BearMascot, Card, Button, StatusPill, Kpi, Tabs, DataTable,
@@ -161,7 +162,7 @@ export default function TeacherPortal({ onExit }) {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.spinner}></div>
-        <p style={{ marginTop: 16, color: 'var(--s-text-2, #84664A)', fontWeight: 600 }}>Đang mở Cổng Giáo Viên...</p>
+        <p style={{ marginTop: 16, color: 'var(--s-text-2, #84664A)', fontWeight: 600 }}>Đang mở cổng giáo viên...</p>
       </div>
     );
   }
@@ -404,7 +405,7 @@ function TeacherAuthScreen({ mode, setMode, onLoginSuccess }) {
             <BearMascot mood="welcome" size={64} />
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--s-text, #4B3621)', margin: '0 0 6px 0', fontFamily: '"Baloo 2", sans-serif' }}>
-            {mode === 'login' ? 'Đăng nhập Cổng Giáo Viên' : 'Đăng ký Tài khoản Cô Giáo'}
+            {mode === 'login' ? 'Đăng nhập cổng giáo viên' : 'Đăng ký tài khoản cô giáo'}
           </h2>
           <p style={{ fontSize: 14, color: 'var(--s-text-2, #84664A)', margin: 0 }}>
             {mode === 'login'
@@ -787,7 +788,7 @@ function TeacherClassesList({
         <KpiCard
           label="Việc cần xem"
           value={loading ? null : totalPendingStudents}
-          sub={totalPendingStudents > 0 ? 'Chờ cô duyệt' : 'Không có việc tồn'}
+          sub={totalPendingStudents > 0 ? 'Chờ cô duyệt' : 'Không có việc cần xem'}
           tone={totalPendingStudents > 0 ? 'warn' : 'default'}
         />
       </div>
@@ -1833,7 +1834,7 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
         <KpiCard label="Hoàn thành" value={totalStudents > 0 ? `${submittedCount}/${totalStudents}` : null} sub={totalStudents > 0 ? `${Math.round((submittedCount / totalStudents) * 100)}%` : ''} />
         <KpiCard label="Tự làm được" value={hasData ? totalSelf : null} sub={pct(totalSelf)} tone="ok" />
         <KpiCard label="Cần gợi ý" value={hasData ? totalHint : null} sub={pct(totalHint)} tone="warn" />
-        <KpiCard label="Mẹ dẫn nhiều" value={hasData ? totalGuided : null} sub={pct(totalGuided)} tone="bad" />
+        <KpiCard label="Bố mẹ dẫn nhiều" value={hasData ? totalGuided : null} sub={pct(totalGuided)} tone="bad" />
       </div>
 
       <div className="tp-res-grid">
@@ -1876,7 +1877,7 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
                     <td style={{ padding: '10px 14px' }}>
                       {s.teach_back_rating === 'self' && <TPill variant="success">Tự làm</TPill>}
                       {s.teach_back_rating === 'hint' && <TPill variant="warning">Cần gợi ý</TPill>}
-                      {s.teach_back_rating === 'guided' && <TPill variant="danger">Mẹ dẫn</TPill>}
+                      {s.teach_back_rating === 'guided' && <TPill variant="danger">Bố mẹ dẫn</TPill>}
                       {!s.teach_back_rating && <span style={{ color: 'var(--s-text-2)' }}>·</span>}
                     </td>
                   </tr>
@@ -1915,12 +1916,12 @@ function AssignmentResultsView({ token, assignmentId, onBack }) {
                   <div style={{ height: 10, borderRadius: 999, overflow: 'hidden', display: 'flex', backgroundColor: 'var(--s-line)', marginBottom: 10 }}>
                     {selfPct > 0 && <div style={{ width: `${selfPct}%`, backgroundColor: 'var(--s-ok)' }} title={`Tự làm: ${selfPct}%`} />}
                     {hintPct > 0 && <div style={{ width: `${hintPct}%`, backgroundColor: 'var(--s-accent)' }} title={`Cần gợi ý: ${hintPct}%`} />}
-                    {guidedPct > 0 && <div style={{ width: `${guidedPct}%`, backgroundColor: 'var(--s-bad)' }} title={`Mẹ dẫn nhiều: ${guidedPct}%`} />}
+                    {guidedPct > 0 && <div style={{ width: `${guidedPct}%`, backgroundColor: 'var(--s-bad)' }} title={`Bố mẹ dẫn nhiều: ${guidedPct}%`} />}
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <TPill variant="success">Tự làm được: {it.self_count || 0} ({selfPct}%)</TPill>
                     <TPill variant="warning">Cần gợi ý: {it.hint_count || 0} ({hintPct}%)</TPill>
-                    <TPill variant="danger">Mẹ dẫn nhiều: {it.guided_count || 0} ({guidedPct}%)</TPill>
+                    <TPill variant="danger">Bố mẹ dẫn nhiều: {it.guided_count || 0} ({guidedPct}%)</TPill>
                   </div>
                 </>
               ) : (
@@ -2221,6 +2222,43 @@ function RosterModal({ token, classId, onClose, onAdded }) {
 // ---------------------------------------------------------------------------
 // 7. ANNOUNCEMENTS & REMINDERS TAB (PROMPT 04 MỤC 4b)
 // ---------------------------------------------------------------------------
+/* Prompt 29A: chọn "Hiện trên app phụ huynh tới" */
+function AnnExpiryPicker({ preset, customDate, pinned, onPreset, onCustomDate }) {
+  return (
+    <div>
+      <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--s-text-2)', display: 'block', marginBottom: 6 }}>
+        Hiện trên app phụ huynh tới
+      </span>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {EXPIRY_PRESETS.filter((p) => !p.pinnedOnly || pinned).map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            className={`tp-chip ${preset === p.id ? 'tp-on' : ''}`}
+            aria-pressed={preset === p.id}
+            onClick={() => onPreset(p.id)}
+          >
+            {p.label}
+          </button>
+        ))}
+        {preset === 'custom' && (
+          <input
+            type="date"
+            className="tp-ann-date"
+            value={customDate}
+            min={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => onCustomDate(e.target.value)}
+            aria-label="Chọn ngày hết hạn"
+          />
+        )}
+      </div>
+      {!pinned && (
+        <p style={{ fontSize: 12, color: 'var(--s-text-2)', margin: '6px 0 0' }}>Muốn hiện mãi thì bật Ghim đầu lớp rồi chọn Không hết hạn.</p>
+      )}
+    </div>
+  );
+}
+
 function TeacherAnnouncementsTab({ token, classId, cls }) {
   const [seg, setSeg] = useState('announcements'); // 'announcements' | 'reminders'
   const [announcements, setAnnouncements] = useState([]);
@@ -2232,6 +2270,13 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
   const [pinned, setPinned] = useState(false);
   const [requireAck, setRequireAck] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  // Prompt 29A: hạn hiển thị + quản lý thông báo đã gửi
+  const [expiryPreset, setExpiryPreset] = useState(DEFAULT_EXPIRY_PRESET);
+  const [customDate, setCustomDate] = useState('');
+  const [annFilter, setAnnFilter] = useState('active'); // 'active' | 'all'
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [editing, setEditing] = useState(null); // { id, title, body, preset, customDate, pinned }
+  const [busyId, setBusyId] = useState(null);
 
   // Nhắc việc có ngày
   const quickDates = getQuickReminderDates();
@@ -2252,6 +2297,21 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
     loadAnnouncements();
     loadClassAssignments();
   }, [classId]);
+
+  // Đóng menu ⋯ khi bấm ra ngoài hoặc nhấn Esc
+  useEffect(() => {
+    if (!menuOpenId) return undefined;
+    const onDown = (e) => {
+      if (!(e.target && e.target.closest && e.target.closest('.tp-ann-menu-wrap'))) setMenuOpenId(null);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpenId(null); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpenId]);
 
   async function loadClassAssignments() {
     try {
@@ -2294,13 +2354,21 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, body, pinned: pinned ? 1 : 0, requireAck: requireAck ? 1 : 0 }),
+        body: JSON.stringify({
+          title,
+          body,
+          pinned: pinned ? 1 : 0,
+          requireAck: requireAck ? 1 : 0,
+          expiresAt: expiryFromPreset(pinned ? expiryPreset : (expiryPreset === 'never' ? DEFAULT_EXPIRY_PRESET : expiryPreset), { customDate }),
+        }),
       });
       const d = await res.json();
       if (res.ok && d.ok) {
         toast('Đã gửi thông báo tới lớp', 'success');
         setTitle('');
         setBody('');
+        setExpiryPreset(DEFAULT_EXPIRY_PRESET);
+        setCustomDate('');
         setShowCreate(false);
         loadAnnouncements();
       } else {
@@ -2311,8 +2379,91 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
     }
   }
 
+  // Prompt 29A: sửa, ghim/gỡ ghim, ẩn/hiện lại, xoá mềm. Chỉ cô tạo lớp gọi được (máy chủ kiểm teacher_id).
+  async function updateAnnouncement(an, payload, okMsg) {
+    setBusyId(an.id);
+    setMenuOpenId(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/teacher/announcements/${an.id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok && d.ok) {
+        toast(okMsg, 'success');
+        loadAnnouncements();
+        return true;
+      }
+      toast(d.error?.message || (res.status === 404 || res.status === 405 ? 'Máy chủ chưa hỗ trợ sửa thông báo (cần cập nhật Worker)' : 'Chưa cập nhật được thông báo'), 'error');
+    } catch {
+      toast('Lỗi kết nối khi cập nhật thông báo', 'error');
+    } finally {
+      setBusyId(null);
+    }
+    return false;
+  }
+
+  async function deleteAnnouncement(an) {
+    setMenuOpenId(null);
+    const ok = await appConfirm(`Thông báo "${an.title}" sẽ không còn hiện trên app phụ huynh. Cô vẫn xem lại được lượt đọc trong mục Tất cả.`, {
+      title: 'Xoá thông báo này?',
+      okText: 'Xoá',
+      danger: true,
+    });
+    if (!ok) return;
+    setBusyId(an.id);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/teacher/announcements/${an.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok && d.ok) {
+        toast('Đã xoá thông báo', 'success');
+        loadAnnouncements();
+      } else {
+        toast(d.error?.message || (res.status === 404 || res.status === 405 ? 'Máy chủ chưa hỗ trợ xoá thông báo (cần cập nhật Worker)' : 'Chưa xoá được thông báo'), 'error');
+      }
+    } catch {
+      toast('Lỗi kết nối khi xoá thông báo', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function startEdit(an) {
+    setMenuOpenId(null);
+    const pinnedNow = Number(an.pinned) === 1;
+    const p = an.expires_at ? presetFromExpiry(an.expires_at) : { preset: pinnedNow ? 'never' : DEFAULT_EXPIRY_PRESET, customDate: '' };
+    setEditing({ id: an.id, title: an.title || '', body: an.body || '', preset: p.preset, customDate: p.customDate || '', pinned: pinnedNow });
+  }
+
+  async function saveEdit(an) {
+    if (!editing || !editing.title.trim() || !editing.body.trim()) return;
+    const preset = editing.preset === 'never' && !editing.pinned ? DEFAULT_EXPIRY_PRESET : editing.preset;
+    const ok = await updateAnnouncement(an, {
+      title: editing.title.trim(),
+      body: editing.body.trim(),
+      expiresAt: expiryFromPreset(preset, { customDate: editing.customDate }),
+    }, 'Đã lưu thông báo');
+    if (ok) setEditing(null);
+  }
+
+  // Gợi ý chuyển sang Nhắc việc khi nội dung có chữ chỉ ngày; giữ nguyên chữ cô đã gõ
+  function moveToReminder() {
+    const text = [title.trim(), body.trim()].filter(Boolean).join('. ');
+    setReminderText(text);
+    setSelectedTemplate(null);
+    setShowCreate(false);
+    setSeg('reminders');
+  }
+
   const reminders = announcements.filter((a) => a.kind === 'reminder');
-  const infoAnnouncements = announcements.filter((a) => a.kind !== 'reminder');
+  const allInfoAnnouncements = announcements.filter((a) => a.kind !== 'reminder');
+  const infoAnnouncements = annFilter === 'all'
+    ? allInfoAnnouncements
+    : allInfoAnnouncements.filter((a) => announcementStatus(a) === 'active');
   const remindersForDate = reminders.filter((r) => r.remind_for === selectedDate).length;
   const reachedLimit = remindersForDate >= MAX_REMINDERS_PER_DAY;
   const familyCount = Number(cls?.active_students_count);
@@ -2451,10 +2602,26 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
                   onChange={(e) => setBody(e.target.value)}
                   required
                 />
+                {hasDateWords(`${title} ${body}`) && (
+                  <button type="button" className="tp-ann-hint" data-testid="ann-reminder-hint" onClick={moveToReminder}>
+                    💡 Việc có ngày cụ thể? Dùng <b>Nhắc việc</b> để thẻ tự tắt sau ngày đó.
+                  </button>
+                )}
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  <Toggle checked={pinned} onChange={setPinned} label="Ghim đầu lớp" />
+                  <Toggle
+                    checked={pinned}
+                    onChange={(v) => { setPinned(v); if (!v && expiryPreset === 'never') setExpiryPreset(DEFAULT_EXPIRY_PRESET); }}
+                    label="Ghim đầu lớp"
+                  />
                   <Toggle checked={requireAck} onChange={setRequireAck} label='Cần phụ huynh bấm "Đã đọc"' />
                 </div>
+                <AnnExpiryPicker
+                  preset={expiryPreset}
+                  customDate={customDate}
+                  pinned={pinned}
+                  onPreset={setExpiryPreset}
+                  onCustomDate={setCustomDate}
+                />
                 <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
                   <button type="submit" style={styles.primaryBtn}>Gửi thông báo</button>
                   <button type="button" style={styles.secondaryBtn} onClick={() => setShowCreate(false)}>Huỷ</button>
@@ -2463,25 +2630,97 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
             </form>
           )}
 
+          {/* Lọc nhanh: Đang hiện / Tất cả */}
+          <div className="tp-ann-filter" role="group" aria-label="Lọc thông báo">
+            {[{ v: 'active', t: 'Đang hiện' }, { v: 'all', t: 'Tất cả' }].map((o) => (
+              <button
+                key={o.v}
+                type="button"
+                className={`tp-chip ${annFilter === o.v ? 'tp-on' : ''}`}
+                aria-pressed={annFilter === o.v}
+                onClick={() => setAnnFilter(o.v)}
+              >
+                {o.t}
+                {o.v === 'all' ? ` (${allInfoAnnouncements.length})` : ''}
+              </button>
+            ))}
+          </div>
+
           {loading ? (
             <TeacherCardSkeleton count={3} />
           ) : infoAnnouncements.length === 0 ? (
             <EmptyState
-              title="Chưa có thông báo nào"
-              description="Cô bấm Soạn thông báo mới để gửi tới phụ huynh lớp này."
+              title={annFilter === 'active' && allInfoAnnouncements.length > 0 ? 'Không có thông báo nào đang hiện' : 'Chưa có thông báo nào'}
+              description={annFilter === 'active' && allInfoAnnouncements.length > 0 ? 'Các thông báo cũ đã hết hạn hoặc đã ẩn. Bấm Tất cả để xem lại.' : 'Cô bấm Soạn thông báo mới để gửi tới phụ huynh lớp này.'}
             />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {infoAnnouncements.map((an) => (
-                <div key={an.id} className="tp-asg-card" style={{ alignItems: 'stretch' }}>
-                  <div>
+              {infoAnnouncements.map((an) => {
+                const st = announcementStatus(an);
+                const isPinned = Number(an.pinned) === 1;
+                const isEditing = editing && editing.id === an.id;
+                return (
+                <div key={an.id} className={`tp-asg-card tp-ann-card tp-ann-${st}`} style={{ alignItems: 'stretch' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                      {Number(an.pinned) === 1 && <span style={styles.pinnedBadge}>Đã ghim</span>}
+                      <TPill variant={st === 'active' ? 'success' : st === 'expired' ? 'warning' : 'default'}>{STATUS_LABEL[st]}</TPill>
+                      {isPinned && <span style={styles.pinnedBadge}>Đã ghim</span>}
                       {Number(an.require_ack) === 1 && <span style={styles.ackBadge}>Cần bấm Đã đọc</span>}
                       <span style={{ fontSize: 12.5, color: 'var(--s-text-2)' }}>{fmtDate(an.created_at)}</span>
+                      {st !== 'deleted' && <span style={{ fontSize: 12.5, color: 'var(--s-text-2)' }}>· {expiryLabel(an)}</span>}
+                      {st !== 'deleted' && (
+                        <div className="tp-ann-menu-wrap">
+                          <button
+                            type="button"
+                            className="tp-ann-more"
+                            aria-label="Thao tác với thông báo"
+                            aria-haspopup="menu"
+                            aria-expanded={menuOpenId === an.id}
+                            disabled={busyId === an.id}
+                            onClick={() => setMenuOpenId(menuOpenId === an.id ? null : an.id)}
+                            data-testid={`ann-more-${an.id}`}
+                          >
+                            ⋯
+                          </button>
+                          {menuOpenId === an.id && (
+                            <div className="tp-ann-menu" role="menu">
+                              <button type="button" role="menuitem" onClick={() => startEdit(an)}>✏️ Sửa</button>
+                              <button type="button" role="menuitem" onClick={() => updateAnnouncement(an, { pinned: isPinned ? 0 : 1 }, isPinned ? 'Đã gỡ ghim' : 'Đã ghim lên đầu lớp')}>
+                                {isPinned ? '📌 Gỡ ghim' : '📌 Ghim'}
+                              </button>
+                              {st === 'hidden' ? (
+                                <button type="button" role="menuitem" onClick={() => updateAnnouncement(an, { hidden: false }, 'Đã hiện lại trên app phụ huynh')}>👁 Hiện lại trên app phụ huynh</button>
+                              ) : (
+                                <button type="button" role="menuitem" onClick={() => updateAnnouncement(an, { hidden: true }, 'Đã ẩn khỏi app phụ huynh')}>🙈 Ẩn khỏi app phụ huynh</button>
+                              )}
+                              <button type="button" role="menuitem" className="tp-ann-danger" onClick={() => deleteAnnouncement(an)}>🗑 Xoá</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--s-text)' }}>{an.title}</h4>
-                    <p style={{ fontSize: 14, color: 'var(--s-text)', margin: '0 0 8px 0', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{an.body}</p>
+                    {isEditing ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '6px 0 8px' }}>
+                        <input style={styles.input} value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} aria-label="Tiêu đề" />
+                        <textarea style={{ ...styles.input, minHeight: 70 }} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} aria-label="Nội dung" />
+                        <AnnExpiryPicker
+                          preset={editing.preset}
+                          customDate={editing.customDate}
+                          pinned={editing.pinned}
+                          onPreset={(v) => setEditing({ ...editing, preset: v })}
+                          onCustomDate={(v) => setEditing({ ...editing, customDate: v })}
+                        />
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button type="button" style={styles.primaryBtn} disabled={busyId === an.id} onClick={() => saveEdit(an)}>Lưu</button>
+                          <button type="button" style={styles.secondaryBtn} onClick={() => setEditing(null)}>Huỷ</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <h4 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--s-text)' }}>{an.title}</h4>
+                        <p style={{ fontSize: 14, color: 'var(--s-text)', margin: '0 0 8px 0', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{an.body}</p>
+                      </>
+                    )}
                     <div style={{ fontSize: 12.5, color: 'var(--s-text-2)', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span>
                         Đã đọc: <strong>{Number(an.read_count) || 0}</strong> gia đình · <strong>{Math.max(Number(an.done_count) || 0, Number(an.ack_count) || 0)}</strong> gia đình đã nhắc con
@@ -2493,7 +2732,8 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
                     <ReadsList ann={an} />
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -2507,7 +2747,7 @@ function TeacherAnnouncementsTab({ token, classId, cls }) {
               Cô soạn nhắc việc
             </h4>
             <p style={{ fontSize: 13, color: 'var(--s-text-2)', margin: '0 0 14px 0', lineHeight: 1.5 }}>
-              Thẻ hiện trên màn chính của mẹ từ trưa hôm trước tới trưa ngày áp dụng. Mẹ bấm "Đã nhắc con" là xong.
+              Thẻ hiện trên màn chính của phụ huynh từ trưa hôm trước tới trưa ngày áp dụng. Phụ huynh bấm "Đã nhắc con" là xong.
             </p>
 
             <div style={{ marginBottom: 12 }}>

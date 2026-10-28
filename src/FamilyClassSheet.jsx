@@ -12,11 +12,12 @@
  */
 
 import { appConfirm } from './dialog'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { BookOpen, Users, Check, X, ShieldAlert, LogOut, ArrowRight, Bell, AlertTriangle, RefreshCw, Plus, CheckCircle, Clock } from 'lucide-react';
 import { toast } from './utils';
 import { fetchClassPreview, joinFamilyClass, changeClassChild, leaveFamilyClass, normalizeClassInfo, teacherLabel, GATEWAY } from './api';
 import { formatClassName, formatTeacherName } from './teacher/format.js';
+import { AppCtx } from './ctx'
 
 const API_BASE = GATEWAY;
 
@@ -30,6 +31,7 @@ export function FamilyClassSheet({
   onClose,
   onOpenAssignment,
 }) {
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const kidsList = Array.isArray(familyKids) && familyKids.length > 0
     ? familyKids
     : activeChild ? [activeChild] : [{ id: 'na', name: 'Bé', grade: 'Lớp 3' }];
@@ -345,7 +347,7 @@ export function FamilyClassSheet({
                 Bé chưa kết nối vào lớp nào
               </h4>
               <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 16px 0' }}>
-                Cô giáo sẽ gửi mã lớp hoặc link vào nhóm Zalo. Mẹ chỉ cần nhập mã hoặc bấm vào link là xong nhé!
+                Cô giáo sẽ gửi mã lớp hoặc link vào nhóm Zalo. {Ho} chỉ cần nhập mã hoặc bấm vào link là xong nhé!
               </p>
               <button style={styles.btnPrimary} onClick={() => setMode('join')}>
                 ＋ Vào lớp bằng mã hoặc link
@@ -672,7 +674,7 @@ export function FamilyClassSheet({
                         <AlertTriangle size={20} color="#D97706" style={{ flexShrink: 0 }} />
                         <div style={{ fontSize: 12.5, color: '#92400E', lineHeight: 1.4 }}>
                           <strong>{selectedChild?.name}</strong> đang ghi <strong>{selectedChild?.grade}</strong>, lớp này là <strong>khối {classGradeNum}</strong>.
-                          <br />Đúng con chưa mẹ?
+                          <br />Đúng con chưa {ho}?
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
@@ -782,7 +784,7 @@ export function FamilyClassSheet({
               Đổi con cho {formatClassName(changingClassStudent.class_name) || 'lớp này'}
             </h4>
             <p style={{ fontSize: 12.5, color: 'var(--c-text-2)', margin: '0 0 14px 0' }}>
-              Mẹ có thể chuyển lớp này sang con khác trong nhà trong 24 giờ đầu khi chưa nộp bài nào.
+              {Ho} có thể chuyển lớp này sang con khác trong nhà trong 24 giờ đầu khi chưa nộp bài nào.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>

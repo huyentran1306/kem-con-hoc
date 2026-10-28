@@ -108,7 +108,7 @@ export function JoinFamilyView({ inviteCode, onJoined, onCancel, toast, boom }) 
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 44, marginBottom: 8 }}>🏠</div>
           <h2 style={{ fontSize: 20, fontWeight: 900, color: '#1E1B4B', margin: 0 }}>
-            Tham Gia Gia Đình Kèm Con Học
+            Tham gia gia đình
           </h2>
           <p style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
             Cùng người thân theo dõi và hướng dẫn các con học tập mỗi ngày
@@ -281,7 +281,7 @@ export function JoinFamilyView({ inviteCode, onJoined, onCancel, toast, boom }) 
                   background: 'linear-gradient(135deg, #4F46E5 0%, #4338CA 100%)',
                 }}
               >
-                {submitting ? 'Đang vào nhà…' : 'Vào Nhà Cùng Con 🚀'}
+                {submitting ? 'Đang vào nhà…' : 'Vào nhà cùng con 🚀'}
               </button>
             </form>
           </div>

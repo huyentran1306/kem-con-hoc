@@ -406,7 +406,7 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
               background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
             }}
           >
-            {sharing ? 'Đang mở chia sẻ…' : '💬 Gửi Báo Cáo Vào Nhóm Zalo'}
+            {sharing ? 'Đang mở chia sẻ…' : '💬 Gửi báo cáo vào nhóm Zalo'}
           </button>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>

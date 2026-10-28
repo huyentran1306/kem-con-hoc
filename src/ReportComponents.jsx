@@ -677,14 +677,12 @@ export function SubjectAndSkillHeatmap({
           <div key={r.name} className={`sk-row ${k === 0 && recent ? 'top' : ''}`}>
             <div className="sk-nm">
               {r.name}
-              {!recent && <small>{prevValues.length + 1} tuần có bài</small>}
+              {!recent && <small>mới có dữ liệu {prevValues.length + 1} tuần</small>}
             </div>
             {renderSparkline(r.values, r.li)}
             <div className="sk-v">
               <b>{v}%</b>
-              {!recent ? (
-                <span className="ch-delta eq">tuần {WEEKS[r.li]}</span>
-              ) : delta == null ? null : delta > 0 ? (
+              {!recent ? null : delta == null ? null : delta > 0 ? (
                 <span className="ch-delta up">▲ {delta} điểm</span>
               ) : delta < 0 ? (
                 <span className="ch-delta down">▼ {-delta} điểm</span>
@@ -756,6 +754,7 @@ export function TraitAiAnalysisCard({
   child = { name: "Con", id: "c1" },
   stats = {},
 }) {
+  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const [loading, setLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [notEnough, setNotEnough] = useState(null);
@@ -889,7 +888,7 @@ export function TraitAiAnalysisCard({
         >
           Xem dữ liệu Gấu đã đọc ›
         </span>
-        <span className="xs">Đây là gợi ý, mẹ quyết định</span>
+        <span className="xs">Đây là gợi ý, {ho} quyết định</span>
       </div>
 
       {/* Modal dữ liệu Gấu đã đọc */}
@@ -968,3 +967,6 @@ export function TraitAiAnalysisCard({
     </div>
   );
 }
+
+import { AppCtx } from './ctx'
+import { useContext } from 'react'

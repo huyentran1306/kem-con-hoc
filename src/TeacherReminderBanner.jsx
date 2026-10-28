@@ -10,10 +10,11 @@
    - Tối đa 3 thẻ gộp, còn lại ghi "+N trong hộp thông báo"
    ============================================================ */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { isReminderInDisplayWindow, isLateNightUrgent } from './teacherReminderData.js'
 import { getAuthToken, fetchFamilyReminders, markFamilyReminderDone, teacherLabel } from './api'
 import { isTrialActive, getTrialTeacherReminders } from './trialData.js'
+import { AppCtx } from './ctx'
 
 const KID_COLORS = [
   { bg: '#FFF1D6', color: '#9A5B00', border: '#F6C56A' }, // Amber
@@ -24,6 +25,7 @@ const KID_COLORS = [
 ]
 
 export default function TeacherReminderBanner({ child, S, patch, go, openSheet, toast }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const [reminders, setReminders] = useState([])
   const [doneMap, setDoneMap] = useState(() => {
     try {
@@ -93,7 +95,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
       } catch {}
     }
 
-    if (toast) toast('Đã ghi nhận: Mẹ đã nhắc con chu đáo! ✨')
+    if (toast) toast(`Đã ghi nhận: ${Ho} đã nhắc con chu đáo! ✨`)
   }
 
   // Filter reminders within active display window (12:00 yesterday to 12:00 today)
@@ -219,7 +221,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
                     border: '1px solid var(--c-good, #A7F3D0)',
                   }}
                 >
-                  ✓ {rem.done_by_name || 'Mẹ'} đã nhắc con lúc {doneTime}
+                  ✓ {rem.done_by_name || 'Bố mẹ'} đã nhắc con lúc {doneTime}
                 </div>
               ) : isViewOnly ? (
                 <div
