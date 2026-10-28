@@ -154,7 +154,7 @@ export function getTrialInitialState() {
     parent: 'Mẹ',
     tone: 'Dịu dàng',
     partner: true,
-    theme: 'bear',
+    theme: (typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:theme') : null) || 'bear',
     motion: 'full',
     cloudSync: false,
     _ts: now,

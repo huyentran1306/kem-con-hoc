@@ -188,8 +188,8 @@ const initialState = () => ({
   schedule: SCHEDULE_DEFAULT,
   flow: { step: 0, stuck: 0, unlocked: false, result: null, ocr: PROBLEM.ocr },
   problem: PROBLEM,
-  theme: 'bear',
-  motion: 'full',
+  theme: (typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:theme') : null) || 'bear',
+  motion: (typeof localStorage !== 'undefined' ? localStorage.getItem('kem-con-hoc:motion') : null) || 'full',
   cloudSync: true,
   _ts: 0,
 })

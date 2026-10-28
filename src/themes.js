@@ -928,6 +928,8 @@ export const SEASONAL_THEMES = THEMES.filter((t) => t.seasonal)
 export const REGULAR_THEMES = THEMES.filter((t) => !t.seasonal)
 
 import { deriveCustomThemeVars } from './themes/customPalette.js'
+import { updateThemeFavicon } from './themes/dynamicFavicon.js'
+export { updateThemeFavicon }
 
 export function getTheme(id) {
   if (id === 'custom') {
@@ -962,6 +964,7 @@ export function applyTheme(id, motion = 'full', customConfig = null) {
     root.dataset.theme = 'custom'
     root.dataset.motion = motion
     root.style.colorScheme = cfg?.mode === 'dark' ? 'dark' : 'light'
+    updateThemeFavicon('custom', cfg)
     const metaTheme = document.querySelector('meta[name="theme-color"]')
     if (metaTheme) {
       metaTheme.setAttribute('content', customVars['--c-bg'] || (cfg?.mode === 'dark' ? '#0F172A' : '#FFF7ED'))
@@ -992,6 +995,7 @@ export function applyTheme(id, motion = 'full', customConfig = null) {
 
   // Nạp font động nếu chưa có
   ensureThemeFont(theme)
+  updateThemeFavicon(theme.id)
 
   // Lưu vào localStorage để không nháy màu khi tải lại
   try {

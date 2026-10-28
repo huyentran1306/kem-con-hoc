@@ -30,6 +30,10 @@
           if (['aurora', 'garden', 'chalk'].indexOf(t) !== -1) {
             document.documentElement.style.colorScheme = 'dark';
           }
+          if (t && t !== 'bear') {
+            var fav = document.querySelector("link[rel*='icon']");
+            if (fav) fav.href = '/themes/favicon-' + t + '.svg';
+          }
         } catch(e) {}
       })();
     </script>

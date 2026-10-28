@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="favBg_thieunhi" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="url(#favBg_thieunhi)"/>
+  <rect x="2" y="2" width="96" height="96" rx="22" fill="none" stroke="#BAE6FD" stroke-width="2.5" stroke-opacity="0.4"/>
+  <g transform="translate(0, 2)">
+    <svg viewBox="-8 -10 116 116" width="100" height="100" overflow="visible">
+      <g class="bd-root"><path d="M50 88c-8 6 8 10 0 18" fill="none" stroke="#1D2340" stroke-width="2"/>
+<path d="M44 95l12-3M44 104l11-3" stroke="#FF9F1C" stroke-width="4" stroke-linecap="round"/>
+<path d="M50 4 88 46 50 88 12 46z" fill="#FFD23F"/>
+<path d="M50 4 88 46H50z" fill="#FF5A5F"/>
+<path d="M50 46h38L50 88z" fill="#3A86FF"/>
+<path d="M12 46 50 4v42z" fill="#2EC4B6"/>
+<path d="M12 46h38v42z" fill="#8338EC" opacity=".85"/>
+<path d="M50 4 88 46 50 88 12 46z" fill="none" stroke="#1D2340" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="50" cy="46" r="20" fill="#fff" stroke="#1D2340" stroke-width="2.2"/><circle class="" cx="38" cy="50" r="3.4" fill="#FFB3BC" opacity="0.9"/><circle class="" cx="62" cy="50" r="3.4" fill="#FFB3BC" opacity="0.9"/><g class="eye blink"><g class=""><ellipse cx="43" cy="43" rx="2.8" ry="2.8" fill="#1D2340"/><circle cx="42.02" cy="41.88" r="0.8959999999999999" fill="#FFFFFF"/></g></g><g class="eye blink"><g class=""><ellipse cx="57" cy="43" rx="2.8" ry="2.8" fill="#1D2340"/><circle cx="56.02" cy="41.88" r="0.8959999999999999" fill="#FFFFFF"/></g></g><path d="M44 51Q50 58.2 56 51" fill="none" stroke="#1D2340" stroke-width="2.52" stroke-linecap="round"/><path class="pr-spark" style="animation-delay:0s" transform="translate(86 14) scale(0.9)" d="M0-6Q1-1 6 0Q1 1 0 6Q-1 1-6 0Q-1-1 0-6Z" fill="#FDE68A"/></g>
+    </svg>
+  </g>
+</svg>
