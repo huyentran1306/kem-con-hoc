@@ -37,7 +37,7 @@ export function AdminThemesSection({ token, adminProfile }) {
       if (val && typeof val === 'object' && Array.isArray(val.enabled)) {
         setConfig({
           default: val.default || DEFAULT_THEME,
-          enabled: val.enabled,
+          enabled: val.enabled.includes('sky') ? val.enabled : [...val.enabled, 'sky'],
           forceAll: Boolean(val.forceAll),
           forceVersion: val.forceVersion || 0,
         })

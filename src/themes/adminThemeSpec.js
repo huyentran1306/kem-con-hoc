@@ -261,8 +261,8 @@ export const BUILTIN_THEME_SPECS = THEMES.filter((t) => t.id !== 'custom' && !t.
       borderW: t.vars['--border-w'] || '2px',
       shadowCard: t.vars['--shadow-card'] || '0 6px 0 #F0DDC2',
       shadowBtn: t.vars['--shadow-btn'] || '0 6px 0 #C47F0E',
-      buddyId: t.id === 'candy' ? 'cloud' : t.id === 'bear' ? 'bear' : t.id === 'chalk' ? 'star' : 'sprout',
-      decorStyle: t.id === 'candy' ? 'clouds' : t.id === 'chalk' ? 'chalk' : t.id === 'garden' ? 'leaves' : 'dots',
+      buddyId: t.id === 'candy' || t.id === 'sky' ? 'cloud' : t.id === 'bear' ? 'bear' : t.id === 'chalk' ? 'star' : 'sprout',
+      decorStyle: t.id === 'candy' || t.id === 'sky' ? 'clouds' : t.id === 'chalk' ? 'chalk' : t.id === 'garden' ? 'leaves' : 'dots',
       overrides: { ...t.vars }
     },
     schedule: { seasonal: false, expiresAt: null },

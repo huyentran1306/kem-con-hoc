@@ -166,7 +166,8 @@ export function AdminOverviewTab({ token, onNavigateTab }) {
         />
         <KpiCard
           label="Học sinh"
-          value={loading && !data ? null : fmtNum(m.totalStudents)}
+          // Gói 41: máy chủ cũ trả totalStudents null (bảng children trống) thì ít nhất hiện số con đã có buổi học
+          value={loading && !data ? null : fmtNum(m.totalStudents ?? m.activeStudents)}
           emptyText={loading && !data ? 'Đang tải…' : 'Chưa có dữ liệu'}
           sub={m.activeStudents != null ? `${fmtNum(m.activeStudents)} bạn có buổi học ${RANGE_TEXT[range]}` : 'Tổng hồ sơ con trên hệ thống'}
         />

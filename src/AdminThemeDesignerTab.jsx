@@ -39,7 +39,18 @@ export default function AdminThemeDesignerTab({ token, adminProfile }) {
       const stored = localStorage.getItem(ADMIN_THEMES_STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const parsedIds = new Set(parsed.map((t) => t.id))
+          const missingBuiltins = BUILTIN_THEME_SPECS.filter((b) => !parsedIds.has(b.id))
+          if (missingBuiltins.length > 0) {
+            const merged = [...parsed, ...missingBuiltins]
+            try {
+              localStorage.setItem(ADMIN_THEMES_STORAGE_KEY, JSON.stringify(merged))
+            } catch {}
+            return merged
+          }
+          return parsed
+        }
       }
     } catch {}
     return [...BUILTIN_THEME_SPECS]

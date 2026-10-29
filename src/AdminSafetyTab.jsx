@@ -78,6 +78,37 @@ const OUTCOME_LABELS = {
   sua_phep_tinh: { text: 'Sửa phép tính', tone: 'ok' },
   chan_an_toan: { text: 'Thay câu an toàn', tone: 'warn' },
 }
+// Gói 41: tên dễ hiểu cho tester (bảng nhật ký trước đây hiện mã kỹ thuật p3_explain_v3, cac_bac[].cau_hoi…)
+const OUTCOME_HELP = {
+  sua_bac_chung_chung: 'AI viết câu hỏi chung chung, không nhắc số và đồ vật của đề. Máy chủ tự soạn lại riêng bậc đó.',
+  sua_bac: 'Một bậc có thể làm lộ đáp án hoặc nói hộ phép tính. Máy chủ tự soạn lại riêng bậc đó.',
+  sua_phep_tinh: 'Phép tính trong lời giải AI viết bị sai. Máy chủ tính lại và sửa số.',
+  chan_an_toan: 'Câu gợi ý nói thẳng phép tính hoặc đáp số. Máy chủ thay bằng một câu gợi mở an toàn.',
+  fallback: 'Câu có thể lộ đáp án. Máy chủ thay bằng một câu gợi mở an toàn.',
+  regenerated: 'Câu có thể lộ đáp án. Máy chủ cho AI viết lại.',
+  xin_dap_an: 'Con hoặc phụ huynh xin thẳng đáp án trong khung Hỏi AI. Máy chủ từ chối nhẹ nhàng và gợi ý cách nghĩ.',
+  leaked: 'Câu lộ đáp án đã tới con (bộ chặn không kịp chặn). Cần xem lại.',
+}
+const PROMPT_NAMES = {
+  p3_explain_v3: 'Soạn bài', p3_explain: 'Soạn bài (bản cũ)', p4_chat: 'Hỏi AI', p14a_read_work: 'Đọc vở', p14b_check_work: 'Chấm vở',
+  p14d_teach_back: 'Nghe con giảng lại', p1_ocr_v2: 'Đọc đề từ ảnh', micro_step: 'Gợi ý nhỏ', judge_answer: 'Chấm câu trả lời', p8_calm_phrase: 'Câu nói dịu lòng',
+}
+function fieldName(f) {
+  const v = String(f || '')
+  const step = v.match(/^cac_bac\[(\d*)\]/)
+  const where = step ? (step[1] ? `Bậc ${Number(step[1]) + 1} · ` : 'Một bậc · ') : ''
+  if (/cau_hoi$/.test(v)) return where + 'câu hỏi'
+  if (/goi_y\.muc_1/.test(v)) return where + 'gợi ý 1 (đồ vật)'
+  if (/goi_y\.muc_2/.test(v)) return where + 'gợi ý 2 (hình vẽ)'
+  if (/ly_do_cho_me$/.test(v)) return where + 'lý do cho phụ huynh'
+  if (/dap_an_cho_me$/.test(v) && step) return where + 'đáp án cho phụ huynh'
+  if (v === 'dap_an_cuoi_cho_me') return 'Đáp án cuối cho phụ huynh'
+  if (v === 'bai_anh_em.de') return 'Bài tương tự · đề'
+  if (v === 'bai_anh_em.dap_an_cho_me') return 'Bài tương tự · đáp án'
+  if (v === 'xin_dap_an') return 'Tin nhắn xin đáp án'
+  return v || '·'
+}
+
 const PROMPT_OPTIONS = [
   { value: 'p3_explain', label: 'Giảng bài 3 bậc' },
   { value: 'p14b_check_work', label: 'Chấm vở, không sửa hộ' },
@@ -158,11 +189,11 @@ export function AdminSafetyTab({ token }) {
 
   const logColumns = [
     { key: 'created_at', title: 'Thời gian', render: (v) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(v)}</span> },
-    { key: 'prompt_id', title: 'Prompt', render: (v) => <span className="sys-mono">{v || '·'}</span> },
-    { key: 'field', title: 'Trường', render: (v) => <span className="sys-mono">{v || '·'}</span> },
-    { key: 'before_text', title: 'Câu AI sinh (bị chặn)', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-bad)' }}>{v || '·'}</div> },
-    { key: 'after_text', title: 'Câu thay thế', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-ok)', fontWeight: 700 }}>{v || '·'}</div> },
-    { key: 'outcome', title: 'Kết quả', render: (v) => <StatusPill status={(OUTCOME_LABELS[v] || {}).tone || 'info'} label={(OUTCOME_LABELS[v] || {}).text || v || '·'} /> },
+    { key: 'prompt_id', title: 'Chức năng', render: (v) => <span title={v || ''}>{PROMPT_NAMES[v] || v || '·'}</span> },
+    { key: 'field', title: 'Chỗ bị sửa', render: (v) => <span title={v || ''}>{fieldName(v)}</span> },
+    { key: 'before_text', title: 'Máy chủ phát hiện', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-bad)' }}>{v || '·'}</div> },
+    { key: 'after_text', title: 'Đã xử lý', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-ok)', fontWeight: 700 }}>{v || '·'}</div> },
+    { key: 'outcome', title: 'Loại xử lý', render: (v) => <span title={OUTCOME_HELP[v] || ''}><StatusPill status={(OUTCOME_LABELS[v] || {}).tone || 'info'} label={(OUTCOME_LABELS[v] || {}).text || v || '·'} /></span> },
   ]
   const fbColumns = [
     { key: 'created_at', title: 'Thời gian', render: (v) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(v)}</span> },
@@ -199,7 +230,7 @@ export function AdminSafetyTab({ token }) {
 
       <div className="sys-kpis">
         <KpiCard label="Tỉ lệ câu an toàn" value={safeRate} sub="7 ngày qua, theo nhật ký bộ chặn" emptyText={g ? 'Chưa có câu nào qua bộ chặn' : 'Chưa có dữ liệu'} tone="ok" />
-        <KpiCard label="Lượt bộ chặn can thiệp" value={g ? fmtNumber(g.fallbacks + g.regenerated) : null} sub={g ? `${fmtNumber(g.fallbacks)} thay câu · ${fmtNumber(g.regenerated)} sinh lại` : ''} />
+        <KpiCard label="Lần máy chủ tự sửa" value={g ? fmtNumber(g.fallbacks + g.regenerated) : null} sub={g ? `trước khi tới con, 7 ngày (${fmtNumber(g.fallbacks)} thay câu · ${fmtNumber(g.regenerated)} soạn lại)` : ''} />
         <KpiCard label="Phản hồi đang mở" value={fb ? fmtNumber(fb.open) : null} sub={fb ? `Tổng ${fmtNumber(fb.total)} phản hồi` : ''} tone={fb?.open ? 'warn' : 'default'} />
         <KpiCard label="Con tự sửa bài" value={wc && wc.total > 0 ? fmtNumber(wc.selfFixed) : null} sub={wc ? `trên ${fmtNumber(wc.total)} lần chấm vở, 7 ngày` : ''} emptyText={wc ? 'Chưa có lần chấm vở nào' : 'Chưa có dữ liệu'} tone="ok" />
       </div>
@@ -218,6 +249,22 @@ export function AdminSafetyTab({ token }) {
       {logErr && subTab !== 'test' && <Banner type="bad" message={logErr} actionText="Thử lại" onAction={loadData} />}
 
       {subTab === 'logs' && (
+        <Card style={{ padding: '14px 16px' }} data-testid="guard-log-help">
+          <b style={{ display: 'block', fontSize: 15, marginBottom: 4 }}>Bảng này là gì?</b>
+          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55 }}>
+            Đây là <b>dữ liệu thật</b> của hệ thống, không phải dữ liệu thử. Mỗi lần AI soạn bài hoặc trả lời, máy chủ kiểm lại trước khi gửi tới phụ huynh và con.
+            Mỗi dòng là <b>một lần máy chủ phát hiện vấn đề và tự sửa</b>, nên phụ huynh và con <b>không nhìn thấy</b> câu lỗi.
+            Tỉ lệ 100% ở trên nghĩa là chưa có câu lộ đáp án nào lọt tới con.
+          </p>
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 13, lineHeight: 1.55 }}>
+            {['sua_bac_chung_chung', 'sua_bac', 'sua_phep_tinh', 'chan_an_toan', 'xin_dap_an', 'leaked'].map((k) => (
+              <li key={k}><b>{OUTCOME_LABELS[k].text}:</b> {OUTCOME_HELP[k]}</li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {subTab === 'logs' && (
         <Card style={{ padding: 0, overflow: 'hidden' }}>
           <DataTable
             columns={logColumns}
@@ -226,7 +273,7 @@ export function AdminSafetyTab({ token }) {
             rowKey="id"
             pageSize={20}
             emptyTitle="Chưa có lần can thiệp nào"
-            emptyDescription="Khi AI sinh câu có thể lộ đáp án, bộ chặn thay câu và ghi lại ở đây."
+            emptyDescription="Khi máy chủ phát hiện câu AI viết có vấn đề (lộ đáp án, chung chung, sai phép tính) và tự sửa, lần đó được ghi ở đây."
           />
         </Card>
       )}
