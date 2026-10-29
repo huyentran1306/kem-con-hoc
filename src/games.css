@@ -1,0 +1,168 @@
+/* Gói 39 · Tab Trò chơi theo bản vẽ "Trò chơi v5" (Góc chơi chung) và "Chơi với đồ vật v1".
+   Màu đọc từ biến --c-* của bộ giao diện; nội dung từng trò chơi giữ nguyên. */
+.gc, .gv {
+  --ti-ink: var(--c-accent-ink, var(--c-text));
+  --ti-soft: color-mix(in srgb, var(--c-accent) 35%, var(--c-surface));
+  --ti-hi: var(--c-accent);
+  --ti-paper: var(--c-surface);
+  --g-soft: color-mix(in srgb, var(--c-accent) 12%, var(--c-surface));
+  --g-edge: color-mix(in srgb, var(--c-accent) 45%, var(--c-line));
+  --g-muted: color-mix(in srgb, var(--c-text-2) 45%, var(--c-text));
+  --g-ink: color-mix(in srgb, var(--c-accent-ink, var(--c-accent)) 40%, var(--c-text));
+  --g-press: color-mix(in srgb, var(--c-accent) 62%, var(--c-text));
+  --g-warn-ink: color-mix(in srgb, var(--c-warn-fg, var(--c-text)) 40%, var(--c-text));
+  color: var(--c-text);
+}
+
+/* ===== Góc chơi chung ===== */
+.gc { display: flex; flex-direction: column; padding-bottom: 32px; }
+.gc-top {
+  position: relative; margin: 0 -16px; padding: 22px 16px 18px; border-radius: 0 0 32px 32px;
+  background:
+    radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--c-accent) 45%, transparent) 0 5px, transparent 6px),
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--c-accent-2, var(--c-accent)) 35%, transparent) 0 7px, transparent 8px),
+    radial-gradient(circle at 70% 85%, color-mix(in srgb, var(--c-accent) 30%, transparent) 0 4px, transparent 5px),
+    var(--g-soft);
+}
+.gc-hello { display: flex; align-items: center; gap: 12px; }
+.gc-hello > div { flex: 1; min-width: 0; }
+.gc-hello h1 { margin: 0; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 800; font-size: 28px; line-height: 1.3; color: var(--g-ink); }
+.gc-hello p { margin: 2px 0 0; font-size: 14px; color: var(--g-muted); }
+.gc-mascot { flex: none; width: 84px; height: 84px; display: grid; place-items: center; animation: gc-float 3.2s ease-in-out infinite; }
+@keyframes gc-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.gc-games { display: flex; flex-direction: column; gap: 14px; padding-top: 20px; }
+.gc-game {
+  width: 100%; text-align: left; display: flex; align-items: center; gap: 14px; padding: 12px; cursor: pointer; font: inherit; color: var(--c-text);
+  background: var(--c-surface); border: 2px solid var(--c-line); border-radius: var(--radius-lg, 24px); box-shadow: 0 5px 0 var(--c-line);
+  transition: transform .12s, box-shadow .12s;
+}
+.gc-game:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--c-line); }
+.gc-art { flex: none; width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; }
+.gc-art svg { width: 62px; height: 62px; }
+.gc-art.a1 { background: var(--g-soft); }
+.gc-art.a2 { background: color-mix(in srgb, var(--c-warn, var(--c-accent)) 16%, var(--c-surface)); }
+.gc-art.a3 { background: color-mix(in srgb, var(--c-accent-2, var(--c-accent)) 16%, var(--c-surface)); }
+.gc-gtx { flex: 1; min-width: 0; }
+.gc-gtx b { display: block; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 700; font-size: 18px; line-height: 1.3; color: var(--c-text); }
+.gc-desc { display: block; margin-top: 3px; font-size: 14px; line-height: 1.4; color: var(--g-muted); }
+.gc-meta { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--c-warn-bg, var(--c-surface-2)); color: var(--g-warn-ink); }
+.gc-play { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--c-accent); color: var(--c-on-accent, var(--c-surface)); box-shadow: 0 3px 0 var(--g-press); }
+.gc-play svg { width: 18px; height: 18px; fill: currentColor; margin-left: 3px; }
+
+.gc-sec { margin-top: 30px; padding: 20px 16px; background: var(--c-surface); border: 2px solid var(--c-line); border-radius: 28px; }
+.gc-sec-head { display: flex; align-items: flex-start; gap: 10px; }
+.gc-sec-head > div { flex: 1; min-width: 0; }
+.gc-sec-head h2 { margin: 0; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 700; font-size: 22px; line-height: 1.3; color: var(--g-ink); }
+.gc-sec-head p { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--g-muted); }
+.gc-speak { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; border: 0; background: var(--c-warn-bg, var(--c-surface-2)); color: var(--c-warn-fg, var(--c-text)); box-shadow: 0 3px 0 var(--c-warn-line, var(--c-line)); }
+.gc-speak svg { width: 22px; height: 22px; }
+
+.gc-cam { margin-top: 16px; min-height: 180px; position: relative; overflow: hidden; border-radius: 20px; }
+.gc-shot { width: 85%; max-height: 260px; object-fit: contain; border-radius: 14px; margin: auto; }
+.gc-cam-err { width: 100%; padding: 20px 12px; text-align: center; color: var(--c-surface); }
+.gc-cam-err p { margin: 4px 0 10px; font-size: 14px; }
+.gc-cam-actions { display: flex; gap: 10px; margin-top: 16px; }
+.gc-btn, .gv-btn {
+  min-height: 52px; padding: 0 16px; border-radius: 999px; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s, box-shadow .12s;
+}
+.gc-btn svg, .gv-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.gv-btn svg.fill { fill: currentColor; stroke: none; width: 20px; height: 20px; }
+.gc-btn-primary, .gv-btn-primary { flex: 1.3; border: 0; background: var(--c-accent); color: var(--c-on-accent, var(--c-surface)); box-shadow: 0 5px 0 var(--g-press); }
+.gc-btn-primary:active, .gv-btn-primary:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--g-press); }
+.gc-btn-soft, .gv-btn-soft { flex: 1; background: var(--c-surface); color: var(--g-ink); border: 2px solid var(--g-edge); box-shadow: 0 5px 0 var(--g-edge); }
+.gc-btn-soft:active, .gv-btn-soft:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--g-edge); }
+
+.gc-label { margin: 22px 0 10px; font-size: 14px; font-weight: 700; color: var(--g-muted); }
+.gc-search { display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 16px; border-radius: 999px; background: var(--c-bg); border: 2px solid var(--c-line); }
+.gc-search:focus-within { border-color: var(--g-edge); }
+.gc-search input { flex: 1; min-width: 0; min-height: 44px; border: 0; outline: 0; background: transparent; font: inherit; font-size: 16px; color: var(--c-text); }
+.gc-search input::placeholder { color: var(--g-muted); opacity: .8; }
+.gc-search button { min-height: 44px; padding: 0 16px; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; background: var(--c-warn-bg, var(--c-surface-2)); border: 2px solid var(--c-accent); color: var(--g-warn-ink); box-shadow: 0 3px 0 var(--g-press); }
+.gc-search button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--g-press); }
+
+.gc-items { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.gc-item {
+  aspect-ratio: 1 / 1.12; min-height: 56px; padding: 4px 2px; border-radius: 16px; cursor: pointer; font: inherit; color: var(--c-text);
+  background: var(--c-bg); border: 2px solid var(--c-line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-size: 12px; font-weight: 700; line-height: 1.15; text-align: center; transition: transform .12s;
+}
+.gc-item svg { flex: none; }
+.gc-item:active { transform: scale(.94); }
+@media (max-width: 360px) { .gc-items { grid-template-columns: repeat(4, 1fr); } }
+
+.gc-note-card { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px; border-radius: 18px; background: var(--g-soft); border: 2px dashed var(--g-edge); }
+.gc-note-card b { display: block; font-size: 15px; }
+.gc-note-card small { display: block; font-size: 13px; color: var(--g-muted); }
+.gc-spin { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--c-accent); border-right-color: transparent; animation: gc-rot .8s linear infinite; }
+@keyframes gc-rot { to { transform: rotate(360deg); } }
+.gc-found { margin-top: 14px; padding: 16px; border-radius: 22px; background: var(--c-good-bg, var(--g-soft)); border: 2px solid var(--c-good, var(--g-edge)); }
+.gc-found-q { margin: 0 0 8px; font-size: 15px; }
+.gc-found-row { display: flex; align-items: center; gap: 14px; }
+.gc-found-ic { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--c-surface); }
+.gc-found-row b { display: block; font-size: 18px; }
+.gc-found-row small, .gc-found-idea small { display: block; font-size: 13px; line-height: 1.4; color: var(--g-muted); }
+.gc-found-idea { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: var(--c-surface); }
+.gc-found-idea b { display: block; font-size: 14px; color: var(--g-ink); }
+.gc-edit { margin-top: 12px; padding: 12px; border-radius: 16px; background: var(--c-surface); }
+
+/* ===== Chơi với đồ vật ===== */
+.gv { display: flex; flex-direction: column; gap: 16px; padding-bottom: 28px; }
+.gv-head { display: flex; align-items: center; gap: 10px; padding-top: 8px; }
+.gv-head h1 { flex: 1; margin: 0; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 800; font-size: 24px; line-height: 1.3; color: var(--g-ink); }
+.gv-round { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: var(--c-surface); border: 2px solid var(--c-line); color: var(--g-ink); }
+.gv-round.y { background: var(--c-warn-bg, var(--c-surface-2)); border-color: var(--c-warn-line, var(--c-line)); color: var(--c-warn-fg, var(--c-text)); }
+.gv-round svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+.gv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.gv-chip { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px 0 10px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; color: var(--c-text); background: var(--c-surface); border: 2px solid var(--c-line); }
+.gv-chip[aria-pressed="true"] { background: var(--c-warn-bg, var(--g-soft)); border-color: var(--c-accent); box-shadow: 0 3px 0 var(--g-edge); color: var(--g-warn-ink); }
+
+/* Số to trong trò chơi (lớp .timer dùng chung) đọc màu chữ đậm của bộ để rõ trên nền tối */
+.gv .gv-game { --plum-deep: var(--g-ink); --muted: var(--g-muted); --text: var(--c-text); }
+.gv .gv-game .timer { color: var(--g-ink); }
+.gv .gv-game .pill { color: var(--c-text); }
+
+/* Khung ngoài của trò chơi: thẻ bo tròn, viền 2px, bóng dày (nội dung bên trong giữ nguyên) */
+.gv-game > .card { border-radius: var(--radius-lg, 24px); border-width: 2px; box-shadow: 0 5px 0 var(--c-line); padding: 16px; }
+
+.gv-card { background: var(--c-surface); border: 2px solid var(--c-line); border-radius: var(--radius-lg, 24px); padding: 16px; box-shadow: 0 5px 0 var(--c-line); }
+.gv-card h2 { margin: 0; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 700; font-size: 18px; line-height: 1.3; color: var(--c-text); }
+.gv-meta { display: flex; gap: 6px; margin-bottom: 8px; }
+.gv-tag { padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--g-soft); color: var(--c-text); }
+.gv-sub { margin: 4px 0 0; font-size: 14px; color: var(--g-muted); }
+.gv-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.gv-line { width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; text-align: left; cursor: pointer; font: inherit; color: var(--c-text); border-radius: 16px; background: var(--c-bg); border: 2px solid var(--c-line); }
+.gv-line:active { transform: scale(.98); }
+.gv-spk { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--c-warn-bg, var(--g-soft)); color: var(--c-warn-fg, var(--c-text)); }
+.gv-spk svg { width: 18px; height: 18px; }
+.gv-line small { display: block; font-size: 13px; font-weight: 700; color: var(--g-muted); }
+.gv-line b { font-weight: 700; }
+
+.gv-timer { text-align: center; }
+.gv-tlbl { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--g-muted); }
+.gv-tlbl svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.gv-clock { margin: 6px 0 12px; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 800; font-size: 56px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--g-ink); }
+.gv-clock.low { color: var(--c-danger-ink, var(--c-danger)); }
+.gv-row2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; }
+.gv-note { margin: 12px 0 0; font-size: 13px; color: var(--g-muted); }
+
+.gc-game:focus-visible, .gc-btn:focus-visible, .gv-btn:focus-visible, .gc-item:focus-visible, .gv-chip:focus-visible, .gv-line:focus-visible, .gv-round:focus-visible, .gc-speak:focus-visible, .gc-search button:focus-visible { outline: 3px solid var(--c-accent); outline-offset: 3px; }
+
+/* Bộ Cực Quang: thẻ kính tối hơn để chữ rõ trên nền dải màu sáng */
+[data-theme="aurora"] .gc-game, [data-theme="aurora"] .gc-sec, [data-theme="aurora"] .gv-card, [data-theme="aurora"] .gv-chip, [data-theme="aurora"] .gc-top {
+  background: color-mix(in srgb, var(--c-bg) 62%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+
+@media (min-width: 1024px) {
+  .gc, .gv, .app.parent-shell > .scroll > .fadeIn > .gc, .app.parent-shell > .scroll > .fadeIn > .gv { max-width: 760px; margin: 0 auto; width: 100%; }
+  .gc-top { margin: 0; border-radius: 32px; }
+  .gc-items { grid-template-columns: repeat(10, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-mascot, .gc-spin { animation: none; }
+  .gc-game, .gc-btn, .gv-btn { transition: none; }
+}
+.gc-btn svg, .gv-btn svg, .gv-chip svg, .gc-item svg, .gv-round svg, .gc-speak svg, .gv-spk svg, .gc-play svg { margin: 0; }
+.gc-play svg { margin-left: 3px; }

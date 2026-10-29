@@ -36,6 +36,8 @@ import { CalmNudgeCard } from './CalmNudgeCard'
 import { emitMotion } from './MotionLayer'
 import TeacherReminderBanner from './TeacherReminderBanner.jsx'
 import GocChoiChung from './games/GocChoiChung'
+import { ToyIcon, SpeakerIcon } from './games/toyIcons'
+import './games.css'
 import { getDailyLimitMinutes, setDailyLimitMinutes } from './games/gameStorage'
 
 // Module-scoped pending shot buffer (Prompt 23D)
@@ -3868,21 +3870,27 @@ function SnapToyCameraSection() {
     toast(`✨ Đã tìm thấy trò chơi với: ${item.n}`)
   }
 
+  const camVisible = Boolean(shot || camOn || camErr)
   return (
     <>
-      <Header title="Chơi gì với đồ trong nhà?" />
-      <div className="cam" style={{ minHeight: 180, position: 'relative', overflow: 'hidden', marginTop: 12, marginBottom: 14, borderRadius: 20 }}>
+      <div className="gc-sec-head">
+        <div>
+          <h2>Chơi gì với đồ trong nhà?</h2>
+          <p>Chụp cây lược, bút, chai lọ hoặc đồ chơi để AI gợi ý trò chơi học toán cùng con!</p>
+        </div>
+        <button
+          type="button"
+          className="gc-speak"
+          aria-label="Đọc to"
+          onClick={() => speak('Chơi gì với đồ trong nhà? Chụp cây lược, bút, chai lọ hoặc đồ chơi để gợi ý trò chơi học toán cùng con.', 'vi-VN')}
+        >
+          <SpeakerIcon />
+        </button>
+      </div>
+
+      {/* Khung máy ảnh: luôn giữ thẻ video trong DOM để không mất luồng camera, chỉ hiện khi đang dùng */}
+      <div className="cam gc-cam" style={{ display: camVisible ? undefined : 'none' }}>
         <div className="frame" />
-        {/* Always keep video element in DOM so camera stream is not lost */}
-        {!shot && !camOn && !camErr && (
-          <div style={{ textAlign: 'center', padding: '24px 16px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} data-testid="snap-toy-static-invite">
-            <span style={{ fontSize: 52, marginBottom: 8 }}>🧸 📸 🧴</span>
-            <b style={{ fontSize: 16, color: '#FFF4E6', marginBottom: 6 }}>Chụp đồ vật quanh nhà</b>
-            <p className="xs" style={{ color: 'rgba(255,244,230,.82)', maxWidth: 280, margin: 0, lineHeight: 1.45 }}>
-              Chụp cây lược, bút, chai lọ hoặc đồ chơi để AI gợi ý trò chơi học toán cùng con!
-            </p>
-          </div>
-        )}
         <video
           ref={videoRef}
           playsInline
@@ -3897,33 +3905,12 @@ function SnapToyCameraSection() {
             transition: 'opacity .3s',
           }}
         />
-        {shot && (
-          <img
-            src={shot}
-            alt="Đồ vật đã chụp"
-            decoding="async"
-            style={{
-              width: '85%',
-              borderRadius: 14,
-              maxHeight: 260,
-              objectFit: 'contain',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-              margin: 'auto',
-            }}
-          />
-        )}
+        {shot && <img src={shot} alt="Đồ vật đã chụp" decoding="async" className="gc-shot" />}
         {!shot && camErr && (
-          <div style={{ textAlign: 'center', padding: '20px 10px', width: '100%' }}>
-            <span style={{ fontSize: 56 }}>🧸</span>
-            <div style={{ marginTop: 8 }}>
-              <button
-                className="btn sm ghost"
-                onClick={startCamera}
-                style={{ fontSize: 12.5, background: 'rgba(255,255,255,0.9)' }}
-              >
-                🔄 Bấm để mở lại Camera
-              </button>
-            </div>
+          <div className="gc-cam-err">
+            <span style={{ fontSize: 48 }} aria-hidden="true">🧸</span>
+            <p>Chưa mở được máy ảnh.</p>
+            <button type="button" className="gc-btn gc-btn-soft" onClick={startCamera}>Thử mở lại máy ảnh</button>
           </div>
         )}
         {(camOn || shot) && (
@@ -3933,132 +3920,71 @@ function SnapToyCameraSection() {
         )}
       </div>
 
-      {!shot && !camOn && (
-        <div className="btns" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
-          <button
-            type="button"
-            className="btn solid"
-            onClick={startCamera}
-            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
-            data-testid="btn-start-camera"
-          >
-            📷 Bật máy ảnh
-          </button>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => fileRef.current && fileRef.current.click()}
-            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
-          >
-            Chọn ảnh
-          </button>
-        </div>
-      )}
-
-      {!shot && camOn && (
-        <div className="btns" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
-          <button
-            type="button"
-            className="btn solid"
-            onClick={capture}
-            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
-          >
-            📸 Chụp ngay
-          </button>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={stopCamera}
-            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
-          >
-            Đóng camera
-          </button>
-        </div>
-      )}
-
-      {shot && (
-        <div className="btns" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={retake}
-            style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
-          >
-            📷 Chụp lại
-          </button>
-          {!detectedToy && !analyzing && (
-            <button
-              type="button"
-              className="btn solid"
-              onClick={() => triggerAnalyze(shotBlob, customInput)}
-              style={{ flex: 1, minHeight: 48, borderRadius: 16 }}
-            >
-              ✨ Nhận diện AI
+      <div className="gc-cam-actions">
+        {!shot && !camOn && (
+          <>
+            <button type="button" className="gc-btn gc-btn-primary" onClick={startCamera} data-testid="btn-start-camera">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+              Bật máy ảnh
             </button>
-          )}
-        </div>
-      )}
+            <button type="button" className="gc-btn gc-btn-soft" onClick={() => fileRef.current && fileRef.current.click()}>Chọn ảnh</button>
+          </>
+        )}
+        {!shot && camOn && (
+          <>
+            <button type="button" className="gc-btn gc-btn-primary" onClick={capture}>📸 Chụp ngay</button>
+            <button type="button" className="gc-btn gc-btn-soft" onClick={stopCamera}>Đóng máy ảnh</button>
+          </>
+        )}
+        {shot && (
+          <>
+            <button type="button" className="gc-btn gc-btn-soft" onClick={retake}>Chụp lại</button>
+            {!detectedToy && !analyzing && (
+              <button type="button" className="gc-btn gc-btn-primary" onClick={() => triggerAnalyze(shotBlob, customInput)}>✨ Nhận diện AI</button>
+            )}
+          </>
+        )}
+      </div>
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickFile} />
 
-      {/* Analyzing state */}
       {analyzing && (
-        <div className="card sky" style={{ textAlign: 'center', padding: '16px 12px', border: '1.5px dashed #38BDF8' }}>
-          <div style={{ fontSize: 32, marginBottom: 4, animation: 'float 2s ease-in-out infinite' }}>🔍 🤖 ✨</div>
-          <b style={{ color: 'var(--plum-deep)', fontSize: 15 }}>AI Vision đang phân tích đồ vật trong ảnh...</b>
-          <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>Nhận dạng hình dáng và tự động gợi ý trò chơi học tập tương ứng</div>
+        <div className="gc-note-card" role="status">
+          <span className="gc-spin" aria-hidden="true" />
+          <div>
+            <b>AI đang xem đồ vật trong ảnh…</b>
+            <small>Nhận dạng hình dáng và gợi ý trò chơi học tập tương ứng</small>
+          </div>
         </div>
       )}
 
-      {/* Detected Toy Card */}
       {detectedToy && !analyzing && (
-        <div className="card mint pop" style={{ border: '2px solid #10B981', background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08))' }}>
-          <div style={{ marginBottom: 8, fontSize: 14.5, color: 'var(--text)' }}>
-            AI đoán đây là: <b style={{ color: 'var(--plum-deep)' }}>{detectedToy.n}</b>. Đúng chưa {ho}?
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '6px 0' }}>
-            <div style={{ fontSize: 42, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-              {detectedToy.e}
-            </div>
-            <div style={{ flex: 1 }}>
-              <b style={{ fontSize: 18, color: 'var(--text)' }}>{detectedToy.n}</b>
-              <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>{detectedToy.desc}</div>
+        <div className="gc-found">
+          <p className="gc-found-q">AI đoán đây là: <b>{detectedToy.n}</b>. Đúng chưa {ho}?</p>
+          <div className="gc-found-row">
+            <span className="gc-found-ic"><ToyIcon name={detectedToy.n} emoji={detectedToy.e} size={40} /></span>
+            <div>
+              <b>{detectedToy.n}</b>
+              <small>{detectedToy.desc}</small>
             </div>
           </div>
-          <div style={{ padding: '10px 12px', borderRadius: 10, background: '#ffffffcc', margin: '8px 0', fontSize: 13.5, border: '1px solid rgba(0,0,0,0.06)' }}>
-            <div style={{ fontWeight: 700, color: 'var(--plum-deep)', marginBottom: 2 }}>🎯 Gợi ý: {detectedToy.gameTitle}</div>
-            <div style={{ color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.4 }}>{detectedToy.gameIdea}</div>
+          <div className="gc-found-idea">
+            <b>🎯 Gợi ý: {detectedToy.gameTitle}</b>
+            <small>{detectedToy.gameIdea}</small>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-            <button
-              className="btn solid"
-              style={{ flex: 1, padding: '12px', fontSize: 14.5, fontWeight: 700 }}
-              onClick={() => pick(detectedToy.n)}
-            >
-              ✅ Đúng rồi
-            </button>
-            <button
-              className="btn ghost"
-              style={{ flex: 1, padding: '12px', fontSize: 14, background: '#fff' }}
-              onClick={() => setShowEditToy(!showEditToy)}
-            >
-              Chọn đồ khác
-            </button>
+          <div className="gc-cam-actions">
+            <button type="button" className="gc-btn gc-btn-primary" onClick={() => pick(detectedToy.n)}>Đúng rồi, chơi thôi</button>
+            <button type="button" className="gc-btn gc-btn-soft" aria-expanded={showEditToy} onClick={() => setShowEditToy(!showEditToy)}>Chọn đồ khác</button>
           </div>
-
           {showEditToy && (
-            <div className="card" style={{ marginTop: 8, background: '#fff', border: '1.5px solid var(--plum-tint)', padding: '12px' }}>
-              <span className="lbl plum" style={{ marginBottom: 6 }}>Chọn đúng đồ vật {ho} đang cầm:</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            <div className="gc-edit">
+              <p className="gc-label" style={{ marginTop: 0 }}>Chọn đúng đồ vật {ho} đang cầm:</p>
+              <div className="gv-chips">
                 {TOY_MAPPINGS.map((tm) => (
                   <button
                     key={tm.n}
-                    className="chip"
-                    style={{
-                      background: detectedToy.n === tm.n ? 'var(--plum-tint)' : '#F8FAFC',
-                      border: detectedToy.n === tm.n ? '1.5px solid var(--plum)' : '1px solid var(--line)',
-                      fontWeight: 700,
-                      padding: '5px 10px',
-                    }}
+                    type="button"
+                    className="gv-chip"
+                    aria-pressed={detectedToy.n === tm.n}
                     onClick={() => {
                       soundPop(600)
                       setDetectedToy(tm)
@@ -4066,81 +3992,42 @@ function SnapToyCameraSection() {
                       toast(`Đã chọn: ${tm.n} ${tm.e}`)
                     }}
                   >
-                    {tm.e} {tm.n}
+                    <ToyIcon name={tm.n} emoji={tm.e} size={24} />{tm.n}
                   </button>
                 ))}
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  className="field grow0"
-                  style={{ flex: 1, fontSize: 13 }}
-                  placeholder="Hoặc gõ tên đồ vật khác..."
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      searchCustom()
-                      setShowEditToy(false)
-                    }
-                  }}
-                />
-                <button
-                  className="btn solid grow0"
-                  style={{ width: 'auto', padding: '8px 14px', fontSize: 13 }}
-                  onClick={() => {
-                    searchCustom()
-                    setShowEditToy(false)
-                  }}
-                >
-                  Xác nhận
-                </button>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Search / Type object box */}
-      <div style={{ margin: '8px 0' }}>
-        <p className="lbl mut" style={{ marginBottom: 6 }}>Hoặc gõ nhanh đồ vật đang có trên bàn</p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input
-            className="field"
-            style={{ flex: 1 }}
-            placeholder="Gõ tên đồ vật"
-            value={customInput}
-            onChange={(e) => setCustomInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && searchCustom()}
-          />
-          <button
-            className="btn solid grow0"
-            style={{ width: 'auto', padding: '10px 16px', whiteSpace: 'nowrap' }}
-            onClick={searchCustom}
-          >
-            Tìm trò ➔
-          </button>
-        </div>
-      </div>
+      <p className="gc-label">Hoặc gõ nhanh đồ vật đang có trên bàn</p>
+      <form
+        className="gc-search"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (!customInput.trim()) { toast('Gõ tên một đồ vật nhé'); return }
+          searchCustom()
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Gõ tên đồ vật"
+          aria-label="Gõ tên đồ vật"
+          value={customInput}
+          onChange={(e) => setCustomInput(e.target.value)}
+        />
+        <button type="submit">Tìm trò</button>
+      </form>
 
-      <p className="lbl mut">Hoặc chọn nhanh từ danh sách</p>
-      <div className="opt-grid" style={{ marginBottom: 16 }}>
+      <p className="gc-label">Hoặc chọn nhanh từ danh sách</p>
+      <div className="gc-items">
         {TOYS.map((t) => (
-          <button key={t.n} className="opt" onClick={() => pick(t.n)}>
-            <div style={{ fontSize: 26 }}>{t.e}</div>
+          <button key={t.n} type="button" className="gc-item" onClick={() => pick(t.n)}>
+            <ToyIcon name={t.n} emoji={t.e} size={30} />
             {t.n}
           </button>
         ))}
-      </div>
-      {/* Prompt 29B.4: chưa có dữ liệu thì nói thật, không hiện khung trống */}
-      <div className="card sky">
-        <span className="lbl sky">AI ưu tiên ôn</span>
-        {(stats.weak || []).length > 0 ? (
-          (stats.weak || []).map((w) => (
-            <span key={w.n} className="sub">• {w.n}</span>
-          ))
-        ) : (
-          <span className="sub">Học xong bài đầu, Gấu sẽ gợi ý chỗ cần ôn.</span>
-        )}
       </div>
     </>
   )
@@ -4182,7 +4069,7 @@ const weakToy = (n) => {
 }
 
 export function Game() {
-  const { toast } = useContext(AppCtx)
+  const { toast, go, Ho = 'Bố mẹ' } = useContext(AppCtx)
   const [toy, setToy] = useState(() => pendingToy || 'Cây lược')
   const [tl, setTl] = useState(600)
   const [running, setRunning] = useState(false)
@@ -4210,61 +4097,79 @@ export function Game() {
     return () => clearInterval(t)
   }, [running])
 
+  const low = tl > 0 && tl <= 60
+  const startLabel = running ? 'Tạm dừng' : tl === 600 || tl <= 0 ? 'Bắt đầu' : 'Tiếp tục'
   return (
-    <>
-      <Header title="Chơi với đồ vật" back="toy" />
-      <div className="chips" style={{ marginBottom: 8 }}>
+    <div className="gv">
+      <header className="gv-head">
+        <button type="button" className="gv-round" aria-label="Quay lại" onClick={() => go('toy')}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+        <h1>Chơi với đồ vật</h1>
+        <button type="button" className="gv-round y" aria-label="Đọc to" onClick={() => speak(`Chơi với đồ vật. Đang chọn ${toy}. Chọn một đồ vật để bắt đầu trò chơi.`, 'vi-VN')}>
+          <SpeakerIcon />
+        </button>
+      </header>
+
+      <div className="gv-chips" role="group" aria-label="Chọn đồ vật">
         {TOYS.map((t) => (
-          <button key={t.n} className={`chip ${toy === t.n ? 'on' : ''}`} onClick={() => { soundTap(); setToy(t.n) }}>
-            {t.e} {t.n}
+          <button key={t.n} type="button" className="gv-chip" aria-pressed={toy === t.n} onClick={() => { soundTap(); setToy(t.n) }}>
+            <ToyIcon name={t.n} emoji={t.e} size={24} />{t.n}
           </button>
         ))}
       </div>
 
-      {toy === 'Chai / Lọ' && <BottleGame />}
-      {toy === 'Cây lược' && <CombGame />}
-      {toy === 'Cây bút' && <PenGame />}
-      {toy === 'Thước kẻ' && <RulerGame />}
-      {toy === 'Lego' && <LegoGame />}
-      {toy === 'Kẹo' && <CandyGame />}
-      {toy === 'Bài' && <CardGame />}
-      {toy === 'Đồng hồ' && <ClockGame />}
-      {toy === 'Que kem' && <StickGame />}
-      {toy === 'Bát đĩa' && <BowlGame />}
-      {toy !== 'Chai / Lọ' && toy !== 'Cây lược' && toy !== 'Cây bút' && toy !== 'Thước kẻ' && toy !== 'Lego' && toy !== 'Kẹo' && toy !== 'Bài' && toy !== 'Đồng hồ' && toy !== 'Que kem' && toy !== 'Bát đĩa' && (
-        <GenericToyGame toyName={toy} />
+      {/* Nội dung trò chơi của từng đồ vật giữ nguyên, chỉ đổi khung bên ngoài */}
+      <div className="gv-game" data-testid="toy-game-panel">
+        {toy === 'Chai / Lọ' && <BottleGame />}
+        {toy === 'Cây lược' && <CombGame />}
+        {toy === 'Cây bút' && <PenGame />}
+        {toy === 'Thước kẻ' && <RulerGame />}
+        {toy === 'Lego' && <LegoGame />}
+        {toy === 'Kẹo' && <CandyGame />}
+        {toy === 'Bài' && <CardGame />}
+        {toy === 'Đồng hồ' && <ClockGame />}
+        {toy === 'Que kem' && <StickGame />}
+        {toy === 'Bát đĩa' && <BowlGame />}
+        {!TOYS.some((t) => t.n === toy) && <GenericToyGame toyName={toy} />}
+      </div>
+
+      {/* Gói 39: "Đồng hồ Lego" (câu tiếng Anh hỏi giờ) chỉ thuộc đồ vật Đồng hồ, trước đây bị hiện ở mọi trò */}
+      {toy === 'Đồng hồ' && (
+        <section className="gv-card" data-testid="card-lego-clock">
+          <div className="gv-meta"><span className="gv-tag">Tiếng Anh</span><span className="gv-tag"><PlayMinutesText /></span></div>
+          <h2>Đồng hồ Lego</h2>
+          <p className="gv-sub">Xếp kim giờ, kim phút bằng thanh Lego. Bấm để nghe câu mẫu:</p>
+          <div className="gv-lines">
+            {ENGLISH_PHRASES.map((p) => (
+              <button key={p.en} type="button" className="gv-line" onClick={() => speak(p.en, 'en-US')}>
+                <span className="gv-spk"><SpeakerIcon /></span>
+                <span><small>{p.role.replace(/^Mẹ/, Ho)}</small><b>"{p.en}"</b></span>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="card sky">
-        <div className="chips">
-          <span className="pill b">Tiếng Anh</span>
-          <PlayMinutesPill />
+      {/* Đồng hồ chơi (đếm ngược) dùng chung, luôn hiện */}
+      <section className="gv-card gv-timer" aria-label="Đồng hồ chơi" data-testid="card-play-timer">
+        <div className="gv-tlbl">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2M9 2h6" /></svg>
+          Đồng hồ chơi
         </div>
-        <b style={{ fontSize: 16 }}>⏰ Đồng hồ Lego</b>
-        <span style={{ fontSize: 13.5 }}>Xếp kim giờ, kim phút bằng thanh Lego. Bấm để nghe câu mẫu:</span>
-        {ENGLISH_PHRASES.map((p) => (
-          <div key={p.en} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <SpeakBtn text={p.en} lang="en-US" />
-            <div>
-              <span className="lbl sky">{p.role}</span>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>"{p.en}"</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="card">
-        <span className="lbl plum">⏱ Đồng hồ chơi</span>
-        <div className="timer">{fmtTime(tl)}</div>
-        <div className="btns">
-          <button className="btn solid" onClick={() => { if (tl <= 0) setTl(600); setRunning(!running) }}>
-            {running ? '⏸ Tạm dừng' : '▶ Bắt đầu'}
+        <div className={`gv-clock ${low ? 'low' : ''}`} role="timer" aria-live="off">{fmtTime(tl)}</div>
+        <div className="gv-row2">
+          <button type="button" className="gv-btn gv-btn-primary" onClick={() => { if (tl <= 0) setTl(600); setRunning(!running) }}>
+            {running
+              ? <svg viewBox="0 0 24 24" aria-hidden="true" className="fill"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>
+              : <svg viewBox="0 0 24 24" aria-hidden="true" className="fill"><path d="M7 4l13 8-13 8z" /></svg>}
+            {startLabel}
           </button>
-          <button className="btn ghost" onClick={() => { setRunning(false); setTl(600); toast('Đã đặt lại ⏱') }}>Đặt lại</button>
+          <button type="button" className="gv-btn gv-btn-soft" onClick={() => { setRunning(false); setTl(600); toast('Đã đặt lại đồng hồ') }}>Đặt lại</button>
         </div>
-        <span className="sub">Hết giờ là dừng, khen con và nghỉ, đừng kéo dài thành cuộc chiến.</span>
-      </div>
-    </>
+        <p className="gv-note">Hết giờ là dừng, khen con và nghỉ, đừng kéo dài thành cuộc chiến.</p>
+      </section>
+    </div>
   )
 }
 
@@ -4315,7 +4220,7 @@ function BottleGame() {
   ]
 
   return (
-    <div className="card mint" style={{ border: '2px solid #06B6D4', background: '#F0FDFA' }}>
+    <div className="card mint" style={{ border: '2px solid #06B6D4', background: 'var(--c-surface-2, #F0FDFA)' }}>
       <div className="chips" style={{ marginBottom: 8 }}>
         <button
           className={`pill ${tab === 'spray' ? 'p' : 'w'}`}
@@ -4335,7 +4240,7 @@ function BottleGame() {
         <>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <span className="lbl sky">Chai xịt thông minh (Dung tích 100 ml)</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#0E7490' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-accent-ink, #0E7490)' }}>
               Còn lại: <b>{liquid} ml</b>
             </span>
           </div>
@@ -4348,9 +4253,9 @@ function BottleGame() {
               justifyContent: 'center',
               gap: 20,
               padding: '16px',
-              background: '#fff',
+              background: 'var(--c-surface, #fff)',
               borderRadius: 14,
-              border: '1.5px solid #CCFBF1',
+              border: '1.5px solid var(--c-line, #CCFBF1)',
               boxShadow: '0 4px 12px rgba(6,182,212,0.1)',
               margin: '8px 0',
             }}
@@ -4384,7 +4289,7 @@ function BottleGame() {
                   border: '2.5px solid #0EA5E9',
                   borderRadius: '6px 6px 14px 14px',
                   position: 'relative',
-                  background: '#F8FAFC',
+                  background: 'var(--c-surface-2, #F8FAFC)',
                   overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column',
@@ -4415,7 +4320,7 @@ function BottleGame() {
 
             {/* Điều khiển & Nút xịt */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontSize: 13, color: '#0F766E', lineHeight: 1.4 }}>
+              <div style={{ fontSize: 13, color: 'var(--c-text, #0F766E)', lineHeight: 1.4 }}>
                 Bé bấm nút để <b>xịt nước</b>, mỗi lần xịt hết đúng <b>20 ml</b> nhé!
               </div>
               <button
@@ -4442,9 +4347,9 @@ function BottleGame() {
           </div>
 
           {/* Câu đố toán học dung tích */}
-          <div className="card" style={{ background: '#FFFBEB', padding: '10px 12px', fontSize: 13, border: '1px solid #FCD34D' }}>
-            <b style={{ color: '#92400E' }}>💡 Thử thách tính nhẩm cho con:</b>
-            <div style={{ marginTop: 4, color: '#78350F', lineHeight: 1.4 }}>
+          <div className="card" style={{ background: 'var(--c-warn-bg, #FFFBEB)', padding: '10px 12px', fontSize: 13, border: '1px solid var(--c-warn-line, #FCD34D)' }}>
+            <b style={{ color: 'var(--g-warn-ink, #92400E)' }}>💡 Thử thách tính nhẩm cho con:</b>
+            <div style={{ marginTop: 4, color: 'var(--c-text, #78350F)', lineHeight: 1.4 }}>
               "Ban đầu bình có <b>100 ml</b>. Nếu con xịt <b>3 lần</b> (mỗi lần 20 ml), thì trong chai còn lại bao nhiêu ml?"
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
@@ -4456,39 +4361,39 @@ function BottleGame() {
                 onChange={(e) => setQuizAns(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && checkQuiz(40)}
               />
-              <span style={{ fontWeight: 700, color: '#78350F' }}>ml</span>
+              <span style={{ fontWeight: 700, color: 'var(--c-text, #78350F)' }}>ml</span>
               <button
                 className="btn solid grow0"
-                style={{ padding: '8px 16px', background: '#D97706', fontSize: 13 }}
+                style={{ padding: '8px 16px', background: 'var(--c-accent, #D97706)', color: 'var(--c-on-accent, #fff)', fontSize: 13 }}
                 onClick={() => checkQuiz(40)}
               >
                 Kiểm tra
               </button>
             </div>
             {quizFb === 'yes' && (
-              <div style={{ color: '#059669', fontWeight: 700, marginTop: 6 }}>
+              <div style={{ color: 'var(--c-good-fg, #059669)', fontWeight: 700, marginTop: 6 }}>
                 🎉 Quá đỉnh! 3 lần xịt = 3 x 20 = 60ml. Còn lại: 100 - 60 = 40ml!
               </div>
             )}
             {quizFb === 'no' && (
-              <div style={{ color: '#DC2626', fontWeight: 700, marginTop: 6 }}>
+              <div style={{ color: 'var(--c-danger-ink, #DC2626)', fontWeight: 700, marginTop: 6 }}>
                 🤔 Con thử tính lại xem: 3 lần 20ml là 60ml, lấy 100ml trừ đi 60ml nhé!
               </div>
             )}
           </div>
         </>
       ) : (
-        <div className="card" style={{ background: '#FFFBEB', padding: '12px', border: '1px solid #FCD34D' }}>
-          <b style={{ fontSize: 14, color: '#92400E' }}>📏 Trò chơi: Chai xịt làm thước đo chiều cao</b>
-          <p style={{ fontSize: 13, color: '#78350F', margin: '4px 0 8px', lineHeight: 1.4 }}>
+        <div className="card" style={{ background: 'var(--c-warn-bg, #FFFBEB)', padding: '12px', border: '1px solid var(--c-warn-line, #FCD34D)' }}>
+          <b style={{ fontSize: 14, color: 'var(--g-warn-ink, #92400E)' }}>📏 Trò chơi: Chai xịt làm thước đo chiều cao</b>
+          <p style={{ fontSize: 13, color: 'var(--c-text, #78350F)', margin: '4px 0 8px', lineHeight: 1.4 }}>
             Chai xịt này cao khoảng <b>12 cm</b>. {Ho} đố con đoán xem đồ vật nào cao hơn chai xịt:
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: '#78350F' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: 'var(--c-text, #78350F)' }}>
             {COMPARES.map((c, idx) => (
               <div
                 key={c.name}
                 style={{
-                  background: '#fff',
+                  background: 'var(--c-surface, #fff)',
                   padding: '8px 10px',
                   borderRadius: 8,
                   border: compareIdx === idx ? '1.5px solid #0EA5E9' : '1px solid #FDE68A',
@@ -4502,7 +4407,7 @@ function BottleGame() {
                     {c.height > 12 ? 'Cao hơn chai' : 'Thấp hơn chai'}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: '#0369A1', marginTop: 3 }}>{c.hint}</div>
+                <div style={{ fontSize: 12, color: 'var(--c-accent-ink, #0369A1)', marginTop: 3 }}>{c.hint}</div>
               </div>
             ))}
           </div>
@@ -4547,7 +4452,7 @@ function CombGame() {
   }
 
   return (
-    <div className="card sun" style={{ border: '2px solid #F59E0B', background: '#FFFDF5' }}>
+    <div className="card sun" style={{ border: '2px solid #F59E0B', background: 'var(--c-warn-bg, #FFFDF5)' }}>
       <div className="chips" style={{ marginBottom: 8 }}>
         <button
           className={`pill ${tab === 'teeth' ? 'p' : 'w'}`}
@@ -4596,7 +4501,7 @@ function CombGame() {
             }}
           >
             <div style={{ height: 16, background: '#CA8A04', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 9, color: '#FEF08A', fontWeight: 800, letterSpacing: '0.1em' }}>THÂN LƯỢC</span>
+              <span style={{ fontSize: 9, color: '#422006', fontWeight: 800, letterSpacing: '0.1em' }}>THÂN LƯỢC</span>
             </div>
             {/* Teeth grid */}
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TOTAL_TEETH}, 1fr)`, gap: 4, height: 70, alignItems: 'flex-start' }}>
@@ -4623,7 +4528,7 @@ function CombGame() {
                     }}
                     title={`Răng số ${i + 1}`}
                   >
-                    <span style={{ fontSize: 8.5, fontWeight: 800, color: isSelected ? '#fff' : '#854D0E' }}>
+                    <span style={{ fontSize: 8.5, fontWeight: 800, color: isSelected ? '#fff' : '#422006' }}>
                       {i + 1}
                     </span>
                   </button>
@@ -4632,9 +4537,9 @@ function CombGame() {
             </div>
           </div>
 
-          <div className="card" style={{ background: '#FFFBEB', padding: '10px 12px', fontSize: 13, border: '1px solid #FCD34D' }}>
-            <b style={{ color: '#92400E' }}>💡 Thử thách cho {ho} hỏi con:</b>
-            <div style={{ marginTop: 4, color: '#78350F', lineHeight: 1.4 }}>
+          <div className="card" style={{ background: 'var(--c-warn-bg, #FFFBEB)', padding: '10px 12px', fontSize: 13, border: '1px solid var(--c-warn-line, #FCD34D)' }}>
+            <b style={{ color: 'var(--g-warn-ink, #92400E)' }}>💡 Thử thách cho {ho} hỏi con:</b>
+            <div style={{ marginTop: 4, color: 'var(--c-text, #78350F)', lineHeight: 1.4 }}>
               "Cây lược có tất cả <b>{TOTAL_TEETH} cái răng</b>. Nếu {ho} chia đôi chiếc lược thành 2 nửa bằng nhau, mỗi nửa có mấy răng?"
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
@@ -4648,38 +4553,38 @@ function CombGame() {
               />
               <button
                 className="btn solid grow0"
-                style={{ padding: '8px 16px', background: '#D97706', fontSize: 13 }}
+                style={{ padding: '8px 16px', background: 'var(--c-accent, #D97706)', color: 'var(--c-on-accent, #fff)', fontSize: 13 }}
                 onClick={() => checkQuiz(TOTAL_TEETH / 2)}
               >
                 Kiểm tra
               </button>
             </div>
             {quizFb === 'yes' && (
-              <div style={{ color: '#059669', fontWeight: 700, marginTop: 6 }}>
+              <div style={{ color: 'var(--c-good-fg, #059669)', fontWeight: 700, marginTop: 6 }}>
                 🎉 Đúng rồi! 14 : 2 = 7 cái răng mỗi bên!
               </div>
             )}
             {quizFb === 'no' && (
-              <div style={{ color: '#DC2626', fontWeight: 700, marginTop: 6 }}>
+              <div style={{ color: 'var(--c-danger-ink, #DC2626)', fontWeight: 700, marginTop: 6 }}>
                 🤔 Chưa đúng rồi, con thử đếm lại 14 chia cho 2 nhé!
               </div>
             )}
           </div>
         </>
       ) : (
-        <div className="card" style={{ background: '#FFFBEB', padding: '12px', border: '1px solid #FCD34D' }}>
-          <b style={{ fontSize: 14, color: '#92400E' }}>📏 Trò chơi: Cây lược làm thước đo</b>
-          <p style={{ fontSize: 13, color: '#78350F', margin: '4px 0 8px', lineHeight: 1.4 }}>
+        <div className="card" style={{ background: 'var(--c-warn-bg, #FFFBEB)', padding: '12px', border: '1px solid var(--c-warn-line, #FCD34D)' }}>
+          <b style={{ fontSize: 14, color: 'var(--g-warn-ink, #92400E)' }}>📏 Trò chơi: Cây lược làm thước đo</b>
+          <p style={{ fontSize: 13, color: 'var(--c-text, #78350F)', margin: '4px 0 8px', lineHeight: 1.4 }}>
             {ho} đưa cây lược cho con và cùng làm các thử thách thú vị:
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: '#78350F' }}>
-            <div style={{ background: '#fff', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: 'var(--c-text, #78350F)' }}>
+            <div style={{ background: 'var(--c-surface, #fff)', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--c-warn-line, #FDE68A)' }}>
               <b>1. So với bàn tay:</b> Đặt bàn tay con lên cây lược xem lược dài hơn hay ngắn hơn bàn tay con?
             </div>
-            <div style={{ background: '#fff', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A' }}>
+            <div style={{ background: 'var(--c-surface, #fff)', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--c-warn-line, #FDE68A)' }}>
               <b>2. Đo sách:</b> Cuốn sách giáo khoa dài bằng khoảng mấy lần cây lược? (khoảng 1 cây rưỡi).
             </div>
-            <div style={{ background: '#fff', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A' }}>
+            <div style={{ background: 'var(--c-surface, #fff)', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--c-warn-line, #FDE68A)' }}>
               <b>3. Đo bút chì:</b> So sánh cây lược với chiếc bút bi/bút chì xem cái nào dài hơn bao nhiêu cm!
             </div>
           </div>
@@ -4702,15 +4607,15 @@ function PlayMinutesPill() {
 function GenericToyGame({ toyName }) {
   const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   return (
-    <div className="card mint" style={{ border: '2px solid #10B981', background: '#F0FDF4', padding: '14px' }}>
+    <div className="card mint" style={{ border: '2px solid var(--c-good, #10B981)', background: 'var(--c-good-bg, #F0FDF4)', padding: '14px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <span style={{ fontSize: 32 }}>🧸</span>
         <div>
-          <b style={{ fontSize: 16, color: '#065F46' }}>Khám phá toán học cùng: {toyName}</b>
-          <div style={{ fontSize: 12.5, color: '#047857' }}><PlayMinutesText /> vừa học vừa chơi với đồ thật trong nhà</div>
+          <b style={{ fontSize: 16, color: 'var(--c-good-fg, #065F46)' }}>Khám phá toán học cùng: {toyName}</b>
+          <div style={{ fontSize: 12.5, color: 'var(--c-good-fg, #047857)' }}><PlayMinutesText /> vừa học vừa chơi với đồ thật trong nhà</div>
         </div>
       </div>
-      <div style={{ background: '#fff', padding: '10px 12px', borderRadius: 10, border: '1px solid #A7F3D0', fontSize: 13, lineHeight: 1.5, color: '#064E3B' }}>
+      <div style={{ background: 'var(--c-surface, #fff)', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--c-good, #A7F3D0)', fontSize: 13, lineHeight: 1.5, color: 'var(--c-text, #064E3B)' }}>
         <b>🎯 3 câu hỏi gợi ý {ho} hỏi con ngay:</b>
         <ol style={{ margin: '6px 0 0 16px', padding: 0 }}>
           <li><b>Quan sát & Hình khối:</b> Món đồ này có dạng hình gì? (hình tròn, hình trụ, chữ nhật...).</li>
@@ -4885,7 +4790,7 @@ function PenGame() {
             <div style={{ fontSize: 44, marginBottom: 4 }}>{curMeasure.icon}</div>
             <b style={{ fontSize: 17 }}>Thử thách {mIdx + 1}: Đo {curMeasure.name}</b>
             <div style={{ fontSize: 13, color: 'var(--muted)', margin: '6px 0 10px' }}>{curMeasure.hint}</div>
-            <div style={{ background: '#fff', borderRadius: 10, padding: '10px', display: 'inline-block', border: '1px dashed #10B981' }}>
+            <div style={{ background: 'var(--c-surface, #fff)', borderRadius: 10, padding: '10px', display: 'inline-block', border: '1px dashed var(--c-good, #10B981)' }}>
               🎯 Dự kiến: <b>{curMeasure.approx}</b>
             </div>
           </div>
@@ -4959,7 +4864,7 @@ function RulerGame() {
       </span>
 
       {/* Visual Ruler */}
-      <div style={{ background: '#FFFBEB', border: '1.5px solid #FCD34D', borderRadius: 10, padding: '16px 12px 10px', margin: '14px 0' }}>
+      <div style={{ background: 'var(--c-warn-bg, #FFFBEB)', border: '1.5px solid var(--c-warn-line, #FCD34D)', borderRadius: 10, padding: '16px 12px 10px', margin: '14px 0' }}>
         {/* Object being measured */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <div
@@ -4974,7 +4879,7 @@ function RulerGame() {
           />
         </div>
         {/* Ruler ticks */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #78350F', paddingTop: 4, fontSize: 10, color: '#78350F', fontWeight: 700 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #78350F', paddingTop: 4, fontSize: 10, color: 'var(--c-text, #78350F)', fontWeight: 700 }}>
           {Array.from({ length: 16 }).map((_, i) => (
             <div key={i} style={{ textAlign: 'center', width: 14 }}>
               <div style={{ height: i % 5 === 0 ? 8 : 4, width: 1, background: '#78350F', margin: '0 auto 2px' }} />

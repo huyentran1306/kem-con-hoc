@@ -1,10 +1,13 @@
 /**
  * 🎲 GÓC CHƠI CHUNG (ĐẦU TAB TRÒ CHƠI) - PROMPT 24
  * 3 trò mẹ con: Đấu trí hai đầu bàn, Leo cây mật ong, Thám tử đồ vật.
- * 0 token, tự dừng khi hết giờ, luôn khen cả hai.
+ * 0 token, hết giờ chơi thì dừng, luôn khen cả hai.
  */
 import React, { useState, useContext } from 'react';
-import { getPlayTimeStatus, getTodaysFocusSkill, hasLearningData, hasWeakData, getDailyLimitMinutes } from './gameStorage';
+import { getPlayTimeStatus } from './gameStorage';
+import { ThemeBuddy } from '../themes/buddies/buddySvgs';
+import { GameArt } from './toyIcons';
+import '../games.css';
 import GameDuel from './GameDuel';
 import GameHoneyTree from './GameHoneyTree';
 import GameDetective from './GameDetective';
@@ -23,13 +26,8 @@ export default function GocChoiChung({
 }) {
   const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const childName = child?.name || 'con';
-  // Prompt 29B.4: chưa có buổi học nào thì nói thật, không nói "hay kẹt"
-  const hasData = hasLearningData(child, stats);
-  const playMin = getDailyLimitMinutes(child?.id);
-  const gradeLabel = String(child?.grade || '').replace(/^\s*lớp\s*/i, '') || '3';
   const [activeGame, setActiveGame] = useState(null); // null | 'duel' | 'tree' | 'detective'
   const timeStatus = getPlayTimeStatus(child?.id);
-  const focusSkill = getTodaysFocusSkill(child, stats);
 
   const handleStartGame = (gameId) => {
     if (timeStatus.isTimeLimitReached) {
@@ -88,261 +86,44 @@ export default function GocChoiChung({
     );
   }
 
-  // 5. MÀN HÌNH CHÍNH GÓC CHƠI CHUNG (MÀN 1)
+  // 5. MÀN HÌNH CHÍNH GÓC CHƠI CHUNG (Gói 39: bản vẽ "Trò chơi v5")
+  // Bỏ thẻ ôn bài hôm nay và dòng nhắc giới hạn phút ở đầu màn: không liên quan tới trò chơi.
+  const GAMES = [
+    { id: 'duel', testId: 'btn-game-duel', title: 'Đấu trí hai đầu bàn', desc: 'Đặt máy giữa bàn, mỗi người một nửa màn hình', meta: '2 người', tone: 'a1' },
+    { id: 'tree', testId: 'btn-game-tree', title: 'Leo cây mật ong', desc: 'Cùng giúp linh vật leo lên trước khi ong về', meta: 'Cùng phe', tone: 'a2' },
+    { id: 'detective', testId: 'btn-game-detective', title: 'Thám tử đồ vật', desc: 'Đi tìm đồ trong nhà cho đủ phép tính', meta: 'Vận động', tone: 'a3' },
+  ];
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 80 }} data-testid="screen-goc-choi-chung">
-      {/* TopBar T3 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-sub)' }}>Trò chơi</span>
-        {/* Gói 34: bỏ nút tròn bình tĩnh ở đây, dùng nút nổi {Mẹ/Bố} bình tĩnh chung */}
+    <div className="gc" data-testid="screen-goc-choi-chung">
+      <header className="gc-top">
+        <div className="gc-hello">
+          <div>
+            <h1>Góc chơi chung</h1>
+            <p>{Ho} và {childName} chơi cùng.</p>
+          </div>
+          <span className="gc-mascot" aria-hidden="true"><ThemeBuddy state="hello" size={84} fallback={<span style={{ fontSize: 56 }}>🧸</span>} /></span>
+        </div>
+      </header>
+
+      <div className="gc-games">
+        {GAMES.map((g) => (
+          <button key={g.id} type="button" className="gc-game" data-testid={g.testId} onClick={() => handleStartGame(g.id)}>
+            <span className={`gc-art ${g.tone}`} aria-hidden="true"><GameArt id={g.id} /></span>
+            <span className="gc-gtx">
+              <b>{g.title}</b>
+              <span className="gc-desc">{g.desc}</span>
+              <span className="gc-meta">{g.meta}</span>
+            </span>
+            <span className="gc-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" /></svg></span>
+          </button>
+        ))}
       </div>
 
-      {/* Header chào mừng */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
-            Góc chơi chung
-          </h2>
-          <p style={{ margin: '2px 0 0', fontSize: 13.5, color: 'var(--c-sub)' }}>
-            {hasWeakData(child, stats)
-              ? `${Ho} và ${childName} chơi cùng ${playMin} phút, ôn đúng chỗ ${childName} hay kẹt.`
-              : hasData
-                ? `${Ho} và ${childName} chơi cùng ${playMin} phút. Hôm nay ôn: ${focusSkill.charAt(0).toLowerCase() + focusSkill.slice(1)}.`
-                : `Chưa có buổi học nào. Hôm nay ${Ho.toLowerCase()} và ${childName} chơi ôn ${focusSkill} (lớp ${gradeLabel}).`}
-          </p>
-        </div>
-        <span style={{ fontSize: 44, flexShrink: 0 }}>🐻</span>
-      </div>
-
-      {/* Thẻ Hôm nay ôn */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 10,
-          padding: "10px 12px",
-          background: "color-mix(in srgb, var(--c-accent) 12%, var(--c-surface, #fff))",
-          border: "1px solid var(--c-line)",
-          borderRadius: 18,
-          boxSizing: "border-box",
-        }}
-        data-testid="card-today-focus"
-      >
-        <span style={{ fontSize: 24, flexShrink: 0 }}>🎯</span>
-        <div style={{ flex: 1, minWidth: 0, display: "grid" }}>
-          <b style={{ fontSize: 14, color: "var(--c-text)", margin: 0 }}>Hôm nay ôn</b>
-          <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {focusSkill}
-          </p>
-        </div>
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 900,
-            color: timeStatus.isTimeLimitReached ? "var(--c-danger, #D23A50)" : "var(--c-text)",
-            background: "var(--c-surface)",
-            padding: "4px 9px",
-            borderRadius: 999,
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-            border: "1px solid var(--c-line)",
-          }}
-        >
-          ⏱ còn {timeStatus.remainingFormatted}
-        </span>
-      </div>
-
-      {/* 3 Thẻ Trò chơi (Làm đúng goc-choi-chung.html: thẻ ngang, icon 52px, không mũi tên) */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {/* Trò 1: Đấu trí */}
-        <div
-          role="button"
-          tabIndex={0}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 12px",
-            background: "var(--c-surface, #fff)",
-            border: "1px solid var(--c-line)",
-            borderRadius: 20,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-          onClick={() => handleStartGame("duel")}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartGame("duel"); }}
-          data-testid="btn-game-duel"
-        >
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
-              background: "color-mix(in srgb, var(--c-accent) 22%, var(--c-surface))",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 26,
-              flexShrink: 0,
-            }}
-          >
-            ⚔️
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: "grid", gap: 1 }}>
-            <b style={{ fontSize: 15.5, color: "var(--c-text)", margin: 0 }}>Đấu trí hai đầu bàn</b>
-            <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35 }}>
-              Đặt máy giữa bàn, mỗi người một nửa màn hình
-            </p>
-          </div>
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 900,
-              background: "var(--c-surface-2)",
-              color: "var(--c-text)",
-              borderRadius: 999,
-              padding: "4px 9px",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            2 người
-          </span>
-        </div>
-
-        {/* Trò 2: Leo cây */}
-        <div
-          role="button"
-          tabIndex={0}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 12px",
-            background: "var(--c-surface, #fff)",
-            border: "1px solid var(--c-line)",
-            borderRadius: 20,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-          onClick={() => handleStartGame("tree")}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartGame("tree"); }}
-          data-testid="btn-game-tree"
-        >
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
-              background: "color-mix(in srgb, var(--c-good, #2EA043) 22%, var(--c-surface))",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 26,
-              flexShrink: 0,
-            }}
-          >
-            🌳
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: "grid", gap: 1 }}>
-            <b style={{ fontSize: 15.5, color: "var(--c-text)", margin: 0 }}>Leo cây mật ong</b>
-            <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35 }}>
-              Cùng giúp linh vật leo lên trước khi ong về
-            </p>
-          </div>
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 900,
-              background: "var(--c-surface-2)",
-              color: "var(--c-text)",
-              borderRadius: 999,
-              padding: "4px 9px",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            cùng phe
-          </span>
-        </div>
-
-        {/* Trò 3: Thám tử đồ vật */}
-        <div
-          role="button"
-          tabIndex={0}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 12px",
-            background: "var(--c-surface, #fff)",
-            border: "1px solid var(--c-line)",
-            borderRadius: 20,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-          onClick={() => handleStartGame("detective")}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartGame("detective"); }}
-          data-testid="btn-game-detective"
-        >
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
-              background: "color-mix(in srgb, var(--c-accent-2, #9333EA) 22%, var(--c-surface))",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 26,
-              flexShrink: 0,
-            }}
-          >
-            🔍
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: "grid", gap: 1 }}>
-            <b style={{ fontSize: 15.5, color: "var(--c-text)", margin: 0 }}>Thám tử đồ vật</b>
-            <p style={{ margin: 0, fontSize: 12.5, color: "var(--c-sub, var(--c-text-2))", lineHeight: 1.35 }}>
-              Đi tìm đồ trong nhà cho đủ phép tính
-            </p>
-          </div>
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 900,
-              background: "var(--c-surface-2)",
-              color: "var(--c-text)",
-              borderRadius: 999,
-              padding: "4px 9px",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            vận động
-          </span>
-        </div>
-      </div>
-      {/* Dòng chú thích */}
-      <p style={{ margin: '4px 0', fontSize: 12, color: 'var(--c-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-        {hasWeakData(child, stats)
-          ? `Câu hỏi dựa trên chỗ ${childName} hay kẹt. Hết ${playMin} phút thì tự dừng.`
-          : hasData
-          ? `Câu hỏi bám bài ${childName} vừa học. Hết ${playMin} phút thì tự dừng.`
-          : `Câu hỏi theo chương trình lớp ${gradeLabel}. Hết ${playMin} phút thì tự dừng.`}
-      </p>
-
-      {/* Khu "Chụp đồ vật để Gấu nghĩ trò" (Legacy component chuyển xuống dưới) */}
+      {/* Khu "Chơi gì với đồ trong nhà?" (chụp / gõ / chọn đồ vật) */}
       {SnapToyLegacyComponent && (
-        <div id="sec-snap-toy" style={{ marginTop: 8, borderTop: '1px solid var(--c-line)', paddingTop: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-sub)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            🧸 Chụp đồ vật quanh nhà
-          </div>
+        <section id="sec-snap-toy" className="gc-sec">
           <SnapToyLegacyComponent />
-        </div>
+        </section>
       )}
     </div>
   );
