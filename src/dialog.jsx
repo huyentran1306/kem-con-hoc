@@ -35,6 +35,7 @@ export function DialogHost() {
   const [items, setItems] = useState([])
   const [value, setValue] = useState('')
   const okRef = useRef(null)
+  const cancelRef = useRef(null)
   const inputRef = useRef(null)
   const cur = items[0]
 
@@ -49,7 +50,9 @@ export function DialogHost() {
   useEffect(() => {
     if (!cur) return
     setValue(cur.opts.defaultValue || '')
-    const t = setTimeout(() => (cur.kind === 'prompt' ? inputRef.current : okRef.current)?.focus(), 30)
+    // Gói 38: hộp xác nhận nguy hiểm (xoá vĩnh viễn) đặt sẵn tiêu điểm vào nút an toàn, tránh lỡ tay bấm Enter là xoá
+    const safeFirst = cur.kind === 'confirm' && cur.opts.danger
+    const t = setTimeout(() => (cur.kind === 'prompt' ? inputRef.current : safeFirst ? cancelRef.current : okRef.current)?.focus(), 30)
     return () => clearTimeout(t)
   }, [cur?.id])
 
@@ -167,10 +170,12 @@ export function DialogHost() {
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
           {kind !== 'alert' && (
             <button
+              ref={cancelRef}
               type="button"
               onClick={onCancel}
               style={{
                 flex: 1,
+                minHeight: 48,
                 padding: '11px 14px',
                 borderRadius: 999,
                 border: '1.5px solid var(--c-line, #F4DDE7)',
@@ -191,6 +196,7 @@ export function DialogHost() {
             disabled={kind === 'prompt' && opts.required && !value.trim()}
             style={{
               flex: kind === 'alert' ? '0 1 160px' : 1.2,
+              minHeight: 48,
               padding: '11px 14px',
               borderRadius: 999,
               border: 'none',

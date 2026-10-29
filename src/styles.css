@@ -346,6 +346,10 @@ textarea.field{resize:none;line-height:1.6}
   pointer-events:none;
 }
 .toast.show{opacity:1;transform:none}
+/* Gói 38: Toast có nút Hoàn tác (dùng chung toàn app) */
+.toast.has-undo { display: flex; align-items: center; gap: 12px; text-align: left; pointer-events: auto; padding: 8px 8px 8px 16px; }
+.toast.has-undo > span { flex: 1; }
+.toast-undo { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 2px solid currentColor; background: transparent; color: inherit; font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; }
 
 /* ---------- Sheet ---------- */
 .sheet{

@@ -30,7 +30,9 @@ const screens = new Set(['onb', ...Object.keys(screenMap)])
 
 const screensSrc = fs.readFileSync(path.join(SRC, 'screens.jsx'), 'utf8')
 for (const [name, comp] of Object.entries(screenMap)) {
-  assert.ok(new RegExp(`export function ${comp}\\b`).test(screensSrc), `TAB_CAP.${name} trỏ tới ${comp} nhưng screens.jsx không export`)
+  // Gói 38: chấp nhận cả export lại từ file khác (vd. export { Profile } from './ProfileScreen')
+  const exported = new RegExp(`export function ${comp}\\b`).test(screensSrc) || new RegExp(`export \\{[^}]*\\b${comp}\\b[^}]*\\} from`).test(screensSrc)
+  assert.ok(exported, `TAB_CAP.${name} trỏ tới ${comp} nhưng screens.jsx không export`)
 }
 
 const missing = []

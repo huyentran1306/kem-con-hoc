@@ -94,8 +94,18 @@ export function speak(text, lang = 'vi-VN') {
 
 /* ---------- Toast (pub/sub nhỏ) ---------- */
 const toastListeners = []
-export function toast(msg) {
-  toastListeners.forEach((f) => f(msg))
+// Gói 38: toast(msg, { undo }) hiện thêm nút "Hoàn tác" (giữ lâu hơn để kịp bấm)
+export function toast(msg, opts) {
+  toastListeners.forEach((f) => f(msg, opts))
+}
+
+/* ---------- Rung nhẹ khi chạm (máy không hỗ trợ thì bỏ qua) ---------- */
+export function buzz(pattern = 10) {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern)
+  } catch (e) {
+    /* bỏ qua */
+  }
 }
 export function onToast(f) {
   toastListeners.push(f)

@@ -9,6 +9,7 @@ import { Stepper, VoiceInputBtn } from './ui'
 import { dbKvGet, dbKvSet, aiPractice, aiExplain, saveTeachingFeedback, cloudLoadState, cloudSaveState, cloudDeleteFamily, getAuthToken, setAuthToken, removeAuthToken, loadPublicConfig, syncPublicConfig, fetchClassPreview, sendAiFeedback, getSafetySummary, clearLearnerHistory, recordRewardEvent, deleteBadgeEvents } from './api'
 import * as Scr from './screens'
 import { ThemePickerSheet } from './ThemePickerSheet'
+import { AddChildSheet, EditChildSheet } from './ChildSheets'
 import { ThemeDecor } from './ThemeDecor'
 import { applyTheme } from './themes'
 import { BookOpen, Sparkles, BarChart3, User } from 'lucide-react'
@@ -319,6 +320,7 @@ export default function App() {
   const [sheet, setSheet] = useState(null)
   const [classJoinBanner, setClassJoinBanner] = useState(null)
   const [msg, setMsg] = useState('')
+  const [toastUndo, setToastUndo] = useState(null)
   const [study, setStudy] = useState(null)
   const scrollRef = useRef(null)
   // Đợt 15 chặng 6: dải Dùng thử thu gọn, mở thẳng tab đăng ký, nút nổi thu tròn khi cuộn
@@ -352,10 +354,11 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const off = onToast((m) => {
+    const off = onToast((m, opts) => {
       setMsg(m)
+      setToastUndo(() => (opts && typeof opts.undo === 'function' ? opts.undo : null))
       clearTimeout(toastTimer.current)
-      toastTimer.current = setTimeout(() => setMsg(''), 2300)
+      toastTimer.current = setTimeout(() => { setMsg(''); setToastUndo(null) }, opts?.undo ? 6000 : 2300)
     })
     return off
   }, [])
@@ -934,7 +937,7 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''} ${screen === 'report' ? 'on-report' : ''} ${screen === 'done' ? 'on-done' : ''}`}>
+        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''} ${screen === 'report' ? 'on-report' : ''} ${screen === 'done' ? 'on-done' : ''} ${screen === 'profile' ? 'on-profile' : ''}`}>
           {session?.isTrial && !trialCollapsed && (
             <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử" style={{ minHeight: 32, height: 'auto', padding: '4px 10px', gap: 6 }}>
               <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>
@@ -1029,7 +1032,24 @@ export default function App() {
             </button>
           )}
 
-          <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
+          <div className={`toast ${msg ? 'show' : ''} ${toastUndo ? 'has-undo' : ''}`} role="status" aria-live="polite">
+            <span>{msg}</span>
+            {msg && toastUndo && (
+              <button
+                type="button"
+                className="toast-undo"
+                onClick={() => {
+                  const fn = toastUndo
+                  clearTimeout(toastTimer.current)
+                  setMsg('')
+                  setToastUndo(null)
+                  fn()
+                }}
+              >
+                Hoàn tác
+              </button>
+            )}
+          </div>
 
           {sheet && (
             <ErrorBoundary onClose={closeSheet} message="Có lỗi nhỏ khi mở cửa sổ này. Thử lại nhé!">
@@ -1193,7 +1213,7 @@ function SheetView({ type, data, session }) {
   }
 
   if (type === 'practice') return <PracticeSheet />
-  if (type === 'addChild') return <AddChildSheet />
+  if (type === 'addChild') return <AddChildSheet makeStats={defaultStats} />
   if (type === 'editChild') return <EditChildSheet />
   if (type === 'invite' || type === 'members') {
     return (
@@ -1738,214 +1758,7 @@ function SafetyPortalSheet({ onClose, S }) {
   )
 }
 
-/* ---------- THÊM CON ---------- */
-function AddChildSheet() {
-  const { S, patch, closeSheet, toast } = useContext(AppCtx)
-  const [name, setName] = useState('')
-  const [emoji, setEmoji] = useState('🐰')
-  const [grade, setGrade] = useState('Lớp 1')
-  const [book, setBook] = useState(BOOKS[0])
-
-  const save = () => {
-    if (S.children.length >= 4) {
-      toast('Tối đa 4 bé nhé 💛')
-      return
-    }
-    if (!name.trim()) { toast('Đặt biệt danh cho bé nhé 🐣'); return }
-    const id = 'c' + Date.now().toString(36)
-    const kids = [...S.children, { id, name: name.trim(), emoji, grade, book }]
-    patch({
-      children: kids,
-      activeId: id,
-      stats: { ...S.stats, [id]: defaultStats(id) },
-    })
-    closeSheet()
-    toast(`Đã thêm bé ${name.trim()} ${emoji} 🎉`)
-  }
-
-  return (
-    <Sheet>
-      <p className="title">Thêm con</p>
-      <div className="card">
-        <span className="lbl plum">Biệt danh</span>
-        <input className="field" placeholder="VD: Bon, Miu…" value={name} onChange={(e) => setName(e.target.value)} />
-      </div>
-      <div className="card">
-        <span className="lbl plum">Hình đại diện</span>
-        <div className="chips" style={{ gap: 4 }}>
-          {EMOJIS.map((e) => (
-            <button
-              key={e}
-              onClick={() => setEmoji(e)}
-              style={{
-                fontSize: 22, width: 40, height: 40, borderRadius: 12,
-                background: emoji === e ? 'var(--plum-tint)' : '#fff',
-                border: emoji === e ? '2px solid var(--plum)' : '1.5px solid var(--line)',
-              }}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="card">
-        <span className="lbl plum">Lớp</span>
-        <div className="opt-grid">
-          {GRADES.map((x) => (
-            <button key={x} className={`opt ${grade === x ? 'on' : ''}`} onClick={() => setGrade(x)}>{x}</button>
-          ))}
-        </div>
-      </div>
-      <div className="card">
-        <span className="lbl plum">Bộ sách</span>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-          {BOOKS.map((x) => (
-            <button
-              key={x}
-              type="button"
-              className={`btn-km btn-km-s ${book === x ? 'btn-km-primary' : 'btn-km-secondary'}`}
-              style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
-              onClick={() => setBook(x)}
-            >
-              {x}
-            </button>
-          ))}
-        </div>
-      </div>
-      <button className="btn solid" onClick={save}>Thêm bé</button>
-    </Sheet>
-  )
-}
-
-/* ---------- SỬA HỒ SƠ CON ĐANG CHỌN (Đợt 15 · 6.4 & Đợt 18 · Chặng 2) ---------- */
-function EditChildSheet() {
-  const { S, patch, closeSheet, toast } = useContext(AppCtx)
-  const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
-  const [name, setName] = useState(child?.name || '')
-  const [emoji, setEmoji] = useState(child?.emoji || '🐰')
-  const [grade, setGrade] = useState(child?.grade || GRADES[0])
-  const [book, setBook] = useState(child?.book || BOOKS[0])
-  const [bearMemory, setBearMemory] = useState(child?.bearMemory !== false)
-
-  const childBadges = (S.stats?.[child?.id]?.stickerHistory || []).filter((s) => !s.sample)
-  const earliestDate = childBadges.length > 0
-    ? new Date(Math.min(...childBadges.map((b) => b.timestamp || Date.now()))).toLocaleDateString('vi-VN')
-    : 'chưa có'
-
-  const handleClearBadgeHistory = async () => {
-    if (!child) return
-    const ok = await appConfirm(`Xoá toàn bộ lịch sử ${childBadges.length} huy hiệu của ${child.name}? Các mốc phẩm chất sẽ được xoá khỏi hệ thống.`)
-    if (!ok) return
-    await deleteBadgeEvents(child.id)
-    patch((prev) => ({
-      ...prev,
-      stats: {
-        ...prev.stats,
-        [child.id]: {
-          ...(prev.stats?.[child.id] || {}),
-          stickerHistory: [],
-        },
-      },
-    }))
-    toast(`Đã xoá lịch sử huy hiệu của ${child.name}`)
-  }
-
-  const handleClearHistory = async () => {
-    if (!child) return
-    const ok = await appConfirm(`Xoá toàn bộ lịch sử học tập và ghi nhớ của ${child.name}? Gấu sẽ bắt đầu lại từ đầu cho bé.`)
-    if (!ok) return
-    await clearLearnerHistory(child.id)
-    const kids = S.children.map((c) => (c.id === child.id ? { ...c, learnerProfile: null } : c))
-    patch({ children: kids })
-    toast(`Đã xoá lịch sử học của ${child.name}`)
-  }
-
-  const save = () => {
-    if (!child) { closeSheet(); return }
-    if (!name.trim()) { toast('Đặt biệt danh cho con nhé 🐣'); return }
-    const kids = S.children.map((c) => (c.id === child.id ? { ...c, name: name.trim(), emoji, grade, book, bearMemory } : c))
-    patch({ children: kids })
-    closeSheet()
-    toast(`Đã lưu hồ sơ của ${name.trim()} ${emoji}`)
-  }
-
-  return (
-    <Sheet>
-      <p className="title">Sửa hồ sơ của {child?.name || 'con'}</p>
-      <p className="sub">Chỉ sửa hồ sơ của con đang chọn. Lịch sử học và sticker giữ nguyên.</p>
-      <div className="card">
-        <label className="lbl plum" htmlFor="edit-child-name">Biệt danh</label>
-        <input id="edit-child-name" className="field" placeholder="VD: Bon, Miu…" value={name} maxLength={30} onChange={(e) => setName(e.target.value)} />
-      </div>
-      <div className="card">
-        <span className="lbl plum" id="edit-child-avatar">Hình đại diện</span>
-        <div className="chips" style={{ gap: 4 }} role="radiogroup" aria-labelledby="edit-child-avatar">
-          {EMOJIS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              role="radio"
-              aria-checked={emoji === e}
-              aria-label={`Hình ${e}`}
-              onClick={() => setEmoji(e)}
-              style={{
-                fontSize: 22, width: 44, height: 44, borderRadius: 12,
-                background: emoji === e ? 'var(--c-surface-2)' : 'var(--c-surface)',
-                border: emoji === e ? '2px solid var(--c-accent)' : '1.5px solid var(--c-line)',
-              }}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="card">
-        <span className="lbl plum">Lớp</span>
-        <div className="opt-grid">
-          {GRADES.map((x) => (
-            <button key={x} type="button" className={`opt ${grade === x ? 'on' : ''}`} onClick={() => setGrade(x)}>{x}</button>
-          ))}
-        </div>
-      </div>
-      <div className="card">
-        <span className="lbl plum">Bộ sách</span>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-          {BOOKS.map((x) => (
-            <button
-              key={x}
-              type="button"
-              className={`btn-km btn-km-s ${book === x ? 'btn-km-primary' : 'btn-km-secondary'}`}
-              style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
-              onClick={() => setBook(x)}
-            >
-              {x}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <b style={{ fontSize: 14 }}>🐻 Bật Gấu nhớ con</b>
-          <p style={{ fontSize: 12, color: 'var(--c-text-muted)', margin: '2px 0 0' }}>AI ghi nhớ chỗ hay kẹt và đã vững để hỏi sát hơn</p>
-        </div>
-        <span
-          id="toggle-bear-memory"
-          className={`sw ${bearMemory ? 'on' : ''}`}
-          onClick={() => setBearMemory(!bearMemory)}
-          style={{ cursor: 'pointer' }}
-          role="switch"
-          aria-checked={bearMemory}
-        />
-      </div>
-
-
-      <div className="btns">
-        <button type="button" className="btn ghost" onClick={closeSheet}>Huỷ</button>
-        <button type="button" className="btn solid" onClick={save}>Lưu</button>
-      </div>
-    </Sheet>
-  )
-}
+/* ---------- THÊM CON / SỬA HỒ SƠ CON: xem ChildSheets.jsx (gói 38) ---------- */
 
 /* ---------- XÓA DỮ LIỆU (Đợt 15 · 6.4: nút nguy hiểm, gõ tên gia đình để xác nhận) ---------- */
 function WipeSheet() {
