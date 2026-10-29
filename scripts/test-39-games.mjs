@@ -17,9 +17,9 @@ t('Khu "Chơi gì với đồ trong nhà?" không còn thẻ "AI ưu tiên ôn"'
   assert.ok(!snap.includes('AI ưu tiên ôn'))
   assert.ok(!snap.includes('Gấu sẽ gợi ý chỗ cần ôn'))
 })
-t('Đồng hồ Lego chỉ hiện khi chọn đồ vật Đồng hồ; Đồng hồ chơi (đếm ngược) luôn hiện', () => {
-  assert.match(game, /\{toy === 'Đồng hồ' && \(\n\s*<section className="gv-card" data-testid="card-lego-clock">/)
-  assert.equal((game.match(/Đồng hồ Lego/g) || []).length, 2) // 1 chú thích + 1 tiêu đề
+t('Không còn thẻ Đồng hồ Lego ở bất kỳ đồ vật nào; Đồng hồ chơi (đếm ngược) luôn hiện', () => {
+  // Gói 41: bỏ hẳn thẻ Đồng hồ Lego, kể cả ở đồ vật Đồng hồ
+  assert.ok(!game.includes('card-lego-clock'))
   assert.match(game, /data-testid="card-play-timer"/)
 })
 t('UI theo bản vẽ: thẻ trò chơi có tranh + nút Play, đồ vật có hình, đồng hồ số to', () => {

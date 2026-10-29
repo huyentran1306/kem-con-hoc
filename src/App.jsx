@@ -17,6 +17,7 @@ import { ThemedTabIcon } from './themes/themeIcons'
 import { SeasonParticles } from './seasons/SeasonParticles'
 import { useStudyTracker } from './useStudyTracker'
 import { CalmCornerModal } from './CalmCornerModal'
+import { CalmBreathSheet } from './CalmBreath'
 import { ErrorBoundary } from './ErrorBoundary'
 import { initClientErrorLogging } from './clientErrors'
 import { sanitizeAppState, sanitizeSession } from './stateShape.js'
@@ -1018,7 +1019,7 @@ export default function App() {
               type="button"
               data-testid="calm-fab"
               className={`calm-fab ${['explain', 'scaffold', 'done', 'snap', 'analyze'].includes(screen) ? 'calm-fab-mini' : ''} ${fabCompact ? 'compact' : ''}`}
-              onClick={() => openSheet('calm')}
+              onClick={() => openSheet('calm', { inLesson: screen === 'scaffold' })}
               title={calmLabel}
               aria-label={calmLabel}
             >
@@ -1079,16 +1080,18 @@ function SheetView({ type, data, session }) {
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
 
   if (type === 'calm') {
+    // Gói 41: bấm "{Mẹ/Bố} bình tĩnh" là hít thở 4 giây vào · 4 giây ra như bản trước;
+    // các gợi ý khác (con chưa hiểu, mất tập trung, thổi cùng con…) nằm ở nút phụ bên dưới.
+    const inLesson = Boolean(data?.inLesson)
     return (
-      <CalmCornerModal
-        isOpen={true}
-        onClose={closeSheet}
-        currentProblem={S.problem}
+      <CalmEntry
+        inLesson={inLesson}
+        currentProblem={inLesson ? S.problem : null}
         currentStepIndex={S.flow?.step || 0}
         child={child}
         parentName={Ho}
         themeId={S.theme || 'bear'}
-        onLowerDifficulty={async () => {
+        onLowerDifficulty={inLesson ? async () => {
           closeSheet()
           patch({ flow: { ...S.flow, stuck: 0, lowering: true } })
           toast('AI đang hạ độ khó với số nhỏ hơn 🪜⚡')
@@ -1109,13 +1112,14 @@ function SheetView({ type, data, session }) {
             patch({ flow: { ...S.flow, stuck: 0, lowering: false } })
             toast('Mạng chậm, thử lại sau nhé')
           }
-        }}
-        onOpenHint={() => {
+        } : undefined}
+        onOpenHint={inLesson ? () => {
           closeSheet()
-          patch({ flow: { ...S.flow, unlocked: true } })
-          toast('Đã mở gợi ý đồ vật thật cho con 💡')
-        }}
-        onSaveAndStop={() => {
+          // Màn Hỏi con từng bước mở gợi ý theo số lần "Con còn bí" (flow.stuck): mở sẵn gợi ý 1 của bậc đang làm
+          patch((prev) => ({ ...prev, flow: { ...prev.flow, stuck: Math.max(1, Number(prev.flow?.stuck) || 0) } }))
+          toast('Đã mở gợi ý 1 cho bậc đang làm 💡')
+        } : undefined}
+        onSaveAndStop={inLesson ? () => {
           closeSheet()
           patch({
             pendingProblemResume: {
@@ -1137,7 +1141,7 @@ function SheetView({ type, data, session }) {
           }
           toast('Đã lưu bài! Dừng ở đây cũng là một tối học rất tốt 🌙')
           go('home')
-        }}
+        } : undefined}
         onRecordCalmEvent={(evt) => {
           const now = Date.now()
           const newEvent = {
@@ -1259,6 +1263,19 @@ function SheetView({ type, data, session }) {
   // Prompt 31A: Nghe con giảng lại
   if (type === 'teachBack') return <Sheet><Scr.TeachBackSheet /></Sheet>
   return null
+}
+
+/* Gói 41: "{Mẹ/Bố} bình tĩnh" mở bảng hít thở trước; bấm "Xem gợi ý khác" mới sang Góc hạ hoả (CalmCornerModal) */
+function CalmEntry(props) {
+  const { closeSheet, toast, Ho = 'Bố mẹ' } = useContext(AppCtx)
+  const [more, setMore] = useState(false)
+  if (more) return <CalmCornerModal isOpen={true} onClose={closeSheet} {...props} />
+  return (
+    <CalmBreathSheet
+      onMore={() => setMore(true)}
+      onDone={(ok) => { closeSheet(); if (ok) toast(`${Ho} làm tốt lắm 💚`) }}
+    />
+  )
 }
 
 function Sheet({ children }) {

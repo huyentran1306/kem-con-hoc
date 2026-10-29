@@ -116,3 +116,15 @@
   .dn-mascot::before, .dn-spark { animation: none !important; }
   .dn-tips-head svg { transition: none; }
 }
+
+/* Gói 41: thanh trượt chọn sticker (đủ 12 sticker, không chỉ 4) */
+.dn-stk { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
+.dn-stk-rail { flex: 1; min-width: 0; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px 2px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.dn-stk-rail::-webkit-scrollbar { display: none; }
+.dn-stk-rail .dn-trait { position: relative; flex: 0 0 76px; scroll-snap-align: start; }
+.dn-stk-tag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px; font-style: normal; font-size: 12px; font-weight: 800; white-space: nowrap; background: var(--c-warn-bg, var(--c-surface-2)); color: var(--c-warn-fg, var(--c-text)); border: 1px solid var(--c-warn-line, var(--c-line)); }
+.dn-stk-nav { flex: none; width: 36px; height: 44px; border-radius: 12px; border: 1.5px solid var(--c-line); background: var(--c-surface); color: var(--c-text); font: inherit; font-size: 22px; font-weight: 800; cursor: pointer; display: grid; place-items: center; }
+.dn-stk-hint { margin: 4px 0 0; font-size: 13px; text-align: center; color: color-mix(in srgb, var(--c-text-2) 45%, var(--c-text)); }
+/* Gói 41: đề bài tương tự hiện đủ (tối đa 3 dòng); nút căn giữa chữ */
+.dn-next-txt .dn-bro-de { white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.dn-next-btn { display: inline-flex; align-items: center; justify-content: center; text-align: center; }

@@ -31,6 +31,7 @@ export function CalmCornerModal({
   onSaveAndStop,
   onRecordCalmEvent,
   triggerType = 'manual', // 'manual' | 'nudge'
+  inLesson = true, // Gói 41: ngoài giờ học thì ẩn các việc chỉ dành cho bài đang làm
 }) {
   const [view, setView] = useState('reasons') // 'reasons' | 'move_game' | 'blowing' | 'role_swap' | 'phrase'
   const [selectedReason, setSelectedReason] = useState(null)
@@ -277,7 +278,7 @@ export function CalmCornerModal({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--c-text)' }}>Gợi ý khi con chưa hiểu</h3>
-              <button className="round-btn" style={{ width: 32, height: 32, fontSize: 14 }} onClick={onClose} aria-label="Đóng">✕</button>
+              <button className="round-btn" style={{ width: 44, height: 44, fontSize: 15 }} onClick={onClose} aria-label="Đóng">✕</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
               <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface-2, #F8FAFC)', border: '1px solid var(--c-line, #E2E8F0)', borderRadius: 14 }}>
@@ -308,7 +309,7 @@ export function CalmCornerModal({
                   Điều gì đang khó, {parentName.toLowerCase()} ơi?
                 </h3>
               </div>
-              <button className="round-btn" onClick={onClose} style={{ width: 32, height: 32, fontSize: 14 }}>
+              <button className="round-btn" onClick={onClose} aria-label="Đóng" style={{ width: 44, height: 44, fontSize: 15 }}>
                 ✕
               </button>
             </div>
@@ -322,7 +323,7 @@ export function CalmCornerModal({
 
             {/* 4 Ô CHÍNH */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-              {CALM_REASONS.map((r) => (
+              {CALM_REASONS.filter((r) => inLesson || r.id !== 'late').map((r) => (
                 <button
                   key={r.id}
                   onClick={() => handleSelectReason(r)}
@@ -349,6 +350,7 @@ export function CalmCornerModal({
 
             {/* 2 HÀNG BÊN DƯỚI */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+              {inLesson && steps.length > 0 && (
               <button
                 className="btn ghost"
                 style={{
@@ -365,6 +367,7 @@ export function CalmCornerModal({
                 <span>🎭 Đổi vai 2 phút (Cô {child?.name || 'con'} hỏi {parentName.toLowerCase()})</span>
                 <span>➔</span>
               </button>
+              )}
 
               <button
                 className="btn ghost"
@@ -390,7 +393,7 @@ export function CalmCornerModal({
               style={{ width: '100%', height: 48, borderRadius: 16, fontSize: 14, fontWeight: 700 }}
               onClick={onClose}
             >
-              Quay lại bài đang làm ➔
+              {inLesson ? 'Quay lại bài đang làm ➔' : 'Đóng'}
             </button>
           </div>
         )}
@@ -496,8 +499,8 @@ export function CalmCornerModal({
               style={{
                 borderRadius: 14,
                 padding: '10px 12px',
-                background: '#FEF3C7',
-                border: '1px solid #FCD34D',
+                background: 'var(--c-warn-bg, #FEF3C7)',
+                border: '1px solid var(--c-warn-line, #FCD34D)',
                 marginBottom: 16,
               }}
             >
@@ -509,7 +512,7 @@ export function CalmCornerModal({
                   cursor: 'pointer',
                   fontWeight: 700,
                   fontSize: 12.5,
-                  color: '#92400E',
+                  color: 'var(--c-warn-fg, #92400E)',
                 }}
                 onClick={() => setIsHintFolded(!isHintFolded)}
               >
@@ -517,7 +520,7 @@ export function CalmCornerModal({
                 <span style={{ fontSize: 14, fontWeight: 800 }}>{isHintFolded ? '▾' : '▴'}</span>
               </div>
               {!isHintFolded && (
-                <div style={{ marginTop: 8, fontSize: 13, color: '#78350F', lineHeight: 1.4 }}>
+                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--c-text, #78350F)', lineHeight: 1.4 }}>
                   {parentName} thử trả lời: <b>"{intentionalWrongAnswer}"</b> để xem {child?.name} có phát hiện ra chỗ sai và sửa giúp {parentName.toLowerCase()} không nhé!
                 </div>
               )}
@@ -584,17 +587,17 @@ export function CalmCornerModal({
             {/* Thay vì nói (gạch ngang) */}
             <div
               style={{
-                background: '#FFF1F2',
-                border: '1.5px solid #FECDD3',
+                background: 'var(--c-surface-2, #FFF1F2)',
+                border: '1.5px solid var(--c-line, #FECDD3)',
                 borderRadius: 14,
                 padding: '10px 14px',
                 marginBottom: 10,
               }}
             >
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#E11D48', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-danger-ink, #E11D48)', textTransform: 'uppercase' }}>
                 Thay vì buột miệng nói:
               </span>
-              <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#9F1239', textDecoration: 'line-through' }}>
+              <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--c-text, #9F1239)', textDecoration: 'line-through' }}>
                 "{swapMe(calmPhrase.thay_vi_noi, parentName.toLowerCase())}"
               </p>
             </div>
@@ -602,17 +605,17 @@ export function CalmCornerModal({
             {/* Thử nói (ấm áp) */}
             <div
               style={{
-                background: '#ECFDF5',
-                border: '1.5px solid #A7F3D0',
+                background: 'var(--c-good-bg, #ECFDF5)',
+                border: '1.5px solid var(--c-good, #A7F3D0)',
                 borderRadius: 14,
                 padding: '12px 14px',
                 marginBottom: 12,
               }}
             >
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#059669', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-good-fg, #059669)', textTransform: 'uppercase' }}>
                 {parentName} thử nói nhẹ nhàng:
               </span>
-              <p style={{ margin: '4px 0 0', fontSize: 15, fontWeight: 700, color: '#065F46', lineHeight: 1.4 }}>
+              <p style={{ margin: '4px 0 0', fontSize: 15, fontWeight: 700, color: 'var(--c-text, #065F46)', lineHeight: 1.4 }}>
                 "{swapMe(calmPhrase.thu_noi, parentName.toLowerCase())}"
               </p>
             </div>

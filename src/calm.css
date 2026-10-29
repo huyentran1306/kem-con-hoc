@@ -1,0 +1,37 @@
+/* Gói 41 · Bảng hít thở "{Mẹ/Bố} bình tĩnh". Màu theo biến của bộ giao diện. */
+.calm-pn { --cm-muted: color-mix(in srgb, var(--c-text-2) 45%, var(--c-text)); }
+.calm-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.calm-head h2 { margin: 0; font-family: var(--font-head), var(--font-body), sans-serif; font-weight: 800; font-size: 20px; line-height: 1.3; color: var(--c-text); }
+.calm-sound { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: var(--c-surface-2); color: var(--c-text); border: 1.5px solid var(--c-line); }
+
+.calm-breath-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0 2px; }
+.calm-circle {
+  width: 190px; height: 190px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c-good, var(--c-accent)) 18%, var(--c-surface)), color-mix(in srgb, var(--c-good, var(--c-accent)) 38%, var(--c-surface)) 72%);
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--c-good, var(--c-accent)) 14%, transparent);
+  color: var(--c-text); transform: scale(.72);
+}
+.calm-circle b { font-size: 18px; font-weight: 800; }
+.calm-count { font-family: var(--font-head), var(--font-body), sans-serif; font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.calm-circle.in { animation: calm-grow 4s linear forwards; }
+.calm-circle.out { transform: scale(1); animation: calm-shrink 4s linear forwards; }
+.calm-circle.done { transform: scale(.9); }
+@keyframes calm-grow { from { transform: scale(.72); } to { transform: scale(1); } }
+@keyframes calm-shrink { from { transform: scale(1); } to { transform: scale(.72); } }
+.calm-sub { margin: 0; font-size: 14px; color: var(--cm-muted); text-align: center; }
+.calm-again { min-height: 44px; padding: 0 16px; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; background: var(--c-surface); color: var(--c-text); border: 2px solid color-mix(in srgb, var(--c-accent) 45%, var(--c-line)); }
+
+.calm-say { padding: 12px 14px; border-radius: 16px; border: 1.5px solid var(--c-line); background: var(--c-surface-2); }
+.calm-say span { display: block; font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--cm-muted); }
+.calm-say s, .calm-say p { display: block; margin: 4px 0 0; font-size: 15px; line-height: 1.45; color: var(--c-text); }
+.calm-say.no span { color: color-mix(in srgb, var(--c-danger-ink, var(--c-danger)) 60%, var(--c-text)); }
+.calm-say.yes { background: color-mix(in srgb, var(--c-good, var(--c-accent)) 12%, var(--c-surface)); border-color: color-mix(in srgb, var(--c-good, var(--c-accent)) 40%, var(--c-line)); }
+.calm-say.yes span { color: color-mix(in srgb, var(--c-good-fg, var(--c-text)) 55%, var(--c-text)); }
+.calm-say.yes p { font-weight: 700; }
+
+.calm-ok { width: 100%; min-height: 52px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 16px; background: var(--c-accent); color: var(--c-on-accent, var(--c-surface)); display: flex; align-items: center; justify-content: center; }
+.calm-more { width: 100%; min-height: 44px; border: 0; background: none; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; color: var(--c-text); text-decoration: underline; text-underline-offset: 3px; display: flex; align-items: center; justify-content: center; }
+.calm-ok:focus-visible, .calm-more:focus-visible, .calm-sound:focus-visible, .calm-again:focus-visible { outline: 3px solid var(--c-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .calm-circle.in, .calm-circle.out { animation: none; transform: scale(.9); }
+}

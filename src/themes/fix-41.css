@@ -1,0 +1,25 @@
+/* Gói 41 · Nạp sau cùng (main.jsx), sau fix-33.css */
+
+/* 1. Mọi nút chính của app căn giữa chữ. Nút lớn btn-km-l trước đây căn trái ("Bắt đầu hỏi con   ›").
+      Mũi tên › giữ ở mép phải nhưng không đẩy chữ lệch. */
+.btn-km.btn-km-l { justify-content: center !important; padding-left: 44px !important; padding-right: 44px !important; }
+.btn-km.btn-km-l .btn-km-text { flex: 0 1 auto !important; text-align: center !important; }
+.btn-km.btn-km-l .btn-km-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); margin: 0 !important; }
+.btn-km.btn-km-l .btn-km-icon { margin-right: 2px; }
+
+/* 2. Màn "Phụ huynh nhập đề" (chụp đề) trên điện thoại 360–430px (iPhone 16: 393×852):
+      khung máy ảnh cao hơn cho trang vở, nút chụp không còn dính/đè vào khung,
+      linh vật lên góc trên để không che dòng hướng dẫn. */
+.snap-screen .cam { height: clamp(220px, calc(100dvh - 470px), 520px); min-height: 0; margin-bottom: 14px; }
+.snap-screen .cam .frame { z-index: 1; }
+.snap-screen .cam .hint, .snap-screen .cam .kb-peek, .snap-screen .cam .cam-err { z-index: 2; }
+.snap-screen .cam video { position: absolute; inset: 0; }
+.snap-screen .cam .kb-peek { top: 8px; bottom: auto; left: 8px; }
+.snap-screen .cam .hint.cam-guide {
+  left: 50%; right: auto; bottom: 8px; transform: translateX(-50%);
+  width: max-content; max-width: calc(100% - 24px); padding: 4px 12px; border-radius: 999px;
+  background: rgba(20, 14, 24, .55); opacity: 1; line-height: 18px;
+}
+.snap-screen .shutter { margin: 2px auto 16px !important; }
+.snap-screen .btns { gap: 8px !important; }
+.snap-screen .btns .btn { min-height: 48px; white-space: nowrap; padding: 10px 6px !important; }

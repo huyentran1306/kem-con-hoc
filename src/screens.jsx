@@ -2855,7 +2855,13 @@ export function Done() {
   }, [sessionData, child, S?.flow, ho, problem, tracker?.streak])
 
   const currentTrait = pickedTrait || suggestedBadge.trait
-  const currentBadgeInfo = TRAIT_BADGE_INFO[currentTrait] || TRAIT_BADGE_INFO['Kiên nhẫn']
+  // Gói 41: chọn trong cả 12 sticker (thanh trượt), không chỉ 4 phẩm chất
+  const badgeInfoOf = (tr) => {
+    if (TRAIT_BADGE_INFO[tr]) return TRAIT_BADGE_INFO[tr]
+    const stk = AVAILABLE_STICKERS.find((x) => x.trait === tr)
+    return stk ? { trait: stk.trait, stickerId: stk.id, name: stk.n, icon: stk.e, color: stk.color } : TRAIT_BADGE_INFO['Kiên nhẫn']
+  }
+  const currentBadgeInfo = badgeInfoOf(currentTrait)
   const isSuggested = currentTrait === suggestedBadge.trait
   const currentReason = isSuggested ? suggestedBadge.reason : `${child?.name || 'Con'} được chọn huy hiệu ${currentTrait}.`
   const stkCur = AVAILABLE_STICKERS[Math.min(stkIdx, AVAILABLE_STICKERS.length - 1)] || AVAILABLE_STICKERS[0]
@@ -2864,10 +2870,21 @@ export function Done() {
   const hadStuckStep = Boolean(firstStuckStep || S.flow?.teachBack === 'hint' || S.flow?.teachBack === 'guided')
   const stuckSkill = firstStuckStep?.skill || S.flow?.lastStuckSkill || 'tinh_toan'
 
+  // Gói 41: bài tương tự có thể là chuỗi hoặc { de, de_bai, text }; bài soạn không kèm bài tương tự thì tự xin AI viết
+  const broTextOf = (b) => {
+    if (!b) return ''
+    if (typeof b === 'string') return b.trim()
+    return String(b.de || b.de_bai || b.text || b.problem || b.cau_hoi || '').trim()
+  }
+  const lessonBroText = broTextOf(problem.brotherProblem || problem.bai_anh_em)
+  const [broTry, setBroTry] = useState(0)
+  const [broFailed, setBroFailed] = useState(false)
+
   useEffect(() => {
     let cancelled = false
-    if (hadStuckStep) {
+    if (hadStuckStep || !lessonBroText) {
       setLoadingBrother(true)
+      setBroFailed(false)
       fetchAiAdaptiveBrother({
         problemText: problem.ocr || problem.text || problem.problem_text || '',
         stuckSkill,
@@ -2875,11 +2892,11 @@ export function Done() {
         childName: child?.name || 'Con',
       })
         .then((res) => {
-          if (!cancelled && res && res.ok && res.brother) {
-            setAdaptiveBrother(res.brother)
-          }
+          if (cancelled) return
+          if (res && res.ok && res.brother && broTextOf(res.brother)) setAdaptiveBrother(res.brother)
+          else if (!lessonBroText) setBroFailed(true)
         })
-        .catch(() => {})
+        .catch(() => { if (!cancelled && !lessonBroText) setBroFailed(true) })
         .finally(() => {
           if (!cancelled) setLoadingBrother(false)
         })
@@ -2887,7 +2904,7 @@ export function Done() {
     return () => {
       cancelled = true
     }
-  }, [hadStuckStep, stuckSkill, child?.name, child?.grade, problem.ocr, problem.text, problem.problem_text])
+  }, [hadStuckStep, stuckSkill, child?.name, child?.grade, problem.ocr, problem.text, problem.problem_text, lessonBroText, broTry])
 
   const pickSticker = (e) => {
     let found
@@ -3141,8 +3158,47 @@ export function Done() {
   const inSet = nStickers === 0 ? 0 : nStickers % 10 === 0 ? 10 : nStickers % 10
   const fullSets = Math.floor((nStickers - 1) / 10)
   const [tipsOpen, setTipsOpen] = useState(false)
+  const railRef = useRef(null)
+  // Thanh sticker: sticker Gấu gợi ý đứng đầu, sau đó là các sticker còn lại trong bộ sưu tập
+  const railTraits = useMemo(() => {
+    const all = Array.from(new Set([...Object.keys(TRAIT_BADGE_INFO), ...AVAILABLE_STICKERS.map((x) => x.trait)]))
+    return [suggestedBadge.trait, ...all.filter((t) => t !== suggestedBadge.trait)]
+  }, [suggestedBadge.trait])
   const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
-  const broLoading = !bro && (loadingBrother || (problem?.prompt_version === 'v3' && !isDemoMode() && !isTrialActive()))
+  const broText = broTextOf(bro)
+  const broLoading = !broText && loadingBrother
+  // Bắt đầu bài tương tự: gia đình thật thì cho AI soạn bài đầy đủ như đề mẹ gõ; Dùng thử thì dựng bài 3 bậc có sẵn
+  const startBrother = () => {
+    const ans = (bro && typeof bro === 'object' && (bro.dap_an_cho_me || bro.dap_an)) || ''
+    const freshFlow = { step: 0, stuck: 0, unlocked: false, ocr: broText, subject: S.flow?.subject || null, peeks: 0, stepLog: [], revealedSteps: [], stepRevealTimes: [], startedAt: null, sessionId: S.flow?.sessionId }
+    if (isTrialActive() || isDemoMode()) {
+      patch({
+        problem: {
+          ...PROBLEM, id: 'bro_' + Date.now(), ocr: broText, text: broText,
+          type: problem.type || '', dang_bai: problem.dang_bai || '', summary: '', warning: '', method: problem.method || '',
+          answer: ans, answerLine: ans, diagram: null, brotherProblem: null, isBrotherProblem: true, isSample: false,
+          steps: [
+            { q: `Con đọc đề và cho ${ho} biết bài cho biết gì, hỏi gì?`, hint: 'Gạch chân các con số trong đề.', hint2: 'Câu cuối có chữ "Hỏi" là điều bài muốn tìm.', answerForParent: 'Con nêu đủ các số và điều bài hỏi.' },
+            { q: 'Muốn tìm điều bài hỏi, con làm phép tính gì?', hint: 'Bài này giống bài con vừa làm, chỉ đổi số và đồ vật.', hint2: 'Nhớ lại phép tính con đã dùng ở bài vừa rồi.', answerForParent: ans || 'Phép tính như bài vừa làm.' },
+            { q: 'Con tính ra bao nhiêu? Viết lời giải và đáp số nhé.', hint: 'Tính từng bước, viết kết quả bước một trước.', hint2: 'Đọc lại câu hỏi để viết đúng đơn vị.', answerForParent: ans || 'Đáp số đúng theo phép tính.' },
+          ],
+        },
+        flow: freshFlow,
+      })
+      go('explain')
+      return
+    }
+    patch({
+      studySource: 'parent', assignmentId: null, assignmentItemId: null,
+      flow: freshFlow,
+      problem: {
+        ...PROBLEM, id: 'bro_' + Date.now(), type: '', dang_bai: '', summary: '', warning: '', method: '', answer: '', answerLine: '',
+        steps: [], diagram: null, brotherProblem: null, teachBack: '', fiveMinGame: '', ocr: broText,
+        isTeacherAssigned: false, teacherName: null, teacherMethodNote: null, teacherAnswer: null, assignmentId: null, isBrotherProblem: true,
+      },
+    })
+    go('analyze')
+  }
 
   const giveBadge = () => {
     if (badgeGiven) return
@@ -3202,25 +3258,33 @@ export function Done() {
             {isSuggested && !badgeGiven && <em className="dn-suggest">Gấu gợi ý theo cách {child.name} làm bài</em>}
           </div>
         </div>
-        <div className="dn-traits" role="group" aria-label="Chọn huy hiệu">
-          {['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'].map((tr) => {
-            const active = (badgeGiven || currentTrait) === tr
-            const info = TRAIT_BADGE_INFO[tr]
-            return (
-              <button
-                key={tr}
-                type="button"
-                className="dn-trait"
-                aria-pressed={active}
-                disabled={Boolean(badgeGiven)}
-                onClick={() => { soundPop(450); setPickedTrait(tr) }}
-                data-testid={`btn-pick-trait-${tr}`}
-              >
-                <span className="dn-ti" aria-hidden="true">{info.icon}</span>{tr}
-              </button>
-            )
-          })}
+        <div className="dn-stk" data-testid="done-sticker-rail">
+          <button type="button" className="dn-stk-nav" aria-label="Sticker trước" onClick={() => railRef.current?.scrollBy({ left: -220, behavior: 'smooth' })}>‹</button>
+          <div className="dn-stk-rail" ref={railRef} role="radiogroup" aria-label={`Chọn sticker cho ${child.name}`}>
+            {railTraits.map((tr) => {
+              const info = badgeInfoOf(tr)
+              const active = (badgeGiven || currentTrait) === tr
+              return (
+                <button
+                  key={tr}
+                  type="button"
+                  role="radio"
+                  className="dn-trait"
+                  aria-checked={active}
+                  aria-pressed={active}
+                  disabled={Boolean(badgeGiven)}
+                  onClick={(e) => { soundPop(450); setPickedTrait(tr); e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }) }}
+                  data-testid={`btn-pick-trait-${tr}`}
+                >
+                  {tr === suggestedBadge.trait && <em className="dn-stk-tag">Gợi ý</em>}
+                  <span className="dn-ti" aria-hidden="true">{info.icon}</span>{tr}
+                </button>
+              )
+            })}
+          </div>
+          <button type="button" className="dn-stk-nav" aria-label="Sticker sau" onClick={() => railRef.current?.scrollBy({ left: 220, behavior: 'smooth' })}>›</button>
         </div>
+        <p className="dn-stk-hint">Vuốt ngang để xem {railTraits.length} sticker</p>
         <button
           type="button"
           className={`dn-gift ${badgeGiven ? 'done' : ''}`}
@@ -3288,40 +3352,22 @@ export function Done() {
         <h2>Làm tiếp</h2>
         <div className="dn-next">
           {broLoading && (
-            <div className="dn-next-row">
-              <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span>Gấu đang viết bài tương tự cho con…</span></div>
+            <div className="dn-next-row" role="status">
+              <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span>Đang viết bài tương tự cho {child.name}…</span></div>
             </div>
           )}
-          {bro && (() => {
-            const deText = bro.de || bro.text || ''
-            return (
-              <div className="dn-next-row">
-                <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span>{deText}</span></div>
-                <button
-                  type="button"
-                  className="dn-next-btn primary"
-                  onClick={() => {
-                    patch({
-                      problem: {
-                        text: deText,
-                        steps: [
-                          { question: 'Con đọc kỹ đề bài mới nhé?', answer: 'Đọc kỹ đề', praise: 'Giỏi lắm!' },
-                          { question: 'Bài này mình cần làm phép tính gì con nhỉ?', answer: bro.dap_an_cho_me || 'Phép tính', praise: 'Đúng hướng rồi!' },
-                          { question: 'Con tính ra kết quả là bao nhiêu?', answer: bro.dap_an_cho_me || 'Đáp số', praise: 'Xuất sắc!' },
-                        ],
-                        brotherProblem: null,
-                        isBrotherProblem: true,
-                      },
-                      flow: { step: 0, stuck: 0, unlocked: false, startedAt: Date.now(), sessionId: S.flow?.sessionId },
-                    })
-                    go('explain')
-                  }}
-                >
-                  Làm thử ›
-                </button>
-              </div>
-            )
-          })()}
+          {broText && (
+            <div className="dn-next-row" data-testid="done-brother">
+              <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span className="dn-bro-de">{broText}</span></div>
+              <button type="button" className="dn-next-btn primary" onClick={startBrother} data-testid="btn-brother-start">Làm thử ›</button>
+            </div>
+          )}
+          {!broText && !broLoading && broFailed && (
+            <div className="dn-next-row">
+              <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span>Chưa viết được bài tương tự, mạng có thể đang chậm.</span></div>
+              <button type="button" className="dn-next-btn soft" onClick={() => setBroTry((n) => n + 1)}>Thử lại</button>
+            </div>
+          )}
           {FEATURES.CHECK_WORK && (
             <div className="dn-next-row">
               <div className="dn-next-txt"><b>Chấm vở con đã viết</b><span>Chụp vở để AI tìm bước sai cho con tự sửa</span></div>
@@ -4099,22 +4145,7 @@ export function Game() {
         {!TOYS.some((t) => t.n === toy) && <GenericToyGame toyName={toy} />}
       </div>
 
-      {/* Gói 39: "Đồng hồ Lego" (câu tiếng Anh hỏi giờ) chỉ thuộc đồ vật Đồng hồ, trước đây bị hiện ở mọi trò */}
-      {toy === 'Đồng hồ' && (
-        <section className="gv-card" data-testid="card-lego-clock">
-          <div className="gv-meta"><span className="gv-tag">Tiếng Anh</span><span className="gv-tag"><PlayMinutesText /></span></div>
-          <h2>Đồng hồ Lego</h2>
-          <p className="gv-sub">Xếp kim giờ, kim phút bằng thanh Lego. Bấm để nghe câu mẫu:</p>
-          <div className="gv-lines">
-            {ENGLISH_PHRASES.map((p) => (
-              <button key={p.en} type="button" className="gv-line" onClick={() => speak(p.en, 'en-US')}>
-                <span className="gv-spk"><SpeakerIcon /></span>
-                <span><small>{p.role.replace(/^Mẹ/, Ho)}</small><b>"{p.en}"</b></span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Gói 41: bỏ hẳn thẻ "Đồng hồ Lego" (câu tiếng Anh hỏi giờ), kể cả ở đồ vật Đồng hồ */}
 
       {/* Đồng hồ chơi (đếm ngược) dùng chung, luôn hiện */}
       <section className="gv-card gv-timer" aria-label="Đồng hồ chơi" data-testid="card-play-timer">
