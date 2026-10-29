@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="honeyBgMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFEBB8"/>
+      <stop offset="45%" stop-color="#FFD478"/>
+      <stop offset="100%" stop-color="#F6A623"/>
+    </linearGradient>
+    <filter id="bearShadowMask" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#78350F" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Maskable full bleed background (tràn viền để hệ điều hành cắt tự do) -->
+  <rect width="512" height="512" fill="url(#honeyBgMask)"/>
+
+  <!-- Nội dung gấu nằm an toàn trong vòng tròn 80% (tâm 256, bán kính 200) -->
+  <g transform="translate(256, 256) scale(0.82) translate(-256, -260)" filter="url(#bearShadowMask)">
+    <!-- Tai trái -->
+    <circle cx="150" cy="145" r="75" fill="#E2871A"/>
+    <circle cx="150" cy="145" r="44" fill="#FEF3C7"/>
+
+    <!-- Tai phải -->
+    <circle cx="362" cy="145" r="75" fill="#E2871A"/>
+    <circle cx="362" cy="145" r="44" fill="#FEF3C7"/>
+
+    <!-- Khuôn mặt gấu -->
+    <circle cx="256" cy="265" r="155" fill="#D97706"/>
+
+    <!-- Mõm gấu -->
+    <ellipse cx="256" cy="305" rx="76" ry="58" fill="#FEF3C7"/>
+
+    <!-- Mũi gấu -->
+    <ellipse cx="256" cy="278" rx="28" ry="19" fill="#5A280B"/>
+    <ellipse cx="250" cy="274" rx="7" ry="4" fill="#FFFFFF" opacity="0.6"/>
+
+    <!-- Miệng gấu cười -->
+    <path d="M256 297 L256 312" stroke="#5A280B" stroke-width="6" stroke-linecap="round"/>
+    <path d="M236 312 Q256 328 276 312" fill="none" stroke="#5A280B" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Mắt trái -->
+    <circle cx="198" cy="235" r="18" fill="#451A03"/>
+    <circle cx="193" cy="229" r="6" fill="#FFFFFF"/>
+    <circle cx="204" cy="241" r="3" fill="#FFFFFF"/>
+
+    <!-- Mắt phải -->
+    <circle cx="314" cy="235" r="18" fill="#451A03"/>
+    <circle cx="309" cy="229" r="6" fill="#FFFFFF"/>
+    <circle cx="320" cy="241" r="3" fill="#FFFFFF"/>
+
+    <!-- Má hồng -->
+    <circle cx="154" cy="290" r="22" fill="#FB7185" opacity="0.85"/>
+    <circle cx="358" cy="290" r="22" fill="#FB7185" opacity="0.85"/>
+  </g>
+
+  <!-- Thanh chữ KÈM CON HỌC -->
+  <g transform="translate(0, 15)">
+    <rect x="116" y="385" width="280" height="56" rx="28" fill="#4B3621" opacity="0.95"/>
+    <text x="256" y="422" text-anchor="middle" fill="#FFFFFF" font-family="'Baloo 2', -apple-system, sans-serif" font-weight="800" font-size="24" letter-spacing="1">KÈM CON HỌC</text>
+  </g>
+</svg>

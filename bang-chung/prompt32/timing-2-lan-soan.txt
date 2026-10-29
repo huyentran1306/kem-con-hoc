@@ -1,0 +1,22 @@
+Timing soạn cùng một đề hai lần (đề hai bước "Bác Ba có 45 quả trứng…"), đo trên bản Worker deploy thật (https://ai-gateway-worker.trannth1306.workers.dev, version 62e00ccd-dfed-454c-96cc-64eed2a8fd8c):
+
+Lần 1: POST /chat (p3_explain_v3)
+  - Timing Worker: { profile_ms: 0, cache_ms: 21, ai_ms: 6458, check_ms: 18, fix_ms: 0, total_ms: 13555 }
+  - Client round-trip: 13836 ms
+  - Cached: false
+  - Bài sinh ra: 5 bậc (đủ 2 bậc tính, bậc chọn phép tính không nói hộ chữ "trừ")
+  - Lưu vào lesson_cache trên D1.
+
+Lần 2: POST /chat (p3_explain_v3, cùng đề, cùng tham số)
+  - Timing Worker: { profile_ms: 0, cache_ms: 21, ai_ms: 0, check_ms: 0, total_ms: 21 }
+  - Client round-trip: 203 ms (< 3 giây)
+  - Cached: true
+  - 0 lần gọi AI. Bài lấy nguyên vẹn từ lesson_cache.
+
+Số đo Chấm vở đọc ảnh thật (/api/v1/ai/check-work/read):
+  - File ảnh: trang vở ô ly thật (bang-chung/prompt23h/ref_f5.jpg)
+  - read_attempts: 1
+  - read_ms: 9141 ms
+  - retried: false
+  - doc_duoc: true
+  - check_id: chk_1793244452748_fzxjr

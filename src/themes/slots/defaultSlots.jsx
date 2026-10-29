@@ -272,6 +272,7 @@ export function DefaultStepProgress({ total = 4, current = 0, doneSteps = [] }) 
 
 // 6. ReadCard
 export function DefaultReadCard({ question, stepIndex = 0, childName = 'con', onSpeak }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div
       className="card"
@@ -295,7 +296,7 @@ export function DefaultReadCard({ question, stepIndex = 0, childName = 'con', on
             borderRadius: 999,
           }}
         >
-          BẬC {stepIndex + 1} · MẸ HỎI {childName.toUpperCase()}
+          BẬC {stepIndex + 1} · {Ho.toUpperCase()} HỎI {childName.toUpperCase()}
         </span>
         <button
           data-testid="btn-speak"
@@ -316,10 +317,11 @@ export function DefaultReadCard({ question, stepIndex = 0, childName = 'con', on
 
 // 7. HintList
 export function DefaultHintList({ hints = [], openedLevels = [], onOpenHint }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text-2)', letterSpacing: 0.5 }}>
-        MÁCH NƯỚC CHO MẸ (NẾU CON BÍ)
+        MÁCH NƯỚC CHO {Ho.toUpperCase()} (NẾU CON BÍ)
       </span>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button
@@ -366,6 +368,7 @@ export function DefaultHintList({ hints = [], openedLevels = [], onOpenHint }) {
 
 // 8. AnswerReveal (Giữ 1.5 giây để xem đáp án)
 export function DefaultAnswerReveal({ answerForParent, onRevealed }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const [unlocked, setUnlocked] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -438,7 +441,7 @@ export function DefaultAnswerReveal({ answerForParent, onRevealed }) {
         {unlocked ? (
           <div>
             <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-good-fg)' }}>
-              🔒 ĐÁP ÁN ĐỐI CHIẾU CHO MẸ:
+              🔒 ĐÁP ÁN ĐỐI CHIẾU CHO {Ho.toUpperCase()}:
             </span>
             <p style={{ margin: '4px 0 0', fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>
               {answerForParent || 'Đáp án đang cập nhật'}
@@ -525,7 +528,7 @@ export function DefaultTeachBackPicker({ value = 'self', onChange }) {
   return (
     <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text-2)', letterSpacing: 0.5 }}>
-        CON DẠY LẠI MẸ (ĐO MỨC HIỂU SÂU)
+        CON DẠY LẠI {Ho.toUpperCase()} (ĐO MỨC HIỂU SÂU)
       </span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
         {options.map((opt) => (

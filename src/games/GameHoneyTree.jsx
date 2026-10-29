@@ -11,7 +11,7 @@ import { AppCtx } from '../ctx'
 import { haiNguoi } from '../xungHo'
 
 export default function GameHoneyTree({ child, stats, onBack, onOpenProfile, isTrial = false }) {
-  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
+  const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const childName = child?.name || 'Bé Na';
   const childGrade = child?.grade || '3';
 
@@ -399,7 +399,7 @@ export default function GameHoneyTree({ child, stats, onBack, onOpenProfile, isT
         }}
       >
         <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-sub)', letterSpacing: '0.05em' }}>
-          {turn === 'child' ? `CÂU CỦA ${childName.toUpperCase()}` : 'CÂU CỦA MẸ'}
+          {turn === 'child' ? `CÂU CỦA ${childName.toUpperCase()}` : `CÂU CỦA ${Ho.toUpperCase()}`}
         </div>
 
         <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.45 }}>

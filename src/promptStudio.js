@@ -229,8 +229,8 @@ CHỈ TRẢ VỀ DUY NHẤT ĐỐI TƯỢNG JSON NÀY.`,
 
   p3_explain_v3: {
     id: 'p3_explain_v3',
-    rev: 28,
-    name: '3 (v3 Bản gọn). Soạn bài phần cần ngay (Prompt 23V, sửa 28)',
+    rev: 32,
+    name: '3 (v3 Bản gọn). Soạn bài phần cần ngay (Prompt 23V, sửa 28, 32)',
     desc: 'Soạn nhanh các bậc câu hỏi bám từng bước của chính đề (dữ kiện → chọn phép tính → kết quả trung gian → kết quả cuối). JSON 1 dòng.',
     variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{doan_phuong_phap}}', '{{khung_ghi_chu}}', '{{ho_so_con}}'],
     requiredVars: ['{{de_bai}}'],
@@ -246,22 +246,23 @@ THÔNG TIN:
 PHƯƠNG PHÁP: {{doan_phuong_phap}}
 
 QUY TẮC BẮT BUỘC:
-1. MỖI BẬC LÀ MỘT BƯỚC NHỎ CỤ THỂ CỦA CHÍNH ĐỀ NÀY, nhắc đúng số và sự vật trong đề. Thứ tự: dữ kiện → chọn phép tính → tính kết quả trung gian → kết quả cuối.
-2. SỐ BẬC: bài 1 phép tính soạn 3 bậc; bài 2 phép tính soạn ĐỦ 4 bậc (mỗi phép tính có bậc chọn phép tính và bậc tính riêng); bài 3 phép tính soạn 5 bậc. Tiếng Việt, Tiếng Anh: 3 bậc bám đúng câu, từ trong đề.
-3. CẤM câu chung chung dùng được cho mọi đề, ví dụ: "Đề bài cho biết gì và hỏi gì?", "Con đọc lại đề nhé", "Con thử nghĩ xem nào".
-4. Bậc cuối KHÔNG được lặp lại nguyên câu hỏi của đề; phải hỏi phép tính cuối cụ thể (số nào làm phép gì với số nào).
-5. Câu hỏi mỗi bậc ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ. Không lộ đáp số cuối trong cau_hoi hoặc goi_y; đáp án từng bậc chỉ để trong "dap_an_cho_me".
-6. Mỗi bậc có 2 gợi ý ngắn: "muc_1_do_vat" (đồ vật thật), "muc_2_hinh_ve" (hình vẽ, sơ đồ, viết nháp).
-7. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
-8. Đề thiếu dữ kiện: trả "can_hoi_lai" nêu lý do.
-VÍ DỤ MẪU (bài 2 phép tính, đủ 4 bậc tốt). Đề: "Mẹ có 4 hộp bút, mỗi hộp 6 cây. Mẹ cho bạn 5 cây. Hỏi mẹ còn bao nhiêu cây bút?"
-{"dang_bai":"Toán có lời văn 2 bước","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Có mấy hộp bút, mỗi hộp mấy cây?","ky_nang":"doc_hieu_de","dap_an_cho_me":"4 hộp, mỗi hộp 6 cây","goi_y":{"muc_1_do_vat":"Xếp 4 nhóm que tính","muc_2_hinh_ve":"Vẽ 4 hộp"}},{"cau_hoi":"4 hộp, mỗi hộp 6 cây, muốn biết tất cả con làm phép gì?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"Phép nhân 6 × 4","goi_y":{"muc_1_do_vat":"Gộp 4 nhóm que","muc_2_hinh_ve":"Viết 6 + 6 + 6 + 6"}},{"cau_hoi":"6 nhân 4 bằng mấy cây bút?","ky_nang":"tinh_toan","dap_an_cho_me":"24 cây bút","goi_y":{"muc_1_do_vat":"Đếm cả 4 nhóm","muc_2_hinh_ve":"Nhẩm bảng nhân 6"}},{"cau_hoi":"Có 24 cây, cho bạn 5 cây thì con lấy số nào trừ số nào?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"24 − 5 = 19 cây","goi_y":{"muc_1_do_vat":"Cất bớt 5 que","muc_2_hinh_ve":"Gạch 5 vạch"}}],"dap_an_cuoi_cho_me":"19 cây bút"}
+1. MỖI BẬC LÀ MỘT BƯỚC NHỎ CỤ THỂ CỦA CHÍNH ĐỀ NÀY, nhắc đúng số và sự vật trong đề. Thứ tự: dữ kiện → chọn phép tính → tính → (bước sau: chọn phép tính → tính).
+2. MỖI PHÉP TÍNH CỦA LỜI GIẢI CÓ ÍT NHẤT MỘT BẬC TÍNH RIÊNG ("tinh_toan"). Bài 1 phép tính: 3 bậc. Bài 2 phép tính: 4 đến 5 bậc (đủ 2 bậc tính). Bài 3 phép tính: 5 bậc. Tiếng Việt, Tiếng Anh: 3 bậc bám đúng câu, từ trong đề.
+3. Bậc "chon_phep_tinh" KHÔNG được nói hộ tên phép tính (không viết "cộng", "trừ", "nhân", "chia" trong câu hỏi). Hãy hỏi ý nghĩa: "nhiều lên hay ít đi", "các nhóm bằng nhau", "con làm phép gì?".
+4. CẤM câu chung chung dùng được cho mọi đề, ví dụ: "Đề bài cho biết gì và hỏi gì?", "Con đọc lại đề nhé", "Con thử đặt tính xem ra bao nhiêu".
+5. Bậc cuối KHÔNG lặp lại nguyên câu hỏi của đề; hỏi phép tính cuối với số cụ thể.
+6. Câu hỏi mỗi bậc ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ. Không lộ đáp số cuối trong cau_hoi hoặc goi_y; đáp án từng bậc chỉ để trong "dap_an_cho_me". Được nhắc kết quả của bậc TRƯỚC.
+7. Mỗi bậc có 2 gợi ý ngắn: "muc_1_do_vat" (đồ vật thật), "muc_2_hinh_ve" (hình vẽ, sơ đồ, viết nháp).
+8. "ky_nang" thuộc: Toán (doc_hieu_de, chon_phep_tinh, tinh_toan, don_vi, viet_loi_giai, kiem_tra_lai), Tiếng Việt (doc_hieu, tu_vung, chinh_ta, dat_cau), Tiếng Anh (tu_vung_en, nghe, ngu_phap, phat_am).
+9. Đề thiếu dữ kiện: trả "can_hoi_lai" nêu lý do.
+VÍ DỤ MẪU (bài 2 phép tính, 5 bậc, đủ 2 bậc tính, bậc chọn phép tính không nói hộ). Đề: "Mẹ có 4 hộp bút, mỗi hộp 6 cây. Mẹ cho bạn 5 cây. Hỏi mẹ còn bao nhiêu cây bút?"
+{"dang_bai":"Toán có lời văn 2 bước","can_hoi_lai":"","cac_bac":[{"cau_hoi":"Có mấy hộp bút, mỗi hộp mấy cây?","ky_nang":"doc_hieu_de","dap_an_cho_me":"4 hộp, mỗi hộp 6 cây","goi_y":{"muc_1_do_vat":"Xếp 4 nhóm que tính","muc_2_hinh_ve":"Vẽ 4 hộp"}},{"cau_hoi":"4 hộp đều có 6 cây, muốn biết tất cả con làm phép gì?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"Phép nhân 6 × 4","goi_y":{"muc_1_do_vat":"Gộp 4 nhóm que","muc_2_hinh_ve":"Viết 6 + 6 + 6 + 6"}},{"cau_hoi":"6 nhân 4 bằng mấy cây bút?","ky_nang":"tinh_toan","dap_an_cho_me":"24 cây bút","goi_y":{"muc_1_do_vat":"Đếm cả 4 nhóm","muc_2_hinh_ve":"Nhẩm bảng nhân 6"}},{"cau_hoi":"Mẹ cho bạn 5 cây thì số bút nhiều lên hay ít đi, con làm phép gì?","ky_nang":"chon_phep_tinh","dap_an_cho_me":"Ít đi, phép trừ","goi_y":{"muc_1_do_vat":"Cất bớt 5 que","muc_2_hinh_ve":"Gạch 5 vạch"}},{"cau_hoi":"24 cây bớt đi 5 cây thì còn mấy cây?","ky_nang":"tinh_toan","dap_an_cho_me":"24 − 5 = 19 cây","goi_y":{"muc_1_do_vat":"Đếm số que còn lại","muc_2_hinh_ve":"Đếm lùi từ 24"}}],"dap_an_cuoi_cho_me":"19 cây bút"}
 ĐẦU RA: JSON viết liền 1 dòng, không xuống dòng, không thụt lề, đúng cấu trúc ví dụ trên. CHỈ TRẢ VỀ CHUỖI JSON ĐÓ.`,
   },
 
   p3_fix_steps_v3: {
     id: 'p3_fix_steps_v3',
-    rev: 28,
+    rev: 32,
     name: '3d (v3 Sửa đúng chỗ). Soạn lại riêng các bậc chung chung (Prompt 28)',
     desc: 'Chỉ gọi khi máy kiểm thấy bậc chung chung, bậc lặp câu hỏi của đề, hoặc bài 2 bước thiếu bậc. Giữ nguyên các bậc tốt.',
     variables: ['{{de_bai}}', '{{cac_bac_hien_tai}}', '{{loi_can_sua}}', '{{so_bac}}'],
@@ -274,8 +275,8 @@ LỖI CẦN SỬA: {{loi_can_sua}}
 
 QUY TẮC:
 1. Giữ nguyên các bậc không bị nêu lỗi. Chỉ viết lại các bậc bị lỗi, hoặc chèn thêm bậc còn thiếu cho đủ {{so_bac}} bậc.
-2. Mỗi bậc là một bước nhỏ cụ thể của chính đề này, nhắc đúng số và sự vật trong đề, theo thứ tự: dữ kiện → chọn phép tính → tính kết quả trung gian → kết quả cuối.
-3. Cấm câu chung chung kiểu "Đề bài cho biết gì, hỏi gì?". Bậc cuối không được lặp lại câu hỏi của đề.
+2. Mỗi bậc là một bước nhỏ cụ thể của chính đề này, nhắc đúng số và sự vật trong đề, theo thứ tự: dữ kiện → chọn phép tính → tính → (bước sau). Mỗi phép tính của lời giải có ít nhất một bậc tính riêng ("tinh_toan").
+3. Cấm câu chung chung kiểu "Đề bài cho biết gì, hỏi gì?". Bậc cuối không được lặp lại câu hỏi của đề. Bậc "chon_phep_tinh" không được viết tên phép tính (cộng, trừ, nhân, chia).
 4. Câu hỏi ≤ 20 chữ, gợi ý ≤ 15 chữ, đáp án cho mẹ ≤ 12 chữ, không lộ đáp số cuối trong cau_hoi hoặc goi_y.
 ĐẦU RA: JSON 1 dòng {"cac_bac":[{"cau_hoi":"...","ky_nang":"...","dap_an_cho_me":"...","goi_y":{"muc_1_do_vat":"...","muc_2_hinh_ve":"..."}}]} gồm TOÀN BỘ các bậc theo thứ tự. CHỈ TRẢ VỀ CHUỖI JSON ĐÓ.`,
   },
@@ -315,16 +316,23 @@ Hãy tôn trọng và điều chỉnh các bậc câu hỏi, cách giải thích
 
   p4_chat: {
     id: 'p4_chat',
+    rev: 32,
     name: '4. Hỏi thêm AI',
-    desc: 'Mẹ chat hỏi AI về bài đang học',
+    desc: 'Phụ huynh chat hỏi AI về bài đang học. Trả văn bản thường 2–4 câu (Prompt 32).',
     variables: ['{{mon}}', '{{lop}}', '{{sach}}', '{{dang_bai}}', '{{loi_hay_gap}}', '{{de_bai}}', '{{khung_ghi_chu}}', '{{doan_phuong_phap}}'],
     requiredVars: ['{{de_bai}}'],
     template: `Bạn là trợ lý cho phụ huynh dạy con tiểu học môn {{mon}}. Trẻ học {{lop}}, sách {{sach}}.
 Dạng bài: {{dang_bai}}. Lỗi hay gặp: {{loi_hay_gap}}.
 Bài đang học: "{{de_bai}}".
+Người đang hỏi: {{xung_ho}} (gọi đúng là "{{xung_ho}}").
+Phương pháp nên dùng (chỉ để chọn cách giảng, KHÔNG phải định dạng trả lời):
 {{doan_phuong_phap}}
 {{khung_ghi_chu}}
-LUẬT BẮT BUỘC: chỉ trả lời cho phụ huynh CÁCH GIẢNG, gợi ý câu hỏi dẫn dắt, phương pháp, mẹo viết lời giải hoặc ví dụ đồ vật cụ thể trong nhà (kẹo, bánh, que tính, chiếc đũa). KHÔNG BAO GIỜ đưa đáp án cuối cùng cho trẻ chép. Trả lời ngắn gọn, tiếng Việt, câu ngắn, giọng điệu đồng cảm với cha mẹ.`,
+LUẬT BẮT BUỘC:
+1. Trả lời đúng câu hỏi MỚI NHẤT của phụ huynh (tin nhắn cuối cùng), không lặp lại câu trả lời trước.
+2. Chỉ nói CÁCH GIẢNG: câu hỏi dẫn dắt, đồ vật trong nhà, mẹo viết lời giải. Bám đúng số và sự vật của bài đang học.
+3. KHÔNG BAO GIỜ đưa đáp số hay kết quả phép tính của bài. Phụ huynh xin đáp án thì từ chối nhẹ nhàng và đưa một câu hỏi gợi mở.
+4. ĐỊNH DẠNG: văn bản thường tiếng Việt có dấu, 2 đến 4 câu ngắn. KHÔNG JSON, không ngoặc nhọn, không gạch đầu dòng, không markdown.`,
   },
 
   p4b_parent_note_chat: {

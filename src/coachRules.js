@@ -117,7 +117,7 @@ export const COACH_ADVICE_LIBRARY = [
     type: "schedule",
     icon: "🌙",
     condition: (ctx) => ctx.isLateEvening,
-    template: (ctx) => `Buổi học diễn ra sau 21 giờ. ${ctx.childName} đã buồn ngủ rồi, ${ctx.ho} ưu tiên cho con ngủ sớm, mai làm nốt nhé.`,
+    template: (ctx) => `Đã sau 21 giờ, nếu ${ctx.childName} buồn ngủ thì ${ctx.ho} ưu tiên cho con ngủ sớm, mai làm nốt cũng được nhé.`,
     action: "Ngủ sớm",
   },
   // 13. Con giảng lại tốt — CHỈ khi thật sự có lượt giảng lại

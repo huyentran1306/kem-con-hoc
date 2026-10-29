@@ -65,16 +65,27 @@ t('A3: máy kiểm bắt bậc chung chung, bậc lặp câu hỏi của đề, 
     { cau_hoi: 'Bà còn lại bao nhiêu quả trứng?' },
   ], trung, 'Toán')
   const kinds = a.issues.map((i) => i.kind).sort()
-  assert.deepEqual(kinds, ['generic', 'missing_steps', 'repeat_question'])
+  assert.deepEqual(kinds, ['generic', 'missing_calc', 'missing_steps', 'repeat_question'])
 })
 t('A3: bộ 4 bậc tốt thì không báo lỗi', () => {
   const a = auditSteps([
     { cau_hoi: 'Có mấy rổ trứng, mỗi rổ mấy quả?' },
     { cau_hoi: '5 rổ, mỗi rổ 6 quả, con làm phép gì để biết tất cả?' },
-    { cau_hoi: '6 nhân 5 bằng mấy quả trứng?' },
-    { cau_hoi: 'Có 30 quả, làm bánh hết 8 quả thì con lấy số nào trừ số nào?' },
+    { cau_hoi: '6 nhân 5 bằng mấy quả trứng?', ky_nang: 'tinh_toan', dap_an_cho_me: '6 × 5 = 30' },
+    { cau_hoi: 'Làm bánh hết 8 quả thì số trứng nhiều lên hay ít đi?', ky_nang: 'chon_phep_tinh' },
+    { cau_hoi: '30 quả bớt đi 8 quả thì còn mấy quả?', ky_nang: 'tinh_toan', dap_an_cho_me: '30 − 8 = 22' },
   ], trung, 'Toán')
   assert.ok(a.ok, JSON.stringify(a.issues))
+})
+t('32.6: bậc chọn phép tính nói hộ "trừ" và bài thiếu bậc tính đều bị bắt', () => {
+  const vit = 'Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?'
+  const a = auditSteps([
+    { cau_hoi: 'Bác Ba có mấy con vịt?', ky_nang: 'doc_hieu_de' },
+    { cau_hoi: 'Bán bớt thì nhiều lên hay ít đi?', ky_nang: 'chon_phep_tinh' },
+    { cau_hoi: 'Bác Ba có 15 con, bán 6 con, lấy số nào trừ số nào?', ky_nang: 'chon_phep_tinh', dap_an_cho_me: '15 - 6 = 9' },
+  ], vit, 'Toán')
+  const kinds = a.issues.map((i) => i.kind).sort()
+  assert.deepEqual(kinds, ['missing_calc', 'names_operation'])
 })
 t('A4: câu nhỏ hơn bám đúng bậc và số trong đề', () => {
   const m = buildLocalMicroStep({ problemText: trung, stepQuestion: 'Bà có bao nhiêu quả trứng ban đầu?', skill: 'doc_hieu_de', microIndex: 1 })

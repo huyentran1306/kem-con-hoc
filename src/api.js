@@ -400,6 +400,14 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     let j;
     // Đợt 20 · Chặng 2: Chế độ trình diễn - nếu quá 10s tự động chuyển bản soạn sẵn
     if (isDemoMode()) {
+      // Prompt 32 mục 8: chế độ trình diễn dùng bài soạn sẵn khi đề trùng bài mẫu (0 lần gọi AI, có nhãn "Bài soạn sẵn")
+      const preset = matchTrialLesson(ocr)
+      if (preset) {
+        const p = trialLessonToProblem(preset)
+        p.is_preloaded_demo = true
+        p.demo_timestamp = localStorage.getItem("kch_demo_preload_time") || ''
+        return p
+      }
       try {
         const demoTimeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error("demo_safeguard_10s_timeout")), 10000)
@@ -448,7 +456,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     }
     let data = extractJson(j.response ?? j)
     // Prompt 29B.5: đo thời gian từng phần của lần soạn bài (gọi AI, kiểm, soạn lại) để tìm bước chậm
-    const timing = { prompt: targetPromptId, first_call_ms: Date.now() - startedAt, server: j?.timing || j?.server_timing || null }
+    const timing = { prompt: targetPromptId, first_call_ms: Date.now() - startedAt, cached: Boolean(j?.cached), server: j?.timing || j?.server_timing || null }
 
     // Đợt 23V: Nếu lần A (p3_explain_v3) lỗi hoặc thiếu bậc, tự động gọi lại bằng p3_explain_v2 như cũ
     const remainingMs = EXPLAIN_TIMEOUT_MS - (Date.now() - startedAt)
@@ -520,7 +528,8 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
     }
 
     // Prompt 28 A3: máy kiểm bậc chung chung / lặp câu hỏi của đề / thiếu bậc → soạn lại riêng các bậc đó
-    if (targetPromptId === 'p3_explain_v3' && Array.isArray(data.cac_bac) && !(data.can_hoi_lai && String(data.can_hoi_lai).trim())) {
+    // Prompt 32: máy chủ đã kiểm/sửa (steps_checked) thì không sửa lại ở máy; bài cũ trong cache mới sửa ở máy, trần 8 giây
+    if (targetPromptId === 'p3_explain_v3' && !data.steps_checked && Array.isArray(data.cac_bac) && !(data.can_hoi_lai && String(data.can_hoi_lai).trim())) {
       const remainMs = EXPLAIN_TIMEOUT_MS - (Date.now() - startedAt)
       if (remainMs > 12000) {
         const repairStart = Date.now()
@@ -528,7 +537,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
           data = await repairGenericSteps(data, ocr, classification.mon || 'Toán', {
             familyId: effectiveFamilyId,
             modelId,
-            timeoutMs: Math.min(remainMs - 2000, 30000),
+            timeoutMs: Math.min(remainMs - 2000, 8000),
             signal: options.signal,
           })
         } catch (repErr) {
@@ -717,6 +726,9 @@ export async function repairGenericSteps(data, ocr, mon = 'Toán', { familyId = 
       'X-Prompt-Id': 'p3_fix_steps_v3',
       'X-Family-Id': encodeURIComponent(familyId || ''),
       'X-Bypass-Cache': '1',
+      // Prompt 32 mục 3: máy chủ ghi mỗi bậc được soạn lại vào nhật ký bộ chặn (thẻ An toàn AI)
+      'X-Fix-Count': String(Math.max(1, before.issues.length)),
+      'X-Fix-Reason': encodeURIComponent(before.issues.map((i) => i.text).join('; ').slice(0, 180)),
     },
     signal
   )
@@ -737,12 +749,22 @@ export async function repairGenericSteps(data, ocr, mon = 'Toán', { familyId = 
 /* ============================================================
    🧠 AI CHAT — Hỏi thêm (chỉ cho cha mẹ, không đáp án)
    ============================================================ */
-export async function aiChat(system, history, question) {
+export async function aiChat(system, history, question, opts = {}) {
   try {
+    // Prompt 32: gửi kèm id prompt + ngữ cảnh bài để máy chủ biết đây là chat văn bản thường và chặn được xin đáp án
+    const o = opts && typeof opts === 'object' && !Array.isArray(opts) ? opts : {}
     const messages = [{ role: 'system', content: system }]
-    history.forEach((m) => messages.push({ role: m.from === 'u' ? 'user' : 'assistant', content: m.text }))
+    ;(Array.isArray(history) ? history : []).forEach((m) => messages.push({ role: m.from === 'u' ? 'user' : 'assistant', content: m.text }))
     messages.push({ role: 'user', content: question })
-    const j = await postAi('/chat', { messages, max_tokens: 600, temperature: 0.5 })
+    const headers = {}
+    if (o.promptId) headers['X-Prompt-Id'] = o.promptId
+    if (o.problemText) headers['X-Problem-Text'] = encodeURIComponent(String(o.problemText).slice(0, 600))
+    if (o.hintQuestion) headers['X-Hint-Question'] = encodeURIComponent(o.hintQuestion)
+    if (o.xungHo) headers['X-Xung-Ho'] = encodeURIComponent(o.xungHo)
+    const fam = getCurrentFamilyId()
+    if (fam) headers['X-Family-Id'] = encodeURIComponent(fam)
+    const j = await postAi('/chat', { messages, max_tokens: 600, temperature: typeof o.temperature === 'number' ? o.temperature : 0.5 }, 25000, headers)
+    if (o.onMeta) { try { o.onMeta({ guarded: Boolean(j?.guarded), guard_reason: j?.guard_reason || null }) } catch (_) {} }
     const resp = j.response
     if (typeof resp === 'string' && resp.trim()) return resp.trim()
     return null
@@ -1990,13 +2012,16 @@ export async function getSafetySummary(range = '7d') {
       total_guard_interventions: 0,
       guard_events: { total: 0, fallbacks: 0, regenerated: 0, leaked: 0 },
       feedback: { total: 0, open: 0, byReason: {} },
-      work_checks: { total: 0, self_fixed: 0 },
-      teach_backs: { total: 0, self_level: 0 },
+      // Prompt 32 mục 3: Dùng thử là số MẪU hợp lý (thẻ ghi rõ "Số mẫu")
+      sample: true,
+      work_checks: { total: 3, self_fixed: 3 },
+      teach_backs: { total: 2, self_level: 1 },
       dot18_safety: {
-        phep_tinh_sai_da_bat: 0,
-        bac_bo_chan_sua_lai: 0,
-        cau_nho_hon_da_tao: 0,
-        so_lan_gau_nghe_con: 0,
+        phep_tinh_sai_da_bat: 3,
+        bac_bo_chan_sua_lai: 2,
+        cau_nho_hon_da_tao: 5,
+        so_lan_gau_nghe_con: 8,
+        xin_dap_an_da_chan: 1,
       },
       four_layer_safety: [
         { layer: 1, name: 'Prompt Sư phạm Socratic', status: 'active', desc: 'Không giải bài hộ, chia 3 bậc gợi ý' },

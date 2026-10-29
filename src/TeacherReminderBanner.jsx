@@ -41,7 +41,7 @@ export default function TeacherReminderBanner({ child, S, patch, go, openSheet, 
   }, [child?.name, S?.children])
 
   async function loadReminders() {
-    const token = getAuthToken()
+    const token = isTrialActive() ? null : getAuthToken() // Prompt 32 mục 8: Dùng thử không gọi API gia đình
     if (token) {
       try {
         const res = await fetchFamilyReminders({ token, window: 'today' })

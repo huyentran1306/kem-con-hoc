@@ -1962,10 +1962,19 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
         ...PROBLEM,
         // Prompt 31B1: không mang nhãn/tóm tắt của đề giả 3 hộp bút sang đề vừa gõ
         id: 'typed_' + Date.now(),
+        // Prompt 32 mục 2: đề mới không kế thừa gì của bài mẫu 3 hộp bút
         type: '',
         dang_bai: '',
         summary: '',
         warning: '',
+        method: '',
+        answer: '',
+        answerLine: '',
+        steps: [],
+        diagram: null,
+        brotherProblem: null,
+        teachBack: '',
+        fiveMinGame: '',
         ocr: text.trim(),
         isTeacherAssigned: false,
         teacherName: null,
@@ -2079,10 +2088,11 @@ function StickerBookSheet() {
   const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
   const curStats = S.stats[child.id] || {}
   const list = (curStats.stickersList || []).filter((x) => !x.sample)
-  const distinct = new Set(list.map((x) => x.id || x.e || x.name)).size
   const [selected, setSelected] = useState(null)
 
   const isUnlocked = (stk) => list.some((x) => x.id === stk.id || x.e === stk.e || x.name === stk.n)
+  // Prompt 32 mục 8: số loại đã sưu tập = số ô sáng trong sổ (trước đây đếm cả sticker không khớp ô nào)
+  const distinct = AVAILABLE_STICKERS.filter(isUnlocked).length
   const getRecord = (stk) => list.find((x) => x.id === stk.id || x.e === stk.e || x.name === stk.n)
 
   const clickSticker = (stk) => {

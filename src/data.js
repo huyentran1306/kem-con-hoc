@@ -70,20 +70,15 @@ export const TOYS = [
   { e: '🍽', n: 'Bát đĩa' },
 ]
 
+// Prompt 32: 3 câu chung, không gắn phép tính của một bài cụ thể
 export const CHAT_SAMPLES = [
-  'Con vẫn không hiểu, giảng kiểu khác?',
-  'Sao phải nhân trước?',
+  'Con vẫn chưa hiểu, giảng kiểu khác?',
+  'Có đồ vật nào trong nhà dùng được?',
   'Lời giải viết sao cho đúng?',
 ]
 
-export const CHAT_REPLIES = {
-  'Con vẫn không hiểu, giảng kiểu khác?':
-    'Thử dùng đồ thật: lấy 3 cái chén, mỗi chén 8 hạt đậu. Cho con tự đếm tất cả, rồi bốc 5 hạt đưa mẹ. Con sẽ "thấy" 2 bước rõ ràng hơn.',
-  'Sao phải nhân trước?':
-    'Vì 5 cây lấy ra từ TẤT CẢ số bút, không phải từ 1 hộp. Hỏi con: "Na lấy bút từ hộp nào?" để con tự nhận ra.',
-  'Lời giải viết sao cho đúng?':
-    'Lớp 3 thường viết: "Số bút mẹ mua là: … (cây)". Mẹ nhắc con mỗi phép tính đi kèm 1 câu lời giải và đơn vị.',
-}
+// Không còn câu trả lời viết sẵn của bài 3 hộp bút; câu dự phòng lấy từ bài đang học (screens.jsx)
+export const CHAT_REPLIES = {}
 
 export const SCHEDULE_DEFAULT = [
   { day: 'T2', owner: 'Mẹ', english: false },

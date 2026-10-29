@@ -136,6 +136,26 @@ export function hasLearningData(child, stats) {
   );
 }
 
+/** Prompt 32 mục 5: có dữ liệu "hay kẹt" thật (không chỉ là đã học một bài) */
+export function hasWeakData(child, stats) {
+  return Boolean((stats?.weak || []).length > 0 || (child?.bearMemory || []).length > 0);
+}
+
+/** Chủ đề của bài vừa học: "Phép trừ trong bài vừa học" */
+export function lastLessonFocus(stats) {
+  const log = (stats?.studyLog || []).filter((e) => e && e.kind !== 'check');
+  if (!log.length) return '';
+  const last = log.slice().sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0))[0];
+  const txt = `${last.problemType || ''} ${last.problemText || ''}`.toLowerCase();
+  const ops = [];
+  if (/nhân|mỗi\s+\S+\s+(có\s+)?\d+/.test(txt)) ops.push('nhân');
+  if (/chia/.test(txt)) ops.push('chia');
+  if (/trừ|bớt|bán|cho bạn|còn lại|hết/.test(txt)) ops.push('trừ');
+  if (/cộng|thêm|tất cả|cả hai/.test(txt) && !ops.length) ops.push('cộng');
+  if (ops.length) return `Phép ${ops.slice(0, 2).join(' và ')} trong bài vừa học`;
+  return last.problemType ? `${last.problemType} (bài vừa học)` : '';
+}
+
 export function getTodaysFocusSkill(child, stats) {
   // Ưu tiên kỹ năng hay vướng gần nhất
   const weakList = stats?.weak || [];
@@ -148,6 +168,10 @@ export function getTodaysFocusSkill(child, stats) {
   if (memList.length > 0 && memList[0]?.label) {
     return memList[0].label;
   }
+
+  // Có bài vừa học nhưng chưa đủ dữ liệu "hay kẹt": ôn đúng phép tính của bài vừa học
+  const lastFocus = lastLessonFocus(stats);
+  if (lastFocus) return lastFocus;
 
   // Mặc định theo lớp
   const g = parseInt(String(child?.grade || '3').replace(/\D/g, '') || '3', 10);

@@ -5,7 +5,7 @@ import { Fragment, useContext, useEffect, useRef, useState, useMemo, useCallback
 import { AppCtx } from './ctx'
 import {
   PARENT_TYPES, GRADES, BOOKS, TONES, EMOJIS, PROBLEM, STICKER_REWARD,
-  ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CHAT_REPLIES, CALM_LINES,
+  ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CALM_LINES,
   AVAILABLE_STICKERS, WAITING_QUIZZES, SCHEDULE_DEFAULT,
 } from './data'
 import { TraitStackedChart, SubjectAndSkillHeatmap, TraitAiAnalysisCard } from './ReportComponents'
@@ -14,8 +14,11 @@ import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, 
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
 import { captureVideoFrame, fileToCanvas, prepareHomeworkShot } from './imageOcr'
 import { soundTap, soundPop, soundSuccess, soundWrong, soundBreathe, soundWoodBlock, soundFanfare, isSoundEnabled, toggleSound } from './audio'
-import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, cancelPrefetch, isDemoMode, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary, isTeachBackSampleMode, sampleTeachBackTranscript, fastClassifyProblem } from './api'
+import { aiExplain, aiChat, aiOcr, startSession, getCurrentFamilyId, updateSession, cancelPrefetch, isDemoMode, recordLearningEvent, recordBadgeEvent, fetchLearnerProfile, fetchAiProgressReport, fetchAiMicroStep, fetchAiJudgeAnswer, fetchAiAdaptiveBrother, aiExtractProblem, aiAnalyzeToy, aiAnalyzeLongitudinalProgress, logScopeEvent, getAuthToken, checkWorkRead, checkWorkGrade, teachBackTranscribe, teachBackGrade, teachBackConfirm , GATEWAY, getSafetySummary, isTeachBackSampleMode, sampleTeachBackTranscript } from './api'
 import { missingCheckWorkFields } from './checkWorkFields.js'
+import { buildLocalMicroStep } from './microStepLocal.js'
+import { guessProblemType } from './stepQuality.js'
+import { isAnswerRequest, refusalReply, cleanChatReply } from './chatSafety.js'
 import { isTrialActive, PRELOADED_TRIAL_LESSONS, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, setActiveTrialLesson, matchTrialLesson } from './trialData.js'
 import { renderPrompt } from './promptStudio'
 import { THEMES, getTheme } from './themes'
@@ -231,7 +234,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
 
   const loadAssignmentDetail = useCallback((asgId) => {
     const token = getAuthToken()
-    if (!token || !asgId) return
+    if (!token || !asgId || isTrialActive()) return
     fetch(`${GATEWAY}/api/v1/family/assignments/${asgId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -244,7 +247,7 @@ function TeacherAssignmentBanner({ child, S, patch, go }) {
 
   const loadAssignments = useCallback(() => {
     const token = getAuthToken()
-    if (!token) return
+    if (!token || isTrialActive()) return // Prompt 32 mục 8: Dùng thử không gọi API gia đình
     fetch(`${GATEWAY}/api/v1/family/assignments`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -1013,6 +1016,17 @@ const detectSubject = (t) => {
 }
 
 /* Linh vật trong khung ảnh lúc AI đọc đề / soạn bài / gặp trục trặc */
+/* Prompt 32 mục 7: đếm giây chờ đọc ảnh chấm vở (đặt lại 0 mỗi lần vào màn chờ) */
+function ScanWaitTicker({ onTick }) {
+  useEffect(() => {
+    const t0 = Date.now()
+    onTick(0)
+    const id = setInterval(() => onTick(Math.floor((Date.now() - t0) / 1000)), 1000)
+    return () => clearInterval(id)
+  }, [onTick])
+  return null
+}
+
 const READ_LINES = ['Đang soi từng chữ…', 'Đang đọc nét viết tay của con…', 'Đang tách đề và bài làm…']
 const THINK_LINES = ['Đang nghĩ câu hỏi gợi mở…', 'Đang đối chiếu SGK…', 'Sắp xong rồi…']
 function AnalyzeBuddy({ aiState, done }) {
@@ -1823,6 +1837,13 @@ export function Explain() {
         onBack={() => go('home')}
         onOpenCalm={() => openSheet('calm')}
       />
+
+      {/* Prompt 32 mục 8: nhãn bài soạn sẵn ở chế độ trình diễn */}
+      {problem.is_preloaded_demo && (
+        <div data-testid="badge-preloaded-demo" style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 999, background: 'var(--c-surface-2, #FFF3D6)', border: '1px dashed var(--c-line)', color: 'var(--c-text)' }}>
+          📦 Bài soạn sẵn (chế độ trình diễn){problem.demo_timestamp ? ` · soạn lúc ${problem.demo_timestamp}` : ''}
+        </div>
+      )}
 
       {/* Thẻ Theo cách cô dạy */}
       {Boolean(problem.isTeacherAssigned && S.studySource === 'teacher') && (
@@ -2975,15 +2996,20 @@ export function Scaffold() {
    Không dùng type của bài giả mặc định (PROBLEM id 'mock' là đề 3 hộp bút cũ). */
 export function problemTypeLabel(S, child) {
   const p = S?.problem || {}
-  if (p.dang_bai) return p.dang_bai
-  if (p.type && p.id !== 'mock') return p.type
   const text = S?.flow?.ocr || p.ocr || ''
+  // Prompt 32 mục 2: chỉ dùng nhãn của S.problem khi nó CHÍNH LÀ đề đang đọc (không lấy nhãn bài cũ hay bài giả 3 hộp bút)
+  const same = !text || !p.ocr || String(p.ocr).trim() === String(text).trim()
+  if (same && p.dang_bai) return p.dang_bai
+  if (same && p.type && p.id !== 'mock') return p.type
   if (isTrialActive()) {
     const trial = matchTrialLesson(text)
-    if (trial?.dang_bai) return trial.dang_bai
+    // Prompt 32 mục 2: chỉ lấy nhãn bài mẫu khi đề gõ CHÍNH LÀ đề mẫu. Đề khác dạng có "bác Ba … bán" (ví dụ
+    // bài hai bước 45 quả trứng) trước đây bị khớp nhầm bài vịt và mang nhãn "phép trừ".
+    const exact = trial && String(text).toLowerCase().includes(String(trial.de_bai || '').toLowerCase().slice(0, 30))
+    if (exact && trial.dang_bai) return trial.dang_bai
   }
-  const cls = fastClassifyProblem(text, child?.grade || 'Lớp 3')
-  return cls?.dang_bai || 'Toán có lời văn'
+  void child
+  return guessProblemType(text)
 }
 
 /* ============================================================
@@ -3679,7 +3705,8 @@ export function Done() {
   const saveResult = () => {
     soundPop(600)
     emitMotion('day_logged')
-    const topicName = problem?.dang_bai || problem?.type || (problem?.ocr ? problem.ocr.slice(0, 40) : 'Bài tập rèn luyện')
+    // Prompt 32 mục 5: lưu cả đề để Góc chơi biết bài vừa học là phép gì
+    const topicName = problem?.dang_bai || problem?.type || (problem?.ocr ? guessProblemType(problem.ocr) : 'Bài tập rèn luyện')
     const isSample = Boolean(problem?.isSample)
 
     patch((prev) => {
@@ -3728,6 +3755,7 @@ export function Done() {
           ts: now,
           dateKey: getStudyDateKey(now),
           problemType: topicName,
+          problemText: String(problem?.ocr || '').slice(0, 160),
           totalSteps: problem?.steps?.length || 4,
           selfSteps: realSelfSteps,
           teachBack: prev.flow?.teachBack || null,
@@ -3873,7 +3901,7 @@ export function Done() {
               HUY HIỆU NỖ LỰC
             </span>
             <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--c-sub)' }}>
-              Đã có {stats.stickers}/10 ⭐
+              {stickerCountLabel(stats.stickers)}
             </span>
           </div>
 
@@ -4197,8 +4225,34 @@ export function Done() {
 /* ============================================================
    8. HỎI THÊM AI
    ============================================================ */
+/* Prompt 32 mục 5: không bao giờ ghi X/10 với X > 10 */
+export function stickerCountLabel(n) {
+  const k = Math.max(0, Number(n) || 0)
+  if (k <= 10) return `Đã có ${k}/10 ⭐`
+  const full = Math.floor(k / 10)
+  const rest = k % 10
+  return `Đã có ${k} ⭐ · đủ ${full} bộ 10, bộ mới ${rest}/10`
+}
+
+/* Prompt 32 mục 1: câu hỏi gợi mở bám đúng bài đang học (dùng cho câu từ chối và câu dự phòng) */
+function lessonHintQuestion(problem, stepIdx = 0) {
+  const steps = Array.isArray(problem?.steps) ? problem.steps : []
+  const cur = steps[stepIdx] || steps[0] || {}
+  // Ưu tiên câu "chọn phép tính" của chính bài đang học (đã qua máy kiểm, không nói hộ phép tính)
+  const own = steps.find((st) => st?.ky_nang === 'chon_phep_tinh' && (st.question || '').length > 8 && !/(^|[\s"'“(])(cộng|trừ|nhân|chia)(?=$|[\s.,?!"'”)])/i.test(st.question || ''))
+  if (own) return own.question
+  const sk = cur.ky_nang === 'tinh_toan' || cur.ky_nang === 'chon_phep_tinh' ? cur.ky_nang : 'chon_phep_tinh'
+  return buildLocalMicroStep({
+    problemText: problem?.ocr || problem?.text || '',
+    stepQuestion: cur.question || cur.q || '',
+    stepAnswer: sk === 'tinh_toan' ? (cur.answerForParent || cur.answer || '') : '',
+    skill: sk,
+    microIndex: 1,
+  }).cau_hoi_nho
+}
+
 export function AskAI() {
-  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
+  const { Ho = 'Bố mẹ', ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, problem, toast } = useContext(AppCtx)
   const [msgs, setMsgs] = useState([
     { from: 'ai', text: `Bạn cần hỏi gì về bài "${(problem.ocr || '').slice(0, 42)}…"? Mình sẽ gợi cách giảng, không đưa đáp án cho con nhé.` },
@@ -4221,19 +4275,43 @@ export function AskAI() {
     setVal('')
     setTyping(true)
     const child = S.children.find((c) => c.id === S.activeId) || S.children[0]
+    const hint = lessonHintQuestion(problem, S.flow?.step || 0)
+    const sampleOnly = isTrialActive() || isDemoMode()
+    // Xin đáp án: Dùng thử / trình diễn trả lời ngay bằng luật trong code (0 lần gọi AI);
+    // gia đình thật gửi lên máy chủ để máy chủ từ chối và ghi nhật ký bộ chặn 'xin_dap_an'
+    if (sampleOnly && isAnswerRequest(text)) {
+      setTyping(false)
+      busyRef.current = false
+      setMsgs((m) => [...m, { from: 'ai', text: refusalReply({ hintQuestion: hint, ho }), guarded: true }])
+      return
+    }
     const sys = renderPrompt('p4_chat', {
       mon: problem.mon || 'Toán',
       lop: child.grade,
       sach: child.book,
-      dang_bai: problem.dang_bai || problem.type || 'Toán có lời văn',
+      dang_bai: problemTypeLabel(S, child),
       loi_hay_gap: problem.loi_hay_gap || 'Con hay vội làm phép tính mà chưa đọc kỹ câu hỏi',
       de_bai: problem.ocr || '',
-      ghi_chu: customNote || text,
+      ghi_chu: customNote || '',
+      xung_ho: ho,
     })
-    const reply = await aiChat(sys, msgs, text)
+    // Gửi kèm câu hỏi mới + tối đa 4 lượt chat trước (bỏ câu chào đầu)
+    const history = msgs.slice(1).slice(-8)
+    let meta = null
+    const raw = await aiChat(sys, history, text, {
+      promptId: 'p4_chat',
+      problemText: problem.ocr || '',
+      hintQuestion: hint,
+      xungHo: ho,
+      temperature: 0.4,
+      onMeta: (x) => { meta = x },
+    })
     setTyping(false)
     busyRef.current = false
-    setMsgs((m) => [...m, { from: 'ai', text: reply || CHAT_REPLIES[text] || CHAT_REPLIES[CHAT_SAMPLES[0]] }])
+    let reply = raw ? cleanChatReply(raw) : ''
+    if (!reply && isAnswerRequest(text)) reply = refusalReply({ hintQuestion: hint, ho })
+    if (!reply) reply = `Gấu chưa trả lời được lúc này. ${Ho} thử hỏi con: "${hint}"`
+    setMsgs((m) => [...m, { from: 'ai', text: reply, guarded: Boolean(meta?.guarded) }])
   }
 
   // A2: Nếu mẹ đã nhập ghi chú ở màn Hỏi con từng bước, tự động gửi câu hỏi đầu tiên
@@ -4256,7 +4334,14 @@ export function AskAI() {
       >
         <div className="chat">
           {msgs.map((m, i) => (
-            <div key={i} className={`m ${m.from === 'u' ? 'u' : 'a'}`}>{m.text}</div>
+            <Fragment key={i}>
+              <div className={`m ${m.from === 'u' ? 'u' : 'a'}`}>{m.text}</div>
+              {m.guarded && (
+                <div data-testid="chat-guarded" style={{ alignSelf: 'flex-start', fontSize: 11.5, fontWeight: 700, color: 'var(--c-sub)', margin: '-2px 0 2px 6px' }}>
+                  🛡 Bộ chặn đáp án đã bật · không đưa đáp số cho con chép
+                </div>
+              )}
+            </Fragment>
           ))}
           {typing && (
             <div className="typing"><i /><i /><i /></div>
@@ -6313,6 +6398,7 @@ const LOI_LABEL = {
 }
 
 function WeeklyAiCards({ stats, childName }) {
+  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const [safety, setSafety] = useState(null)
   useEffect(() => {
@@ -6327,9 +6413,12 @@ function WeeklyAiCards({ stats, childName }) {
     }
   }, [])
   const week = (stats?.studyLog || []).filter((e) => e && e.ts && getWeekLabel(e.ts) === 'Tuần này')
-  const teachBacks = week.filter((e) => e.kind !== 'check' && (e.teachBackDone === true || (e.teachBackDone === undefined && e.teachBack))).length
+  const trial = isTrialActive()
+  // Prompt 32 mục 3: Dùng thử hiện số mẫu hợp lý (khớp thẻ An toàn AI), gia đình thật lấy số thật
+  const teachBacksLocal = week.filter((e) => e.kind !== 'check' && (e.teachBackDone === true || (e.teachBackDone === undefined && e.teachBack))).length
+  const teachBacks = trial ? Math.max(2, teachBacksLocal) : Math.max(teachBacksLocal, Number(safety?.teach_backs?.total || 0))
   const selfFixedLocal = week.filter((e) => e.kind === 'check')
-  const selfFixed = Math.max(selfFixedLocal.length, Number(safety?.work_checks?.self_fixed || 0))
+  const selfFixed = trial ? Math.max(3, selfFixedLocal.length) : Math.max(selfFixedLocal.length, Number(safety?.work_checks?.self_fixed || 0))
   const errCount = {}
   selfFixedLocal.forEach((e) => {
     if (e.errorType) errCount[e.errorType] = (errCount[e.errorType] || 0) + 1
@@ -6360,7 +6449,7 @@ function WeeklyAiCards({ stats, childName }) {
             <span style={{ fontSize: 20 }}>🛡️</span>
             <b style={{ fontSize: 14, color: 'var(--c-text)' }}>An toàn AI 7 ngày</b>
           </div>
-          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>{isTrialActive() ? 'Số mẫu' : 'Số thật từ hệ thống'}</span>
+          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>{trial ? 'Số mẫu' : 'Số thật từ hệ thống'}</span>
         </div>
         <div className="facts-grid two-cols">
           <div>
@@ -6384,8 +6473,12 @@ function WeeklyAiCards({ stats, childName }) {
             <em style={{ color: 'var(--c-text)' }}>lắng nghe con trả lời</em>
           </div>
         </div>
+        <div data-testid="weekly-answer-requests" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, fontSize: 13, color: 'var(--c-text)' }}>
+          <span>Lần Gấu từ chối xin đáp án</span>
+          <b style={{ fontSize: 16 }}>{trial ? 1 : Number(safety?.dot18_safety?.xin_dap_an_da_chan || 0)}</b>
+        </div>
         <div style={{ background: 'var(--c-surface)', borderRadius: 10, padding: '8px 10px', marginTop: 8, fontSize: 13, color: 'var(--c-text)' }}>
-          <b>MẸ THẤY GÌ:</b> Không câu nào lộ đáp án tới con. Mọi phép tính trong bài đã được Gấu tính lại.
+          <b>{Ho} thấy gì:</b> {leaked > 0 ? `Có ${leaked} câu bộ chặn ghi nhận đã lọt, ${ho} bấm "Báo câu chưa phù hợp" để Gấu sửa.` : 'Không câu nào lộ đáp án tới con. Mọi phép tính trong bài đã được Gấu tính lại.'}
         </div>
       </div>
     </div>
@@ -7518,6 +7611,8 @@ export function CheckWork() {
   const childName = child?.name || 'Mít'
 
   const initData = S.checkWorkInit || {}
+  // Prompt 32 mục 7: Worker đọc lần 1 tối đa ~18 giây rồi tự đọc lại bằng model dự phòng; màn chờ báo rõ lần 2
+  const [scanSecs, setScanSecs] = useState(0)
   const [step, setStep] = useState('capture') // capture | scanning | review | grading | result_parent | result_child | retake | celebration | blur | invalid_scope
   const [problemText, setProblemText] = useState(initData.problemText || '')
   const [sessionId, setSessionId] = useState(initData.sessionId || null)
@@ -7884,11 +7979,18 @@ export function CheckWork() {
 
       {/* 2. MÀN HÌNH ĐANG QUÉT ẢNH */}
       {step === 'scanning' && (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <ScanWaitTicker onTick={setScanSecs} />
+      )}
+      {step === 'scanning' && (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }} data-testid="checkwork-scanning">
           <div style={{ fontSize: 48, marginBottom: 16, animation: 'pulse-dot 1.2s infinite' }}>🔍</div>
-          <h3 style={{ fontSize: 19, fontWeight: 800, color: 'var(--c-text)' }}>AI đang đọc chữ viết tay...</h3>
+          <h3 style={{ fontSize: 19, fontWeight: 800, color: 'var(--c-text)' }} data-testid="checkwork-scan-title">
+            {scanSecs >= 16 ? 'Gấu đang đọc lại lần 2…' : 'AI đang đọc chữ viết tay...'}
+          </h3>
           <p style={{ fontSize: 14, color: 'var(--c-text-2)', marginTop: 6 }}>
-            Đọc từng dòng bài giải của {childName}, giữ nguyên bài làm của con
+            {scanSecs >= 16
+              ? 'Lần đầu chưa đọc rõ, Gấu đang thử cách đọc khác. Chờ thêm vài giây nhé.'
+              : <>Đọc từng dòng bài giải của {childName}, giữ nguyên bài làm của con</>}
           </p>
         </div>
       )}
@@ -7976,6 +8078,7 @@ export function CheckWork() {
                     style={{
                       padding: '8px 12px',
                       background: '#FFFBEB',
+                      color: '#78350F',
                       border: '1px solid #FCD34D',
                       borderRadius: 12,
                       marginTop: -4,
@@ -8137,10 +8240,11 @@ export function CheckWork() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', width: 16 }}>
+                    {/* Prompt 32 mục 5: ô sáng (vàng/xanh nhạt) luôn dùng chữ tối, kể cả ở bộ tối như Khu Vườn Đêm */}
+                    <span style={{ fontSize: 12, fontWeight: 800, color: isWrongLine ? '#92400E' : isCorrectLine ? '#166534' : 'var(--c-sub)', width: 16 }}>
                       {lineNum}
                     </span>
-                    <span style={{ color: 'var(--c-text)', fontWeight: isWrongLine ? 700 : 500 }}>
+                    <span style={{ color: isWrongLine ? '#451A03' : isCorrectLine ? '#14532D' : 'var(--c-text)', fontWeight: isWrongLine ? 700 : 500 }}>
                       {ln.noi_dung}
                     </span>
                   </div>
@@ -8181,7 +8285,7 @@ export function CheckWork() {
           {/* Đáp án đối chiếu cho mẹ: Nút Giữ có vòng chạy */}
           <div className="card-km" style={{ padding: '12px 14px', background: 'var(--c-surface)' }}>
             <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-sub)', display: 'block', marginBottom: 6 }}>
-              ĐÁP ÁN ĐỐI CHIẾU (CHỈ MẸ)
+              ĐÁP ÁN ĐỐI CHIẾU (CHỈ {Ho.toUpperCase()} THẤY)
             </label>
             <HoldBtn
               label="Giữ 1.5s xem đáp án chuẩn"
@@ -8189,7 +8293,7 @@ export function CheckWork() {
             />
             {isHoldingAnswer && (
               <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', padding: '10px 12px', borderRadius: 12, marginTop: 8, fontSize: 14, fontWeight: 800, color: '#92400E' }}>
-                ✓ {gradeResult.dap_an_dung_cho_me || '19 cây bút'}
+                ✓ {gradeResult.dap_an_dung_cho_me || 'Chưa có đáp án đối chiếu cho bài này'}
               </div>
             )}
           </div>

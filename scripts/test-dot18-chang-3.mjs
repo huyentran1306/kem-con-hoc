@@ -73,7 +73,7 @@ assert(screensSrc.includes("Phép tính sai đã bắt"), "Thẻ An toàn AI có
 assert(screensSrc.includes("Bậc bộ chặn sửa lại"), "Thẻ An toàn AI có Bậc bộ chặn sửa lại");
 assert(screensSrc.includes("Câu nhỏ hơn đã tạo"), "Thẻ An toàn AI có Câu nhỏ hơn đã tạo");
 assert(screensSrc.includes("Lần Gấu nghe con"), "Thẻ An toàn AI có Lần Gấu nghe con");
-assert(screensSrc.includes("MẸ THẤY GÌ:"), "Thẻ An toàn AI có dòng kết luận MẸ THẤY GÌ");
+assert(/\{Ho\} thấy gì:|MẸ THẤY GÌ:/.test(screensSrc), "Thẻ An toàn AI có dòng kết luận {Ho} thấy gì (prompt 32: theo xưng hô, không cố định Mẹ)");
 
 assert(stylesSrc.includes(".card.ana"), "CSS có định dạng cho .card.ana");
 assert(stylesSrc.includes(".src-badge"), "CSS có định dạng cho .src-badge");

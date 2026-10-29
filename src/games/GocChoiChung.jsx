@@ -4,7 +4,7 @@
  * 0 token, tự dừng khi hết giờ, luôn khen cả hai.
  */
 import React, { useState, useContext } from 'react';
-import { getPlayTimeStatus, getTodaysFocusSkill, hasLearningData, getDailyLimitMinutes } from './gameStorage';
+import { getPlayTimeStatus, getTodaysFocusSkill, hasLearningData, hasWeakData, getDailyLimitMinutes } from './gameStorage';
 import GameDuel from './GameDuel';
 import GameHoneyTree from './GameHoneyTree';
 import GameDetective from './GameDetective';
@@ -113,9 +113,11 @@ export default function GocChoiChung({
             Góc chơi chung
           </h2>
           <p style={{ margin: '2px 0 0', fontSize: 13.5, color: 'var(--c-sub)' }}>
-            {hasData
+            {hasWeakData(child, stats)
               ? `${Ho} và ${childName} chơi cùng ${playMin} phút, ôn đúng chỗ ${childName} hay kẹt.`
-              : `Chưa có buổi học nào. Hôm nay ${Ho.toLowerCase()} và ${childName} chơi ôn ${focusSkill} (lớp ${gradeLabel}).`}
+              : hasData
+                ? `${Ho} và ${childName} chơi cùng ${playMin} phút. Hôm nay ôn: ${focusSkill.charAt(0).toLowerCase() + focusSkill.slice(1)}.`
+                : `Chưa có buổi học nào. Hôm nay ${Ho.toLowerCase()} và ${childName} chơi ôn ${focusSkill} (lớp ${gradeLabel}).`}
           </p>
         </div>
         <span style={{ fontSize: 44, flexShrink: 0 }}>🐻</span>
@@ -335,8 +337,10 @@ export default function GocChoiChung({
       </div>
       {/* Dòng chú thích */}
       <p style={{ margin: '4px 0', fontSize: 12, color: 'var(--c-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-        {hasData
+        {hasWeakData(child, stats)
           ? `Câu hỏi dựa trên chỗ ${childName} hay kẹt. Hết ${playMin} phút thì tự dừng.`
+          : hasData
+          ? `Câu hỏi bám bài ${childName} vừa học. Hết ${playMin} phút thì tự dừng.`
           : `Câu hỏi theo chương trình lớp ${gradeLabel}. Hết ${playMin} phút thì tự dừng.`}
       </p>
 

@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { GATEWAY, getAuthToken, teacherLabel } from './api'
 import { announcementStatus } from './teacher/announcementStatus.js'
+import { isTrialActive } from './trialData.js'
 
 // Prompt 29A: màn chính chỉ hiện tối đa 2 thông báo CÒN HẠN, chưa ẩn (ghim lên trước).
 // Thông báo hết hạn chỉ thấy trong "Xem tất cả", để mờ, có nhãn "Đã qua". Đã ẩn / đã xoá thì không hiện.
@@ -61,7 +62,8 @@ export default function FamilyAnnouncements({ childId, toast }) {
 
   useEffect(() => {
     const token = getAuthToken()
-    if (!token) return
+    // Prompt 32 mục 8: Dùng thử không gọi API gia đình (tránh 401)
+    if (!token || isTrialActive()) return
     let cancelled = false
     fetch(`${GATEWAY}/api/v1/family/announcements`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
@@ -177,7 +179,8 @@ export default function FamilyAnnouncements({ childId, toast }) {
         )
       })}
 
-      {(activeItems.length > HOME_MAX || pastItems.length > 0 || showAll) && (
+      {/* Prompt 32 mục 8: luôn có dòng "Xem tất cả" dưới danh sách, kể cả khi chỉ có 1–2 thông báo */}
+      {(items.length > 0 || showAll) && (
         <button className="btn ghost" style={{ padding: '7px 12px', fontSize: 12.5 }} onClick={() => setShowAll((v) => !v)}>
           {showAll ? 'Thu gọn' : 'Xem tất cả thông báo của cô'}
         </button>

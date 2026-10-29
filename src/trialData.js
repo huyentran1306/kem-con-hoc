@@ -167,9 +167,10 @@ export function getTrialInitialState() {
       na: {
         stickers: 3,
         stickersList: [
-          { id: 'stk_1', name: 'Ngôi sao chăm chỉ', emoji: '⭐', earnedAt: now - 86400000 * 3 },
-          { id: 'stk_2', name: 'Bạn Ong siêng năng', emoji: '🐝', earnedAt: now - 86400000 * 2 },
-          { id: 'stk_3', name: 'Bông sen kiên nhẫn', emoji: '🪷', earnedAt: now - 86400000 * 1 },
+          // Prompt 32 mục 8: dùng đúng id/tên trong AVAILABLE_STICKERS để ô trong sổ dán sáng lên khớp số đếm
+          { id: 's9', e: '🐝', n: 'Ong vàng Chăm chỉ', name: 'Ong vàng Chăm chỉ', emoji: '🐝', earnedAt: now - 86400000 * 3 },
+          { id: 's1', e: '🦄', n: 'Kỳ lân Kiên trì', name: 'Kỳ lân Kiên trì', emoji: '🦄', earnedAt: now - 86400000 * 2 },
+          { id: 's3', e: '🌟', n: 'Ngôi sao Sáng tạo', name: 'Ngôi sao Sáng tạo', emoji: '🌟', earnedAt: now - 86400000 * 1 },
         ],
         stickerHistory: (() => {
           const list = [];
@@ -242,8 +243,8 @@ export function getTrialInitialState() {
       tit: {
         stickers: 2,
         stickersList: [
-          { id: 'stk_t1', name: 'Tên lửa vút bay', emoji: '🚀', earnedAt: now - 86400000 * 2 },
-          { id: 'stk_t2', name: 'Mầm non xanh', emoji: '🌱', earnedAt: now - 86400000 * 1 },
+          { id: 's2', e: '🚀', n: 'Tên lửa Tốc độ', name: 'Tên lửa Tốc độ', emoji: '🚀', earnedAt: now - 86400000 * 2 },
+          { id: 's11', e: '🐢', n: 'Rùa con Bền bỉ', name: 'Rùa con Bền bỉ', emoji: '🐢', earnedAt: now - 86400000 * 1 },
         ],
         stickerHistory: [],
         weak: [{ n: 'Phân biệt l/n', count: 1 }],
@@ -303,7 +304,14 @@ export function matchTrialLesson(text = '') {
   const s = String(text).toLowerCase();
   const exact = PRELOADED_TRIAL_LESSONS.find((l) => s.includes(l.de_bai.toLowerCase().slice(0, 30)));
   if (exact) return exact;
-  if (s.includes('vịt') || (s.includes('bác ba') && s.includes('bán'))) return PRELOADED_TRIAL_LESSONS[0];
+  if (s.includes('vịt') || (s.includes('bác ba') && s.includes('bán'))) {
+    // Prompt 32 mục 2: đề có số KHÁC bài vịt (ví dụ "Bác Ba có 45 quả trứng, bán đi 18 quả…") không phải bài mẫu,
+    // trước đây bị trả nhầm bài vịt (và nhãn "phép trừ") cho một đề hai bước.
+    const nums = s.match(/\d+/g) || [];
+    const lessonNums = PRELOADED_TRIAL_LESSONS[0].de_bai.match(/\d+/g) || [];
+    if (nums.some((n) => !lessonNums.includes(n))) return null;
+    return PRELOADED_TRIAL_LESSONS[0];
+  }
   if (s.includes('mùa xuân') || s.includes('lộc') || s.includes('chồi') || /\bl hay n\b/.test(s)) return PRELOADED_TRIAL_LESSONS[1];
   if (s.includes('mimi') || s.includes('my cat') || /\bits\b/.test(s)) return PRELOADED_TRIAL_LESSONS[2];
   return null;

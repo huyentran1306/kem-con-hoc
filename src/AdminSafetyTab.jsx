@@ -71,11 +71,19 @@ const OUTCOME_LABELS = {
   fallback: { text: 'Thay câu an toàn', tone: 'warn' },
   regenerated: { text: 'Sinh lại', tone: 'ok' },
   leaked: { text: 'Lọt tới con', tone: 'bad' },
+  // Prompt 32
+  xin_dap_an: { text: 'Chặn xin đáp án', tone: 'warn' },
+  sua_bac: { text: 'Sửa riêng bậc', tone: 'ok' },
+  sua_bac_chung_chung: { text: 'Soạn lại bậc chung chung', tone: 'ok' },
+  sua_phep_tinh: { text: 'Sửa phép tính', tone: 'ok' },
+  chan_an_toan: { text: 'Thay câu an toàn', tone: 'warn' },
 }
 const PROMPT_OPTIONS = [
   { value: 'p3_explain', label: 'Giảng bài 3 bậc' },
   { value: 'p14b_check_work', label: 'Chấm vở, không sửa hộ' },
   { value: 'p14d_teach_back', label: 'Nghe con giảng lại' },
+  { value: 'p4_chat', label: 'Hỏi thêm AI (xin đáp án)' },
+  { value: 'p3_explain_v3', label: 'Soạn bài v3' },
 ]
 
 export function AdminSafetyTab({ token }) {
