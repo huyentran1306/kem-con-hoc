@@ -55,9 +55,16 @@ export function reportClientError(error, extra = {}) {
     lastSentTime = now
     errorCountThisMinute++
 
+    // Gói 33 · B3: mọi lỗi kèm màn đang ở, lớp của bé, kích thước khung (window.__kchCtx do App cập nhật)
+    const ctx = (typeof window !== 'undefined' && window.__kchCtx) || {}
+    const viewport = typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : ''
+    const ctxLine = `[screen=${ctx.screen || '?'} grade=${ctx.grade || '?'} theme=${theme} vp=${viewport}${extra?.kind ? ` kind=${extra.kind}` : ''}]`
     const payload = {
       message: String(message).slice(0, 500),
-      stack: stackLines,
+      stack: `${ctxLine}\n${stackLines}`.slice(0, 2000),
+      screen: ctx.screen || null,
+      childGrade: ctx.grade || null,
+      viewport,
       route,
       theme,
       buildVersion: BUILD_VERSION,

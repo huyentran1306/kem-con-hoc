@@ -1,0 +1,37 @@
+/* Gói 33 · B1: màn "Chụp bài tập" khi camera bị chặn / máy không có camera.
+   .cam là một hàng flex: khối thông báo từng bị ép thành cột ~120px cạnh <video> rộng 100%.
+   File này nạp sau cùng (main.jsx) để thắng mọi bộ giao diện. */
+.cam.cam-off video{display:none !important}
+.cam.cam-off .frame{display:none}
+.cam .cam-err{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:16px;gap:8px;color:#fff;font-size:13px;
+}
+.cam .cam-err-inner{max-width:300px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+.cam .cam-err-title{font-size:14.5px;color:#fff;font-weight:800}
+.cam .cam-err-text{color:#E6DAE6;line-height:1.5}
+/* Nút Thử lại camera: chữ và viền sáng trên nền tối (tương phản > 4.5:1), mọi bộ giao diện */
+.cam .cam-retry,
+[data-theme] .cam .cam-retry{
+  width:auto !important;min-height:40px;padding:8px 18px !important;font-size:13px !important;font-weight:800 !important;
+  color:#FFFFFF !important;background:rgba(255,255,255,.16) !important;border:1.5px solid #FFFFFF !important;
+  border-radius:999px !important;box-shadow:none !important;cursor:pointer;
+}
+.cam .cam-retry:focus-visible{outline:3px solid #FFD27A;outline-offset:2px}
+/* Dòng hướng dẫn nằm dưới viền nét đứt (frame cách mép 26px), không đè lên viền */
+.cam .hint.cam-guide{bottom:4px;line-height:18px}
+.cam.cam-off .hint.cam-guide{display:none}
+/* Nút chụp luôn tròn 72px ở mọi khung; camera lỗi thì mờ đi */
+.shutter,
+[data-theme] .shutter{
+  width:72px !important;height:72px !important;min-width:72px;max-width:72px;flex:0 0 72px;
+  aspect-ratio:1/1;padding:0 !important;border-radius:50% !important;align-self:center;
+}
+.shutter:disabled,.shutter.shutter-off{opacity:.35;box-shadow:none;cursor:not-allowed}
+/* Cột nội dung màn chụp căn giữa trong khung app ở màn rộng */
+.snap-screen{width:100%;max-width:560px;margin-left:auto;margin-right:auto;display:flex;flex-direction:column}
+
+/* Gói 33: thẻ cảnh báo nền vàng nhạt giữ chữ/nút tối ở mọi theme (theme tối không làm nút phụ mất chữ) */
+.kch-warn-card .btn-km-secondary{background:#fff !important;color:#78350F !important;border:1.5px solid #F59E0B !important}
+.kch-warn-card .btn-km-secondary:disabled{opacity:.5}

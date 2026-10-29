@@ -48,6 +48,8 @@ import { getStudyDateKey } from './useStudyTracker'
 import { validateAllLessonMath } from './arithmetic.js'
 import { ThemeBuddy, BuddyGreeter, buddyReact, useThemeBuddyId, BUDDY_NAMES } from './themes/buddies/buddySvgs'
 import FamilyAnnouncements from './FamilyAnnouncements.jsx'
+import { SKILL_LABELS, skillLabel, lessonIssue } from './lessonGuard.js'
+import { SUBJECT_LABEL, resolveSubject, typeLabelForSubject } from './subjectChip.js'
 
 
 /* ============================================================
@@ -889,7 +891,8 @@ export function SnapHomework() {
   return (
     <>
       <Header title="Chụp bài tập" back="home" />
-      <div className="cam">
+      <div className="snap-screen">
+      <div className={`cam ${camErr ? 'cam-off' : ''}`}>
         <div className="frame" ref={frameRef} />
         {camOn && (
           <div className="kb-peek">
@@ -911,23 +914,25 @@ export function SnapHomework() {
         />
 {!camOn && !camErr && <div className="hint">Đang bật camera…</div>}
         {camErr && (
-          <div style={{ padding: '24px 20px', textAlign: 'center', color: '#fff', fontSize: 13, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 34 }}>📷</span>
-            <b style={{ fontSize: 14.5, color: '#fff' }}>Không mở được camera</b>
-            <span style={{ color: '#D8C7D8', lineHeight: 1.5 }}>
-              Trình duyệt chưa cho phép quyền camera. Bạn có thể bấm <b>Chọn ảnh</b> để chụp từ thư viện,
-              hoặc bấm <b>Thử lại</b> sau khi bật quyền camera trong trình duyệt.
-            </span>
-            <button
-              className="btn ghost"
-              style={{ width: 'auto', padding: '8px 18px', fontSize: 13, borderColor: '#fff', color: '#fff', background: 'rgba(255,255,255,.12)' }}
-              onClick={() => { setCamErr(false); setCamOn(false); window.location.reload() }}
-            >
-              🔄 Thử lại camera
-            </button>
+          <div className="cam-err" role="alert" data-testid="cam-error">
+            <div className="cam-err-inner">
+              <span aria-hidden="true" style={{ fontSize: 34 }}>📷</span>
+              <b className="cam-err-title">Không mở được camera</b>
+              <span className="cam-err-text">
+                Trình duyệt chưa cho phép quyền camera. Bạn có thể bấm <b>Chọn ảnh</b> để chụp từ thư viện,
+                hoặc bấm <b>Thử lại</b> sau khi bật quyền camera trong trình duyệt.
+              </span>
+              <button
+                type="button"
+                className="cam-retry"
+                onClick={() => { setCamErr(false); setCamOn(false); window.location.reload() }}
+              >
+                🔄 Thử lại camera
+              </button>
+            </div>
           </div>
         )}
-        <div className="hint">{busy ? 'Đang xử lý ảnh…' : 'Căn đúng 1 bài vào khung · giữ máy song song trang vở'}</div>
+        <div className="hint cam-guide">{busy ? 'Đang xử lý ảnh…' : 'Căn đúng 1 bài vào khung · giữ máy song song trang vở'}</div>
       </div>
 
       {qualityWarn && (
@@ -964,7 +969,7 @@ export function SnapHomework() {
         </div>
       )}
 
-      <button className="shutter" aria-label="Chụp" onClick={capture} disabled={!camOn || busy} />
+      <button className={`shutter ${camErr ? 'shutter-off' : ''}`} aria-label="Chụp" onClick={capture} disabled={!camOn || busy} />
       <div className="btns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 8 }}>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13 }} onClick={() => fileRef.current.click()}>🖼 Chọn ảnh</button>
         <button className="btn ghost" style={{ padding: '10px 8px', fontSize: 13 }} onClick={() => openSheet('typeProblem')}>⌨️ Gõ đề</button>
@@ -993,6 +998,7 @@ export function SnapHomework() {
         onChange={onPickFile}
       />
       <p className="notice">🔒 Ảnh chỉ dùng để đọc đề, app không lưu ảnh</p>
+      </div>
     </>
   )
 }
@@ -1029,6 +1035,8 @@ function ScanWaitTicker({ onTick }) {
 
 const READ_LINES = ['Đang soi từng chữ…', 'Đang đọc nét viết tay của con…', 'Đang tách đề và bài làm…']
 const THINK_LINES = ['Đang nghĩ câu hỏi gợi mở…', 'Đang đối chiếu SGK…', 'Sắp xong rồi…']
+// Gói 33 · B3: mọi trạng thái của màn Gấu đọc đề phải có giao diện (danh sách đã vẽ ở Analyze()).
+export const ANALYZE_RENDERED_STATES = new Set(['loading', 'cleaning', 'done', 'review', 'scope_blocked', 'scope_warn', 'scope_pick_one', 'ocr_failed', 'trial_limit', 'network_slow', 'error', 'ai_slow', 'ai_error', 'format_error'])
 function AnalyzeBuddy({ aiState, done }) {
   const [i, setI] = useState(0)
   const loading = aiState === 'loading' || aiState === 'cleaning'
@@ -1065,6 +1073,8 @@ function AnalyzeBuddy({ aiState, done }) {
 }
 
 export function Analyze() {
+  // Gói 33 · B3: ném lỗi giả để kiểm ScreenErrorBoundary (gõ trong Console: window.__kchCrashTest = 'analyze')
+  if (typeof window !== 'undefined' && window.__kchCrashTest === 'analyze') throw new Error('kch_crash_test_analyze')
   const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
   const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, patch, go, openSheet, toast } = useContext(AppCtx)
@@ -1080,6 +1090,7 @@ export function Analyze() {
   const [reAskReason, setReAskReason] = useState(null)
   const [childWork, setChildWork] = useState('') // phần con đã viết tay, AI tách khỏi đề
   const [uncertain, setUncertain] = useState([]) // chữ/số AI đọc chưa chắc
+  const [ocrMon, setOcrMon] = useState(null) // Gói 33 · B4: mon_doan của bước đọc ảnh
   const [zoomOpen, setZoomOpen] = useState(false)
   const [explainStartedAt, setExplainStartedAt] = useState(0)
   const [explainSecs, setExplainSecs] = useState(0)
@@ -1146,7 +1157,7 @@ export function Analyze() {
       S.tone,
       redirectNote,
       false,
-      { familyId: effectiveFamId, isPrefetch: true, signal: abortCtrl.signal }
+      { familyId: effectiveFamId, isPrefetch: true, signal: abortCtrl.signal, subject: SUBJECT_LABEL[resolveSubject({ chosen: S.flow?.subject, ocrMon, text: rawText })] }
     ).catch((e) => {
       if (e?.name !== 'AbortError') console.warn('Prefetch error:', e)
       return null
@@ -1214,7 +1225,7 @@ export function Analyze() {
       }
 
       if (!explainRes || explainRes.error) {
-        explainRes = await aiExplain(textToUse, child, S.tone, combinedNote, false, { familyId: effectiveFamId })
+        explainRes = await aiExplain(textToUse, child, S.tone, combinedNote, false, { familyId: effectiveFamId, subject: SUBJECT_LABEL[resolveSubject({ chosen: S.flow?.subject, ocrMon, text: textToUse })] })
       }
       setDone(4)
 
@@ -1372,6 +1383,7 @@ export function Analyze() {
           // Đề đọc từ JSON (p1_ocr_v3/v2) = model đã nhìn ảnh và chép nguyên văn
           const structured = !!(scope && scope.fromJson)
           setChildWork((scope && scope.bai_lam_cua_con) || '')
+          if (scope && scope.mon_doan) setOcrMon(scope.mon_doan)
           setUncertain((scope && scope.cho_khong_chac) || [])
 
           // 1. KIỂM TRA PHẠM VI ẢNH
@@ -1506,8 +1518,10 @@ export function Analyze() {
     }
   }, [])
 
-  const subjectDetected = detectSubject(editedText || ocrText || S.flow.ocr || '')
-  const subjectLabel = subjectDetected === 'tieng_viet' ? 'Tiếng Việt' : 'Toán'
+  // Gói 33 · B4: trước đây so 'tieng_viet' với kết quả 'vie' của detectSubject nên chip luôn ra "Toán"
+  const subjectKey = resolveSubject({ chosen: S.flow?.subject, ocrMon, text: editedText || ocrText || S.flow.ocr || '' })
+  const subjectDetected = subjectKey === 'tieng_viet' ? 'vie' : subjectKey === 'tieng_anh' ? 'eng' : 'math'
+  const subjectLabel = SUBJECT_LABEL[subjectKey] || 'Toán'
 
   return (
     <div className="analyze-container-km" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative', paddingBottom: 80 }}>
@@ -1598,7 +1612,7 @@ export function Analyze() {
               🎒 {child?.grade || 'Lớp 3'}
             </span>
             <span className="btn-km-chip" style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 800 }}>
-              📐 {problemTypeLabel(S, child)}
+              📐 {problemTypeLabel(S, child, subjectKey)}
             </span>
           </div>
 
@@ -1728,7 +1742,7 @@ export function Analyze() {
       )}
 
       {aiState === 'scope_warn' && scopeResult && (
-        <div className="card-km" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
+        <div className="card-km kch-warn-card" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
           <b style={{ fontSize: 15, color: '#92400E' }}>Lưu ý về bài tập</b>
           <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>{scopeResult.message}</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -1738,6 +1752,108 @@ export function Analyze() {
             <button type="button" className="btn-km btn-km-m btn-km-primary" onClick={handleContinueWarn}>
               Vẫn tiếp tục ›
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Gói 33 · A3/B3: các trạng thái này bị mất giao diện từ đợt 23 (f9375e9) nên màn soạn bài ra trắng.
+          Mọi trạng thái phải có chữ và nút; trạng thái lạ rơi vào khối dự phòng cuối cùng. */}
+      {aiState === 'scope_pick_one' && scopeResult && (
+        <div className="card-km" data-testid="analyze-pick-one" style={{ border: '2px solid #0284C7', background: '#F0F9FF' }}>
+          <b style={{ fontSize: 15, color: '#0369A1' }}>
+            Trong ảnh có {scopeResult.so_bai || (scopeResult.cac_bai?.length || 2)} bài tập
+          </b>
+          <p style={{ fontSize: 13.5, color: '#0C4A6E', margin: '4px 0 12px' }}>{scopeResult.message}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(Array.isArray(scopeResult.cac_bai) && scopeResult.cac_bai.length > 0 ? scopeResult.cac_bai : [scopeResult.de_bai || editedText || ocrText || 'Bài tập 1']).map((cau, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSelectExercise(String(cau))}
+                style={{ background: '#FFFFFF', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #BAE6FD', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left', font: 'inherit' }}
+              >
+                <span style={{ background: '#0284C7', color: '#fff', fontSize: 12, fontWeight: 800, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>Câu {idx + 1}</span>
+                <span style={{ fontSize: 14, color: '#1E293B', lineHeight: 1.45, flex: 1 }}>{String(cau)}</span>
+              </button>
+            ))}
+          </div>
+          <button type="button" className="btn-km btn-km-m btn-km-secondary" style={{ width: '100%', marginTop: 10 }} onClick={() => go('snap')}>
+            Chụp lại ảnh khác
+          </button>
+        </div>
+      )}
+
+      {aiState === 'ocr_failed' && (
+        <div className="card-km kch-warn-card" data-testid="analyze-ocr-failed" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
+          <b style={{ fontSize: 15, color: '#92400E' }}>Gấu chưa đọc rõ ảnh này</b>
+          <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>
+            Ảnh mờ hoặc thiếu chữ. {Ho} gõ nhanh đề bài, chụp lại, hoặc dùng bài mẫu nhé.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button type="button" className="btn-km btn-km-m btn-km-primary" onClick={() => openSheet('typeProblem')}>Gõ đề bài</button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={() => go('snap')}>Chụp lại</button>
+              <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={useSampleProblem}>Dùng bài mẫu</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {aiState === 'trial_limit' && (
+        <div className="card-km kch-warn-card" data-testid="trial-limit" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
+          <b style={{ fontSize: 15, color: '#92400E' }}>Dùng thử có {PRELOADED_TRIAL_LESSONS.length} đề mẫu</b>
+          <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>
+            {Ho} chọn một đề bên dưới để xem Gấu giảng, chấm vở và nghe con giảng lại. Đăng ký tài khoản để Gấu giảng mọi đề.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {PRELOADED_TRIAL_LESSONS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                className="btn-km btn-km-m btn-km-secondary"
+                style={{ textAlign: 'left', height: 'auto', padding: '10px 12px', display: 'block' }}
+                onClick={() => { setActiveTrialLesson(l.id); patch({ flow: { ...S.flow, ocr: l.de_bai } }); startExplain(l.de_bai) }}
+              >
+                <b>{l.subject} · {l.grade}</b>
+                <span style={{ display: 'block', fontWeight: 500, marginTop: 2 }}>{l.de_bai}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {['network_slow', 'error', 'ai_slow', 'ai_error', 'format_error'].includes(aiState) && (
+        <div className="card-km kch-warn-card" data-testid="analyze-explain-error" role="alert" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
+          <b style={{ fontSize: 15, color: '#92400E' }}>
+            {aiState === 'ai_slow' ? 'Gấu đang soạn lâu hơn thường lệ' : 'Gấu chưa soạn được bài này'}
+          </b>
+          <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>
+            {aiState === 'ai_slow'
+              ? 'Đề bài vẫn được giữ nguyên. Bấm Thử lại, thường lần sau Gấu soạn nhanh hơn.'
+              : aiState === 'ai_error'
+                ? 'Máy chủ đang bận hoặc tạm lỗi. Thử lại sau ít phút nhé.'
+                : aiState === 'format_error'
+                  ? 'Bài soạn chưa đúng khuôn. Bấm Soạn lại để Gấu soạn lại nhé.'
+                  : 'Kiểm tra mạng rồi thử lại nhé.'}
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button type="button" className="btn-km btn-km-m btn-km-primary" onClick={() => startExplain((editedText || ocrText || S.flow.ocr || '').trim())}>
+              {aiState === 'format_error' ? 'Soạn lại' : 'Thử lại'}
+            </button>
+            <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={() => go('home')}>
+              Về trang chủ
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!ANALYZE_RENDERED_STATES.has(aiState) && (
+        <div className="card-km kch-warn-card" data-testid="analyze-unknown-state" role="alert" style={{ border: '2px solid #F59E0B', background: '#FFFBEB' }}>
+          <b style={{ fontSize: 15, color: '#92400E' }}>Gấu chưa soạn được bài này</b>
+          <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>Có lỗi nhỏ. Thử lại hoặc về trang chủ nhé.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button type="button" className="btn-km btn-km-m btn-km-primary" onClick={() => startExplain((editedText || ocrText || S.flow.ocr || '').trim())}>Thử lại</button>
+            <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={() => go('home')}>Về trang chủ</button>
           </div>
         </div>
       )}
@@ -1790,22 +1906,7 @@ export function Analyze() {
    5. AI GIẢNG CHO MẸ
    ============================================================ */
 
-export const SKILL_LABELS = {
-  doc_hieu_de: "Đọc hiểu đề",
-  don_vi: "Đổi đơn vị",
-  chon_phep_tinh: "Chọn phép tính",
-  tinh_toan: "Tính toán",
-  viet_loi_giai: "Lời giải",
-  kiem_tra_lai: "Kiểm tra lại",
-  doc_hieu: "Đọc hiểu",
-  tu_vung: "Từ vựng",
-  chinh_ta: "Chính tả",
-  dat_cau: "Đặt câu",
-  tu_vung_en: "Từ vựng Tiếng Anh",
-  nghe: "Nghe",
-  ngu_phap: "Ngữ pháp",
-  phat_am: "Phát âm",
-}
+export { SKILL_LABELS }
 
 // "Lớp 3" → "lớp 3" (tránh "CÁCH LỚP LỚP 3")
 function gradeLabel(g) {
@@ -1814,7 +1915,32 @@ function gradeLabel(g) {
   return /^lớp/i.test(t) ? t.replace(/^lớp/i, 'lớp') : `lớp ${t}`
 }
 
+// Gói 33 · B3: màn giảng và màn hỏi con kiểm dữ liệu bài trước khi vẽ; dữ liệu hỏng thì báo, không trắng.
+function LessonGuardCard({ issue }) {
+  const { go } = useContext(AppCtx)
+  useEffect(() => {
+    try { window.__reportClientError?.(new Error('lesson_guard: ' + issue), { kind: 'lesson_guard' }) } catch { /* ignore */ }
+  }, [issue])
+  return (
+    <div className="card-km kch-warn-card" data-testid="lesson-guard" role="alert" style={{ border: '2px solid #F59E0B', background: '#FFFBEB', margin: '16px 0' }}>
+      <b style={{ fontSize: 15, color: '#92400E' }}>Gấu chưa soạn được bài này</b>
+      <p style={{ fontSize: 13.5, color: '#78350F', margin: '4px 0 12px' }}>Bài soạn bị thiếu phần. Bấm Soạn lại để Gấu soạn lại nhé.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <button type="button" className="btn-km btn-km-m btn-km-primary" onClick={() => go('analyze')}>Soạn lại</button>
+        <button type="button" className="btn-km btn-km-m btn-km-secondary" onClick={() => go('home')}>Về trang chủ</button>
+      </div>
+    </div>
+  )
+}
+
 export function Explain() {
+  const { S } = useContext(AppCtx)
+  const issue = lessonIssue(S.problem)
+  if (issue) return <LessonGuardCard issue={issue} />
+  return <ExplainView />
+}
+
+function ExplainView() {
   const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
   const [showMathList, setShowMathList] = useState(false)
@@ -1992,7 +2118,7 @@ export function Explain() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {problem.steps.map((st, i) => {
-              const skillName = SKILL_LABELS[st.ky_nang] || st.ky_nang || ''
+              const skillName = skillLabel(st.ky_nang)
               return (
                 <div
                   key={i}
@@ -2144,6 +2270,13 @@ function ParentAnswer({ text, parent }) {
    6. HỎI CON TỪNG BƯỚC
    ============================================================ */
 export function Scaffold() {
+  const { S } = useContext(AppCtx)
+  const issue = lessonIssue(S.problem)
+  if (issue) return <LessonGuardCard issue={issue} />
+  return <ScaffoldView />
+}
+
+function ScaffoldView() {
   const { S, problem, patch, go, openSheet, closeSheet, toast, boom, ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx)
   const { step, stuck, unlocked } = S.flow
   const child = S.children.find((c) => c.id === S.activeId)
@@ -2674,7 +2807,7 @@ export function Scaffold() {
           </div>
           {curStep?.ky_nang && (
             <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-sub)', background: 'var(--c-bg)', padding: '2px 8px', borderRadius: 999 }}>
-              {SKILL_LABELS[curStep.ky_nang] || curStep.ky_nang}
+              {skillLabel(curStep.ky_nang)}
             </span>
           )}
         </div>
@@ -2994,9 +3127,14 @@ export function Scaffold() {
 
 /* Prompt 31B1: nhãn dạng bài ở màn "Gấu đọc được đề này!" lấy đúng đề đang đọc.
    Không dùng type của bài giả mặc định (PROBLEM id 'mock' là đề 3 hộp bút cũ). */
-export function problemTypeLabel(S, child) {
+export function problemTypeLabel(S, child, subjectKey) {
   const p = S?.problem || {}
   const text = S?.flow?.ocr || p.ocr || ''
+  const subject = subjectKey || resolveSubject({ chosen: S?.flow?.subject, text })
+  return typeLabelForSubject(problemTypeLabelRaw(S, child, p, text), subject, text)
+}
+
+function problemTypeLabelRaw(S, child, p, text) {
   // Prompt 32 mục 2: chỉ dùng nhãn của S.problem khi nó CHÍNH LÀ đề đang đọc (không lấy nhãn bài cũ hay bài giả 3 hộp bút)
   const same = !text || !p.ocr || String(p.ocr).trim() === String(text).trim()
   if (same && p.dang_bai) return p.dang_bai

@@ -40,7 +40,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
     const res = mode === 'login' ? await familyLogin(n, pass) : await familyRegister(n, pass)
     setBusy(false)
     if (!res.ok) {
-      setErr(res.error || 'Có lỗi xảy ra')
+      setErr(loginErrorText(res, mode))
       return
     }
     onAuthed({ id: res.id, name: n })
@@ -113,7 +113,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
                 placeholder="VD: Gia đình Na, Nhà Bon…"
                 maxLength={30}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); if (err) setErr('') }}
               />
             </div>
 
@@ -126,7 +126,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
                   type={showPass ? 'text' : 'password'}
                   placeholder={mode === 'register' ? 'Tối thiểu 4 ký tự' : 'Nhập mật khẩu'}
                   value={pass}
-                  onChange={(e) => setPass(e.target.value)}
+                  onChange={(e) => { setPass(e.target.value); if (err) setErr('') }}
                   onKeyDown={(e) => e.key === 'Enter' && submit()}
                 />
                 <button
@@ -142,6 +142,8 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
               </div>
             </div>
 
+            {mode === 'login' && err && <LoginErrorLine text={err} />}
+
             {mode === 'register' && (
               <div>
                 <span className="lbl plum">Nhập lại mật khẩu</span>
@@ -152,7 +154,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
                     type={showPass ? 'text' : 'password'}
                     placeholder="Nhập lại mật khẩu"
                     value={pass2}
-                    onChange={(e) => setPass2(e.target.value)}
+                    onChange={(e) => { setPass2(e.target.value); if (err) setErr('') }}
                     onKeyDown={(e) => e.key === 'Enter' && submit()}
                   />
                   <button
@@ -169,7 +171,7 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
               </div>
             )}
 
-            {err && <div className="card sun pop"><span style={{ fontSize: 13.5 }}>{err}</span></div>}
+            {mode === 'register' && err && <LoginErrorLine text={err} />}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
               <button
@@ -252,5 +254,30 @@ export default function LoginScreen({ onAuthed, reauthSession = null, onOpenJoin
             </div>
           </div>
         </div>
+  )
+}
+
+// Gói 33 · B2: lỗi đăng nhập là DÒNG CHỮ thông báo, không phải ô trông như nút (không viền nổi, không bóng,
+// không con trỏ tay), ngay dưới ô mật khẩu, role="alert". Chưa có gửi mail nên không có "Quên mật khẩu".
+export const WRONG_PASSWORD_TEXT = 'Sai mật khẩu rồi, thử lại hoặc liên hệ admin nhé.'
+
+export function loginErrorText(res, mode = 'login') {
+  const msg = String(res?.error || '')
+  if (res?.network) return msg || 'Không kết nối được máy chủ, kiểm tra mạng rồi thử lại nhé.'
+  const wrong = /sai mật khẩu|mật khẩu (không đúng|chưa đúng|sai)|wrong password|invalid password|incorrect password/i.test(msg.normalize('NFC')) || res?.code === 'WRONG_PASSWORD' || res?.code === 'INVALID_PASSWORD'
+  if (mode === 'login' && wrong) return WRONG_PASSWORD_TEXT
+  return msg || 'Có lỗi xảy ra, thử lại nhé.'
+}
+
+function LoginErrorLine({ text }) {
+  return (
+    <p
+      role="alert"
+      data-testid="login-error"
+      style={{ display: 'flex', alignItems: 'flex-start', gap: 6, margin: '-4px 2px 0', fontSize: 13.5, lineHeight: 1.45, fontWeight: 600, color: 'var(--c-danger-ink, #B4441E)', background: 'none', border: 'none', boxShadow: 'none', cursor: 'default' }}
+    >
+      <span aria-hidden="true">⚠️</span>
+      <span>{text}</span>
+    </p>
   )
 }

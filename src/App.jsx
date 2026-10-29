@@ -17,6 +17,7 @@ import { useStudyTracker } from './useStudyTracker'
 import { CalmCornerModal } from './CalmCornerModal'
 import { ErrorBoundary } from './ErrorBoundary'
 import { initClientErrorLogging } from './clientErrors'
+import { sanitizeAppState, sanitizeSession } from './stateShape.js'
 import { getTrialInitialState, TRIAL_SESSION, PRELOADED_TRIAL_LESSONS, setActiveTrialLesson } from './trialData'
 
 initClientErrorLogging()
@@ -142,9 +143,12 @@ const readSession = () => {
         return sess
       }
     }
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null')
-    return s && s.id ? s : null
+    const s = sanitizeSession(JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'))
+    if (!s) { try { if (localStorage.getItem(SESSION_KEY)) localStorage.removeItem(SESSION_KEY) } catch { /* ignore */ } }
+    return s
   } catch (e) {
+    // Gói 33 · B3: phiên hỏng thì bỏ khoá phiên, về màn đăng nhập
+    try { localStorage.removeItem(SESSION_KEY) } catch { /* ignore */ }
     return null
   }
 }
@@ -210,8 +214,21 @@ function loadState(lsKey) {
       if (savedMotion) init.motion = savedMotion
       return init
     }
-    const saved = JSON.parse(raw)
-    const base = { ...initialState(), ...saved }
+    let saved
+    try {
+      saved = JSON.parse(raw)
+    } catch {
+      // Gói 33 · B3: khoá hỏng thì bỏ khoá đó, không để app sập
+      try { localStorage.removeItem(lsKey) } catch { /* ignore */ }
+      saved = null
+    }
+    const { state: base, fixes } = sanitizeAppState(saved, initialState(), defaultStats)
+    if (fixes.length) {
+      console.warn('[KCH] dữ liệu đã lưu sai hình dạng, đã sửa:', fixes)
+      try { window.__reportClientError?.(new Error('state_shape_fixed: ' + fixes.slice(0, 8).join(',')), { kind: 'state_shape' }) } catch { /* ignore */ }
+      if (fixes.includes('root')) { try { localStorage.removeItem(lsKey) } catch { /* ignore */ } }
+    }
+    saved = saved && typeof saved === 'object' ? saved : {}
     if (savedTheme && !saved.theme) base.theme = savedTheme
     if (savedMotion && !saved.motion) base.motion = savedMotion
     if (base.stats) {
@@ -244,6 +261,7 @@ class ScreenErrorBoundary extends Component {
   }
   componentDidCatch(error, info) {
     console.error('Screen crash caught by ScreenErrorBoundary:', error, info)
+    try { window.__reportClientError?.(error, { componentStack: info?.componentStack, kind: 'screen_boundary' }) } catch { /* ignore */ }
   }
   componentDidUpdate(prevProps) {
     if (prevProps.screen !== this.props.screen && this.state.hasError) {
@@ -255,8 +273,8 @@ class ScreenErrorBoundary extends Component {
       return (
         <div className="card" style={{ textAlign: 'center', padding: '36px 20px', margin: '20px 0' }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🐻 🍯</div>
-          <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px', color: 'var(--c-text)' }}>
-            Có chút trục trặc nhỏ khi nạp trang này
+          <h3 role="alert" style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px', color: 'var(--c-text)' }}>
+            {['analyze', 'explain', 'scaffold'].includes(this.props.screen) ? 'Gấu chưa soạn được bài này' : 'Có chút trục trặc nhỏ khi nạp trang này'}
           </h3>
           <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: '0 0 16px' }}>
             Bạn đừng lo nhé! Bấm nút bên dưới để quay lại màn hình chính nhé.
@@ -290,6 +308,13 @@ export default function App() {
   const CLOUD_KEY = famId ? famCloudKey(famId) : 'kem-con-hoc:state'
   const [S, setS] = useState(() => (famId ? loadState(LS_KEY) : initialState()))
   const [screen, setScreen] = useState(S.onboarded ? 'home' : 'onb')
+  // Gói 33 · B3: ngữ cảnh gửi kèm mọi lỗi (màn đang ở, lớp của bé, bộ giao diện)
+  useEffect(() => {
+    try {
+      const c = (Array.isArray(S.children) && (S.children.find((x) => x.id === S.activeId) || S.children[0])) || null
+      window.__kchCtx = { screen, grade: c?.grade || null, theme: S.theme || null }
+    } catch { /* ignore */ }
+  }, [screen, S.activeId, S.children, S.theme])
   const [sheet, setSheet] = useState(null)
   const [classJoinBanner, setClassJoinBanner] = useState(null)
   const [msg, setMsg] = useState('')
@@ -1957,7 +1982,8 @@ function TypeProblemSheet({ initialMode, autoMic = false }) {
       studySource: 'parent',
       assignmentId: null,
       assignmentItemId: null,
-      flow: { ...S.flow, ocr: text.trim(), step: 0, stuck: 0, peeks: 0, stepLog: [], revealedSteps: [], stepRevealTimes: [], startedAt: null },
+      // Gói 33 · B4: môn mẹ đã bấm (chip đề mẫu) đi theo đề; đề tự gõ thì để màn đọc đề tự đoán
+      flow: { ...S.flow, ocr: text.trim(), subject: (PRELOADED_TRIAL_LESSONS.find((l) => l.de_bai === text.trim())?.subject) || null, step: 0, stuck: 0, peeks: 0, stepLog: [], revealedSteps: [], stepRevealTimes: [], startedAt: null },
       problem: {
         ...PROBLEM,
         // Prompt 31B1: không mang nhãn/tóm tắt của đề giả 3 hộp bút sang đề vừa gõ

@@ -1,4 +1,5 @@
 import { getCurrentXungHo } from './xungHo.js'
+import { SUBJECT_LABEL, normalizeSubject, guessSubject } from './subjectChip.js'
 /* ============================================================
    📝 PROMPT STUDIO CONFIG & TEMPLATE ENGINE
    Hệ thống quản lý 8 Prompts linh hoạt, hỗ trợ điền biến {{...}}
@@ -887,7 +888,7 @@ export function routePedagogyMethod({ mon = 'Toán', lop = 'Lớp 2', dang_bai =
 /**
  * Phân loại bài tập động theo cấu hình Router sư phạm (thay thế hardcode)
  */
-export function classifyProblemDynamic(deBai = '', lop = 'Lớp 2') {
+export function classifyProblemDynamic(deBai = '', lop = 'Lớp 2', monHint = null) {
   const text = (deBai || '').toLowerCase()
   const cfg = getActiveAiConfig()
   const table = (cfg && Array.isArray(cfg.pedagogy_routing) && cfg.pedagogy_routing.length > 0)
@@ -911,7 +912,16 @@ export function classifyProblemDynamic(deBai = '', lop = 'Lớp 2') {
     }
   }
 
-  // Fallback mặc định
+  // Gói 33 · B4: fallback theo môn thật (môn mẹ chọn / đoán từ đề), không mặc định "Toán" cho đề Tiếng Việt, Tiếng Anh
+  const subject = normalizeSubject(monHint) || guessSubject(deBai)
+  if (subject === 'tieng_viet' || subject === 'tieng_anh') {
+    return {
+      mon: SUBJECT_LABEL[subject],
+      lop,
+      dang_bai: subject === 'tieng_viet' ? 'Bài tập Tiếng Việt' : 'Bài tập Tiếng Anh',
+      loi_hay_gap: 'Con hay làm vội mà chưa đọc kỹ yêu cầu của bài',
+    }
+  }
   return {
     mon: 'Toán',
     lop,
