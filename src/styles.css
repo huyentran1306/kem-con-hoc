@@ -328,13 +328,13 @@ textarea.field{resize:none;line-height:1.6}
   transition:transform .15s, box-shadow .2s;
 }
 .calm-fab:active{transform:scale(.94)}
-.calm-fab.mini{
+.calm-fab.calm-fab-mini{
   padding:0;width:44px;height:44px;border-radius:50%;
   justify-content:center;
   bottom:calc(76px + env(safe-area-inset-bottom));
   box-shadow:0 6px 16px rgba(0,0,0,.25);
 }
-.calm-fab.mini span{display:none}
+.calm-fab.calm-fab-mini span{display:none}
 
 /* ---------- Toast ---------- */
 .toast{
@@ -853,7 +853,7 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
 .calm-fab .calm-fab-ic { font-size: 20px; line-height: 1; }
 .calm-fab.compact { padding: 0; width: 52px; height: 52px; border-radius: 50%; justify-content: center; gap: 0; }
 .calm-fab.compact .calm-fab-label { display: none; }
-.calm-fab.mini .calm-fab-ic { display: inline; }
+.calm-fab.calm-fab-mini .calm-fab-ic { display: inline; }
 
 /* 6.1 Công tắc dùng chung (thay ô tích mặc định) */
 .switch { display: inline-block; box-shadow: inset 0 0 0 2px var(--c-line, var(--line)); }
@@ -980,7 +980,7 @@ button.chip.on { background: var(--c-surface-2, var(--plum-tint)); border-color:
   .app.parent-shell > .tabs button { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 10px 14px; min-height: 48px; }
   .app.parent-shell > .tabs button.on { background: var(--c-surface-2, var(--plum-tint)); color: var(--c-text, var(--ink)); }
   .app.parent-shell .calm-fab { bottom: 28px; right: 32px; }
-  .app.parent-shell .calm-fab.mini { bottom: 28px; }
+  .app.parent-shell .calm-fab.calm-fab-mini { bottom: 28px; }
   .app.parent-shell .trial-mini { bottom: 24px; left: 16px; }
   .app.parent-shell .toast { left: auto; right: 32px; width: 420px; bottom: 96px; }
   .app.parent-shell .hero-band {

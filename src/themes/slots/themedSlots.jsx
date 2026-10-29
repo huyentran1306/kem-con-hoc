@@ -95,28 +95,10 @@ export function BearStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -278,28 +260,10 @@ export function GardenStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -556,28 +520,10 @@ export function AuroraStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -668,28 +614,10 @@ export function StickerStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -771,28 +699,10 @@ export function NotebookStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -810,28 +720,10 @@ export function BentoStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -846,28 +738,10 @@ export function ChalkStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }
@@ -882,28 +756,10 @@ export function CandyStartAction({ onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span className="btn-km-icon">🍯</span>
-        <span className="btn-km-text">Bắt đầu bài tối nay</span>
+        <span className="btn-km-text">Phụ huynh nhập đề</span>
         <span className="btn-km-arrow">›</span>
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={17} /> Gõ đề bài
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn-km btn-km-m btn-km-secondary"
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={17} /> Đọc đề cho Gấu
-        </button>
-      </div>
     </div>
   )
 }

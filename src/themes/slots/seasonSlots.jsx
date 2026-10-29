@@ -173,54 +173,9 @@ function SeasonStart({ theme, emoji, onStart }) {
         onClick={() => onStart?.('photo')}
       >
         <span style={{ fontSize: 22 }}>{emoji || "📷"}</span>
-        <span>Bắt đầu bài tối nay</span>
+        <span>Phụ huynh nhập đề</span>
       </button>
 
-      {/* 2 nút phụ 44px gõ đề và đọc đề */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <button
-          type="button"
-          data-testid="start-type"
-          className="btn ghost btn-km btn-km-m btn-km-secondary"
-          style={{
-            minHeight: 44,
-            height: 44,
-            padding: "0 12px",
-            fontSize: 13.5,
-            fontWeight: 700,
-            textTransform: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-          onClick={() => onStart?.('type')}
-        >
-          <span>⌨️</span>
-          <span>Gõ đề bài</span>
-        </button>
-        <button
-          type="button"
-          data-testid="start-voice"
-          className="btn ghost btn-km btn-km-m btn-km-secondary"
-          style={{
-            minHeight: 44,
-            height: 44,
-            padding: "0 12px",
-            fontSize: 13.5,
-            fontWeight: 700,
-            textTransform: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-          onClick={() => onStart?.('voice')}
-        >
-          <span>🎙️</span>
-          <span>{theme === "noel" ? "Đọc đề cho Người Tuyết" : theme === "tet" ? "Đọc đề cho Bé Lân" : theme === "thieunhi" ? "Đọc đề cho Bé Diều" : "Đọc đề"}</span>
-        </button>
-      </div>
     </div>
   )
 }

@@ -94,16 +94,7 @@ export default function GocChoiChung({
       {/* TopBar T3 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-sub)' }}>Trò chơi</span>
-        <button
-          type="button"
-          className="btn-km-circle"
-          style={{ width: 36, height: 36, fontSize: 15 }}
-          onClick={() => openSheet('calm')}
-          aria-label={`${Ho} bình tĩnh`}
-          title={`${Ho} bình tĩnh`}
-        >
-          😮‍💨
-        </button>
+        {/* Gói 34: bỏ nút tròn bình tĩnh ở đây, dùng nút nổi {Mẹ/Bố} bình tĩnh chung */}
       </div>
 
       {/* Header chào mừng */}

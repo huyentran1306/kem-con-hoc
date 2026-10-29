@@ -93,12 +93,15 @@ async function run() {
   }
 
   console.log('Đã vào trang chủ!');
-  const startTypeBtn = page.locator('[data-testid="start-type"], button:has-text("Gõ đề bài")').first();
+  const startTypeBtn = page.locator('[data-testid="start-photo"]').first();
   await startTypeBtn.waitFor({ state: 'visible', timeout: 15000 });
 
   // Step 3: Soạn đề Toán
   console.log('\n--- 3. Soạn đề Toán...');
   await startTypeBtn.click();
+  // Gói 34: trang chủ chỉ còn nút "Phụ huynh nhập đề", Gõ đề nằm ở trang nhập đề
+  await page.waitForTimeout(800);
+  await page.locator('button:has-text("Gõ đề")').first().click();
   await page.waitForTimeout(1000);
 
   const textarea = page.locator('textarea[data-testid="type-problem-input"], textarea.ta');
@@ -180,8 +183,11 @@ async function run() {
   await page.goto(PROD_URL, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
 
-  const startTypeBtn2 = page.locator('[data-testid="start-type"], button:has-text("Gõ đề bài")').first();
+  const startTypeBtn2 = page.locator('[data-testid="start-photo"]').first();
   await startTypeBtn2.click();
+  // Gói 34: trang chủ chỉ còn nút "Phụ huynh nhập đề", Gõ đề nằm ở trang nhập đề
+  await page.waitForTimeout(800);
+  await page.locator('button:has-text("Gõ đề")').first().click();
   await page.waitForTimeout(1000);
 
   const tvChip = page.locator('button:has-text("Tiếng Việt")');
@@ -214,8 +220,11 @@ async function run() {
   await page.goto(PROD_URL, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
 
-  const startTypeBtn3 = page.locator('[data-testid="start-type"], button:has-text("Gõ đề bài")').first();
+  const startTypeBtn3 = page.locator('[data-testid="start-photo"]').first();
   await startTypeBtn3.click();
+  // Gói 34: trang chủ chỉ còn nút "Phụ huynh nhập đề", Gõ đề nằm ở trang nhập đề
+  await page.waitForTimeout(800);
+  await page.locator('button:has-text("Gõ đề")').first().click();
   await page.waitForTimeout(1000);
 
   const textarea3 = page.locator('textarea[data-testid="type-problem-input"], textarea.ta');

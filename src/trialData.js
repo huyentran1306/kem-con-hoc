@@ -20,48 +20,60 @@ export const TRIAL_SESSION = {
 
 export const PRELOADED_TRIAL_LESSONS = [
   {
-    id: 'lesson_math_3',
+    // Gói 34: đề mẫu Toán quay về đề hộp bút (hai bước nhân rồi trừ, nhiều giá trị sư phạm hơn đề vịt một bước)
+    id: 'lesson_math_but',
     subject: 'Toán',
     grade: 'Lớp 3',
-    de_bai: 'Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?',
-    phuong_phap: 'Truy vấn gợi mở 3 bậc (Scaffolding)',
-    dang_bai: 'Toán có lời văn phép trừ',
+    de_bai: 'Mẹ mua 2 hộp bút, mỗi hộp có 10 cây. Mẹ cho Lan 4 cây. Hỏi mẹ còn bao nhiêu cây bút?',
+    phuong_phap: 'Truy vấn gợi mở 4 bậc (Scaffolding)',
+    dang_bai: 'Toán có lời văn · hai bước tính',
     cac_bac: [
       {
         bac: 1,
         ky_nang: 'doc_hieu_de',
-        cau_hoi: 'Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt?',
-        ly_do_cho_me: 'Giúp con nhận diện dữ kiện số lượng ban đầu của đàn vịt trước khi thực hiện thao tác bớt đi.',
-        dap_an_cho_me: 'Xác định số lượng ban đầu là 15 con vịt.',
+        cau_hoi: 'Bài cho mình biết những gì?',
+        ly_do_cho_me: 'Con tự gọi tên từng con số trước khi tính.',
+        dap_an_cho_me: '2 hộp, mỗi hộp 10 cây, cho Lan 4 cây.',
         goi_y: {
-          muc_1_do_vat: 'Lấy 15 que tính hoặc cúc áo xếp ra bàn để tượng trưng cho đàn vịt.',
-          muc_2_hinh_ve: 'Vẽ 15 chấm tròn hoặc một đoạn thẳng biểu diễn 15 con vịt.',
+          muc_1_do_vat: 'Con đọc lại đề, tìm những con số và nói xem mỗi số là cái gì.',
+          muc_2_hinh_ve: 'Có số hộp bút, số cây trong mỗi hộp, và số cây mẹ cho Lan.',
         },
       },
       {
         bac: 2,
-        ky_nang: 'chon_phep_tinh',
-        cau_hoi: 'Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con?',
-        ly_do_cho_me: 'Dẫn dắt con hiểu từ khoá "bán bớt" tương ứng với phép toán trừ trong thực tế.',
-        dap_an_cho_me: 'Bán bớt tức là làm phép trừ, bớt đi 6 con.',
+        ky_nang: 'tinh_toan',
+        cau_hoi: 'Mẹ có tất cả bao nhiêu cây bút trước khi cho Lan?',
+        ly_do_cho_me: 'Gộp các nhóm bằng nhau là phép nhân.',
+        dap_an_cho_me: '2 × 10 = 20 cây bút.',
         goi_y: {
-          muc_1_do_vat: 'Tách 6 que tính ra khỏi 15 que tính ban đầu.',
-          muc_2_hinh_ve: 'Gạch chéo 6 chấm tròn trên hình vẽ.',
+          muc_1_do_vat: 'Con vẽ 2 cái hộp thử xem, mỗi hộp mấy cây bút?',
+          muc_2_hinh_ve: 'Có 2 hộp bằng nhau, con nghĩ đến phép tính nào để gộp lại?',
         },
       },
       {
         bac: 3,
-        ky_nang: 'tinh_toan',
-        cau_hoi: 'Đếm lại số que tính còn lại trên bàn, hoặc viết phép tính để tìm số vịt còn lại nào!',
-        ly_do_cho_me: 'Khích lệ con tự thực hiện phép tính và kết luận số lượng còn lại.',
-        dap_an_cho_me: 'Phép tính: 15 - 6 = 9 (con vịt). Đáp số: 9 con vịt.',
+        ky_nang: 'chon_phep_tinh',
+        cau_hoi: 'Cho Lan 4 cây thì số bút của mẹ nhiều lên hay ít đi?',
+        ly_do_cho_me: 'Con tự nói "cho đi" là ít đi, mẹ không nói hộ chữ "trừ".',
+        dap_an_cho_me: 'Ít đi, nên làm phép trừ.',
         goi_y: {
-          muc_1_do_vat: 'Đếm từng que tính còn lại trước mặt con.',
-          muc_2_hinh_ve: 'Tách 15 thành 10 và 5, lấy 10 trừ 6 còn 4, cộng 5 bằng 9.',
+          muc_1_do_vat: 'Mẹ cho đi thì bút của mẹ thế nào?',
+          muc_2_hinh_ve: 'Ít đi thì con nghĩ đến phép cộng hay phép trừ?',
+        },
+      },
+      {
+        bac: 4,
+        ky_nang: 'tinh_toan',
+        cau_hoi: 'Con viết lời giải và phép tính nhé.',
+        ly_do_cho_me: 'Dùng kết quả bậc 2 làm số bị trừ.',
+        dap_an_cho_me: '20 − 4 = 16. Mẹ còn 16 cây bút.',
+        goi_y: {
+          muc_1_do_vat: 'Con dùng kết quả ở bậc 2 làm số bị trừ.',
+          muc_2_hinh_ve: 'Lấy tổng số bút trừ đi số bút cho Lan.',
         },
       },
     ],
-    dap_an_cuoi_cho_me: 'Bác Ba còn lại 9 con vịt.',
+    dap_an_cuoi_cho_me: 'Mẹ còn 16 cây bút.',
   },
   {
     id: 'lesson_viet_1',
@@ -144,6 +156,50 @@ export const PRELOADED_TRIAL_LESSONS = [
       },
     ],
     dap_an_cuoi_cho_me: 'Đáp án A. Its (Its name is Mimi).',
+  },
+  {
+    id: 'lesson_math_3',
+    subject: 'Toán',
+    grade: 'Lớp 3',
+    de_bai: 'Một đàn vịt có 15 con, bác Ba bán bớt đi 6 con. Hỏi bác Ba còn lại bao nhiêu con vịt?',
+    phuong_phap: 'Truy vấn gợi mở 3 bậc (Scaffolding)',
+    dang_bai: 'Toán có lời văn phép trừ',
+    cac_bac: [
+      {
+        bac: 1,
+        ky_nang: 'doc_hieu_de',
+        cau_hoi: 'Con hãy đọc to đề bài và chỉ cho mẹ: Bác Ba ban đầu có tất cả bao nhiêu con vịt?',
+        ly_do_cho_me: 'Giúp con nhận diện dữ kiện số lượng ban đầu của đàn vịt trước khi thực hiện thao tác bớt đi.',
+        dap_an_cho_me: 'Xác định số lượng ban đầu là 15 con vịt.',
+        goi_y: {
+          muc_1_do_vat: 'Lấy 15 que tính hoặc cúc áo xếp ra bàn để tượng trưng cho đàn vịt.',
+          muc_2_hinh_ve: 'Vẽ 15 chấm tròn hoặc một đoạn thẳng biểu diễn 15 con vịt.',
+        },
+      },
+      {
+        bac: 2,
+        ky_nang: 'chon_phep_tinh',
+        cau_hoi: 'Bác Ba bán bớt đi nghĩa là bớt đi hay thêm vào, và bớt đi mấy con?',
+        ly_do_cho_me: 'Dẫn dắt con hiểu từ khoá "bán bớt" tương ứng với phép toán trừ trong thực tế.',
+        dap_an_cho_me: 'Bán bớt tức là làm phép trừ, bớt đi 6 con.',
+        goi_y: {
+          muc_1_do_vat: 'Tách 6 que tính ra khỏi 15 que tính ban đầu.',
+          muc_2_hinh_ve: 'Gạch chéo 6 chấm tròn trên hình vẽ.',
+        },
+      },
+      {
+        bac: 3,
+        ky_nang: 'tinh_toan',
+        cau_hoi: 'Đếm lại số que tính còn lại trên bàn, hoặc viết phép tính để tìm số vịt còn lại nào!',
+        ly_do_cho_me: 'Khích lệ con tự thực hiện phép tính và kết luận số lượng còn lại.',
+        dap_an_cho_me: 'Phép tính: 15 - 6 = 9 (con vịt). Đáp số: 9 con vịt.',
+        goi_y: {
+          muc_1_do_vat: 'Đếm từng que tính còn lại trước mặt con.',
+          muc_2_hinh_ve: 'Tách 15 thành 10 và 5, lấy 10 trừ 6 còn 4, cộng 5 bằng 9.',
+        },
+      },
+    ],
+    dap_an_cuoi_cho_me: 'Bác Ba còn lại 9 con vịt.',
   },
 ];
 
@@ -304,13 +360,21 @@ export function matchTrialLesson(text = '') {
   const s = String(text).toLowerCase();
   const exact = PRELOADED_TRIAL_LESSONS.find((l) => s.includes(l.de_bai.toLowerCase().slice(0, 30)));
   if (exact) return exact;
-  if (s.includes('vịt') || (s.includes('bác ba') && s.includes('bán'))) {
-    // Prompt 32 mục 2: đề có số KHÁC bài vịt (ví dụ "Bác Ba có 45 quả trứng, bán đi 18 quả…") không phải bài mẫu,
-    // trước đây bị trả nhầm bài vịt (và nhãn "phép trừ") cho một đề hai bước.
+  if (s.includes('hộp bút') && s.includes('lan')) {
+    // Gói 34: đề mẫu bút. Đề hộp bút có số khác (3 hộp, 8 cây…) không phải bài mẫu
     const nums = s.match(/\d+/g) || [];
     const lessonNums = PRELOADED_TRIAL_LESSONS[0].de_bai.match(/\d+/g) || [];
     if (nums.some((n) => !lessonNums.includes(n))) return null;
     return PRELOADED_TRIAL_LESSONS[0];
+  }
+  const duck = PRELOADED_TRIAL_LESSONS.find((l) => l.id === 'lesson_math_3');
+  if (s.includes('vịt') || (s.includes('bác ba') && s.includes('bán'))) {
+    // Prompt 32 mục 2: đề có số KHÁC bài vịt (ví dụ "Bác Ba có 45 quả trứng, bán đi 18 quả…") không phải bài mẫu,
+    // trước đây bị trả nhầm bài vịt (và nhãn "phép trừ") cho một đề hai bước.
+    const nums = s.match(/\d+/g) || [];
+    const lessonNums = duck.de_bai.match(/\d+/g) || [];
+    if (nums.some((n) => !lessonNums.includes(n))) return null;
+    return duck;
   }
   if (s.includes('mùa xuân') || s.includes('lộc') || s.includes('chồi') || /\bl hay n\b/.test(s)) return PRELOADED_TRIAL_LESSONS[1];
   if (s.includes('mimi') || s.includes('my cat') || /\bits\b/.test(s)) return PRELOADED_TRIAL_LESSONS[2];
@@ -319,6 +383,62 @@ export function matchTrialLesson(text = '') {
 
 /* ---------- Dữ liệu đầy đủ cho từng đề mẫu (giảng, chấm vở, nghe con giảng lại khớp nhau) ---------- */
 export const TRIAL_LESSON_EXTRAS = {
+  lesson_math_but: {
+    tom_tat: 'Bài hai bước: gộp 2 hộp bằng nhau (nhân) rồi bớt số bút cho Lan (trừ).',
+    luu_y: 'Con hay lấy 10 − 4 luôn mà quên mẹ có 2 hộp. Để con tự tìm tổng số bút trước, đừng nói hộ chữ "nhân" hay "trừ".',
+    cach_lop_hoc: 'Lớp 3 làm hai phép tính, mỗi phép một câu lời giải: tìm số bút mẹ có, rồi tìm số bút còn lại.',
+    dap_an: '2 × 10 = 20 (cây); 20 − 4 = 16 (cây bút)',
+    dap_an_dong: 'Mẹ còn 16 cây bút.',
+    cham_vo: {
+      dong_sai: [
+        { so: 1, noi_dung: 'Số bút mẹ còn lại là:', chac_chan: 0.93 },
+        { so: 2, noi_dung: '10 - 4 = 6 (cây)', chac_chan: 0.7, lua_chon: ['6', '8'] },
+        { so: 3, noi_dung: 'Đáp số: 6 cây bút', chac_chan: 0.9 },
+      ],
+      dong_dung: [
+        { so: 1, noi_dung: 'Mẹ có số bút là: 2 x 10 = 20 (cây)', chac_chan: 0.95 },
+        { so: 2, noi_dung: 'Mẹ còn lại số bút là: 20 - 4 = 16 (cây)', chac_chan: 0.95 },
+        { so: 3, noi_dung: 'Đáp số: 16 cây bút', chac_chan: 0.95 },
+      ],
+      cham_sai: {
+        ket_qua: 'co_buoc_sai',
+        loi_giai_chuan: ['2 x 10 = 20', '20 - 4 = 16'],
+        dong_sai_dau_tien: 2,
+        loai_loi: 'thieu_buoc',
+        giai_thich_cho_me: 'Con lấy số bút một hộp trừ luôn số bút cho Lan, quên mẹ mua 2 hộp. Con cần tìm tổng số bút trước.',
+        gia_tri_dung_dong_sai: '20 - 4 = 16',
+        dap_an_dung_cho_me: '16 cây bút',
+        loi_khen_cu_the: 'Con viết câu lời giải rõ ràng và ghi đủ đơn vị "cây".',
+        cau_hoi_cho_con: {
+          muc_1: 'Con đọc lại đề nhé: mẹ mua mấy hộp bút?',
+          muc_2: 'Mẹ xếp 2 nhóm, mỗi nhóm 10 que tính. Con đếm tất cả rồi lấy ra 4 que nhé.',
+        },
+      },
+      cham_dung: {
+        ket_qua: 'dung_het',
+        loi_giai_chuan: ['2 x 10 = 20', '20 - 4 = 16'],
+        dong_sai_dau_tien: null,
+        loai_loi: null,
+        giai_thich_cho_me: 'Con đã tìm tổng số bút trước rồi mới trừ, đúng cả hai bước.',
+        gia_tri_dung_dong_sai: null,
+        dap_an_dung_cho_me: '16 cây bút',
+        loi_khen_cu_the: 'Con nhớ mẹ có 2 hộp, tính tổng trước rồi mới bớt, giỏi quá!',
+        cau_hoi_cho_con: { muc_1: 'Con tự tìm ra chỗ cần sửa rồi đó, con giỏi lắm!', muc_2: '' },
+      },
+    },
+    giang_lai: {
+      transcript: 'Mẹ có hai hộp, mỗi hộp mười cây nên mẹ có hai mươi cây. Mẹ cho Lan bốn cây thì ít đi, nên con lấy hai mươi trừ bốn còn mười sáu cây bút ạ.',
+      transcript_vong_1: 'Hai nhân mười bằng hai mươi, hai mươi trừ bốn còn mười sáu cây bút ạ.',
+      cau_hoi_them: 'Vì sao mẹ cho Lan bút thì con lại làm phép trừ?',
+      transcript_vong_2: 'Vì mẹ cho Lan bốn cây thì số bút của mẹ ít đi, nên con lấy hai mươi trừ bốn còn mười sáu cây bút ạ.',
+      tieu_chi: [
+        { ma: 'du_kien', dat: true, trich: 'hai hộp, mỗi hộp mười cây' },
+        { ma: 'phep_tinh', dat: true, trich: 'hai mươi trừ bốn' },
+        { ma: 'ket_qua', dat: true, trich: 'còn mười sáu cây bút' },
+        { ma: 'vi_sao', dat: true, trich: 'cho Lan bốn cây thì ít đi' },
+      ],
+    },
+  },
   lesson_math_3: {
     tom_tat: 'Bài trừ một bước: lấy số vịt ban đầu bớt đi số vịt đã bán.',
     luu_y: 'Con hay thấy hai số rồi cộng luôn. Để con tự nói "bán bớt" là nhiều lên hay ít đi, đừng nói hộ chữ "trừ".',

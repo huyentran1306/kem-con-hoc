@@ -65,8 +65,10 @@ assert(!themedSlotsCode.includes("onStart?.('snap')"), 'FAIL: themedSlots vẫn 
 
 // Kiểm tra các theme đã dùng đủ start-photo, start-type, start-voice
 assert(themedSlotsCode.includes('data-testid="start-photo"'), 'Có data-testid start-photo')
-assert(themedSlotsCode.includes('data-testid="start-type"'), 'Có data-testid start-type')
-assert(themedSlotsCode.includes('data-testid="start-voice"'), 'Có data-testid start-voice')
+// Gói 34: trang chủ bỏ 2 nút Gõ đề bài + Đọc đề (đã có ở trang nhập đề), nút chính là "Phụ huynh nhập đề"
+assert(!themedSlotsCode.includes('data-testid="start-type"'), 'Không còn nút start-type ở trang chủ')
+assert(!themedSlotsCode.includes('data-testid="start-voice"'), 'Không còn nút start-voice ở trang chủ')
+assert(themedSlotsCode.includes('Phụ huynh nhập đề'), 'Nút chính ghi "Phụ huynh nhập đề"')
 
 // Kiểm tra screens.jsx xử lý đúng 3 giá trị
 assert(screensCode.includes("mode === 'photo' || mode === 'snap'"), 'screens.jsx hỗ trợ photo')

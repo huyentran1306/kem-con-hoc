@@ -933,7 +933,7 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <div className="app parent-shell">
+        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''}`}>
           {session?.isTrial && !trialCollapsed && (
             <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử" style={{ minHeight: 32, height: 'auto', padding: '4px 10px', gap: 6 }}>
               <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>
@@ -1008,7 +1008,19 @@ export default function App() {
           {S.onboarded && <BuddyPopLayer />}
           {S.onboarded && <MotionLayer />}
 
-          {/* Prompt 23: Nút 😮‍💨 chuyển lên top bar 36px của mọi màn, bỏ nút nổi đè góc dưới */}
+          {/* Gói 34: trả lại nút nổi "{Mẹ/Bố} bình tĩnh" như trước đợt 23 (bỏ nút tròn 😮‍💨 trên thanh trên) */}
+          {S.onboarded && (
+            <button
+              type="button"
+              data-testid="calm-fab"
+              className={`calm-fab ${['explain', 'scaffold', 'done', 'snap', 'analyze'].includes(screen) ? 'calm-fab-mini' : ''} ${fabCompact ? 'compact' : ''}`}
+              onClick={() => openSheet('calm')}
+              title={calmLabel}
+              aria-label={calmLabel}
+            >
+              <span className="calm-fab-ic" aria-hidden="true">😮‍💨</span> <span className="calm-fab-label">{calmLabel}</span>
+            </button>
+          )}
 
           {S.onboarded && session?.isTrial && trialCollapsed && (
             <button type="button" className="trial-mini" onClick={() => setTrialCollapsed(false)} aria-label="Mở lại dải dùng thử">

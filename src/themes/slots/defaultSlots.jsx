@@ -157,30 +157,9 @@ export function DefaultStartAction({ modes = ['photo', 'type', 'voice'], lastMod
         onClick={() => onStart?.('photo')}
       >
         <InputModeIcon mode="photo" size={24} />
-        <span>📷 Chụp bài tập tối nay</span>
+        <span>Phụ huynh nhập đề</span>
       </button>
 
-      {/* 2 nút phụ gõ đề và đọc đề */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <button
-          data-testid="start-type"
-          className="btn ghost"
-          style={{ padding: '12px 14px', fontSize: 13.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-          onClick={() => onStart?.('type')}
-        >
-          <InputModeIcon mode="type" size={18} />
-          <span>⌨️ Gõ đề bài</span>
-        </button>
-        <button
-          data-testid="start-voice"
-          className="btn ghost"
-          style={{ padding: '12px 14px', fontSize: 13.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-          onClick={() => onStart?.('voice')}
-        >
-          <InputModeIcon mode="voice" size={18} />
-          <span>🎙️ Đọc đề cho AI</span>
-        </button>
-      </div>
     </div>
   )
 }
