@@ -12,7 +12,7 @@ import { auditSteps } from '../src/stepQuality.js'
 import { buildLocalMicroStep, isServerMicroStepGeneric } from '../src/microStepLocal.js'
 import { announcementStatus, expiryFromPreset, hasDateWords } from '../src/teacher/announcementStatus.js'
 import { swapMe, xungHo, haiNguoi } from '../src/xungHo.js'
-import { validateAndGuard } from '../src/guard.js'
+import { validateAndGuard, checkAnswerLeak } from '../src/guard.js'
 
 let n = 0
 const t = (name, fn) => { fn(); n++; console.log('  ✓', name) }
@@ -86,6 +86,13 @@ t('32.6: bậc chọn phép tính nói hộ "trừ" và bài thiếu bậc tính
   ], vit, 'Toán')
   const kinds = a.issues.map((i) => i.kind).sort()
   assert.deepEqual(kinds, ['missing_calc', 'names_operation'])
+})
+t('32b: câu đưa lựa chọn "nhiều lên hay ít đi" không bị coi là lộ đáp án "ít đi"', () => {
+  const de = 'Bác Ba có 45 quả trứng, bác bán đi 18 quả, sau đó mua thêm 12 quả. Hỏi bác Ba có bao nhiêu quả trứng?'
+  const leak = (q) => checkAnswerLeak('p3_explain_v3', { dap_an_cuoi_cho_me: '39 quả trứng', cac_bac: [{ cau_hoi: q, ky_nang: 'chon_phep_tinh', dap_an_cho_me: 'Ít đi' }] }, { problem_text: de }).leaked
+  assert.equal(leak('Bác Ba bán đi 18 quả, số trứng nhiều lên hay ít đi, con làm phép gì?'), false)
+  assert.equal(leak('Số trứng ít đi hay nhiều lên?'), false)
+  assert.equal(leak('Bác bán đi 18 quả nên số trứng ít đi, đúng không?'), true)
 })
 t('A4: câu nhỏ hơn bám đúng bậc và số trong đề', () => {
   const m = buildLocalMicroStep({ problemText: trung, stepQuestion: 'Bà có bao nhiêu quả trứng ban đầu?', skill: 'doc_hieu_de', microIndex: 1 })

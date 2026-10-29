@@ -371,6 +371,13 @@ function getFieldValues(obj, path) {
   return results;
 }
 
+// Prompt 32 (sau deploy): câu hỏi đưa lựa chọn "nhiều lên hay ít đi" không phải lộ đáp án "ít đi".
+// Cụm đáp án đứng cạnh "hay/hoặc" là một phương án con được chọn, không bị coi là lộ.
+function isOfferedChoice(questionLower, phrase) {
+  const esc = String(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(hay|hoặc)\\s+${esc}|${esc}\\s*,?\\s+(hay|hoặc)\\s`, "i").test(questionLower);
+}
+
 export function checkAnswerLeak(promptId, data, context = {}) {
   // Đợt 18 · Chặng 0.4: Bộ chặn cho p3_explain / p3_explain_v2 sửa đúng bậc, bớt bắt nhầm
   if (promptId === "p3_explain" || promptId === "p3_explain_v2" || promptId === "p3_explain_v3" || promptId === "p3_fix_steps_v3") {
@@ -442,7 +449,7 @@ export function checkAnswerLeak(promptId, data, context = {}) {
         });
 
         answerPhrases.forEach((phrase) => {
-          if (normQ.toLowerCase().includes(phrase)) {
+          if (normQ.toLowerCase().includes(phrase) && !isOfferedChoice(normQ.toLowerCase(), phrase)) {
             leaked = true;
             leakReasons.push(`Bậc ${stepNo} lộ cụm từ đáp án "${phrase}" trong câu hỏi`);
             leaks.push({
