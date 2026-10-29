@@ -934,7 +934,7 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''} ${screen === 'report' ? 'on-report' : ''}`}>
+        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''} ${screen === 'report' ? 'on-report' : ''} ${screen === 'done' ? 'on-done' : ''}`}>
           {session?.isTrial && !trialCollapsed && (
             <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử" style={{ minHeight: 32, height: 'auto', padding: '4px 10px', gap: 6 }}>
               <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>

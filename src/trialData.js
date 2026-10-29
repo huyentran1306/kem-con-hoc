@@ -291,9 +291,15 @@ export function getTrialInitialState() {
         sessionsMom: 3,
         sessionsDad: 1,
         studyLog: [
-          { id: 's1', ts: now - 86400000 * 3, problemType: 'Toán có lời văn', minutes: 15 },
-          { id: 's2', ts: now - 86400000 * 2, problemType: 'Bảng cửu chương', minutes: 15 },
-          { id: 's3', ts: now - 86400000 * 1, problemType: 'Tiếng Anh', minutes: 15 },
+          { id: 's1', ts: now - 86400000 * 3, problemType: 'Toán có lời văn', minutes: 12 },
+          { id: 's2', ts: now - 86400000 * 2, problemType: 'Bảng cửu chương', minutes: 28 },
+          { id: 's3', ts: now - 86400000 * 1, problemType: 'Tiếng Anh', minutes: 18 },
+          // Gói 36: vài buổi cũ hơn với số phút khác nhau để lịch học Dùng thử thấy rõ đậm nhạt
+          { id: 's4', ts: now - 86400000 * 8, problemType: 'Toán có lời văn', minutes: 35 },
+          { id: 's5', ts: now - 86400000 * 9, problemType: 'Tiếng Việt', minutes: 22 },
+          { id: 's6', ts: now - 86400000 * 11, problemType: 'Toán có lời văn', minutes: 8 },
+          { id: 's7', ts: now - 86400000 * 15, problemType: 'Bảng cửu chương', minutes: 30 },
+          { id: 's8', ts: now - 86400000 * 16, problemType: 'Tiếng Anh', minutes: 14 },
         ],
       },
       tit: {

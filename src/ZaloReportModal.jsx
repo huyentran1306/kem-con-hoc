@@ -1,9 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { shareWeeklyReport } from './api'
+import { isTrialActive } from './trialData.js'
+import { LINK_DAYS_MIN, LINK_DAYS_MAX, checkLinkDays } from './reportLinkDays.js'
 import { soundPop, soundSuccess } from './audio'
 
-export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom, currentTheme = 'candy' }) {
+export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom, currentTheme = 'candy', calmNote = '', sendNote = false, onToggleNote }) {
   const [expiresDays, setExpiresDays] = useState(7)
+  const [daysText, setDaysText] = useState('7')
+  const daysCheck = checkLinkDays(daysText)
+  // Chỉ tạo lại link/ảnh khi số ngày hợp lệ và đã ngừng gõ 600ms (không gọi máy chủ theo từng phím)
+  useEffect(() => {
+    if (!daysCheck.ok || daysCheck.n === expiresDays) return undefined
+    const t = setTimeout(() => setExpiresDays(daysCheck.n), 600)
+    return () => clearTimeout(t)
+  }, [daysText])
+  const setDays = (n) => setDaysText(String(Math.min(LINK_DAYS_MAX, Math.max(LINK_DAYS_MIN, n))))
   const [hideCoParents, setHideCoParents] = useState(false)
   const [sharing, setSharing] = useState(false)
   const [shareResult, setShareResult] = useState(null)
@@ -144,11 +156,16 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
       ctx.fillText(coText, 140, 970)
     }
 
-    // Lời khuyên cuối tuần
+    // Lời khuyên cuối tuần, hoặc lời nhắn riêng nếu bố mẹ chọn gửi kèm
     ctx.fillStyle = textColor
     ctx.font = 'italic 500 26px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('🌱 Lời khuyên cuối tuần: Ôn bài 5 phút nhẹ nhàng bằng que tính hoặc xếp hình!', 540, 1070)
+    if (sendNote && calmNote) {
+      ctx.fillStyle = '#9A3B22'
+      ctx.fillText(`💚 Lời nhắn riêng: ${calmNote.length > 60 ? calmNote.slice(0, 58) + '…' : calmNote}`, 540, 1070)
+    } else {
+      ctx.fillText('🌱 Lời khuyên cuối tuần: Ôn bài 5 phút nhẹ nhàng bằng que tính hoặc xếp hình!', 540, 1070)
+    }
 
     // Khung QR code & Brand footer
     ctx.fillStyle = '#EDE9FE'
@@ -162,6 +179,7 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
     ctx.fillStyle = subColor
     ctx.font = '500 22px sans-serif'
     ctx.fillText(shareUrl ? shareUrl.replace(/^https?:\/\//, '') : 'kem-con-hoc-5xf.pages.dev', 140, 1220)
+    ctx.fillText(`Link xem được trong ${expiresDays} ngày`, 140, 1245)
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/png')
@@ -184,6 +202,14 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
           weekendAdvice: 'Cuối tuần cùng con đi chợ hoặc giải đố que tính 5 phút để kích hoạt sáng tạo nhé!',
         }
 
+        // Dùng thử: không có tài khoản nên không tạo link trên máy chủ (tránh lỗi 401), chỉ vẽ ảnh xem trước
+        if (isTrialActive()) {
+          const origin = typeof window !== 'undefined' ? window.location.origin : ''
+          setShareResult({ ok: true, trial: true, fullUrl: origin })
+          const blob = await generateCanvasImage('')
+          if (active && blob) { setImgBlob(blob); setImgUrl(URL.createObjectURL(blob)) }
+          return
+        }
         const res = await shareWeeklyReport({
           childId: child?.id || 'c1',
           week: weekLabel || 'Tuần này',
@@ -214,7 +240,7 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
     return () => {
       active = false
     }
-  }, [expiresDays, hideCoParents])
+  }, [expiresDays, hideCoParents, sendNote])
 
   // Xử lý gửi báo cáo vào nhóm Zalo
   const handleShareToZalo = async () => {
@@ -292,11 +318,13 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
     }
   }
 
-  return (
-    <div className="sheet" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet-content" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+  // Gói 36: đưa bảng ra ngoài vùng cuộn để nằm trên thanh tab và nút bình tĩnh (trước đây bị thanh tab che nút Gửi)
+  const portalTarget = typeof document !== 'undefined' ? (document.querySelector('.app.parent-shell') || document.body) : null
+  const sheet = (
+    <div className="sheet" style={{ zIndex: 130 }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="sheet-content" style={{ maxHeight: '92vh', overflowY: 'auto', width: '100%', maxWidth: 520, background: 'var(--c-bg)', color: 'var(--c-text)', borderRadius: '24px 24px 0 0', padding: '18px 16px calc(16px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <p className="title" style={{ margin: 0 }}>📲 Gửi báo cáo vào nhóm Zalo</p>
+          <p className="title" style={{ margin: 0, color: 'var(--c-text)' }}>Gửi báo cáo vào nhóm Zalo</p>
           <button className="round-btn" onClick={onClose} aria-label="Đóng">✕</button>
         </div>
 
@@ -352,52 +380,54 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
 
         {/* Tuỳ chọn trước khi gửi */}
         <div className="card" style={{ padding: 14, marginBottom: 16 }}>
-          <b style={{ fontSize: 13, color: '#334155', display: 'block', marginBottom: 10 }}>
-            Tuỳ chỉnh báo cáo gửi đi:
+          <b style={{ fontSize: 15, color: 'var(--c-text)', display: 'block', marginBottom: 4 }}>
+            Tuỳ chỉnh báo cáo gửi đi
           </b>
 
-          {/* Chọn hạn link */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 13, color: '#475569' }}>Thời hạn link xem:</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {[7, 14].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setExpiresDays(d)}
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 8,
-                    border: expiresDays === d ? '1.5px solid #7C3AED' : '1px solid #CBD5E1',
-                    background: expiresDays === d ? '#F5F3FF' : '#FFFFFF',
-                    color: expiresDays === d ? '#7C3AED' : '#64748B',
-                    fontWeight: 700,
-                    fontSize: 12,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {d} ngày
-                </button>
-              ))}
+          {/* Thời hạn link: người dùng tự nhập 1–30 ngày */}
+          <div className="rp-opt-row">
+            <label htmlFor="zalo-exp-days" style={{ fontSize: 14, color: 'var(--c-text)' }}>Thời hạn link xem</label>
+            <div className={`rp-stepper ${daysCheck.ok ? '' : 'err'}`}>
+              <button type="button" aria-label="Giảm 1 ngày" disabled={!(Number(daysText) > LINK_DAYS_MIN)} onClick={() => setDays((Math.floor(Number(daysText)) || LINK_DAYS_MIN + 1) - 1)}>−</button>
+              <input
+                id="zalo-exp-days"
+                data-testid="zalo-exp-days"
+                type="text"
+                inputMode="numeric"
+                value={daysText}
+                aria-invalid={!daysCheck.ok}
+                aria-describedby="zalo-exp-hint"
+                onChange={(e) => setDaysText(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                onBlur={() => { if (!daysCheck.ok) setDays(daysText === '' ? 7 : Math.round(Number(daysText)) || 7) }}
+              />
+              <span className="unit">ngày</span>
+              <button type="button" aria-label="Tăng 1 ngày" disabled={Number(daysText) >= LINK_DAYS_MAX} onClick={() => setDays((Math.floor(Number(daysText)) || LINK_DAYS_MIN - 1) + 1)}>+</button>
             </div>
           </div>
+          <p id="zalo-exp-hint" className={`rp-hint ${daysCheck.ok ? '' : 'err'}`} data-testid="zalo-exp-hint">{daysCheck.msg}</p>
 
           {/* Ẩn hiện người kèm */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#475569', cursor: 'pointer' }}>
+          <label className="rp-check">
             <input
               type="checkbox"
               checked={hideCoParents}
               onChange={(e) => setHideCoParents(e.target.checked)}
             />
-            <span>Không hiện dòng "Ai kèm" (chỉ gửi tiến độ của con)</span>
+            <span>Không hiện dòng "Ai kèm"<small>Chỉ gửi tiến độ của con</small></span>
           </label>
+          {calmNote && onToggleNote && (
+            <label className="rp-check">
+              <input type="checkbox" checked={sendNote} onChange={(e) => onToggleNote(e.target.checked)} />
+              <span>Gửi kèm lời nhắn riêng<small>Đoạn "Chỉ người lớn trong nhà thấy"</small></span>
+            </label>
+          )}
         </div>
 
         {/* Nút gửi chính */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
             className="btn solid"
-            disabled={sharing || !shareResult}
+            disabled={sharing || !shareResult || !daysCheck.ok}
             onClick={handleShareToZalo}
             style={{
               width: '100%',
@@ -431,4 +461,5 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
       </div>
     </div>
   )
+  return portalTarget ? createPortal(sheet, portalTarget) : sheet
 }

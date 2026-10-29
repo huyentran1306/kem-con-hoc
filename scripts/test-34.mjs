@@ -30,7 +30,7 @@ t('AI chấm vở tắt: không còn lối vào ở trang chủ và Xong bài', 
   assert.equal(FEATURES.CHECK_WORK, false)
   const s = read('src/screens.jsx')
   assert.match(s, /FEATURES\.CHECK_WORK && CheckWorkEntrySlot/)
-  assert.match(s, /FEATURES\.CHECK_WORK && <div/)
+  assert.match(s, /FEATURES\.CHECK_WORK && (<div|\(\s*<div className="dn-next-row")/) // gói 37: dòng Chấm vở trong thẻ Làm tiếp vẫn sau cờ
 })
 t('Nút nổi {Mẹ/Bố} bình tĩnh trở lại, không còn nút 😮‍💨 trên thanh trên', () => {
   const app = read('src/App.jsx')

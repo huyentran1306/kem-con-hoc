@@ -10,7 +10,9 @@ import {
   ENGLISH_PHRASES, TOYS, CHAT_SAMPLES, CALM_LINES,
   AVAILABLE_STICKERS, WAITING_QUIZZES, SCHEDULE_DEFAULT,
 } from './data'
-import { TraitStackedChart, SubjectAndSkillHeatmap, TraitAiAnalysisCard } from './ReportComponents'
+import { TraitStackedChart, SubjectAndSkillHeatmap, TraitAiAnalysisCard, getSkillInsight } from './ReportComponents'
+import './report.css'
+import './done.css'
 import { computeSuggestedBadge, TRAIT_COLORS, TRAIT_ICONS, TRAIT_BADGE_INFO } from './badgeRules'
 import { Header, SpeakBtn, WhyChip, VoiceInputBtn, DotDiagram, Bar, HoldReveal, Stepper, Switch, useWide } from './ui'
 import { fmtTime, speak, compressImage, uid, boom, getWeekLabel } from './utils'
@@ -2788,7 +2790,14 @@ export function Done() {
   const { S, problem, stats, patch, setStats, go, openSheet, toast, boom, tracker, ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx)
   const child = S.children.find((c) => c.id === S.activeId)
   // Đợt 15 P1: chỉ còn 1 bộ đánh giá (mẹ chốt mức hiểu bài trong thẻ Con dạy lại)
-  const result = S.flow.result || (S.flow.teachBack === 'guided' ? 'weak' : S.flow.teachBack ? 'ok' : null)
+  // Gói 37: chưa chọn mức tự chủ thì dùng mức app gợi ý từ dữ liệu buổi học (xem levelShown bên dưới)
+  const autoLevel = (() => {
+    const log = Array.isArray(S.flow?.stepLog) ? S.flow.stepLog : []
+    if (log.some((e) => e.revealedAnswer)) return 'guided'
+    if (log.some((e) => Number(e.stuckCount) > 0)) return 'hint'
+    return 'ok'
+  })()
+  const result = S.flow.result || ((S.flow.teachBack || autoLevel) === 'guided' ? 'weak' : 'ok')
 
   // Khởi tạo các State trước useMemo để tránh lỗi Temporal Dead Zone (Cannot access 'adaptiveBrother' before initialization)
   const [stkIdx, setStkIdx] = useState(0)
@@ -3090,6 +3099,7 @@ export function Done() {
           teachBackId: null,
           teachBackOwnWay: false,
           playedMiniGame: false,
+          badgeGiven: null,
         },
       }
     })
@@ -3135,381 +3145,248 @@ export function Done() {
     toast(`Đã lưu: ${opt?.t || ''} 💾`)
   }
 
+  // ---- Gói 37: màn Hoàn thành theo bản vẽ v6 (gọn, chữ to hơn, một nút chính) ----
+  const totalSteps = (problem?.steps || []).length
+  const doneSteps = Math.min(totalSteps, sessionData.steps.length || (S.flow?.step >= totalSteps ? totalSteps : 0)) || totalSteps
+  const hintCount = sessionData.steps.reduce((sum, st) => sum + (st.stuckCount || 0), 0)
+  const revealedCount = sessionData.steps.filter((st) => st.revealedAnswer).length
+  const selfAll = sessionData.steps.length > 0 && hintCount === 0 && revealedCount === 0
+  const heroLine = revealedCount > 0
+    ? `${child.name} đã đi hết ${doneSteps} bậc, ${ho} cùng con xem đáp án ở ${revealedCount} bậc.`
+    : hintCount > 0
+    ? `${child.name} đã làm xong cả bài tối nay, có mở gợi ý ${hintCount} lần.`
+    : selfAll
+    ? `${child.name} đã tự làm xong cả bài tối nay.`
+    : `${child.name} đã làm xong bài tối nay.`
+  // Mức tự chủ app gợi ý từ dữ liệu thật của buổi học; bố mẹ chỉnh lại được
+  const suggestedLevel = revealedCount > 0 ? 'guided' : hintCount > 0 ? 'hint' : 'ok'
+  const levelPicked = S.flow?.teachBack || null
+  const levelShown = levelPicked || suggestedLevel
+  const levelWhy = revealedCount > 0
+    ? `${child.name} cần xem đáp án ở ${revealedCount} bậc`
+    : hintCount > 0
+    ? `${child.name} mở gợi ý ${hintCount} lần`
+    : `${child.name} tự làm hết các bậc, không mở gợi ý`
+  // Huy hiệu: chỉ tặng MỘT lần cho mỗi buổi học (trước đây bấm lại là cộng thêm)
+  const badgeRaw = S.flow?.badgeGiven
+  const badgeGiven = badgeRaw && badgeRaw.startedAt === (S.flow?.startedAt || null) ? badgeRaw.trait : null
+  const nStickers = Math.max(0, Number(stats?.stickers) || 0)
+  const inSet = nStickers === 0 ? 0 : nStickers % 10 === 0 ? 10 : nStickers % 10
+  const fullSets = Math.floor((nStickers - 1) / 10)
+  const [tipsOpen, setTipsOpen] = useState(false)
+  const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
+  const broLoading = !bro && (loadingBrother || (problem?.prompt_version === 'v3' && !isDemoMode() && !isTrialActive()))
+
+  const giveBadge = () => {
+    if (badgeGiven) return
+    const found = AVAILABLE_STICKERS.find((x) => x.id === currentBadgeInfo.stickerId || x.trait === currentTrait) || currentBadgeInfo
+    pickSticker({
+      ...found,
+      id: currentBadgeInfo.stickerId,
+      n: currentBadgeInfo.name,
+      trait: currentBadgeInfo.trait,
+      color: currentBadgeInfo.color,
+      source: isSuggested ? 'goi_y' : 'chon_khac',
+      reason: currentReason,
+    })
+    patch((prev) => ({ ...prev, flow: { ...prev.flow, badgeGiven: { trait: currentTrait, startedAt: prev.flow?.startedAt || null } } }))
+  }
+
+  const saveAndHome = () => {
+    // Bố mẹ chưa chọn mức tự chủ thì lưu theo mức app gợi ý (có căn cứ từ dữ liệu buổi học)
+    if (!levelPicked) patch((prev) => ({ ...prev, flow: { ...prev.flow, teachBack: suggestedLevel } }))
+    saveResult()
+    if (!badgeGiven) setTimeout(() => toast(`${Ho} chưa tặng huy hiệu cho ${child.name} tối nay, lần sau nhớ tặng nhé`), 2600)
+  }
+
   return (
-    <div className="done-container-km" style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 80 }}>
-      {/* TopBar T4 */}
-      <TopBarT4
-        title="Xong bài rồi! 🎉"
-        stepText="Hoàn thành"
-        onBack={() => go('home')}
-      />
+    <div className="dn-wrap" data-testid="done-v6">
+      <header className="dn-top">
+        <button type="button" className="btn-km-circle" aria-label="Quay lại" onClick={() => go('home')}>‹</button>
+        <h1>Hoàn thành</h1>
+      </header>
 
-      {/* 1. PHẦN CHO CON */}
-      <div
-        className="card-km"
-        style={{
-          padding: '18px 16px',
-          background: 'var(--c-surface)',
-          borderRadius: 22,
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 10,
-        }}
-        data-testid="done-section-kid"
-      >
-        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
-          PHẦN CHO CON
-        </span>
-
-        <div className="mascot-bounce-km">
-          <ThemeBuddy state={S.flow?.teachBack ? 'love' : 'cheer'} size={80} />
+      {/* 1. HERO: dành cho con */}
+      <section className="dn-card dn-hero" data-testid="done-section-kid">
+        <div className="dn-mascot" aria-hidden="true">
+          <i className="dn-spark s1">✦</i><i className="dn-spark s2">✦</i><i className="dn-spark s3">●</i><i className="dn-spark s4">●</i>
+          <ThemeBuddy state={S.flow?.teachBack ? 'love' : 'cheer'} size={104} />
         </div>
+        <h2>Hoan hô {child.name}!</h2>
+        <p>{heroLine}</p>
+        <div className="dn-stats">
+          <div className="dn-stat"><b>{doneSteps}/{totalSteps || doneSteps}</b><span>bậc đã xong</span></div>
+          <div className="dn-stat"><b>{hintCount}</b><span>lần mở gợi ý</span></div>
+          {sessionData.durationMinutes ? <div className="dn-stat"><b>{sessionData.durationMinutes}</b><span>phút học</span></div> : null}
+        </div>
+      </section>
 
-        <h2 style={{ fontSize: 20, fontWeight: 800, margin: '2px 0 0', color: 'var(--c-text)', fontFamily: 'var(--font-head)' }}>
-          {S.flow?.teachBack ? `Thương ${child.name} ghê! 💕` : `Hoan hô ${child.name}! 🎉`}
-        </h2>
-        <p style={{ fontSize: 13.5, color: 'var(--c-sub)', margin: 0 }}>
-          Con đã xuất sắc vượt qua các bậc bài tập tối nay!
+      {/* 2. TẶNG HUY HIỆU (phụ huynh bấm, con nhận) */}
+      <section className="dn-card" aria-label="Tặng huy hiệu" data-testid="card-suggested-badge">
+        <div className="dn-badge-head">
+          <h2>Tặng huy hiệu cho {child.name}</h2>
+          <span className="dn-collect" data-testid="done-collect">{inSet}/10 huy hiệu{fullSets > 0 ? ` · đủ ${fullSets} bộ` : ''}</span>
+        </div>
+        <div className="dn-badge-preview" aria-live="polite">
+          <span className="dn-badge-ico" style={{ borderColor: currentBadgeInfo.color }}>{currentBadgeInfo.icon}</span>
+          <div>
+            <b>{currentBadgeInfo.name}</b>
+            <span>{currentReason}</span>
+            {isSuggested && !badgeGiven && <em className="dn-suggest">Gấu gợi ý theo cách {child.name} làm bài</em>}
+          </div>
+        </div>
+        <div className="dn-traits" role="group" aria-label="Chọn huy hiệu">
+          {['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'].map((tr) => {
+            const active = (badgeGiven || currentTrait) === tr
+            const info = TRAIT_BADGE_INFO[tr]
+            return (
+              <button
+                key={tr}
+                type="button"
+                className="dn-trait"
+                aria-pressed={active}
+                disabled={Boolean(badgeGiven)}
+                onClick={() => { soundPop(450); setPickedTrait(tr) }}
+                data-testid={`btn-pick-trait-${tr}`}
+              >
+                <span className="dn-ti" aria-hidden="true">{info.icon}</span>{tr}
+              </button>
+            )
+          })}
+        </div>
+        <button
+          type="button"
+          className={`dn-gift ${badgeGiven ? 'done' : ''}`}
+          onClick={giveBadge}
+          disabled={Boolean(badgeGiven)}
+          data-testid="btn-grant-suggested-badge"
+        >
+          {badgeGiven ? `Đã tặng cho ${child.name} ✓` : `Tặng huy hiệu cho ${child.name}`}
+        </button>
+        <div className="dn-dots" aria-label={`${inSet} trên 10 huy hiệu tới phần quà`}>
+          {Array.from({ length: 10 }).map((_, i) => <i key={i} className={i < inSet ? 'on' : ''} />)}
+        </div>
+        <p className="dn-dots-note">{inSet >= 10 ? `Đủ 10 huy hiệu, ${child.name} được đổi quà!` : `Còn ${10 - inSet} huy hiệu nữa là ${child.name} được đổi quà`}</p>
+      </section>
+
+      {/* 3. GÓC PHỤ HUYNH */}
+      <section className="dn-card" aria-label="Góc phụ huynh" data-testid="done-section-parent">
+        <h2>Góc phụ huynh</h2>
+        <p className="dn-lead">Mức độ tự chủ của con hôm nay</p>
+        <div className="dn-seg" role="radiogroup" aria-label="Mức độ tự chủ">
+          {[
+            { v: 'ok', label: 'Tự làm được' },
+            { v: 'hint', label: 'Cần gợi ý' },
+            { v: 'guided', label: 'Cần hướng dẫn' },
+          ].map((opt) => (
+            <button
+              key={opt.v}
+              type="button"
+              role="radio"
+              aria-checked={levelShown === opt.v}
+              aria-pressed={levelShown === opt.v}
+              onClick={() => pickTeachBack(opt.v)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="dn-note">
+          {levelPicked ? `${Ho} đã chọn mức này.` : `App gợi ý mức này vì ${levelWhy}. ${Ho} chỉnh lại nếu thấy khác.`}
         </p>
 
-        {/* CHỌN VÀ TẶNG HUY HIỆU Ở MỘT CHỖ DUY NHẤT */}
-        <div
-          style={{
-            width: '100%',
-            background: 'var(--c-bg)',
-            border: '1px solid var(--c-line)',
-            borderRadius: 16,
-            padding: '12px 14px',
-            marginTop: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-          data-testid="card-suggested-badge"
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, fontWeight: 900, color: 'var(--c-primary)' }}>
-              HUY HIỆU NỖ LỰC
-            </span>
-            <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--c-sub)' }}>
-              {stickerCountLabel(stats.stickers)}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
-            <span
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: currentBadgeInfo.color,
-                color: '#fff',
-                display: 'grid',
-                placeItems: 'center',
-                fontSize: 22,
-                flexShrink: 0,
-              }}
-            >
-              {currentBadgeInfo.icon}
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <b style={{ fontSize: 14.5, color: 'var(--c-text)', display: 'block' }}>
-                {currentBadgeInfo.name} ({currentBadgeInfo.trait})
-              </b>
-              <p style={{ fontSize: 12, color: 'var(--c-sub)', margin: '2px 0 0', lineHeight: 1.35 }}>
-                {currentReason}
-              </p>
-            </div>
-          </div>
-
-          {/* 4 Chip chọn nhanh phẩm chất khác */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
-            {['Kiên nhẫn', 'Sáng tạo', 'Tập trung', 'Tỉ mỉ'].map((tr) => {
-              const active = currentTrait === tr
-              const info = TRAIT_BADGE_INFO[tr]
-              return (
-                <button
-                  key={tr}
-                  type="button"
-                  className={`btn-km btn-km-s ${active ? 'btn-km-primary' : 'btn-km-secondary'}`}
-                  style={{ minHeight: 30, padding: '0 4px', fontSize: 11, fontWeight: 800 }}
-                  onClick={() => {
-                    soundPop(450)
-                    setPickedTrait(tr)
-                  }}
-                  data-testid={`btn-pick-trait-${tr}`}
-                >
-                  {info.icon} {tr}
-                </button>
-              )
-            })}
-          </div>
-
-          <button
-            type="button"
-            className="btn-km btn-km-m btn-km-ok"
-            style={{ width: '100%', minHeight: 46, fontSize: 14 }}
-            onClick={() => {
-              const found = AVAILABLE_STICKERS.find((s) => s.id === currentBadgeInfo.stickerId || s.trait === currentTrait) || currentBadgeInfo
-              pickSticker({
-                ...found,
-                id: currentBadgeInfo.stickerId,
-                n: currentBadgeInfo.name,
-                trait: currentBadgeInfo.trait,
-                color: currentBadgeInfo.color,
-                source: isSuggested ? 'goi_y' : 'chon_khac',
-                reason: currentReason,
-              })
-            }}
-            data-testid="btn-grant-suggested-badge"
-          >
-            <span>Tặng huy hiệu {currentBadgeInfo.name}</span>
-            <span>⭐</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. PHẦN CHO MẸ */}
-      <div
-        className="card-km"
-        style={{
-          padding: '16px',
-          background: 'var(--c-surface)',
-          borderRadius: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-        data-testid="done-section-parent"
-      >
-        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
-          DÀNH CHO {Ho.toUpperCase()}
-        </span>
-
-        {/* Tự chấm nhanh: nút gạt 3 mục */}
-        <div>
-          <label style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--c-text)', display: 'block', marginBottom: 6 }}>
-            Mức độ tự chủ của con hôm nay:
-          </label>
-          {/* Prompt 29B.5: ba nút cách nhau ít nhất 6px để không nhìn như dính liền */}
-          <div className="seg-km" style={{ width: '100%', height: 'auto', minHeight: 36, gap: 6, background: 'transparent', padding: 0, display: 'flex' }}>
-            {[
-              { v: 'ok', label: 'Tự làm được' },
-              { v: 'hint', label: 'Cần gợi ý' },
-              { v: 'guided', label: 'Cần hướng dẫn' },
-            ].map((opt) => {
-              const active = (S.flow.teachBack || result) === opt.v
-              return (
-                <button
-                  key={opt.v}
-                  type="button"
-                  className={`seg-km-btn ${active ? 'active' : ''}`} aria-pressed={active ? "true" : "false"}
-                  style={{ height: 34, fontSize: 12, flex: 1, minWidth: 0, padding: '0 4px', whiteSpace: 'nowrap', borderRadius: 10, border: '1px solid var(--c-line)', background: active ? undefined : 'var(--c-surface)' }}
-                  onClick={() => pickTeachBack(opt.v)}
-                >
-                  {opt.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Góp ý của Gấu: 1 dòng mở được */}
         {coachAdviceEnabled && coachAdviceList.length > 0 && (
-          <div
-            style={{
-              background: '#FFFBEB',
-              border: '1px solid #FDE68A',
-              borderRadius: 12,
-              padding: '10px 12px',
-            }}
-          >
-            <div
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-              onClick={() => setIsCoachOpen(!isCoachOpen)}
-            >
-              <span style={{ fontSize: 13, fontWeight: 800, color: '#92400E' }}>
-                🐻 Gấu góp ý cách kèm ({coachAdviceList.length} ý)
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#B45309' }}>
-                {isCoachOpen ? 'Thu gọn ▲' : 'Xem ngay ▼'}
-              </span>
-            </div>
-            {isCoachOpen && (
-              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="dn-tips" data-testid="coach-advice-card">
+            <button type="button" className="dn-tips-head" aria-expanded={tipsOpen} onClick={() => setTipsOpen(!tipsOpen)}>
+              <span>Gợi ý cách kèm ({coachAdviceList.length} ý)</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+            {!tipsOpen && <p className="dn-tips-prev">{coachAdviceList[0].action}…</p>}
+            {tipsOpen && (
+              <div className="dn-tips-body">
                 {coachAdviceList.map((adv, idx) => (
-                  <div key={idx} style={{ fontSize: 12.5, color: '#78350F', lineHeight: 1.35 }}>
-                    <b>{adv.icon} {adv.action}:</b> {adv.message}
+                  <div className="dn-tip" key={idx}>
+                    <i>{idx + 1}</i>
+                    <div><b>{adv.action}</b>{adv.message}</div>
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* 3. PHẦN LÀM TIẾP */}
-      <div
-        className="card-km"
-        style={{
-          padding: '16px',
-          background: 'var(--c-surface)',
-          borderRadius: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}
-        data-testid="done-section-next"
-      >
-        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.06em', color: 'var(--c-sub)', textTransform: 'uppercase' }}>
-          LÀM TIẾP
-        </span>
-
-        {/* Bài anh em */}
-        {(() => {
-          const bro = adaptiveBrother || problem.brotherProblem || problem.bai_anh_em
-          if (!bro && problem?.prompt_version === 'v3' && !isDemoMode() && !isTrialActive()) {
+      {/* 4. LÀM TIẾP */}
+      <section className="dn-card" aria-label="Làm tiếp" data-testid="done-section-next">
+        <h2>Làm tiếp</h2>
+        <div className="dn-next">
+          {broLoading && (
+            <div className="dn-next-row">
+              <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span>Gấu đang viết bài tương tự cho con…</span></div>
+            </div>
+          )}
+          {bro && (() => {
+            const deText = bro.de || bro.text || ''
             return (
-              <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--c-bg)', border: '1px solid var(--c-line)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 20 }}>🐻💭</span>
-                <span style={{ fontSize: 13, color: 'var(--c-sub)', fontWeight: 600 }}>Gấu đang viết bài anh em cho con…</span>
+              <div className="dn-next-row">
+                <div className="dn-next-txt"><b>Bài tương tự (5 phút)</b><span>{deText}</span></div>
+                <button
+                  type="button"
+                  className="dn-next-btn primary"
+                  onClick={() => {
+                    patch({
+                      problem: {
+                        text: deText,
+                        steps: [
+                          { question: 'Con đọc kỹ đề bài mới nhé?', answer: 'Đọc kỹ đề', praise: 'Giỏi lắm!' },
+                          { question: 'Bài này mình cần làm phép tính gì con nhỉ?', answer: bro.dap_an_cho_me || 'Phép tính', praise: 'Đúng hướng rồi!' },
+                          { question: 'Con tính ra kết quả là bao nhiêu?', answer: bro.dap_an_cho_me || 'Đáp số', praise: 'Xuất sắc!' },
+                        ],
+                        brotherProblem: null,
+                        isBrotherProblem: true,
+                      },
+                      flow: { step: 0, stuck: 0, unlocked: false, startedAt: Date.now(), sessionId: S.flow?.sessionId },
+                    })
+                    go('explain')
+                  }}
+                >
+                  Làm thử ›
+                </button>
               </div>
             )
-          }
-          if (!bro) return null
-          const deText = bro.de || bro.text || ''
-          return (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 8,
-                padding: '10px 12px',
-                borderRadius: 12,
-                background: 'var(--c-bg)',
-                border: '1px solid var(--c-line)',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>🎯 Bài anh em (5 phút)</b>
-                <span style={{ fontSize: 12, color: 'var(--c-sub)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
-                  {deText}
-                </span>
-              </div>
+          })()}
+          {FEATURES.CHECK_WORK && (
+            <div className="dn-next-row">
+              <div className="dn-next-txt"><b>Chấm vở con đã viết</b><span>Chụp vở để AI tìm bước sai cho con tự sửa</span></div>
               <button
                 type="button"
-                className="btn-km btn-km-s btn-km-primary"
+                className="dn-next-btn soft"
                 onClick={() => {
-                  patch({
-                    problem: {
-                      text: deText,
-                      steps: [
-                        { question: 'Con đọc kỹ đề bài mới nhé?', answer: 'Đọc kỹ đề', praise: 'Giỏi lắm!' },
-                        { question: 'Bài này mình cần làm phép tính gì con nhỉ?', answer: bro.dap_an_cho_me || 'Phép tính', praise: 'Đúng hướng rồi!' },
-                        { question: 'Con tính ra kết quả là bao nhiêu?', answer: bro.dap_an_cho_me || 'Đáp số', praise: 'Xuất sắc!' },
-                      ],
-                      brotherProblem: null,
-                      isBrotherProblem: true,
-                    },
-                    flow: { step: 0, stuck: 0, unlocked: false, startedAt: Date.now(), sessionId: S.flow?.sessionId },
-                  })
-                  go('explain')
+                  patch({ checkWorkInit: { sessionId: S.sessionId || `sess_${Date.now()}`, problemText: problem?.ocr || problem?.text || '' } })
+                  go('check')
                 }}
               >
-                Làm thử ›
+                Chấm vở ›
               </button>
             </div>
-          )
-        })()}
-
-        {/* Chấm vở (gói 34: ẩn theo cờ FEATURES.CHECK_WORK) */}
-        {FEATURES.CHECK_WORK && <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 8,
-            padding: '10px 12px',
-            borderRadius: 12,
-            background: 'var(--c-bg)',
-            border: '1px solid var(--c-line)',
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>📝 Chấm vở con đã viết</b>
-            <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>Chụp vở để AI tìm bước sai cho con tự sửa</span>
-          </div>
-          <button
-            type="button"
-            className="btn-km btn-km-s btn-km-secondary"
-            onClick={() => {
-              patch({
-                checkWorkInit: {
-                  sessionId: S.sessionId || `sess_${Date.now()}`,
-                  problemText: problem?.ocr || problem?.text || '',
-                },
-              })
-              go('check')
-            }}
-          >
-            Chấm vở ›
-          </button>
-        </div>}
-
-        {/* Con giảng lại: ẩn khi con đã thật sự giảng lại (không ẩn chỉ vì đã chọn Mức độ tự chủ) */}
-        {!S.flow?.teachBackDone && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 8,
-              padding: '10px 12px',
-              borderRadius: 12,
-              background: 'var(--c-bg)',
-              border: '1px solid var(--c-line)',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <b style={{ fontSize: 13.5, color: 'var(--c-text)', display: 'block' }}>🎓 Con dạy lại {ho}</b>
-              <span style={{ fontSize: 12, color: 'var(--c-sub)' }}>Lắng nghe con giảng lại bài vừa giải</span>
+          )}
+          {!S.flow?.teachBackDone ? (
+            <div className="dn-next-row">
+              <div className="dn-next-txt"><b>Con dạy lại {ho}</b><span>Lắng nghe con giảng lại bài vừa giải</span></div>
+              <button type="button" className="dn-next-btn soft" onClick={() => openSheet('teachBack')}>Nghe con ›</button>
             </div>
-            <button
-              type="button"
-              className="btn-km btn-km-s btn-km-secondary"
-              onClick={() => openSheet('teachBack')}
-            >
-              Nghe con ›
-            </button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="dn-next-row">
+              <div className="dn-next-txt"><b>Con đã dạy lại {ho} ✓</b><span>Đã ghi vào báo cáo tuần</span></div>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Nút dính đáy: Lưu & về trang chủ */}
-      <div
-        className="bottom-action-bar-km"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '10px 16px',
-          background: 'var(--c-surface, #fff)',
-          borderTop: '1px solid var(--c-line, #EADFCF)',
-          zIndex: 90,
-          boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
-        }}
-      >
-        <button
-          type="button"
-          className="btn-km btn-km-l btn-km-primary"
-          style={{ width: '100%' }}
-          onClick={saveResult}
-        >
-          Lưu & về trang chủ
+      {/* ĐÁY: một nút chính duy nhất */}
+      <div className="dn-bottom">
+        <button type="button" className="btn-km btn-km-l btn-km-primary dn-cta" onClick={saveAndHome} data-testid="done-save">
+          <span className="btn-km-text" style={{ textAlign: 'center' }}>Lưu &amp; về trang chủ</span>
         </button>
       </div>
     </div>
@@ -5690,90 +5567,65 @@ const LOI_LABEL = {
   chua_lam_xong: 'chưa làm xong',
 }
 
-function WeeklyAiCards({ stats, childName }) {
-  const { Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
-  const { ho = 'bố mẹ' } = useContext(AppCtx) || {}
+/* Gói 36: bỏ khối An toàn AI (7 ngày) khỏi Báo cáo; chỉ giữ 2 con số đưa lên hàng số liệu chính */
+function useWeeklyAiCounts(stats) {
   const [safety, setSafety] = useState(null)
   useEffect(() => {
     let off = false
+    if (isTrialActive()) return undefined
     getSafetySummary('7d')
-      .then((r) => {
-        if (!off && r && r.ok !== false) setSafety(r)
-      })
+      .then((r) => { if (!off && r && r.ok !== false) setSafety(r) })
       .catch(() => {})
-    return () => {
-      off = true
-    }
+    return () => { off = true }
   }, [])
   const week = (stats?.studyLog || []).filter((e) => e && e.ts && getWeekLabel(e.ts) === 'Tuần này')
   const trial = isTrialActive()
-  // Prompt 32 mục 3: Dùng thử hiện số mẫu hợp lý (khớp thẻ An toàn AI), gia đình thật lấy số thật
   const teachBacksLocal = week.filter((e) => e.kind !== 'check' && (e.teachBackDone === true || (e.teachBackDone === undefined && e.teachBack))).length
   const teachBacks = trial ? Math.max(2, teachBacksLocal) : Math.max(teachBacksLocal, Number(safety?.teach_backs?.total || 0))
-  const selfFixedLocal = week.filter((e) => e.kind === 'check')
-  const selfFixed = trial ? Math.max(3, selfFixedLocal.length) : Math.max(selfFixedLocal.length, Number(safety?.work_checks?.self_fixed || 0))
-  const errCount = {}
-  selfFixedLocal.forEach((e) => {
-    if (e.errorType) errCount[e.errorType] = (errCount[e.errorType] || 0) + 1
-  })
-  const topErr = Object.entries(errCount).sort((a, b) => b[1] - a[1])[0]?.[0]
-  const blocked = Number(safety?.total_guard_interventions || 0)
-  const leaked = Number(safety?.guard_events?.leaked || 0)
-  const reported = Number(safety?.feedback?.total || 0)
-  const tile = { flex: 1, minWidth: 0, background: 'var(--c-surface-2)', borderRadius: 14, padding: '10px 10px' }
-  const num = { fontSize: 22, fontWeight: 900, color: 'var(--c-text)', lineHeight: 1.1 }
-  const cap = { fontSize: 13, color: 'var(--c-text)', marginTop: 2, lineHeight: 1.35 }
+  const selfFixedLocal = week.filter((e) => e.kind === 'check').length
+  const selfFixed = trial ? Math.max(3, selfFixedLocal) : Math.max(selfFixedLocal, Number(safety?.work_checks?.self_fixed || 0))
+  return { teachBacks, selfFixed }
+}
+
+/* Gói 36: lịch học tô đậm nhạt theo số phút học mỗi ngày (màu theo bộ giao diện) */
+const heatLevel = (m) => (!m ? 0 : m <= 10 ? 1 : m <= 20 ? 2 : m <= 30 ? 3 : 4)
+function StudyHeatCalendar({ tracker }) {
+  const [picked, setPicked] = useState(null)
+  const now = new Date()
+  const monthNo = now.getMonth() + 1
+  const month = tracker?.month || []
+  const firstDayIndex = (new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7
+  const studied = month.filter((m) => m.isStudied && !m.isFuture)
+  const totalMin = studied.reduce((sum, m) => sum + (m.minutes || 0), 0)
   return (
-    <div className="card" data-testid="weekly-ai-cards">
-      <span className="lbl plum">Tuần này cùng AI</span>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={tile} data-testid="weekly-teachback">
-          <div style={num}>{teachBacks}</div>
-          <div style={cap}>lần {childName} giảng lại cho {'bố mẹ'}</div>
-        </div>
-        <div style={tile} data-testid="weekly-selffixed">
-          <div style={num}>{selfFixed}</div>
-          <div style={cap}>lỗi tự sửa được{topErr ? ` · hay gặp: ${LOI_LABEL[topErr] || topErr}` : ''}</div>
-        </div>
+    <div className="card rp-card" data-testid="rp-calendar">
+      <div className="rp-cal-head">
+        <h2 className="rp-h2" style={{ margin: 0 }}>Lịch học tháng {monthNo}</h2>
+        <span className="rp-streak">Chuỗi: <b>{tracker?.streak || 0} tối</b></span>
       </div>
-      <div style={{ ...tile, marginTop: 8 }} data-testid="weekly-safety">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 20 }}>🛡️</span>
-            <b style={{ fontSize: 14, color: 'var(--c-text)' }}>An toàn AI 7 ngày</b>
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>{trial ? 'Số mẫu' : 'Số thật từ hệ thống'}</span>
-        </div>
-        <div className="facts-grid two-cols">
-          <div>
-            <span style={{ color: 'var(--c-text)' }}>Phép tính sai đã bắt</span>
-            <b>{isTrialActive() ? 3 : (safety?.dot18_safety?.phep_tinh_sai_da_bat ?? 0)}</b>
-            <em style={{ color: 'var(--c-text)' }}>trước khi tới {ho}</em>
-          </div>
-          <div>
-            <span style={{ color: 'var(--c-text)' }}>Bậc bộ chặn sửa lại</span>
-            <b>{isTrialActive() ? 2 : (safety?.dot18_safety?.bac_bo_chan_sua_lai ?? blocked)}</b>
-            <em style={{ color: 'var(--c-text)' }}>sửa đúng bậc học</em>
-          </div>
-          <div>
-            <span style={{ color: 'var(--c-text)' }}>Câu nhỏ hơn đã tạo</span>
-            <b>{isTrialActive() ? 5 : (safety?.dot18_safety?.cau_nho_hon_da_tao ?? 0)}</b>
-            <em style={{ color: 'var(--c-text)' }}>chia nhỏ khi con kẹt</em>
-          </div>
-          <div>
-            <span style={{ color: 'var(--c-text)' }}>Lần Gấu nghe con</span>
-            <b>{isTrialActive() ? 8 : (safety?.dot18_safety?.so_lan_gau_nghe_con ?? 0)}</b>
-            <em style={{ color: 'var(--c-text)' }}>lắng nghe con trả lời</em>
-          </div>
-        </div>
-        <div data-testid="weekly-answer-requests" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, fontSize: 13, color: 'var(--c-text)' }}>
-          <span>Lần Gấu từ chối xin đáp án</span>
-          <b style={{ fontSize: 16 }}>{trial ? 1 : Number(safety?.dot18_safety?.xin_dap_an_da_chan || 0)}</b>
-        </div>
-        <div style={{ background: 'var(--c-surface)', borderRadius: 10, padding: '8px 10px', marginTop: 8, fontSize: 13, color: 'var(--c-text)' }}>
-          <b>{Ho} thấy gì:</b> {leaked > 0 ? `Có ${leaked} câu bộ chặn ghi nhận đã lọt, ${ho} bấm "Báo câu chưa phù hợp" để Gấu sửa.` : 'Không câu nào lộ đáp án tới con. Mọi phép tính trong bài đã được Gấu tính lại.'}
-        </div>
+      <div className="rp-cal" aria-label={`Lịch tháng ${monthNo}`}>
+        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((h) => <span key={h} className="rp-dow">{h}</span>)}
+        {Array.from({ length: firstDayIndex }).map((_, i) => <span key={'pad_' + i} />)}
+        {month.map((m) => {
+          const lv = m.isFuture ? 0 : heatLevel(m.minutes)
+          const cls = ['rp-d', lv ? `l${lv}` : '', m.isToday ? 'today' : '', m.isFuture ? 'future' : ''].filter(Boolean).join(' ')
+          const label = lv ? `Ngày ${m.day}: học ${m.minutes} phút` : `Ngày ${m.day}: chưa học`
+          return lv ? (
+            <button key={m.dateKey} type="button" className={cls} aria-label={label} onClick={() => setPicked(m)}>{m.day}</button>
+          ) : (
+            <span key={m.dateKey} className={cls} aria-label={label}>{m.day}</span>
+          )
+        })}
       </div>
+      <div className="rp-heat-legend" aria-hidden="true">
+        <span>Ít</span><i className="l1" /><i className="l2" /><i className="l3" /><i className="l4" /><span>Nhiều</span>
+      </div>
+      <p className="rp-muted" style={{ marginTop: 8, textAlign: 'center' }}>
+        Tháng này: <b>{studied.length} tối · {totalMin} phút</b> · Chuỗi dài nhất <b>{tracker?.bestStreak || 0} tối</b>
+      </p>
+      {picked && (
+        <p className="rp-day-info" role="status">Ngày {picked.day}/{monthNo}: học {picked.minutes} phút</p>
+      )}
     </div>
   )
 }
@@ -5898,291 +5750,39 @@ export function Report() {
   }
   const parentLower = ho
 
-  // ---- Các khối báo cáo (thứ tự 6.3: tóm tắt, hay vướng, đã vững, phẩm chất, phân tích, lịch học, riêng người lớn, gửi Zalo) ----
-  const aiKemCard = (
-    <div className="card">
-      <span className="lbl plum">Ai kèm</span>
-      <div style={{ display: 'flex', height: 14, borderRadius: 8, overflow: 'hidden', background: 'var(--c-surface-2)' }}>
-        <i style={{ width: `${momPct}%`, background: 'var(--c-accent)' }} />
-        <i style={{ width: `${dadPct}%`, background: 'var(--c-accent-2, var(--sky))' }} />
-      </div>
-      <span className="sub">
-        Mẹ {momSessions} ca ({momPct}%) · Bố {dadSessions} ca ({dadPct}%) →{' '}
-        {totalSessions === 0
-          ? <b>tuần này chưa ghi nhận ca học nào.</b>
-          : dadSessions === 0
-          ? <b>gợi ý: thử giao 1 ca cho bố để mẹ nghỉ ngơi nhé.</b>
-          : momSessions === 0
-          ? <b>gợi ý: thử giao 1 ca cho mẹ cùng kèm con nhé.</b>
-          : Math.abs(momPct - dadPct) <= 20
-          ? <b>hai người cân sức rồi, giữ nếp nhé!</b>
-          : momPct > dadPct
-          ? <b>gợi ý: thử giao thêm 1 ca cho bố để cân bằng nhé.</b>
-          : <b>gợi ý: thử giao thêm 1 ca cho mẹ để cân bằng nhé.</b>}
-      </span>
-    </div>
-  )
-
-  const weakSection = (
-    <div className="pg-section">
-      <p className="lbl mut">Con hay vướng (cần tháo gỡ)</p>
-      {(stats?.weak || []).length === 0 && (
-        <span className="sub">{(stats?.studyLog || []).length > 0 ? 'Tuần này chưa có dạng nào bị vướng 🎉' : 'Chưa có buổi học nào nên chưa biết con hay vướng ở đâu.'}</span>
-      )}
-      {(stats?.weak || []).map((w) => (
-        <div className="card" key={w.n}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-            <b style={{ fontSize: 14 }}>{w.n}</b>
-            <span className="pill c" style={{ flexShrink: 0 }}>{weakText(w)}</span>
-          </div>
-          <Bar pct={weakPct(w)} color="var(--coral)" />
-        </div>
-      ))}
-    </div>
-  )
-
-  const strongSection = (
-    <div className="pg-section">
-      <p className="lbl mut">Con đã vững</p>
-      {(stats?.strong || []).length === 0 && <span className="sub">{(stats?.studyLog || []).length > 0 ? 'Chưa có dạng bài nào đủ vững, cứ từ từ nhé.' : 'Chưa có buổi học nào, học xong vài bài Gấu sẽ ghi lại.'}</span>}
-      {(stats?.strong || []).map((w) => (
-        <div className="card" key={w.n}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-            <b style={{ fontSize: 14 }}>{w.n}</b>
-            <span className="pill m" style={{ flexShrink: 0 }}>{w.v}/{w.t}</span>
-          </div>
-          <Bar pct={100} color="var(--mint)" />
-        </div>
-      ))}
-    </div>
-  )
-
-  const emptyWeekCard = (
-    <div className="card dimmed" style={{ textAlign: 'center', padding: '24px 16px' }}>
-      <div style={{ fontSize: 32, marginBottom: 6 }} aria-hidden="true">🌱 📚</div>
-      <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>Chưa có buổi học nào tuần này</p>
-      <span style={{ fontSize: 14, color: 'var(--c-text-2)', display: 'block', marginTop: 4 }}>
-        Bắt đầu buổi học đầu tiên để AI ghi nhận phẩm chất và theo dõi tiến bộ của {child.name} nhé!
-      </span>
-    </div>
-  )
-
-  // Phẩm chất tuần này so với tuần trước: phân biệt bằng biểu tượng + nhãn, màu theo bộ giao diện
-  const traitsCard = (
-    <div className="card rpt-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-        <span className="lbl plum" style={{ margin: 0 }}>📊 Phẩm chất tuần này so với tuần trước</span>
-      </div>
-      <div className="trait-grid">
-        {TRACKED_TRAITS.map((item) => {
-          const thisCnt = thisTraits[item.trait] || 0
-          const lastCnt = lastTraits[item.trait] || 0
-          const diff = thisCnt - lastCnt
-          return (
-            <div key={item.trait} className="trait-card">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                  <span className="trait-ic" aria-hidden="true">
-                    <i className={item.fa} />
-                  </span>
-                  <span className="trait-name">{item.trait}</span>
-                </div>
-                <span className="trait-diff" aria-label={diff > 0 ? `Tăng ${diff}` : diff < 0 ? `Giảm ${-diff}` : 'Giữ đều'}>
-                  {diff > 0 ? `+${diff} ↗` : diff < 0 ? `${diff} ↘` : 'Đều'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                <span className="trait-num">{thisCnt}</span>
-                <span className="trait-meta">tuần này</span>
-                <span className="trait-meta" style={{ marginLeft: 'auto' }}>trước: {lastCnt}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      <span className="sub" style={{ marginTop: 10, display: 'block' }}>
-        💡 <b>Góc nhìn sư phạm:</b> Khi bài tập chuyển sang dạng dài và khó, số sticker <i>Kiên nhẫn</i> thường tăng cao và <i>Sáng tạo</i> tạm thời giảm. Đây là nhịp chuyển tự nhiên, không nên sốt ruột.
-      </span>
-    </div>
-  )
-
-  // Thẻ "Con tiến bộ thế nào" (Đợt 18 · Chặng 3)
-  const progressCard = (() => {
-    if (progressState.notEnough) {
-      return (
-        <div className="card st-card" data-testid="progress-not-enough">
-          <span className="e2" aria-hidden="true">🌱</span>
-          <div>
-            <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Cần ít nhất 3 buổi học</b>
-            <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
-              {child.name} mới học {progressState.sessionsCount} buổi. Học thêm {Math.max(1, (progressState.required || 3) - progressState.sessionsCount)} buổi nữa, Gấu sẽ phân tích cho {ho}.
-            </p>
-          </div>
-        </div>
-      )
+  // ---- Gói 36: báo cáo theo bản vẽ v5 (Tổng quan · Kỹ năng · Lịch học · Cho bố mẹ) ----
+  const { teachBacks, selfFixed } = useWeeklyAiCounts(stats)
+  const insight = getSkillInsight(stats)
+  const needMore = Math.max(0, (progressState.required || 3) - (progressState.sessionsCount || totalSessions))
+  const [activeTab, setActiveTab] = useState('rp-overview')
+  const rootRef = useRef(null)
+  const TABS = [
+    { id: 'rp-overview', label: 'Tổng quan' },
+    { id: 'rp-skill', label: 'Kỹ năng' },
+    { id: 'rp-cal', label: 'Lịch học' },
+    { id: 'rp-parent', label: `Cho ${ho}` },
+  ]
+  useEffect(() => {
+    const sc = rootRef.current?.closest('.scroll')
+    if (!sc) return undefined
+    const onScroll = () => {
+      let cur = TABS[0].id
+      const top0 = sc.getBoundingClientRect().top
+      TABS.forEach((t) => {
+        const el = document.getElementById(t.id)
+        if (el && el.getBoundingClientRect().top - top0 < 110) cur = t.id
+      })
+      if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) cur = TABS[TABS.length - 1].id
+      setActiveTab(cur)
     }
+    sc.addEventListener('scroll', onScroll, { passive: true })
+    return () => sc.removeEventListener('scroll', onScroll)
+  }, [])
 
-    if (progressState.loading) {
-      return (
-        <div className="card st-card" data-testid="progress-analyzing" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ThemeBuddy state="reading" size={52} />
-          <div>
-            <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu đang phân tích dữ liệu của {child.name}…</b>
-            <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
-              Đang đối chiếu dữ liệu các buổi học để tìm gợi ý cho tuần tới.
-            </p>
-          </div>
-        </div>
-      )
-    }
+  const weakList = stats?.weak || []
+  const strongList = stats?.strong || []
+  const hasLog = (stats?.studyLog || []).length > 0
 
-    if (progressState.error) {
-      return (
-        <div className="card st-card warn" data-testid="progress-error" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ThemeBuddy state="oops" size={52} />
-          <div style={{ flex: 1 }}>
-            <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Gấu chưa phân tích được lúc này</b>
-            <p className="sm" style={{ color: 'var(--c-text-2)', margin: '4px 0 0' }}>
-              Không có bài viết sẵn nào thay thế. {Ho} thử lại sau ít phút nhé.
-            </p>
-            <button className="mini-btn" onClick={loadProgress}>Thử lại</button>
-          </div>
-        </div>
-      )
-    }
-
-    if (progressState.data) {
-      const pData = progressState.data
-      const soBuoi = pData.nguon_du_lieu?.so_buoi || progressState.factBasis?.so_buoi || totalSessions
-      const tuNgay = pData.nguon_du_lieu?.tu_ngay || progressState.factBasis?.tu_ngay
-      const denNgay = pData.nguon_du_lieu?.den_ngay || progressState.factBasis?.den_ngay
-      return (
-        <div className="card ana" data-testid="progress-ready">
-          <div className="lbl plum" style={{ margin: 0 }}>CON TIẾN BỘ THẾ NÀO</div>
-          <p className="src-badge">
-            🐻 Gấu đã đọc <b>{soBuoi} buổi học</b>{tuNgay ? `, từ ${tuNgay} đến ${denNgay}` : ''}
-          </p>
-          <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '4px 0', lineHeight: 1.5 }}>
-            {pData.tom_tat}
-          </p>
-          <div className="facts-grid">
-            <div>
-              <span>Hay kẹt</span>
-              <b>{pData.hay_ket?.[0] || 'Chưa có'}</b>
-              <em>{progressState.factBasis?.hay_ket?.[0] ? 'cần kiên nhẫn' : 'bước nâng cao'}</em>
-            </div>
-            <div>
-              <span>Đã vững</span>
-              <b>{pData.da_vung?.[0] || 'Phép tính'}</b>
-              <em>làm chắc chắn</em>
-            </div>
-            <div>
-              <span>Tự làm</span>
-              <b>{pData.tu_lam_count ?? progressState.factBasis?.tu_lam_count ?? soBuoi} bài</b>
-              <em>con tự tin</em>
-            </div>
-          </div>
-
-          <div className="lbl plum" style={{ margin: '8px 0 0' }}>GỢI Ý TUẦN TỚI</div>
-          <ol style={{ paddingLeft: 20, margin: '4px 0', fontSize: 14, color: 'var(--c-text)', lineHeight: 1.5 }}>
-            {(pData.goi_y_cho_me || []).map((item, idx) => (
-              <li key={idx} style={{ marginBottom: 4 }}>{item}</li>
-            ))}
-          </ol>
-
-          <div className="ana-f">
-            <button className="lnk-btn" onClick={() => setShowFactModal(true)}>
-              Xem dữ liệu Gấu đã đọc ›
-            </button>
-            <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
-              {progressState.createdAt ? `Phân tích lúc ${progressState.createdAt}` : ''}
-            </span>
-          </div>
-
-          {showFactModal && (
-            <div className="card st-card" style={{ marginTop: 8 }} data-testid="fact-modal">
-              <span className="e2" aria-hidden="true">🔎</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <b style={{ fontSize: 14, color: 'var(--c-text)' }}>Dữ liệu Gấu đã đọc</b>
-                  <button className="lnk-btn" onClick={() => setShowFactModal(false)}>Đóng ✕</button>
-                </div>
-                <ul style={{ paddingLeft: 18, margin: '6px 0', fontSize: 13, color: 'var(--c-text-2)', lineHeight: 1.5 }}>
-                  <li>{soBuoi} buổi học · {tuNgay || '28 ngày qua'} đến {denNgay || 'nay'}</li>
-                  <li>Kỹ năng hay kẹt: {progressState.factBasis?.hay_ket?.join(', ') || 'Chưa có bước kẹt thường xuyên'}</li>
-                  <li>Kỹ năng đã vững: {progressState.factBasis?.da_vung?.join(', ') || 'Đang rèn luyện'}</li>
-                  <li>Con tự làm hết: {progressState.factBasis?.tu_lam_count ?? soBuoi} bài</li>
-                  <li>Mẹ kèm {momSessions} buổi, bố kèm {dadSessions} buổi</li>
-                </ul>
-                <p style={{ fontSize: 12, color: 'var(--c-text-2)', margin: '4px 0 0', fontStyle: 'italic' }}>
-                  Gấu chỉ được dùng các con số trong danh sách này để phân tích.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )
-    }
-
-    return null
-  })()
-
-  // Lưới học 30 ngày trong tháng (Prompt 07 Phần B)
-  const calendarCard = (
-    <div className="card" style={{ padding: '14px 16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 16 }} aria-hidden="true">🗓️</span>
-          <b style={{ fontSize: 15, color: 'var(--c-text)' }}>Lịch học đều tháng {new Date().getMonth() + 1}</b>
-        </div>
-        <span style={{ fontSize: 13, color: 'var(--c-text-2)' }}>
-          Chuỗi: <b style={{ color: 'var(--c-text)' }}>{tracker?.streak || 0} tối</b>
-        </span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, textAlign: 'center' }}>
-        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((h) => (
-          <span key={h} style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 2 }}>{h}</span>
-        ))}
-        {(() => {
-          const now = new Date()
-          const firstDayIndex = (new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7
-          const emptyPads = Array.from({ length: firstDayIndex })
-          return (
-            <>
-              {emptyPads.map((_, i) => <div key={'pad_' + i} />)}
-              {(tracker?.month || []).map((m) => (
-                <div
-                  key={m.dateKey}
-                  title={`${m.day}/${now.getMonth() + 1}: ${m.isStudied ? 'Đã học' : 'Chưa học'}`}
-                  aria-label={`Ngày ${m.day}: ${m.isStudied ? 'đã học' : 'chưa học'}`}
-                  style={{
-                    height: 34,
-                    borderRadius: 8,
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontSize: 13,
-                    fontWeight: m.isToday ? 800 : 600,
-                    background: m.isStudied ? 'var(--c-good)' : 'var(--c-bg)',
-                    color: m.isStudied ? 'var(--c-on-good)' : m.isToday ? 'var(--c-accent-ink, var(--c-text))' : 'var(--c-text-2)',
-                    border: m.isToday ? '2px dashed var(--c-accent)' : '1px solid var(--c-line)',
-                  }}
-                >
-                  {m.isStudied ? '✓' : m.day}
-                </div>
-              ))}
-            </>
-          )
-        })()}
-      </div>
-
-      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--c-line)', fontSize: 13, textAlign: 'center', color: 'var(--c-text-2)' }}>
-        Tháng này: <b style={{ color: 'var(--c-text)' }}>{(tracker?.month || []).filter((m) => m.isStudied).length} tối</b> · chuỗi dài nhất <b style={{ color: 'var(--c-text)' }}>{tracker?.bestStreak || 0} tối</b>
-      </div>
-    </div>
-  )
-
-  // Ghi nhận riêng cho bố mẹ (Prompt 08 Mục 7)
   const adultsCard = (() => {
     if (session && session.role === 'viewer') return null
     const calmHistory = stats?.calmHistory || S?.stats?.[S?.activeId]?.calmHistory || []
@@ -6192,28 +5792,18 @@ export function Report() {
     })
     const count = thisWeekCalm.length
     if (count === 0) return null
-
     const daysSet = new Set()
     thisWeekCalm.forEach((item) => {
       const ts = typeof item === 'number' ? item : item?.ts
       if (ts) daysSet.add(new Date(ts).toLocaleDateString('vi-VN', { weekday: 'short' }))
     })
-
     return (
-      <div className="card rpt-card" style={{ padding: '16px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-          <span className="rpt-kicker">🔒 Riêng cho người lớn trong nhà</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text-2)' }}>{Array.from(daysSet).join(', ')}</span>
-        </div>
-
-        <h4 className="rpt-title" style={{ margin: '0 0 6px' }}>
-          Tuần này {parentLower} đã dừng lại {count} lần trước khi nổi nóng 💚
-        </h4>
-        <p style={{ fontSize: 14, color: 'var(--c-text)', margin: '0 0 10px', lineHeight: 1.45 }}>
-          {count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc. Đó là nỗ lực tuyệt vời của {parentLower}!
-        </p>
-
-        <div className="switch-row" style={{ borderTop: '1px dashed var(--c-line)', padding: '12px 14px 8px 14px' }}>
+      <div className="card rp-card rp-private">
+        <div className="rp-label rp-row"><span>🔒 Chỉ người lớn trong nhà thấy</span><span>{Array.from(daysSet).join(', ')}</span></div>
+        <h3 className="rp-h3">Tuần này {parentLower} đã dừng lại {count} lần trước khi nổi nóng</h3>
+        <p className="rp-muted">{count} lần nghỉ xong, {child?.name || 'con'} đã có năng lượng làm tiếp các bậc. Đó là nỗ lực tuyệt vời của {parentLower}!</p>
+        <div className="rp-divider" />
+        <div className="switch-row" style={{ padding: 0, minHeight: 44 }}>
           <span id="rpt-calm-zalo-lbl" style={{ fontSize: 14, color: 'var(--c-text)' }}>Gửi kèm báo cáo Zalo</span>
           <Switch
             on={Boolean(S?.shareCalmWithZalo)}
@@ -6225,120 +5815,134 @@ export function Report() {
       </div>
     )
   })()
+  const calmNoteText = (() => {
+    const calmHistory = stats?.calmHistory || []
+    const count = calmHistory.filter((item) => { const ts = typeof item === 'number' ? item : item?.ts; return ts && getWeekLabel(ts) === 'Tuần này' }).length
+    return count > 0 ? `Tuần này ${parentLower} đã dừng lại ${count} lần trước khi nổi nóng.` : ''
+  })()
 
-  const weekendCard = (
-    <div className="card plum">
-      <span className="lbl plum">Một việc cho cuối tuần</span>
-      <span style={{ fontSize: 14 }}>
-        Đi chợ cùng con: "3 bó rau, mỗi bó 5 nghìn, trả 20 nghìn thì thối bao nhiêu?"
-      </span>
-    </div>
-  )
+  const whoTip = totalSessions === 0
+    ? 'Tuần này chưa ghi nhận buổi học nào.'
+    : dadSessions === 0
+    ? 'Gợi ý: thử giao 1 buổi cho bố để mẹ nghỉ ngơi nhé.'
+    : momSessions === 0
+    ? 'Gợi ý: thử giao 1 buổi cho mẹ cùng kèm con nhé.'
+    : Math.abs(momPct - dadPct) <= 20
+    ? 'Hai người cân sức rồi, giữ nếp nhé!'
+    : momPct > dadPct
+    ? 'Gợi ý: thử giao thêm 1 buổi cho bố để cân bằng nhé.'
+    : 'Gợi ý: thử giao thêm 1 buổi cho mẹ để cân bằng nhé.'
 
   return (
-    <>
-      <Header title={`Tuần này của ${child.name}`} />
-      <p className="sub">{totalSessions} ca · mẹ kèm {momSessions} ca, bố kèm {dadSessions} ca · {stickerHistory.length} lần ghi nhận phẩm chất</p>
+    <div className="rp-root" ref={rootRef}>
+      {/* 1. TỔNG QUAN: trả lời ngay "tuần này con thế nào" */}
+      <header className="rp-head" id="rp-overview">
+        <h1>Tuần này của {child.name}</h1>
+        <p className="rp-sub">Bố kèm {dadSessions} buổi · Mẹ kèm {momSessions} buổi</p>
+        <div className="rp-kpis" data-testid="rp-kpis">
+          <div className="rp-kpi"><b>{totalSessions}</b><span>buổi học</span></div>
+          <div className="rp-kpi" data-testid="weekly-teachback"><b>{teachBacks}</b><span>lần {child.name} giảng lại</span></div>
+          <div className="rp-kpi" data-testid="weekly-selffixed"><b>{selfFixed}</b><span>lỗi tự sửa được</span></div>
+        </div>
+      </header>
 
-      {/* Dải tab dính trên Báo cáo (Prompt 23 Chặng 3.8 & Prompt 23D) */}
-      <div
-        className="report-sticky-tabs"
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 80,
-          background: 'var(--c-bg, #FFFBF5)',
-          padding: '8px 0',
-          marginBottom: 12,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 6,
-          borderBottom: '1px solid var(--c-line, #EADFCF)',
-        }}
-      >
-        {[
-          { id: 'sec-week', label: 'Tuần này' },
-          { id: 'sec-traits', label: 'Phẩm chất' },
-          { id: 'sec-subjects', label: 'Môn học' },
-          { id: 'sec-ai', label: 'Phân tích' }
-        ].map((t) => (
+      <nav className="rp-tabs" aria-label="Mục báo cáo">
+        {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
-            className="btn-km btn-km-s btn-km-chip"
-            style={{
-              padding: '6px 14px',
-              borderRadius: 12,
-              fontSize: 13,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-              background: 'var(--c-surface, #fff)',
-              border: '1px solid var(--c-line, #EADFCF)',
-              color: 'var(--c-text, #2D241E)',
-              cursor: 'pointer',
-            }}
+            className="rp-tab"
+            aria-current={activeTab === t.id}
             onClick={() => {
-              const el = document.getElementById(t.id);
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setActiveTab(t.id)
+              document.getElementById(t.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }}
           >
             {t.label}
           </button>
         ))}
-      </div>
+      </nav>
 
-
-      <div className="pg-grid2">
-        {/* 1. Tóm tắt tuần */}
-        <div id="sec-week" style={{ gridColumn: "1 / -1" }}>{aiKemCard}</div>
-        {/* Đợt 15 P1: An toàn AI · con giảng lại · tự sửa lỗi (prompt 14 mục 2.7, 3.7, 4.3) */}
-        <WeeklyAiCards stats={stats} childName={child.name} />
-
-        {/* 2-3. Con hay vướng, con đã vững */}
-        {weakSection}
-        {strongSection}
-
-        {/* 4. ĐỢT 19 CHẶNG 3: BIỂU ĐỒ CỘT CHỒNG PHẨM CHẤT & AI PHÂN TÍCH */}
-        <div id="sec-traits" className="pg-span">
-          <TraitStackedChart
-            badges={stats?.stickerHistory || []}
-            rewards={stats?.rewardHistory || []}
-            childName={child.name}
-          />
+      {/* 2. ĐIỀU CẦN CHÚ Ý NHẤT */}
+      <section className="rp-sec">
+        <div className="rp-insight" data-testid="card-bear-insight">
+          <div className="rp-label">Cần chú ý tuần này</div>
+          <p className="rp-insight-main">{insight ? insight.text : hasLog ? 'Tuần này chưa thấy bước nào con kẹt nhiều.' : `Tuần này ${child.name} chưa có buổi học nào.`}</p>
+          {needMore > 0 && <p className="rp-insight-more">Cần thêm {needMore} buổi học của {child.name} để Gấu tìm ra nguyên nhân.</p>}
         </div>
 
-        <div id="sec-ai" className="pg-span">
-          <TraitAiAnalysisCard
-            child={child}
-            stats={stats}
-          />
+        <div className="card rp-card">
+          <div className="rp-label">Con đã vững</div>
+          {strongList.length === 0 ? (
+            <p style={{ marginTop: 4 }}>{hasLog ? 'Chưa có dạng bài nào đủ vững, cứ từ từ nhé.' : 'Học xong vài bài Gấu sẽ ghi lại.'}</p>
+          ) : strongList.map((w) => (
+            <div key={w.n} style={{ marginTop: 8 }}>
+              <div className="rp-row"><b style={{ fontWeight: 700 }}>{w.n}</b><span className="rp-pill ok">{w.v}/{w.t}</span></div>
+              <div className="rp-bar"><i style={{ width: '100%' }} /></div>
+            </div>
+          ))}
+          <div className="rp-divider" />
+          <div className="rp-label">Con hay vướng</div>
+          {weakList.length === 0 ? (
+            <p style={{ marginTop: 4 }}>{hasLog ? 'Tuần này chưa có dạng nào bị vướng.' : 'Chưa có buổi học nào nên chưa biết con hay vướng ở đâu.'}</p>
+          ) : weakList.map((w) => (
+            <div key={w.n} style={{ marginTop: 8 }}>
+              <div className="rp-row"><b style={{ fontWeight: 700 }}>{w.n}</b><span className="rp-pill warn">{weakText(w)}</span></div>
+              <div className="rp-bar warn"><i style={{ width: `${weakPct(w)}%` }} /></div>
+            </div>
+          ))}
         </div>
+      </section>
 
-        <div id="sec-subjects" className="pg-span">
-          <SubjectAndSkillHeatmap
-            stats={stats}
-            childName={child.name}
-          />
+      {/* 3. KỸ NĂNG */}
+      <section className="rp-sec" id="rp-skill">
+        <h2 className="rp-h2">Con hay kẹt ở bước nào?</h2>
+        <p className="rp-muted" style={{ margin: '-6px 0 10px' }}>Tỉ lệ buổi có bậc kẹt, 8 tuần gần nhất</p>
+        <SubjectAndSkillHeatmap stats={stats} childName={child.name} />
+        <div id="sec-traits" style={{ marginTop: 12 }}>
+          <TraitStackedChart badges={stats?.stickerHistory || []} rewards={stats?.rewardHistory || []} childName={child.name} />
         </div>
+        <div id="sec-ai" style={{ marginTop: 12 }}>
+          <TraitAiAnalysisCard child={child} stats={stats} />
+        </div>
+      </section>
 
-        {/* 5. Lịch học */}
-        {calendarCard}
+      {/* 4. LỊCH HỌC */}
+      <section className="rp-sec" id="rp-cal">
+        <StudyHeatCalendar tracker={tracker} />
+      </section>
 
-        {/* 6. Riêng cho người lớn */}
+      {/* 5. CHO BỐ MẸ */}
+      <section className="rp-sec" id="rp-parent">
+        <h2 className="rp-h2">Cho {ho}</h2>
+        <div className="card rp-card">
+          <div className="rp-label">Ai kèm {child.name}</div>
+          <div className="rp-split" aria-hidden="true">
+            <i style={{ width: `${dadPct}%`, background: 'var(--c-accent)' }} />
+            <i style={{ width: `${momPct}%`, background: 'var(--c-accent-2, var(--c-warn))' }} />
+          </div>
+          <div className="rp-row" style={{ fontSize: 14 }}>
+            <span><b>Bố</b> {dadSessions} buổi ({dadPct}%)</span>
+            <span><b>Mẹ</b> {momSessions} buổi ({momPct}%)</span>
+          </div>
+          <p className="rp-tipbox">{whoTip}</p>
+        </div>
+        <div className="card rp-card">
+          <div className="rp-label">Một việc cho cuối tuần</div>
+          <p style={{ marginTop: 4, fontWeight: 500 }}>Đi chợ cùng con: "3 bó rau, mỗi bó 5 nghìn, trả 20 nghìn thì thối bao nhiêu?"</p>
+        </div>
         {adultsCard}
-        {weekendCard}
+      </section>
 
-        {/* 7. Gửi Zalo */}
+      {/* Nút gửi Zalo dính đáy */}
+      <div className="rp-send">
         <button
           type="button"
-          className="btn-km btn-km-primary pg-span"
-          onClick={() => {
-            soundPop(600)
-            setShowZaloReport(true)
-          }}
-          style={{ width: '100%', height: 48, borderRadius: 16, fontSize: 15, fontWeight: 700 }}
+          className="btn-km btn-km-l btn-km-primary"
+          data-testid="rp-send-zalo"
+          onClick={() => { soundPop(600); setShowZaloReport(true) }}
         >
-          💬 Gửi báo cáo vào nhóm Zalo gia đình
+          <span className="btn-km-text" style={{ textAlign: 'center' }}>Gửi báo cáo vào nhóm Zalo gia đình</span>
         </button>
       </div>
 
@@ -6351,9 +5955,12 @@ export function Report() {
           toast={toast}
           boom={boom}
           currentTheme={S.theme || 'candy'}
+          calmNote={calmNoteText}
+          sendNote={Boolean(S?.shareCalmWithZalo)}
+          onToggleNote={(v) => patch && patch({ shareCalmWithZalo: v })}
         />
       )}
-    </>
+    </div>
   )
 }
 

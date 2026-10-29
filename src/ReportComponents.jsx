@@ -481,17 +481,10 @@ export function TraitStackedChart({
 /**
  * 2. DÒNG XU HƯỚNG KỸ NĂNG HAY KẸT (PROMPT 23 - PHƯƠNG ÁN 1)
  */
-export function SubjectAndSkillHeatmap({
-  stats = {},
-  childName = "Con",
-}) {
-  const [selectedSubject, setSelectedSubject] = useState("Toán");
-  const [activeTip, setActiveTip] = useState(null);
-  const [showTable, setShowTable] = useState(false);
+/* Gói 36: dữ liệu mẫu kỹ năng hay kẹt (8 tuần) dùng chung cho khối "Con hay kẹt ở bước nào?" và thẻ "Cần chú ý tuần này" */
+export const SKILL_WEEKS = ["7/9", "14/9", "21/9", "28/9", "5/10", "12/10", "19/10", "26/10"];
 
-  const WEEKS = ["7/9", "14/9", "21/9", "28/9", "5/10", "12/10", "19/10", "26/10"];
-
-  const MATH_DATA = [
+const MATH_DATA = [
     { name: "Đọc hiểu đề", values: [40, 45, 50, 45, 55, 60, 65, 70] },
     { name: "Chọn phép tính", values: [null, 35, 40, 35, null, null, null, null] },
     { name: "Tính toán", values: [null, null, null, null, null, null, null, null] },
@@ -500,20 +493,68 @@ export function SubjectAndSkillHeatmap({
     { name: "Kiểm tra lại", values: [50, 55, 45, 50, 45, 50, 55, 52] },
   ];
 
-  const VIETNAMESE_DATA = [
+const VIETNAMESE_DATA = [
     { name: "Đọc hiểu", values: [30, 35, 40, 35, 40, 45, 40, 42] },
     { name: "Từ vựng", values: [20, 15, 20, 25, 20, 15, 20, 18] },
     { name: "Chính tả", values: [25, 30, 25, 20, 25, 20, 25, 22] },
     { name: "Đặt câu", values: [null, null, null, null, null, null, null, null] },
   ];
 
-  const rawData = selectedSubject === "Tiếng Việt" ? VIETNAMESE_DATA : MATH_DATA;
+const ENGLISH_DATA = [];
 
-  const totalRealSessions =
-    (stats?.sessionsMom || 0) +
-    (stats?.sessionsDad || 0) +
-    (Array.isArray(stats?.studyLog) ? stats.studyLog.length : 0);
+export const SKILL_SUBJECTS = [
+  { value: "Toán", data: MATH_DATA },
+  { value: "Tiếng Việt", data: VIETNAMESE_DATA },
+  { value: "Tiếng Anh", data: ENGLISH_DATA },
+];
 
+function skillTotalSessions(stats) {
+  return (stats?.sessionsMom || 0) + (stats?.sessionsDad || 0) + (Array.isArray(stats?.studyLog) ? stats.studyLog.length : 0);
+}
+
+function latestIdx(arr) {
+  for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i;
+  return -1;
+}
+
+/** Kỹ năng kẹt nhiều nhất tuần này (môn Toán), hoặc null khi chưa đủ 3 buổi */
+export function getSkillInsight(stats) {
+  if (!isTrialActive() && skillTotalSessions(stats) < 3) return null;
+  const rows = MATH_DATA.map((r) => ({ ...r, li: latestIdx(r.values) })).filter((r) => r.li === SKILL_WEEKS.length - 1);
+  rows.sort((x, y) => y.values[y.li] - x.values[x.li]);
+  const top = rows[0];
+  if (!top) return null;
+  const v = top.values[top.li];
+  const max = Math.max(...top.values.filter((x) => x != null));
+  return { name: top.name, pct: v, text: `${top.name} tuần này kẹt ${v}%${v >= max ? ", cao nhất trong 8 tuần" : ""}, trùng tuần làm nhiều bài dạng mới.` };
+}
+
+/** Mũi tên tăng/giảm + số điểm (thay cho chữ "tăng 5 điểm") */
+export function TrendDelta({ delta, iconOnly = false }) {
+  if (delta == null) return null;
+  if (delta === 0) return <span className="ch-delta eq" aria-label="Giữ nguyên so với tuần trước">=</span>;
+  const up = delta > 0;
+  return (
+    <span
+      className={`ch-delta ${up ? "up" : "down"}`}
+      aria-label={up ? `Tăng ${delta} điểm, kẹt nhiều hơn tuần trước` : `Giảm ${-delta} điểm, đã tiến bộ`}
+    >
+      <svg viewBox="0 0 12 12" aria-hidden="true">{up ? <path d="M6 2l4.5 6h-9z" /> : <path d="M6 10L1.5 4h9z" />}</svg>
+      {!iconOnly && Math.abs(delta)}
+    </span>
+  );
+}
+
+export function SubjectAndSkillHeatmap({
+  stats = {},
+  childName = "Con",
+}) {
+  const [selectedSubject, setSelectedSubject] = useState("Toán");
+  const [activeTip, setActiveTip] = useState(null);
+  const [showTable, setShowTable] = useState(false);
+  const WEEKS = SKILL_WEEKS;
+  const rawData = (SKILL_SUBJECTS.find((x) => x.value === selectedSubject) || SKILL_SUBJECTS[0]).data;
+  const totalRealSessions = skillTotalSessions(stats);
   const isTrial = isTrialActive();
 
   // Dưới 3 buổi: hiện 'Gấu cần thêm buổi', không vẽ
@@ -523,36 +564,22 @@ export function SubjectAndSkillHeatmap({
         <div style={{ fontSize: 32, marginBottom: 6 }}>📊 🐻</div>
         <b style={{ fontSize: 15, color: "var(--c-text)" }}>Gấu cần thêm {Math.max(1, 3 - totalRealSessions)} buổi học</b>
         <p className="xs" style={{ margin: "6px 0 0", color: "var(--c-sub, #6E5D4E)" }}>
-          Sau khi {childName} hoàn thành ít nhất 3 buổi học, Gấu sẽ vẽ dòng xu hướng kỹ năng hay kẹt 8 tuần tại đây.
+          Sau khi {childName} hoàn thành ít nhất 3 buổi học, Gấu sẽ cho thấy con hay kẹt ở bước nào trong 8 tuần tại đây.
         </p>
       </div>
     );
   }
 
-  // Tìm tuần gần nhất có bài
-  const getLatestIdx = (arr) => {
-    for (let i = arr.length - 1; i >= 0; i--) {
-      if (arr[i] != null) return i;
-    }
-    return -1;
-  };
-
-  const processedRows = rawData.map((row) => {
-    const li = getLatestIdx(row.values);
-    return { ...row, li };
-  });
-
-  const hasDataRows = processedRows
-    .filter((r) => r.li >= 0)
-    .sort((a, b) => b.values[b.li] - a.values[a.li]);
-
+  const processedRows = rawData.map((row) => ({ ...row, li: latestIdx(row.values) }));
+  const hasDataRows = processedRows.filter((r) => r.li >= 0).sort((a, b) => b.values[b.li] - a.values[a.li]);
   const noDataRows = processedRows.filter((r) => r.li < 0);
-
-  // Kỹ năng đầu tiên kẹt nhiều nhất
-  const topSkill = hasDataRows[0];
-  const insightText = topSkill
-    ? `${topSkill.name} tuần này kẹt ${topSkill.values[topSkill.li]}%, cao nhất trong 8 tuần, trùng tuần làm nhiều bài dạng mới.`
-    : "Hiện tại các kỹ năng đều ổn định.";
+  const rowInfo = (r) => {
+    const v = r.values[r.li];
+    const prevValues = r.values.slice(0, r.li).filter((x) => x != null);
+    const pv = prevValues.length ? prevValues[prevValues.length - 1] : null;
+    const recent = r.li === WEEKS.length - 1;
+    return { v, recent, delta: recent && pv != null ? v - pv : null, weeksWithData: prevValues.length + 1 };
+  };
 
   // Hàm vẽ sparkline SVG
   const renderSparkline = (values, li) => {
@@ -628,124 +655,82 @@ export function SubjectAndSkillHeatmap({
   };
 
   return (
-    <div className="rc-trend" data-testid="subject-skill-heatmap">
+    <div className="rc-trend rp-skill" data-testid="subject-skill-heatmap">
       <div className="rc-h">
-        <b>Kỹ năng hay kẹt · {selectedSubject}</b>
-        <div style={{ display: "inline-flex", gap: 4 }}>
-          {["Toán", "Tiếng Việt"].map((subj) => (
-            <button
-              key={subj}
-              type="button"
-              className={`btn-km btn-km-s ${selectedSubject === subj ? 'btn-km-primary' : 'btn-km-secondary'}`}
-              style={{ minHeight: 28, padding: "0 10px", fontSize: 11.5 }}
-              onClick={() => setSelectedSubject(subj)}
-            >
-              {subj}
-            </button>
-          ))}
+        <span className="rp-label">Môn học</span>
+        <div className="rp-select">
+          <select
+            aria-label="Chọn môn học"
+            data-testid="skill-subject-select"
+            value={selectedSubject}
+            onChange={(e) => { setSelectedSubject(e.target.value); setActiveTip(null); }}
+          >
+            {SKILL_SUBJECTS.map((x) => <option key={x.value} value={x.value}>{x.value}</option>)}
+          </select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
         </div>
       </div>
-      <div className="rc-sub">
-        Tỉ lệ buổi có bậc kẹt theo kỹ năng. Càng cao càng hay kẹt. Vạch chấm giữa là mức 50%.
-      </div>
 
-      {activeTip && (
-        <div
-          style={{
-            background: "var(--c-text, #1E293B)",
-            color: "#fff",
-            padding: "4px 8px",
-            borderRadius: 8,
-            fontSize: 11,
-            fontWeight: 800,
-            marginBottom: 6,
-            display: "inline-block",
-          }}
-        >
-          {activeTip}
-        </div>
-      )}
+      {activeTip && <div className="rp-tip">{activeTip}</div>}
 
-      {hasDataRows.map((r, k) => {
-        const v = r.values[r.li];
-        const prevValues = r.values.slice(0, r.li).filter((x) => x != null);
-        const pv = prevValues.length ? prevValues[prevValues.length - 1] : null;
-        const recent = r.li === WEEKS.length - 1;
-        const delta = pv == null ? null : v - pv;
-
-        return (
-          <div key={r.name} className={`sk-row ${k === 0 && recent ? 'top' : ''}`}>
-            <div className="sk-nm">
-              {r.name}
-              {!recent && <small>mới có dữ liệu {prevValues.length + 1} tuần</small>}
-            </div>
-            {renderSparkline(r.values, r.li)}
-            <div className="sk-v">
-              <b>{v}%</b>
-              {!recent ? null : delta == null ? null : delta > 0 ? (
-                <span className="ch-delta up">▲ {delta} điểm</span>
-              ) : delta < 0 ? (
-                <span className="ch-delta down">▼ {-delta} điểm</span>
-              ) : (
-                <span className="ch-delta eq">giữ nguyên</span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      {noDataRows.length > 0 && (
-        <div className="sk-nod">
-          Chưa có bài luyện: <b>{noDataRows.map((r) => r.name).join(', ')}</b>
-        </div>
-      )}
-
-      <div className="sk-foot">
-        <span>Chạm vào đường để xem tuần</span>
-        <button
-          type="button"
-          className="btn-km-ghost"
-          style={{ fontSize: 11.5, fontWeight: 800, color: "var(--c-primary)", background: "none", border: "none", cursor: "pointer" }}
-          onClick={() => setShowTable(!showTable)}
-        >
-          {showTable ? "Ẩn bảng số liệu ▴" : "Xem dạng bảng ▾"}
-        </button>
-      </div>
-
-      {showTable && (
-        <div style={{ overflowX: "auto", marginTop: 6 }}>
-          <table className="tv-table">
-            <thead>
-              <tr>
-                <th>Kỹ năng</th>
-                {WEEKS.map((w) => (
-                  <th key={w}>{w}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rawData.map((r) => (
+      {hasDataRows.length === 0 ? (
+        <p className="rp-muted" style={{ padding: "16px 0" }}>Chưa có dữ liệu {selectedSubject}.</p>
+      ) : showTable ? (
+        <table className="tv-table rp-table">
+          <thead><tr><th>Kỹ năng</th><th>Tuần này</th><th>So tuần trước</th></tr></thead>
+          <tbody>
+            {hasDataRows.map((r) => {
+              const { v, recent, delta } = rowInfo(r);
+              return (
                 <tr key={r.name}>
                   <td>{r.name}</td>
-                  {r.values.map((v, idx) => (
-                    <td key={idx}>{v == null ? '·' : `${v}%`}</td>
-                  ))}
+                  <td>{recent ? `${v}%` : `${v}% (${WEEKS[r.li]})`}</td>
+                  <td>{delta == null ? <span className="rp-muted">Chưa đủ dữ liệu</span> : <TrendDelta delta={delta} />}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : (
+        <>
+          {hasDataRows.map((r, k) => {
+            const { v, recent, delta, weeksWithData } = rowInfo(r);
+            const top = k === 0 && recent;
+            return (
+              <div key={r.name} className={`sk-row ${top ? "rp-top" : ""}`}>
+                <div className="sk-nm">
+                  {r.name}
+                  {top && <small>Nên luyện thêm</small>}
+                  {!recent && <small>Mới có dữ liệu {weeksWithData} tuần</small>}
+                </div>
+                {renderSparkline(r.values, r.li)}
+                <div className="sk-v">
+                  <b>{v}%</b>
+                  <TrendDelta delta={delta} />
+                </div>
+              </div>
+            );
+          })}
+          <p className="rp-legend">
+            Càng cao càng hay kẹt. Nét đứt là mức 50%.<br />
+            <TrendDelta delta={1} iconOnly /> <span>kẹt nhiều hơn tuần trước</span>
+            <span style={{ display: "inline-block", width: 10 }} />
+            <TrendDelta delta={-1} iconOnly /> <span>đã tiến bộ</span>
+          </p>
+        </>
+      )}
+
+      {noDataRows.length > 0 && hasDataRows.length > 0 && (
+        <div className="sk-nod">
+          Chưa có bài luyện: <b>{noDataRows.map((r) => r.name).join(", ")}</b>
         </div>
       )}
 
-      {/* Thẻ GẤU THẤY (do code tạo, đồng bộ với dòng đầu tiên) */}
-      <div className="card-km card-km-note" style={{ marginTop: 12 }} data-testid="card-bear-insight">
-        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.05em', color: 'var(--c-primary)', marginBottom: 2 }}>
-          GẤU THẤY
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--c-text)', fontWeight: 700, margin: 0 }}>
-          {insightText}
-        </p>
-      </div>
+      {hasDataRows.length > 0 && (
+        <button type="button" className="rp-link" onClick={() => setShowTable(!showTable)}>
+          {showTable ? "Xem dạng biểu đồ" : "Xem dạng bảng"}
+        </button>
+      )}
     </div>
   );
 }

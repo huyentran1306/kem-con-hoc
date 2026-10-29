@@ -61,25 +61,18 @@ console.log("\n--- 4. Kiểm tra Giao diện Report & CSS ---");
 const screensSrc = fs.readFileSync("src/screens.jsx", "utf8");
 const stylesSrc = fs.readFileSync("src/styles.css", "utf8");
 
-assert(screensSrc.includes("data-testid=\"progress-not-enough\""), "UI có trạng thái Cần ít nhất 3 buổi học");
-assert(screensSrc.includes("data-testid=\"progress-analyzing\""), "UI có trạng thái Gấu đang phân tích");
-assert(screensSrc.includes("data-testid=\"progress-error\""), "UI có trạng thái lỗi kèm nút Thử lại");
-assert(screensSrc.includes("data-testid=\"progress-ready\""), "UI có trạng thái hoàn tất CON TIẾN BỘ THẾ NÀO");
-assert(screensSrc.includes("Gấu đã đọc"), "UI có dòng nguồn Gấu đã đọc N buổi học");
-assert(screensSrc.includes("Xem dữ liệu Gấu đã đọc ›"), "UI có nút Xem dữ liệu Gấu đã đọc");
-assert(screensSrc.includes("data-testid=\"fact-modal\""), "UI có hộp thoại chi tiết dữ liệu thực tế");
-
-assert(screensSrc.includes("Phép tính sai đã bắt"), "Thẻ An toàn AI có Phép tính sai đã bắt");
-assert(screensSrc.includes("Bậc bộ chặn sửa lại"), "Thẻ An toàn AI có Bậc bộ chặn sửa lại");
-assert(screensSrc.includes("Câu nhỏ hơn đã tạo"), "Thẻ An toàn AI có Câu nhỏ hơn đã tạo");
-assert(screensSrc.includes("Lần Gấu nghe con"), "Thẻ An toàn AI có Lần Gấu nghe con");
-assert(/\{Ho\} thấy gì:|MẸ THẤY GÌ:/.test(screensSrc), "Thẻ An toàn AI có dòng kết luận {Ho} thấy gì (prompt 32: theo xưng hô, không cố định Mẹ)");
+// Gói 36: màn Báo cáo làm lại theo bản vẽ v5. Thẻ "Con tiến bộ thế nào" trước đây không được hiện (mã chết) đã bỏ;
+// số buổi còn thiếu đưa vào thẻ "Cần chú ý tuần này". Khối "An toàn AI 7 ngày" bỏ khỏi Báo cáo theo góp ý.
+assert(screensSrc.includes("Cần chú ý tuần này"), "Báo cáo có thẻ Cần chú ý tuần này");
+assert(screensSrc.includes("để Gấu tìm ra nguyên nhân"), "Thiếu buổi học thì nói rõ cần thêm mấy buổi");
+assert(!screensSrc.includes("An toàn AI 7 ngày"), "Báo cáo không còn khối An toàn AI 7 ngày");
+assert(screensSrc.includes("fetchAiProgressReport("), "Báo cáo vẫn gọi phân tích tiến bộ để biết số buổi");
 
 assert(stylesSrc.includes(".card.ana"), "CSS có định dạng cho .card.ana");
 assert(stylesSrc.includes(".src-badge"), "CSS có định dạng cho .src-badge");
 assert(stylesSrc.includes(".facts-grid"), "CSS có định dạng cho .facts-grid");
 assert(stylesSrc.includes(".st-card"), "CSS có định dạng cho .st-card");
-console.log("  ✅ Giao diện Report và CSS đầy đủ cả 4 trạng thái, thẻ an toàn AI và modal dữ liệu");
+console.log("  ✅ Giao diện Report (gói 36) và CSS");
 
 console.log("\n===============================================================");
 console.log("🎉 TẤT CẢ CÁC BÀI TEST CHẶNG 3 (ĐỢT 18) ĐÃ VƯỢT QUA 100%!");

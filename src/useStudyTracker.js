@@ -116,6 +116,17 @@ export function useStudyTracker(childId, state = null, updateState = null) {
     return map
   }, [effectiveLog])
 
+  // Gói 36: tổng số phút học mỗi ngày (lịch học tô đậm nhạt theo thời lượng)
+  const minutesByDate = useMemo(() => {
+    const map = new Map()
+    effectiveLog.forEach((item) => {
+      const k = item.dateKey || getStudyDateKey(item.ts)
+      const m = Number(item.minutes)
+      map.set(k, (map.get(k) || 0) + (Number.isFinite(m) && m > 0 ? m : 15))
+    })
+    return map
+  }, [effectiveLog])
+
   // 2. Tính 7 ngày trong tuần hiện tại
   const todayDateKey = useMemo(() => getStudyDateKey(Date.now()), [])
   const weekDays = useMemo(() => getCurrentWeekDays(Date.now()), [])
@@ -251,10 +262,12 @@ export function useStudyTracker(childId, state = null, updateState = null) {
         dateKey,
         isStudied,
         isToday,
+        isFuture: dateKey > todayDateKey,
+        minutes: isStudied ? Math.round(minutesByDate.get(dateKey) || 0) : 0,
       })
     }
     return result
-  }, [studiedDatesMap, todayDateKey])
+  }, [studiedDatesMap, minutesByDate, todayDateKey])
 
   // 7. Hàm ghi nhận buổi học (recordStudySession)
   const recordSession = useCallback(
