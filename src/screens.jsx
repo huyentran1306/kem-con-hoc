@@ -1948,10 +1948,8 @@ export function Explain() {
 function ExplainView() {
   const { ho = 'bố mẹ', Ho = 'Bố mẹ' } = useContext(AppCtx) || {}
   const { S, problem, patch, go, openSheet, toast } = useContext(AppCtx)
-  const [showMathList, setShowMathList] = useState(false)
   const [showFullOcr, setShowFullOcr] = useState(false)
   const child = S.children.find((c) => c.id === S.activeId)
-  const mathInfo = useMemo(() => problem?.mathVerified || problem?.math_verified || validateAllLessonMath(problem), [problem])
   const stepsCount = Array.isArray(problem.steps) ? problem.steps.length : 4
 
   const explainText =
@@ -2059,41 +2057,8 @@ function ExplainView() {
         </button>
       </div>
 
-      {/* Kiểm toán độc lập (nếu có) */}
-      {mathInfo && mathInfo.verifiedCount > 0 && (
-        <div
-          className="card-km card-km-good"
-          onClick={() => setShowMathList(!showMathList)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 12px',
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}>
-            <span style={{ color: 'var(--c-good, #2F7D4F)', fontWeight: 900 }}>✓</span>
-            <span style={{ color: 'var(--c-text)', fontWeight: 700 }}>
-              Đã kiểm lại {mathInfo.verifiedCount} phép tính
-            </span>
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--c-primary)', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 8 }}>
-            {showMathList ? 'Đóng ▲' : 'Xem ›'}
-          </span>
-        </div>
-      )}
-
-      {showMathList && mathInfo?.calculations && (
-        <div className="card-km" style={{ padding: '10px 12px', background: 'var(--c-surface)' }}>
-          {mathInfo.calculations.map((c, idx) => (
-            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '4px 0' }}>
-              <b>{c.expr}</b>
-              <span style={{ color: 'var(--c-good)', fontWeight: 800 }}>✓ Đúng</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Gói 40: bỏ thẻ "Đã kiểm lại N phép tính" và danh sách phép tính ở màn soạn bài.
+          App vẫn tự kiểm phép tính ở phía sau, chỉ không hiện ra cho bố mẹ. */}
 
       {/* 4 bậc là danh sách dòng */}
       {Array.isArray(problem.steps) && problem.steps.length > 0 && (
@@ -5222,7 +5187,11 @@ function CardGame() {
 
 /* ---------- ĐỒNG HỒ: phản xạ bấm đúng thời gian ---------- */
 function ClockGame() {
-  const { toast, boom } = useContext(AppCtx)
+  const { toast, boom, S, Ho = 'Bố mẹ' } = useContext(AppCtx)
+  // Gói 40: hai người chơi là phụ huynh đang cầm máy và con (trước đây ghi cứng Mẹ rồi Bố)
+  const kid = (S?.children || []).find((c) => c.id === S?.activeId)?.name || 'Con'
+  const P1 = Ho
+  const P2 = kid === Ho ? `${kid} (con)` : kid
   const randTarget = () => (1.5 + Math.random() * 3).toFixed(2)
   const [target, setTarget] = useState(randTarget)
   const [phase, setPhase] = useState('ready')
@@ -5232,7 +5201,7 @@ function ClockGame() {
   const [scores, setScores] = useState([])
   const TOTAL_ROUNDS = 4
 
-  const player = round % 2 === 1 ? 'Mẹ' : 'Bố'
+  const player = round % 2 === 1 ? P1 : P2
 
   const start = () => {
     setPhase('running')
@@ -5259,10 +5228,10 @@ function ClockGame() {
     setRound((r) => r + 1)
   }
 
-  const momDev = scores.filter((s) => s.player === 'Mẹ').reduce((a, s) => a + s.dev, 0)
-  const dadDev = scores.filter((s) => s.player === 'Bố').reduce((a, s) => a + s.dev, 0)
+  const p1Dev = scores.filter((s) => s.player === P1).reduce((a, s) => a + s.dev, 0)
+  const p2Dev = scores.filter((s) => s.player === P2).reduce((a, s) => a + s.dev, 0)
   const finished = scores.length >= TOTAL_ROUNDS
-  const winner = finished ? (momDev === dadDev ? 'Hòa' : momDev < dadDev ? 'Mẹ' : 'Bố') : null
+  const winner = finished ? (p1Dev === p2Dev ? 'Hòa' : p1Dev < p2Dev ? P1 : P2) : null
 
   return (
     <div className="card plum">
@@ -5272,7 +5241,7 @@ function ClockGame() {
       </div>
       <b style={{ fontSize: 16 }}>⏰ Bấm đúng thời gian</b>
       <span style={{ fontSize: 13.5 }}>
-        Mục tiêu: bấm Dừng gần đúng <b>{target}s</b>. Mẹ và bố luân phiên, ai lệch ít hơn thì thắng!
+        Mục tiêu: bấm Dừng gần đúng <b>{target}s</b>. {P1} và {P2} luân phiên, ai lệch ít hơn thì thắng!
       </span>
 
       <div className="timer" style={{ fontSize: 44 }}>{target}s</div>

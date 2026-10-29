@@ -5,6 +5,21 @@ import { isTrialActive } from './trialData.js'
 import { LINK_DAYS_MIN, LINK_DAYS_MAX, checkLinkDays } from './reportLinkDays.js'
 import { soundPop, soundSuccess } from './audio'
 
+
+const CANVAS_FONT = '"Nunito", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+async function loadCanvasFonts() {
+  try {
+    if (typeof document === 'undefined' || !document.fonts?.load) return
+    const sample = 'Tuần này của Bé · Đồng hành từng bước nhỏ cùng con ĐÃ VỮNG'
+    await Promise.race([
+      Promise.all(['500', '600', '700', '800', '900'].map((w) => document.fonts.load(`${w} 32px Nunito`, sample))),
+      new Promise((r) => setTimeout(r, 1500)),
+    ])
+  } catch (e) {
+    /* không tải được font thì vẫn vẽ bằng font dự phòng */
+  }
+}
+
 export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom, currentTheme = 'candy', calmNote = '', sendNote = false, onToggleNote }) {
   const [expiresDays, setExpiresDays] = useState(7)
   const [daysText, setDaysText] = useState('7')
@@ -49,6 +64,9 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
     canvas.height = 1350
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
+    // Gói 40: vẽ bằng font Nunito (có đủ dấu tiếng Việt). Trước đây dùng 'sans-serif' nét 900,
+    // trên Windows bị thay bằng font thiếu glyph tiếng Việt nên dấu chữ "Tuần này của" bị lệch.
+    await loadCanvasFonts()
 
     // Background gradient theo theme
     const grad = ctx.createLinearGradient(0, 0, 0, 1350)
@@ -90,17 +108,17 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
     ctx.roundRect(360, 110, 360, 48, 24)
     ctx.fill()
     ctx.fillStyle = '#6D28D9'
-    ctx.font = 'bold 22px sans-serif'
+    ctx.font = 'bold 22px ' + CANVAS_FONT
     ctx.textAlign = 'center'
     ctx.fillText('KÈM CON HỌC · BÁO CÁO TUẦN', 540, 142)
 
     // Tiêu đề
     ctx.fillStyle = textColor
-    ctx.font = '900 64px sans-serif'
-    ctx.fillText(`Tuần này của ${child?.name || 'Bé'}`, 540, 240)
+    ctx.font = '900 64px ' + CANVAS_FONT
+    ctx.fillText(`Tuần này của ${child?.name || 'Bé'}`, 540, 240, 900)
 
     ctx.fillStyle = subColor
-    ctx.font = '500 28px sans-serif'
+    ctx.font = '500 28px ' + CANVAS_FONT
     ctx.fillText(`${weekLabel || 'Tuần này'} · Đồng hành từng bước nhỏ cùng con`, 540, 290)
 
     // 3 Ô số liệu lớn
@@ -110,11 +128,11 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
       ctx.roundRect(x, y, w, h, 28)
       ctx.fill()
       ctx.fillStyle = color
-      ctx.font = '900 68px sans-serif'
+      ctx.font = '900 68px ' + CANVAS_FONT
       ctx.textAlign = 'center'
       ctx.fillText(String(num), x + w / 2, y + 85)
       ctx.fillStyle = subColor
-      ctx.font = '600 24px sans-serif'
+      ctx.font = '600 24px ' + CANVAS_FONT
       ctx.fillText(lbl, x + w / 2, y + 130)
     }
 
@@ -133,10 +151,10 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
       ctx.stroke()
       ctx.textAlign = 'left'
       ctx.fillStyle = strokeColor
-      ctx.font = 'bold 30px sans-serif'
+      ctx.font = 'bold 30px ' + CANVAS_FONT
       ctx.fillText(title, x + 35, y + 55)
       ctx.fillStyle = textColorInner
-      ctx.font = '500 26px sans-serif'
+      ctx.font = '500 26px ' + CANVAS_FONT
       ctx.fillText(content.length > 50 ? content.slice(0, 48) + '…' : content, x + 35, y + 105)
     }
 
@@ -150,7 +168,7 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
       ctx.roundRect(110, 910, 860, 100, 24)
       ctx.fill()
       ctx.fillStyle = '#334155'
-      ctx.font = '600 26px sans-serif'
+      ctx.font = '600 26px ' + CANVAS_FONT
       ctx.textAlign = 'left'
       const coText = '👨‍👩‍👧 Ai kèm: ' + coParents.map((p) => `${p.name} (${p.sessions} buổi)`).join(' · ')
       ctx.fillText(coText, 140, 970)
@@ -158,13 +176,13 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
 
     // Lời khuyên cuối tuần, hoặc lời nhắn riêng nếu bố mẹ chọn gửi kèm
     ctx.fillStyle = textColor
-    ctx.font = 'italic 500 26px sans-serif'
+    ctx.font = 'italic 500 26px ' + CANVAS_FONT
     ctx.textAlign = 'center'
     if (sendNote && calmNote) {
       ctx.fillStyle = '#9A3B22'
-      ctx.fillText(`💚 Lời nhắn riêng: ${calmNote.length > 60 ? calmNote.slice(0, 58) + '…' : calmNote}`, 540, 1070)
+      ctx.fillText(`💚 Lời nhắn riêng: ${calmNote.length > 60 ? calmNote.slice(0, 58) + '…' : calmNote}`, 540, 1070, 880)
     } else {
-      ctx.fillText('🌱 Lời khuyên cuối tuần: Ôn bài 5 phút nhẹ nhàng bằng que tính hoặc xếp hình!', 540, 1070)
+      ctx.fillText('🌱 Lời khuyên cuối tuần: Ôn bài 5 phút nhẹ nhàng bằng que tính hoặc xếp hình!', 540, 1070, 880)
     }
 
     // Khung QR code & Brand footer
@@ -173,11 +191,11 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
     ctx.roundRect(110, 1120, 860, 130, 24)
     ctx.fill()
     ctx.fillStyle = brandColor
-    ctx.font = 'bold 30px sans-serif'
+    ctx.font = 'bold 30px ' + CANVAS_FONT
     ctx.textAlign = 'left'
-    ctx.fillText('📲 Quét mã hoặc bấm link để xem báo cáo chi tiết', 140, 1180)
+    ctx.fillText('📲 Quét mã hoặc bấm link để xem báo cáo chi tiết', 140, 1180, 800)
     ctx.fillStyle = subColor
-    ctx.font = '500 22px sans-serif'
+    ctx.font = '500 22px ' + CANVAS_FONT
     ctx.fillText(shareUrl ? shareUrl.replace(/^https?:\/\//, '') : 'kem-con-hoc-5xf.pages.dev', 140, 1220)
     ctx.fillText(`Link xem được trong ${expiresDays} ngày`, 140, 1245)
 
