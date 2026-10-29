@@ -33,6 +33,7 @@ import { auditSteps, issueScore } from './stepQuality.js'
 import { buildLocalMicroStep, isServerMicroStepGeneric } from './microStepLocal.js'
 import { getCurrentXungHo } from './xungHo.js'
 import { isTrialActive, matchTrialLesson, PRELOADED_TRIAL_LESSONS, getTrialInitialState, trialLessonToProblem, setActiveTrialLesson, getActiveTrialLesson, TRIAL_LESSON_EXTRAS, TRIAL_LIMIT_MESSAGE } from './trialData.js'
+import { isAllowedWorkerHeader } from './workerHeaders.js'
 
 export const GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
 export const AI_GATEWAY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AI_GATEWAY) || 'https://ai-gateway-worker.trannth1306.workers.dev'
@@ -95,6 +96,12 @@ async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeade
   const safeHeaders = { 'Content-Type': 'application/json' }
   if (extraHeaders && typeof extraHeaders === 'object') {
     for (const [k, v] of Object.entries(extraHeaders)) {
+      // Gói 33 · A1: header chưa có trong danh sách dùng chung sẽ bị trình duyệt chặn ở preflight
+      // và làm hỏng CẢ request. Bỏ header đó (kèm log) thay vì để cả màn soạn bài trắng.
+      if (!isAllowedWorkerHeader(k)) {
+        console.error(`[workerHeaders] Bỏ header "${k}" vì Worker chưa cho phép. Thêm vào src/workerHeaders.js và deploy Worker trước.`)
+        continue
+      }
       if (v != null) {
         const strVal = String(v)
         safeHeaders[k] = Array.from(strVal).some((c) => c.charCodeAt(0) > 255) ? encodeURIComponent(strVal) : strVal
@@ -105,12 +112,23 @@ async function post(path, body, timeoutMs = 25000, baseUrl = GATEWAY, extraHeade
     safeHeaders['Authorization'] = `Bearer ${token}`
   }
   try {
-    const r = await fetch(baseUrl + path, {
-      method: 'POST',
-      headers: safeHeaders,
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    })
+    let r
+    try {
+      r = await fetch(baseUrl + path, {
+        method: 'POST',
+        headers: safeHeaders,
+        body: JSON.stringify(body),
+        signal: ctrl.signal,
+      })
+    } catch (fetchErr) {
+      // Gói 33 · A3: mất mạng hoặc CORS chặn đều ném TypeError("Failed to fetch"). Đánh dấu là lỗi mạng
+      // để màn soạn bài báo "kiểm tra mạng rồi thử lại", không coi là lỗi mã nguồn.
+      if (fetchErr?.name === 'AbortError') throw fetchErr
+      const err = new Error('network: ' + (fetchErr?.message || fetchErr))
+      err.network = true
+      err.cause = fetchErr
+      throw err
+    }
     const data = await r.json().catch(() => ({}))
     if (!r.ok) {
       const err = new Error(data.error?.message || 'HTTP ' + r.status)
@@ -311,8 +329,8 @@ export async function aiExtractProblem(rawOcr, confidence = 1) {
    🧭 BỘ ĐỊNH TUYẾN PHÂN LOẠI NHANH (Fast Classifier Router)
    Xác định môn, dạng bài, lỗi hay gặp để chèn phương pháp chuẩn
    ============================================================ */
-export function fastClassifyProblem(deBai = '', lop = 'Lớp 2') {
-  return classifyProblemDynamic(deBai, lop)
+export function fastClassifyProblem(deBai = '', lop = 'Lớp 2', monHint = null) {
+  return classifyProblemDynamic(deBai, lop, monHint)
 }
 
 /* ============================================================
@@ -330,7 +348,7 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
   }
   const grade = child?.grade || 'Lớp 2'
   const book = child?.book || 'Kết nối tri thức'
-  const classification = fastClassifyProblem(ocr, grade)
+  const classification = fastClassifyProblem(ocr, grade, options.subject || null)
   const routedMethod = routePedagogyMethod({
     mon: classification.mon || 'Toán',
     lop: grade,
@@ -681,6 +699,11 @@ export async function aiExplain(ocr, child, tone, parentNote = '', isStuck = fal
 
     return problemObj
   } catch (e) {
+    // Gói 33 · A3: lỗi mạng/CORS (đã đánh dấu ở post) là lỗi mạng, kể cả khi bản chất là TypeError
+    if (e && e.network) {
+      console.warn('[KCH] soạn bài lỗi mạng hoặc CORS:', e.cause || e)
+      return { error: 'network', message: 'Không kết nối được máy chủ' }
+    }
     // Phân biệt: lỗi mã nguồn (ReferenceError, TypeError,...) không che giấu dưới dạng lỗi mạng
     if (e instanceof ReferenceError || e instanceof TypeError || e instanceof RangeError || e instanceof SyntaxError) {
       console.error('Lỗi mã nguồn trong xử lý bài giảng:', e);
@@ -885,7 +908,9 @@ export async function familyRegister(name, password, displayName = '', relation 
     }
     return { ok: true, id: res.family.id, name: res.family.name, member: res.member, token: res.token }
   } catch (e) {
-    return { ok: false, error: e.data?.error?.message || e.message || 'Không kết nối được máy chủ' }
+    // Gói 33 · B2: giữ mã lỗi để màn đăng nhập phân biệt sai mật khẩu / không tìm thấy / mạng
+    if (e && e.network) return { ok: false, network: true, error: 'Không kết nối được máy chủ, kiểm tra mạng rồi thử lại nhé.' }
+    return { ok: false, status: e?.status || null, code: e?.data?.error?.code || null, error: e?.data?.error?.message || e?.message || 'Không kết nối được máy chủ' }
   }
 }
 
@@ -900,7 +925,9 @@ export async function familyLogin(name, password) {
     }
     return { ok: true, id: res.family.id, name: res.family.name, member: res.member, token: res.token }
   } catch (e) {
-    return { ok: false, error: e.data?.error?.message || e.message || 'Không kết nối được máy chủ' }
+    // Gói 33 · B2: giữ mã lỗi để màn đăng nhập phân biệt sai mật khẩu / không tìm thấy / mạng
+    if (e && e.network) return { ok: false, network: true, error: 'Không kết nối được máy chủ, kiểm tra mạng rồi thử lại nhé.' }
+    return { ok: false, status: e?.status || null, code: e?.data?.error?.code || null, error: e?.data?.error?.message || e?.message || 'Không kết nối được máy chủ' }
   }
 }
 
