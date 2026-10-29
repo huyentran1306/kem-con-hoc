@@ -185,19 +185,19 @@ export function ZaloReportModal({ child, stats, weekLabel, onClose, toast, boom,
       ctx.fillText('🌱 Lời khuyên cuối tuần: Ôn bài 5 phút nhẹ nhàng bằng que tính hoặc xếp hình!', 540, 1070, 880)
     }
 
-    // Khung QR code & Brand footer
+    // Khung Brand & Link footer
     ctx.fillStyle = '#EDE9FE'
     ctx.beginPath()
     ctx.roundRect(110, 1120, 860, 130, 24)
     ctx.fill()
     ctx.fillStyle = brandColor
-    ctx.font = 'bold 30px ' + CANVAS_FONT
+    ctx.font = 'bold 28px ' + CANVAS_FONT
     ctx.textAlign = 'left'
-    ctx.fillText('📲 Quét mã hoặc bấm link để xem báo cáo chi tiết', 140, 1180, 800)
+    ctx.fillText('📲 Quét mã hoặc bấm link để xem báo cáo chi tiết', 140, 1172, 800)
     ctx.fillStyle = subColor
     ctx.font = '500 22px ' + CANVAS_FONT
-    ctx.fillText(shareUrl ? shareUrl.replace(/^https?:\/\//, '') : 'kem-con-hoc-5xf.pages.dev', 140, 1220)
-    ctx.fillText(`Link xem được trong ${expiresDays} ngày`, 140, 1245)
+    const displayUrl = shareUrl ? shareUrl.replace(/^https?:\/\//, '') : 'kem-con-hoc-5xf.pages.dev'
+    ctx.fillText(`${displayUrl} · Link xem được trong ${expiresDays} ngày`, 140, 1215, 800)
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/png')

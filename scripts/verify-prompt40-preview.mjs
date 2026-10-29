@@ -144,6 +144,7 @@ async function testPrompt40() {
     const previewImg = page.locator('img[alt="Xem trước báo cáo"]');
     await previewImg.waitFor({ state: 'visible', timeout: 10000 });
     console.log('   Ảnh xem trước báo cáo Zalo visible: true');
+    await previewImg.screenshot({ path: 'bang-chung/prompt40/03_anh_bao_cao_zalo_font_nunito.png' });
 
     // Đóng sheet Zalo
     const closeBtn = page.locator('.sheet button[aria-label="Đóng"], .sheet button:has-text("✕")').first();
