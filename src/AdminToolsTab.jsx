@@ -5,9 +5,10 @@
  * hideSubNav: khung admin mới tự điều hướng bằng thanh bên, trang này không vẽ thanh tab con riêng.
  */
 import { Suspense, lazy, useState } from 'react'
+import { lazyWithReload } from './lazyReload.js'
 import SqlStudioPage from './admin/SqlStudioPage'
 
-const TeamPromptSyncTab = lazy(() => import('./TeamPromptSyncTab'))
+const TeamPromptSyncTab = lazyWithReload(() => import('./TeamPromptSyncTab'))
 
 export function AdminToolsTab({ token, adminProfile, activeSubTab: propSubTab, onSubTabChange, hideSubNav = false }) {
   const [localSubTool] = useState('sql')

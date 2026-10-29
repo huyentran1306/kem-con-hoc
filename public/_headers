@@ -7,6 +7,13 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Gói 35: trang chính luôn hỏi lại máy chủ để không giữ index cũ trỏ tới chunk đã xoá
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
 /r/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-cache, no-store, must-revalidate

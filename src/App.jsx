@@ -1,5 +1,6 @@
 import { appAlert, appConfirm, appPrompt } from './dialog'
 import { useContext, useEffect, useMemo, useRef, useState, Component, lazy, Suspense } from 'react'
+import { lazyWithReload } from './lazyReload.js'
 import { AppCtx } from './ctx'
 import { PROBLEM, SCHEDULE_DEFAULT, EMOJIS, GRADES, BOOKS, CALM_LINES, AVAILABLE_STICKERS, SAMPLE_STICKER_HISTORY } from './data'
 import { toast, onToast, speak, boom, fmtTime, markSampleStickers, getWeekLabel, getVnMondayStart } from './utils'
@@ -22,14 +23,14 @@ import { getTrialInitialState, TRIAL_SESSION, PRELOADED_TRIAL_LESSONS, setActive
 
 initClientErrorLogging()
 
-const LoginScreen = lazy(() => import('./Login'))
-const AdminPortal = lazy(() => import('./Admin'))
-const TeacherPortal = lazy(() => import('./TeacherPortal'))
-const DevUiKitPage = lazy(() => import('./admin/DevUiKitPage'))
-const FamilyMembersSheet = lazy(() => import('./FamilyMembersSheet').then(m => ({ default: m.FamilyMembersSheet })))
-const JoinFamilyView = lazy(() => import('./JoinFamilyView').then(m => ({ default: m.JoinFamilyView })))
-const PublicReportView = lazy(() => import('./PublicReportView').then(m => ({ default: m.PublicReportView })))
-const FamilyClassSheet = lazy(() => import('./FamilyClassSheet').then(m => ({ default: m.FamilyClassSheet })))
+const LoginScreen = lazyWithReload(() => import('./Login'))
+const AdminPortal = lazyWithReload(() => import('./Admin'))
+const TeacherPortal = lazyWithReload(() => import('./TeacherPortal'))
+const DevUiKitPage = lazyWithReload(() => import('./admin/DevUiKitPage'))
+const FamilyMembersSheet = lazyWithReload(() => import('./FamilyMembersSheet').then(m => ({ default: m.FamilyMembersSheet })))
+const JoinFamilyView = lazyWithReload(() => import('./JoinFamilyView').then(m => ({ default: m.JoinFamilyView })))
+const PublicReportView = lazyWithReload(() => import('./PublicReportView').then(m => ({ default: m.PublicReportView })))
+const FamilyClassSheet = lazyWithReload(() => import('./FamilyClassSheet').then(m => ({ default: m.FamilyClassSheet })))
 import { BuddyPopLayer } from './themes/buddies/buddySvgs'
 import MotionLayer from './MotionLayer'
 import { xungHoPair, setCurrentXungHo } from './xungHo'
@@ -933,7 +934,7 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="stage">
-        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''}`}>
+        <div className={`app parent-shell ${screen === 'scaffold' ? 'on-hoicon' : ''} ${screen === 'report' ? 'on-report' : ''}`}>
           {session?.isTrial && !trialCollapsed && (
             <div className="banner-trial-km" role="region" aria-label="Chế độ dùng thử" style={{ minHeight: 32, height: 'auto', padding: '4px 10px', gap: 6 }}>
               <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>✨ <b>Đang dùng thử</b> · Không lưu đám mây</span>
