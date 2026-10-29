@@ -247,19 +247,6 @@ export function ShellHeader({ page, role, profile, counts, canSee, onNavigate, o
         <kbd className="kadm-search-kbd" aria-hidden="true">Ctrl K</kbd>
       </form>
 
-      {canSee && canSee('pre-demo') && (
-        <button
-          type="button"
-          className="kadm-demo-chip"
-          onClick={() => onNavigate('pre-demo')}
-          title="Kiểm tra trước demo (Sẵn sàng demo)"
-          aria-label="Kiểm tra trước demo"
-        >
-          <span className="kadm-demo-dot" aria-hidden="true" />
-          <span className="kadm-demo-text">Sẵn sàng demo</span>
-        </button>
-      )}
-
       <span className="kadm-clock" aria-label={`Giờ Việt Nam ${clock}`}>{clock}</span>
       <Bell counts={counts} onNavigate={onNavigate} canSee={canSee} />
       <AccountMenu profile={profile} onLock={onLock} onLogout={onLogout} onExit={onExit} />
