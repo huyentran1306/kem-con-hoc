@@ -90,8 +90,45 @@ const OUTCOME_HELP = {
   leaked: 'Câu lộ đáp án đã tới con (bộ chặn không kịp chặn). Cần xem lại.',
 }
 const PROMPT_NAMES = {
-  p3_explain_v3: 'Soạn bài', p3_explain: 'Soạn bài (bản cũ)', p4_chat: 'Hỏi AI', p14a_read_work: 'Đọc vở', p14b_check_work: 'Chấm vở',
-  p14d_teach_back: 'Nghe con giảng lại', p1_ocr_v2: 'Đọc đề từ ảnh', micro_step: 'Gợi ý nhỏ', judge_answer: 'Chấm câu trả lời', p8_calm_phrase: 'Câu nói dịu lòng',
+  p3_explain_v3: 'Soạn bài',
+  p3_explain_v2: 'Soạn bài',
+  p3_explain: 'Soạn bài',
+  p3_fix_steps_v3: 'Soạn bài',
+  p3_extra_v3: 'Bài tương tự',
+  p4_chat: 'Hỏi AI',
+  chat: 'Hỏi AI',
+  p14a_read_work: 'Đọc vở',
+  p14b_check_work: 'Chấm vở',
+  p14d_teach_back: 'Nghe con giảng lại',
+  p1_ocr_v3: 'Đọc đề từ ảnh',
+  p1_ocr_v2: 'Đọc đề từ ảnh',
+  p1_ocr: 'Đọc đề từ ảnh',
+  p0_scope_text: 'Kiểm tra phạm vi đề',
+  p2_clean: 'Làm sạch đề',
+  p5_toy: 'Trò chơi đồ vật',
+  p6_practice: 'Bài tương tự',
+  p7_longitudinal_analysis: 'Phân tích học tập',
+  p8_calm_phrase: 'Câu nói dịu lòng',
+  p9_story_wrap: 'Kể chuyện',
+  micro_step: 'Gợi ý nhỏ',
+  judge_answer: 'Chấm câu trả lời',
+}
+
+function promptDisplayName(v) {
+  if (!v) return '·'
+  if (PROMPT_NAMES[v]) return PROMPT_NAMES[v]
+  if (/^p3_explain/.test(v)) return 'Soạn bài'
+  if (/^p3_fix/.test(v)) return 'Soạn bài'
+  if (/^p3_extra/.test(v)) return 'Bài tương tự'
+  if (/^p1_ocr/.test(v)) return 'Đọc đề từ ảnh'
+  if (/^p4_chat|^chat$/.test(v)) return 'Hỏi AI'
+  if (/^p6_practice/.test(v)) return 'Bài tương tự'
+  if (/^p5_toy/.test(v)) return 'Trò chơi đồ vật'
+  if (/^p8_calm/.test(v)) return 'Câu nói dịu lòng'
+  if (/^p14a/.test(v)) return 'Đọc vở'
+  if (/^p14b/.test(v)) return 'Chấm vở'
+  if (/^p14d/.test(v)) return 'Nghe con giảng lại'
+  return v
 }
 function fieldName(f) {
   const v = String(f || '')
@@ -189,7 +226,7 @@ export function AdminSafetyTab({ token }) {
 
   const logColumns = [
     { key: 'created_at', title: 'Thời gian', render: (v) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(v)}</span> },
-    { key: 'prompt_id', title: 'Chức năng', render: (v) => <span title={v || ''}>{PROMPT_NAMES[v] || v || '·'}</span> },
+    { key: 'prompt_id', title: 'Chức năng', render: (v) => <span title={promptDisplayName(v)}>{promptDisplayName(v)}</span> },
     { key: 'field', title: 'Chỗ bị sửa', render: (v) => <span title={v || ''}>{fieldName(v)}</span> },
     { key: 'before_text', title: 'Máy chủ phát hiện', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-bad)' }}>{v || '·'}</div> },
     { key: 'after_text', title: 'Đã xử lý', render: (v) => <div className="sys-cell-wrap" style={{ color: 'var(--s-ok)', fontWeight: 700 }}>{v || '·'}</div> },
